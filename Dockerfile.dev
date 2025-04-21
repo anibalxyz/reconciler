@@ -1,0 +1,10 @@
+FROM maven:3.9-eclipse-temurin-21
+
+WORKDIR /app
+
+COPY pom.xml .
+RUN mvn dependency:resolve
+
+COPY . .
+
+CMD ["sh", "-c", "mvn compile exec:java -Dexec.mainClass=com.anibalxyz.Main"]

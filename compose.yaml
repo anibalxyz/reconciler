@@ -1,0 +1,39 @@
+services:
+  reconciler-db:
+    container_name: reconciler-db
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      # Persistent storage for the DB, so data isn't lost on container shutdown
+      - reconciler-db-volume:/var/lib/postgresql/data
+      # Run the SQL script on first-time container startup (read-only)
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - reconciler-network
+
+  reconciler-app:
+    container_name: reconciler-app
+    image: reconciler-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - reconciler-db
+    networks:
+      - reconciler-network
+
+volumes:
+  # Define the volume used for Postgres data persistence
+  reconciler-db-volume:
+    name: reconciler-db-volume
+
+networks:
+  reconciler-network:
+    name: reconciler-network

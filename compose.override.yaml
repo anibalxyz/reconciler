@@ -1,0 +1,40 @@
+services:
+  reconciler-db:
+    container_name: reconciler-db-dev
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      # Persistent storage for the DB, so data isn't lost on container shutdown
+      - reconciler-db-volume:/var/lib/postgresql/data
+      # Run the SQL script on first-time container startup (read-only)
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - reconciler-network
+
+  reconciler-app:
+    container_name: reconciler-app-dev
+    image: reconciler-app-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      # Mounting the source code from the host to the container. This allows you to work directly on the code inside the container.
+      - ./src:/app/src
+      # Persisting the Maven local repository. The dependencies downloaded by Maven are stored in this volume,
+      # preventing them from being downloaded repeatedly on each execution.
+      - reconciler-mvn:/root/.m2
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - reconciler-db
+    networks:
+      - reconciler-network
+volumes:
+  # Defining the 'maven-repo' volume to persist Maven dependencies.
+  reconciler-mvn:
+    name: "reconciler-mvn"
