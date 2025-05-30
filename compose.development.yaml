@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${POSTGRES_HOST_PORT}:5432"
+    volumes:
+      # Mount source code and config for manual reload during development
+      - ./backend/pom.xml:/app/pom.xml:cached
+      - ./backend/src:/app/src:cached
+      # Persist Maven dependencies cache to speed up builds
+      - maven:/root/.m2
+volumes:
+  maven:
+    name: "reconciler-development-mvn"

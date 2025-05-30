@@ -1,0 +1,27 @@
+# Build stage: compiles the project and packages it as a runnable JAR
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+
+WORKDIR /app
+
+COPY pom.xml .
+
+# Pre-download all required dependencies and plugins for offline builds
+# Does not compile the code; prepares for `mvn package` without internet
+# -B: batch mode (non-interactive)
+RUN mvn dependency:go-offline -B
+
+COPY src ./src
+
+# Compile and package the app, skipping tests (none implemented yet)
+RUN mvn clean package -DskipTests -B
+
+# Runtime stage: minimal image to run the compiled JAR
+FROM eclipse-temurin:21-jdk
+
+WORKDIR /app
+
+COPY --from=build /app/target/app-jar-with-dependencies.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

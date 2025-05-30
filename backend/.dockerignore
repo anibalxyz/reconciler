@@ -1,0 +1,6 @@
+# Ignore all by default
+*
+
+# Allow specific files and directories
+!pom.xml
+!src/**

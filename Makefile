@@ -1,167 +1,227 @@
-# Define the Docker Compose command
-COMPOSE=docker compose
+# -------------------------------------------------------------------------------
+# 1) DEFAULT ENVIRONMENT (can be replaced by `make set-env`)
+# -------------------------------------------------------------------------------
 
-# ======================
-# Development Commands
-# ======================
+ENV := development
 
-# 'dev' -> Starts the development environment with Docker Compose.
-# Checks if the .env file exists before attempting to bring up the containers.
-dev: check-env-dev
-	@echo "Starting development with Docker Compose..."
-	$(COMPOSE) up -d
+# -------------------------------------------------------------------------------
+# 2) DETERMINE DOCKER COMPOSE FILE AND .env FILE BASED ON "ENV"
+# -------------------------------------------------------------------------------
 
-# 'dev-rebuild' -> Rebuilds the development containers with Docker Compose.
-# Forces a rebuild of the images and restarts the containers.
-dev-rebuild: check-env-dev
-	@echo "Rebuilding development containers..."
-	$(COMPOSE) up -d --build
+COMPOSE_FILE := compose.$(ENV).yaml
 
-# 'run' -> Runs the 'reconciler-app' container with Docker Compose.
-# The container is removed after execution.
-run:
-	$(COMPOSE) run --rm reconciler-app
+ENV_FILE := ./backend/.env.$(ENV)
 
-# ======================
-# Production Commands
-# ======================
+COMPOSE_FILES_CHAIN := -f compose.yaml -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
-# 'prod' -> Starts the production environment with Docker Compose.
-# Uses the .env.production file for production configurations.
-prod: check-env-prod
-	@echo "Starting production with Docker Compose..."
-	$(COMPOSE) -f compose.yaml --env-file .env.production up -d
+PROJECT_NAME := --project-name reconciler-$(ENV)
 
-# 'prod-rebuild' -> Rebuilds the production containers with Docker Compose.
-# Forces a rebuild of the images and restarts the production containers.
-prod-rebuild: check-env-prod
-	@echo "Rebuilding production containers..."
-	$(COMPOSE) -f compose.yaml --env-file .env.production up -d --build
+COMPOSE_SETUP := $(COMPOSE_FILES_CHAIN) $(PROJECT_NAME) 
 
-# 'run-prod' -> Runs the 'reconciler-app' container in the production environment.
-# Uses the .env.production file for production configurations.
-run-prod:
-	$(COMPOSE) -f compose.yaml run --env-from-file .env.production --rm reconciler-app
+COMPOSE := docker compose
 
-# ======================
-# Utility Commands
-# ======================
+# Avoid printing the directory name when running commands
+MAKEFLAGS += --no-print-directory
 
-# 'down' -> Stops and removes the containers, networks, and volumes defined in Compose.
-down:
-	$(COMPOSE) down
 
-# 'logs' -> Displays the real-time logs of the containers (last 50 entries).
+# -------------------------------------------------------------------------------
+# 3) TARGET TO CHANGE ENV INSIDE THIS Makefile ITSELF
+#    Usage: make set-env NEW_ENV=<environment>
+# -------------------------------------------------------------------------------
+
+.PHONY: set-env
+set-env:
+	@if [ -z "$(NEW_ENV)" ]; then \
+		echo "ERROR: You must specify NEW_ENV. Example: 'make set-env NEW_ENV=production'"; \
+		exit 1; \
+	fi
+	@if [ ! -f "./backend/.env.$(NEW_ENV).example" ]; then \
+		echo "ERROR: '$(NEW_ENV)' environment does not exist. Please create it or use a valid environment."; \
+		exit 1; \
+	fi
+	@echo "▶  Setting ENV to '$(NEW_ENV)' in Makefile..."
+	@sed -i 's/^ENV := .*/ENV := $(NEW_ENV)/' $(MAKEFILE_LIST)
+	@echo "✓  ENV is now '$(NEW_ENV)'. Run 'make up' to bring up that environment."
+
+
+get-env:
+	@echo "▶  Current ENV is '$(ENV)'."
+	@echo "✓  To change it, use 'make set-env NEW_ENV=<new_env>'."
+
+# -------------------------------------------------------------------------------
+# 4) HELP / USAGE (default goal)
+# -------------------------------------------------------------------------------
+
+.DEFAULT_GOAL := help
+
+.PHONY: help
+help:
+	@echo
+	@echo "Usage: make <command>"
+	@echo
+	@echo "Environment:"
+	@echo "  set-env NEW_ENV=<env>         Set the active environment in this Makefile"
+	@echo "                                (e.g. make set-env NEW_ENV=production)"
+	@echo "  get-env                       Show the current environment"
+	@echo
+	@echo "Life-Cycle:"
+	@echo "  up                             Bring up containers for the current ENV"
+	@echo "  rebuild [nocache=true]         Rebuild images (use nocache=true to avoid cache) and restart"
+	@echo "  down [rmorphans=true]          Stop and remove containers (rmorphans=true removes orphans)"
+	@echo "  start                          Start stopped containers"
+	@echo "  stop                           Stop running containers"
+	@echo "  restart                        Restart running containers"
+	@echo
+	@echo "Logs & Status:"
+	@echo "  logs                           Tail container logs (last 50 lines)"
+	@echo "  ps                             List running containers"
+	@echo "  ps-all                         List all containers (including stopped)"
+	@echo
+	@echo "Cleanup:"
+	@echo "  prune-images                   Remove unused images"
+	@echo "  prune-containers               Remove stopped containers"
+	@echo "  prune-volumes                  Remove unused volumes"
+	@echo "  prune-networks                 Remove unused networks"
+	@echo "  prune-all                      Remove unused images, containers, volumes, and networks"
+	@echo
+	@echo "Listing Resources:"
+	@echo "  list-images                    List all Docker images"
+	@echo "  list-containers                List all Docker containers"
+	@echo "  list-volumes                   List all Docker volumes"
+	@echo "  list-networks                  List all Docker networks"
+	@echo "  list-all                       List all images, containers, volumes, and networks"
+	@echo 
+
+# -------------------------------------------------------------------------------
+# 5) CORE COMMANDS (read $(ENV), $(COMPOSE_FILE), $(ENV_FILE))
+# -------------------------------------------------------------------------------
+
+.PHONY: up rebuild down start stop restart
+
+up: check-env
+	@echo "▶  Bringing up '$(ENV)' environment..."
+	@$(COMPOSE) $(COMPOSE_SETUP) up -d
+
+rebuild: check-env
+	@echo "▶  Rebuilding '$(ENV)' environment..."
+	@if [ "$(nocache)" = "true" ]; then \
+		$(COMPOSE) $(COMPOSE_SETUP) build --no-cache api; \
+	else \
+		$(COMPOSE) $(COMPOSE_SETUP) build api; \
+	fi
+	@$(MAKE) up
+
+down: check-env
+	@echo "▶  Stopping & removing '$(ENV)' environment..."
+	@$(COMPOSE) $(COMPOSE_SETUP) down $(if $(filter true, $(rmorphans)),--remove-orphans)
+
+start: check-env
+	@echo "▶  Starting '$(ENV)' environment..."
+	@$(COMPOSE) $(COMPOSE_SETUP) start
+
+stop: check-env
+	@echo "▶  Stopping '$(ENV)' environment..."
+	@$(COMPOSE) $(COMPOSE_SETUP) stop
+
+restart: check-env
+	@echo "▶  Restarting '$(ENV)' environment..."
+	@$(COMPOSE) $(COMPOSE_SETUP) restart
+
+# -------------------------------------------------------------------------------
+# 6) LOGS & STATUS
+# -------------------------------------------------------------------------------
+
+.PHONY: logs ps ps-all
+
 logs:
-	$(COMPOSE) logs -f --tail=50
+	@echo "▶  Tailing logs (last 50 lines)..."
+	@# "|| true" is used to ignore errors from the logs command
+	@$(COMPOSE) $(COMPOSE_SETUP) logs -f --tail=50 || true
 
-# 'ps' -> Lists the running containers.
 ps:
-	$(COMPOSE) ps
+	@echo "▶  Listing running containers..."
+	@$(COMPOSE) $(COMPOSE_SETUP) ps
 
-# 'ps-all' -> Lists all containers, including stopped ones.
 ps-all:
-	$(COMPOSE) ps -a
+	@echo "▶  Listing all containers (including stopped)..."
+	@$(COMPOSE) $(COMPOSE_SETUP) ps -a
 
-# 'clean' -> Stops the containers and removes unused and orphaned volumes.
-clean:
-	$(COMPOSE) down -v --remove-orphans
+# -------------------------------------------------------------------------------
+# 7) PRUNE / CLEANUP
+# -------------------------------------------------------------------------------
 
-# 'prune-all' -> Removes unused images, containers, volumes, and networks.
-# This helps free up disk space by cleaning up orphaned resources.
-prune-all:
-	docker image prune -f
-	@echo
-	docker container prune -f
-	@echo
-	docker volume prune -f
-	@echo
-	docker network prune -f
+.PHONY: prune-images prune-containers prune-volumes prune-networks prune-all
 
-# 'prune-images' -> Removes unused images.
 prune-images:
-	docker image prune -f
+	@echo "▶  Pruning unused images..."
+	@docker image prune -f
+	@echo
 
-# 'prune-containers' -> Removes stopped containers.
 prune-containers:
-	docker container prune -f
+	@echo "▶  Pruning stopped containers..."
+	@docker container prune -f
+	@echo
 
-# 'prune-volumes' -> Removes unused volumes.
 prune-volumes:
-	docker volume prune -f
+	@echo "▶  Pruning unused volumes..."
+	@docker volume prune -f
+	@echo
 
-# 'prune-networks' -> Removes unused networks.
 prune-networks:
-	docker network prune -f
+	@echo "▶  Pruning unused networks..."
+	@docker network prune -f
+	@echo
 
-# 'list-all' -> Lists all images, containers, volumes, and networks.
-list-all:
-	docker image ls
+prune-all:
 	@echo
-	docker ps -a
-	@echo
-	docker volume ls
-	@echo
-	docker network ls
+	@$(MAKE) prune-images prune-containers prune-volumes prune-networks
 
-# 'list-images' -> Lists all images in the system.
+# -------------------------------------------------------------------------------
+# 8) LIST RESOURCES
+# -------------------------------------------------------------------------------
+
+.PHONY: list-images list-containers list-volumes list-networks list-all
+
 list-images:
-	docker image ls
+	@echo "▶  Listing Docker images..."
+	@docker image ls
+	@echo
 
-# 'list-containers' -> Lists all containers, including stopped ones.
 list-containers:
-	docker ps -a
+	@echo "▶  Listing all Docker containers..."
+	@docker ps -a
+	@echo
 
-# 'list-volumes' -> Lists all Docker volumes.
 list-volumes:
-	docker volume ls
+	@echo "▶  Listing Docker volumes..."
+	@docker volume ls
+	@echo
 
-# 'list-networks' -> Lists all Docker networks.
 list-networks:
-	docker network ls
+	@echo "▶  Listing Docker networks..."
+	@docker network ls
+	@echo
 
-# ======================
-# Environment Checks
-# ======================
+list-all:
+	@echo
+	@$(MAKE) list-images list-containers list-volumes list-networks
 
-# 'check-env-dev' -> Checks if the .env file exists.
-# If not, it creates one from .env.example.
-check-env-dev:
-	@if [ ! -f .env ]; then \
-		echo "No .env file found. Creating one from .env.example..."; \
-		cp .env.example .env; \
-		sleep 3; \
+# -------------------------------------------------------------------------------
+# 9) ENV FILE CHECK
+#    If ./backend/.env.$(ENV) is missing, copy from .env.$(ENV).example
+# -------------------------------------------------------------------------------
+
+.PHONY: check-env
+check-env:
+	@if [ ! -f $(ENV_FILE) ]; then \
+		echo "--> Missing file: $(ENV_FILE)."; \
+		cp $(ENV_FILE).example $(ENV_FILE); \
+		echo "--> File '$(ENV_FILE)' created from example. Please fill it before continuing."; \
+		read -p "Do you want to open it now with nano editor? (y/N) " RESP; \
+		if [ "$$RESP" != "y" ] && [ "$$RESP" != "Y" ]; then \
+			echo "Execution aborted. Please complete the file manually and run again."; \
+			exit 1; \
+		else \
+			nano $(ENV_FILE); \
+		fi; \
 	fi
-
-# 'check-env-prod' -> Checks if the .env.production file exists.
-# If not, it creates one from .env.production.example.
-check-env-prod:
-	@if [ ! -f .env.production ]; then \
-		echo "No .env.production file found. Creating one from .env.production.example..."; \
-		cp .env.production.example .env.production; \
-		sleep 3; \
-	fi
-
-# ======================
-# Restart Command
-# ======================
-
-# 'restart' -> Restarts the Docker environment based on the provided environment (dev or prod).
-# Ensures the proper parameters are passed to select the environment.
-restart:
-ifndef env
-	$(error You must provide an environment: make restart env=dev OR env=prod)
-endif
-ifeq ($(env),dev)
-	$(MAKE) down
-	$(MAKE) clean
-	$(MAKE) prune-all
-	$(MAKE) dev-rebuild
-else ifeq ($(env),prod)
-	$(MAKE) down
-	$(MAKE) clean
-	$(MAKE) prune-all
-	$(MAKE) prod-rebuild
-else
-	$(error Invalid env: '$(env)'. Use 'dev' or 'prod')
-endif
