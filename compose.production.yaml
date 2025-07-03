@@ -1,5 +1,11 @@
 services:
   api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    pull_policy: missing # In real production, this should be set to 'always'
+  nginx:
+    image: anibalxyz/reconciler-production-nginx:latest
+    container_name: reconciler-production-nginx
+    pull_policy: missing # In real production, this should be set to 'always'
+    ports:
+      - "80:80"
+    networks:
+      - main

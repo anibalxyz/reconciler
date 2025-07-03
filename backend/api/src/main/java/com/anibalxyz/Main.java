@@ -20,15 +20,14 @@ import org.eclipse.jetty.servlet.FilterHolder;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String dbPort = System.getenv("POSTGRES_PORT");
-        String dbHost = System.getenv("POSTGRES_HOST");
-        String dbName = System.getenv("POSTGRES_DB");
-        String dbUser = System.getenv("POSTGRES_USER");
-        String dbPassword = System.getenv("POSTGRES_PASSWORD");
+        String dbPort = System.getenv("DB_PORT");
+        String dbHost = System.getenv("DB_HOST");
+        String dbName = System.getenv("DB_NAME");
+        String dbUser = System.getenv("DB_USER");
+        String dbPassword = System.getenv("DB_PASSWORD");
         String dbUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
 
-        int apiPort = System.getenv("API_PORT") != null ? Integer.parseInt(System.getenv("API_PORT")) : 8080;
-        Server server = new Server(apiPort);
+        Server server = new Server(4000); // Docker internal port
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
@@ -58,7 +57,7 @@ public class Main {
                 String json = "{\"status\": " + isDbConnected + "}";
                 resp.getWriter().write(json);
             }
-        }), "/api/health");
+        }), "/health");
 
         server.setHandler(context);
         server.start();

@@ -1,0 +1,33 @@
+# Maven build output
+target/
+build/
+
+# Maven logs
+*.log
+
+# Maven wrapper (not needed in this dockerized project)
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDEs
+.idea/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+nbbuild/
+nbdist/
+nbproject/private/
+
+# Common temporary files
+*.class
+*.jar
+*.war
+*.ear
+
+# Environment variables
+.env*
+!.env*.example

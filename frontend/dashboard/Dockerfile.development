@@ -1,0 +1,11 @@
+FROM anibalxyz/reconciler-development-frontend AS builder
+
+WORKDIR /app
+
+COPY ./package*.json ./dashboard/
+
+RUN npm install --workspace=dashboard
+
+COPY . ./dashboard/
+
+ENTRYPOINT ["npm", "run", "--workspace=dashboard", "dev" ,"--", "--host"]

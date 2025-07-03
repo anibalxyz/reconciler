@@ -1,0 +1,11 @@
+FROM anibalxyz/reconciler-development-frontend AS builder
+
+WORKDIR /app
+
+COPY ./package*.json ./public-site/
+
+RUN npm install --workspace=public-site
+
+COPY . ./public-site/
+
+ENTRYPOINT ["npm", "run", "--workspace=public-site", "dev" ,"--", "--host"]

@@ -2,10 +2,11 @@ services:
   db:
     container_name: reconciler-${APP_ENV}-db
     image: postgres:17
+    pull_policy: missing
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       # Persistent storage for the DB. Data isn't lost on container shutdown
       - database:/var/lib/postgresql/data
@@ -15,15 +16,12 @@ services:
       - main
 
   api:
+    image: anibalxyz/reconciler-${APP_ENV}-api:latest
     container_name: reconciler-${APP_ENV}-api
-    pull_policy: never
-    image: reconciler-${APP_ENV}-api
     env_file:
       - ./backend/.env.${APP_ENV}
     ports:
-      - "${API_HOST_PORT}:8080"
-    depends_on:
-      - db
+      - "${API_PORT}:4000"
     networks:
       - main
 

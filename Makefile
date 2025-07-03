@@ -1,227 +1,396 @@
-# -------------------------------------------------------------------------------
-# 1) DEFAULT ENVIRONMENT (can be replaced by `make set-env`)
-# -------------------------------------------------------------------------------
-
-ENV := development
-
-# -------------------------------------------------------------------------------
-# 2) DETERMINE DOCKER COMPOSE FILE AND .env FILE BASED ON "ENV"
-# -------------------------------------------------------------------------------
-
-COMPOSE_FILE := compose.$(ENV).yaml
-
-ENV_FILE := ./backend/.env.$(ENV)
-
-COMPOSE_FILES_CHAIN := -f compose.yaml -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
-
-PROJECT_NAME := --project-name reconciler-$(ENV)
-
-COMPOSE_SETUP := $(COMPOSE_FILES_CHAIN) $(PROJECT_NAME) 
-
-COMPOSE := docker compose
+# ==================================================================================================
+# 0) Makefile Initial Configuration And Help Command
+# ==================================================================================================
+.PHONY: help
 
 # Avoid printing the directory name when running commands
 MAKEFLAGS += --no-print-directory
 
+.DEFAULT_GOAL := help
 
-# -------------------------------------------------------------------------------
-# 3) TARGET TO CHANGE ENV INSIDE THIS Makefile ITSELF
-#    Usage: make set-env NEW_ENV=<environment>
-# -------------------------------------------------------------------------------
+help:
+	@echo "Usage:"
+	@echo "  make <command> [target=<service|resource>] [flag=true|false]"
+	@echo
+	@echo "Available flags (only for some commands):"
+	@echo "  nocache=true                    # Skip cache during build"
+	@echo "  keep-orphans=true               # (down) Keep orphan containers"
+	@echo "  extra=true                      # (check-service) Allow targeting services only used in"
+	@echo "                                    lifecycle commands"
+	@echo "  all=true                        # (ps) Show all containers, including stopped"
+	@echo
+	@echo "Additional parameters:"
+	@echo "  command=<push|pull>             # (check-service) Required when running push or pull to"
+	@echo "                                    verify allowed services"
+	@echo
+	@echo "Environment Management:"
+	@echo "  set-env        target=<env>     # Set Makefile ENV (development | production)"
+	@echo "  get-env                         # Show current ENV"
+	@echo "  check-env                       # Verify that required .env files exist"
+	@echo
+	@echo "Image Build & Registry:"
+	@echo "  check-service  target=<svc>     # Validate service for current ENV"
+	@echo "  build          target=<svc>     # Build image (Dockerfile or Dockerfile.<env>)"
+	@echo "  push           target=<svc>     # Push image (production only)"
+	@echo "  pull           target=<svc>     # Pull image (production only)"
+	@echo "  rebuild        target=<svc>     # Rebuild image with --no-cache and restart"
+	@echo "  build-all                       # Shortcut: build all services"
+	@echo "  push-all                        # Shortcut: push  all services"
+	@echo "  pull-all                        # Shortcut: pull  all services"
+	@echo "  rebuild-all                     # Shortcut: rebuild all services"
+	@echo
+	@echo "Compose & Lifecycle:"
+	@echo "  up             [target=<svc>]   # Start all or one service"
+	@echo "  down           [target=<svc>]   # Stop & remove all or one service"
+	@echo "                                    (use keep-orphans=true to keep orphans)"
+	@echo "  start          [target=<svc>]   # Start stopped containers"
+	@echo "  stop           [target=<svc>]   # Stop running containers"
+	@echo "  restart        [target=<svc>]   # Restart containers"
+	@echo "  logs           [target=<svc>]   # Tail logs (last 50 lines)"
+	@echo "  ps             [all=true]       # List running or all containers"
+	@echo "  deploy                          # Build/pull and then 'up' for current ENV"	
+	@echo
+	@echo "Docker Resource Management:"
+	@echo "  prune          target=<res>     # Prune images | containers | volumes | networks | all"
+	@echo "  list           target=<res>     # List  images | containers | volumes | networks | all"
+	@echo "  prune-all                       # Shortcut: prune all resources"
+	@echo "  list-all                        # Shortcut: list  all resources"
+	@echo
 
-.PHONY: set-env
+
+# ==================================================================================================
+# 1) Environment Management
+# ==================================================================================================
+.PHONY: set-env get-env check-env
+
+AVAILABLE_ENVS := development production  
+ENV := production
+export APP_ENV := $(ENV)
+
 set-env:
-	@if [ -z "$(NEW_ENV)" ]; then \
-		echo "ERROR: You must specify NEW_ENV. Example: 'make set-env NEW_ENV=production'"; \
+	@if [ -z "$(target)" ]; then \
+		echo "ERROR: You must specify target. Example: 'make set-env target=production'"; \
 		exit 1; \
 	fi
-	@if [ ! -f "./backend/.env.$(NEW_ENV).example" ]; then \
-		echo "ERROR: '$(NEW_ENV)' environment does not exist. Please create it or use a valid environment."; \
+
+	@VALID_ENV=false;\
+	for env in $(AVAILABLE_ENVS); do \
+		if [ "$(target)" == $$env  ]; then \
+			VALID_ENV=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$VALID_ENV" = false ]; then \
+		echo "ERROR: Invalid environment '$(target)'. Available options are: $(AVAILABLE_ENVS)"; \
 		exit 1; \
 	fi
-	@echo "▶  Setting ENV to '$(NEW_ENV)' in Makefile..."
-	@sed -i 's/^ENV := .*/ENV := $(NEW_ENV)/' $(MAKEFILE_LIST)
-	@echo "✓  ENV is now '$(NEW_ENV)'. Run 'make up' to bring up that environment."
+
+	@echo "▶  Setting ENV to '$(target)' in Makefile..."
+	@sed -i 's/^ENV := .*/ENV := $(target)/' $(MAKEFILE_LIST)
+	@echo "✓  ENV is now '$(target)'. Run 'make up' to bring up that environment."
 
 
 get-env:
 	@echo "▶  Current ENV is '$(ENV)'."
-	@echo "✓  To change it, use 'make set-env NEW_ENV=<new_env>'."
+	@echo "✓  To change it, use 'make set-env target=<new_env>'."
 
-# -------------------------------------------------------------------------------
-# 4) HELP / USAGE (default goal)
-# -------------------------------------------------------------------------------
+check-env:
+	@for file in $(ENV_FILES); do \
+		if [ ! -f $$file ]; then \
+			echo "--> Missing file: $$file."; \
+			cp $$file.example $$file; \
+			echo "--> File '$$file' created from example. Please fill it before continuing."; \
+			read -p "Do you want to open it now with nano editor? (y/N) " RESP; \
+			if [ "$$RESP" != "y" ] && [ "$$RESP" != "Y" ]; then \
+				echo "Execution aborted. Please complete the file manually and run again."; \
+				exit 1; \
+			else \
+				nano $$file; \
+			fi; \
+		fi; \
+	done
 
-.DEFAULT_GOAL := help
+# ==================================================================================================
+# 2) Docker Compose & Env File Configuration
+#    Builds the -f chain and --env-file flags for `docker compose`
+# ==================================================================================================
 
-.PHONY: help
-help:
-	@echo
-	@echo "Usage: make <command>"
-	@echo
-	@echo "Environment:"
-	@echo "  set-env NEW_ENV=<env>         Set the active environment in this Makefile"
-	@echo "                                (e.g. make set-env NEW_ENV=production)"
-	@echo "  get-env                       Show the current environment"
-	@echo
-	@echo "Life-Cycle:"
-	@echo "  up                             Bring up containers for the current ENV"
-	@echo "  rebuild [nocache=true]         Rebuild images (use nocache=true to avoid cache) and restart"
-	@echo "  down [rmorphans=true]          Stop and remove containers (rmorphans=true removes orphans)"
-	@echo "  start                          Start stopped containers"
-	@echo "  stop                           Stop running containers"
-	@echo "  restart                        Restart running containers"
-	@echo
-	@echo "Logs & Status:"
-	@echo "  logs                           Tail container logs (last 50 lines)"
-	@echo "  ps                             List running containers"
-	@echo "  ps-all                         List all containers (including stopped)"
-	@echo
-	@echo "Cleanup:"
-	@echo "  prune-images                   Remove unused images"
-	@echo "  prune-containers               Remove stopped containers"
-	@echo "  prune-volumes                  Remove unused volumes"
-	@echo "  prune-networks                 Remove unused networks"
-	@echo "  prune-all                      Remove unused images, containers, volumes, and networks"
-	@echo
-	@echo "Listing Resources:"
-	@echo "  list-images                    List all Docker images"
-	@echo "  list-containers                List all Docker containers"
-	@echo "  list-volumes                   List all Docker volumes"
-	@echo "  list-networks                  List all Docker networks"
-	@echo "  list-all                       List all images, containers, volumes, and networks"
-	@echo 
+COMPOSE := docker compose
 
-# -------------------------------------------------------------------------------
-# 5) CORE COMMANDS (read $(ENV), $(COMPOSE_FILE), $(ENV_FILE))
-# -------------------------------------------------------------------------------
+# Build the environment-specific .env files
+ENV_DIRS := backend frontend
+ENV_FILES := $(foreach envDir,$(ENV_DIRS),./$(envDir)/.env.$(ENV))
+ENV_FILES_CHAIN := $(foreach file,$(ENV_FILES),--env-file $(file))
 
-.PHONY: up rebuild down start stop restart
+# Build the compose setup based on the environment
+COMPOSE_FILE := compose.$(ENV).yaml
+COMPOSE_FILES_CHAIN := -f compose.yaml -f $(COMPOSE_FILE) 
+PROJECT_NAME := --project-name reconciler-$(ENV)
+COMPOSE_SETUP := $(COMPOSE_FILES_CHAIN) $(ENV_FILES_CHAIN) $(PROJECT_NAME) 
+
+# ==================================================================================================
+# 3) Docker Images Management (build, push, pull, rebuild)
+# ==================================================================================================
+.PHONY: check-service build push pull rebuild build-all push-all pull-all rebuild-all
+
+# Evaluates whether to use the `nocache` option for Docker builds
+EVAL_MAKE_NOCACHE := $(if $(filter true, $(nocache)),nocache=true)
+EVAL_DOCKER_NOCACHE := $(if $(filter true,$(nocache)),--no-cache)
+
+# Builds the Docker image name based on the target and environment
+# Example: target=frontend/dashboard, ENV=production -> anibalxyz/reconciler-production-dashboard
+DOCKER_IMAGE := $(if $(target),anibalxyz/reconciler-$(ENV)-$(notdir $(target)))
+
+# Defines the build targets for different environments
+CORE_SERVICES := backend/api frontend frontend/dashboard frontend/public-site
+DEVELOPMENT_SERVICES := $(CORE_SERVICES)
+PRODUCTION_SERVICES := $(CORE_SERVICES) nginx
+
+PUSHABLE_SERVICES := backend/api nginx
+
+# Services used only during lifecycle
+EXTRA_SERVICES := db
+
+EVAL_VALID_SERVICES := $($(shell echo $(ENV) | tr a-z A-Z)_SERVICES)
+
+check-service:
+	@if [ "$(command)" = "push" ] || [ "$(command)" = "pull" ]; then \
+		if ! echo "$(PUSHABLE_SERVICES)" | tr ' ' '\n' | grep -xq "$(target)"; then \
+			echo "ERROR: Service '$(target)' is not $(command)able. Allowed: $(PUSHABLE_SERVICES)"; \
+			exit 1; \
+		fi; \
+	fi;
+
+	@valid_services="$(EVAL_VALID_SERVICES) $(if $(extra),$(EXTRA_SERVICES))"; \
+	if ! echo "$$valid_services" | tr ' ' '\n' | grep -xq "$(target)"; then \
+		echo "ERROR: Invalid service '$(target)'. Available options are: $$valid_services"; \
+		exit 1; \
+	fi;
+
+build:
+	@if [ -z "$(target)" ]; then \
+		echo "ERROR: You must specify target=<service> to build."; \
+		echo "Example: 'make build target=frontend/dashboard'"; \
+		exit 1; \
+	fi;
+
+	@if [ "$(target)" = "all" ]; then \
+		echo "▶  Building '$(ENV)' environment..."; \
+		for service in $(EVAL_VALID_SERVICES); do \
+			$(MAKE) build target=$$service $(EVAL_MAKE_NOCACHE); \
+		done; \
+		exit 0; \
+	fi; \
+	$(MAKE) check-service || exit 1; \
+	echo "▶  Building '$(target)' for '$(ENV)' environment..."; \
+	dockerfile_path=$(if $(wildcard ./$(target)/Dockerfile.$(ENV)),./$(target)/Dockerfile.$(ENV)\
+	,./$(target)/Dockerfile); \
+	docker build $(EVAL_DOCKER_NOCACHE) \
+		-f $$dockerfile_path \
+		-t $(DOCKER_IMAGE) \
+		./$(target)/
+
+push:
+	@if [ "$(ENV)" = "development" ]; then \
+		echo "ERROR: Pushing images is not allowed in 'development' environment."; \
+		exit 1; \
+	fi;
+
+	@if [ -z "$(target)" ]; then \
+		echo "ERROR: You must specify target=<service> to push."; \
+		echo "Example: 'make push target=backend/api'"; \
+		exit 1; \
+	fi;
+
+	@if [ "$(target)" = "all" ]; then \
+		echo "▶  Pushing all images for '$(ENV)' environment..."; \
+		for service in $(PUSHABLE_SERVICES); do \
+			$(MAKE) push target=$$service; \
+		done; \
+		exit 0; \
+	fi; \
+	$(MAKE) check-service command=push || exit 1; \
+	echo "▶  Pushing image '$(target)' for '$(ENV)'..."; \
+	docker push $(DOCKER_IMAGE);
+
+pull:
+	@if [ "$(ENV)" = "development" ]; then \
+		echo "ERROR: Pulling images is not allowed in 'development' environment."; \
+		exit 1; \
+	fi;
+
+	@if [ -z "$(target)" ]; then \
+		echo "ERROR: You must specify target=<service> to pull."; \
+		echo "Example: 'make pull target=backend/api'"; \
+		exit 1; \
+	fi;
+
+	@if [ "$(target)" = "all" ]; then \
+		echo "▶  Pulling all images for '$(ENV)' environment..."; \
+		for service in $(PUSHABLE_SERVICES); do \
+			$(MAKE) pull target=$$service; \
+		done; \
+		exit 0; \
+	fi; \
+	$(MAKE) check-service command=pull || exit 1; \
+	echo "▶  Pulling image '$(target)' for '$(ENV)'..."; \
+	docker pull $(DOCKER_IMAGE); \
+
+rebuild:
+	@if [ -z "$(target)" ]; then \
+		echo "ERROR: You must specify target=<service> to rebuild."; \
+		echo "Example: 'make rebuild target=backend/api'"; \
+		exit 1; \
+	fi;
+
+	@if [ "$(target)" = "all" ]; then \
+		echo "▶  Rebuilding all images for '$(ENV)' environment..."; \
+	  $(MAKE) down target=; \
+	  $(MAKE) build-all nocache=true; \
+	  $(MAKE) up target=; \
+		exit 0; \
+	fi; \
+	$(MAKE) check-service || exit 1; \
+	echo "▶  Rebuilding '$(target)' for '$(ENV)' environment..."; \
+	$(MAKE) down target=$(target); \
+	$(MAKE) build target=$(target) nocache=true; \
+	$(MAKE) up target=$(target);
+
+build-all:
+	@$(MAKE) build target=all $(EVAL_MAKE_NOCACHE)
+	
+push-all:
+	@$(MAKE) push target=all
+
+pull-all:
+	@$(MAKE) pull target=all
+
+rebuild-all:
+	@$(MAKE) rebuild target=all
+
+# ==================================================================================================
+# 4) Project Lifecycle Management
+# ==================================================================================================
+.PHONY: up down deploy start stop restart logs ps
 
 up: check-env
-	@echo "▶  Bringing up '$(ENV)' environment..."
-	@$(COMPOSE) $(COMPOSE_SETUP) up -d
-
-rebuild: check-env
-	@echo "▶  Rebuilding '$(ENV)' environment..."
-	@if [ "$(nocache)" = "true" ]; then \
-		$(COMPOSE) $(COMPOSE_SETUP) build --no-cache api; \
-	else \
-		$(COMPOSE) $(COMPOSE_SETUP) build api; \
-	fi
-	@$(MAKE) up
+	@echo "▶  Bringing up$(if $(target), '$(notdir $(target))' service from) \
+	'$(ENV)' environment..."
+	@if [ -n "$(target)" ]; then \
+		$(MAKE) check-service extra=true; \
+	fi;
+	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) -d
 
 down: check-env
-	@echo "▶  Stopping & removing '$(ENV)' environment..."
-	@$(COMPOSE) $(COMPOSE_SETUP) down $(if $(filter true, $(rmorphans)),--remove-orphans)
+	@if [ -n "$(target)" ]; then \
+		$(MAKE) check-service extra=true; \
+	fi;
+	@echo "▶  Stopping & removing$(if $(target), '$(notdir $(target))' service from) \
+	'$(ENV)' environment..."
+	@$(COMPOSE) $(COMPOSE_SETUP) down $(if $(target),$(notdir $(target))) \
+	$(if $(filter true,$(keep-orphans)),,--remove-orphans)
+
+deploy:
+	@echo "▶  Deploying '$(ENV)' environment..."
+	@if [ "$(ENV)" = "development" ]; then \
+		$(MAKE) build-all nocache=true; \
+	else \
+		$(MAKE) pull-all; \
+	fi;
+	@$(MAKE) up
 
 start: check-env
-	@echo "▶  Starting '$(ENV)' environment..."
-	@$(COMPOSE) $(COMPOSE_SETUP) start
+	@echo "▶  Starting$(if $(target), '$(notdir $(target))' service from) '$(ENV)' environment..."
+	@if [ -n "$(target)" ]; then \
+		$(MAKE) check-service extra=true; \
+	fi;
+	@$(COMPOSE) $(COMPOSE_SETUP) start $(if $(target),$(notdir $(target)))
 
 stop: check-env
-	@echo "▶  Stopping '$(ENV)' environment..."
-	@$(COMPOSE) $(COMPOSE_SETUP) stop
+	@echo "▶  Stopping$(if $(target), '$(notdir $(target))' service from) '$(ENV)' environment..."
+	@if [ -n "$(target)" ]; then \
+		$(MAKE) check-service extra=true; \
+	fi;
+	@$(COMPOSE) $(COMPOSE_SETUP) stop $(if $(target),$(notdir $(target)))
 
 restart: check-env
-	@echo "▶  Restarting '$(ENV)' environment..."
-	@$(COMPOSE) $(COMPOSE_SETUP) restart
+	@echo "▶  Restarting$(if $(target), '$(notdir $(target))' service from) '$(ENV)' environment..."
+	@if [ -n "$(target)" ]; then \
+		$(MAKE) check-service extra=true; \
+	fi;
+	@$(COMPOSE) $(COMPOSE_SETUP) restart $(if $(target),$(notdir $(target)))
 
-# -------------------------------------------------------------------------------
-# 6) LOGS & STATUS
-# -------------------------------------------------------------------------------
+# In 'development', the 'frontend' service is validated despite lacking a container, but
+# Docker handles it correctly. Similarly, 'frontend/dashboard' behaves the same in 'production'.
+logs: check-env
+	@if [ -n "$(target)" ]; then \
+		$(MAKE) check-service extra=true; \
+	fi;
+	@echo "▶  Tailing logs for $(if $(target),'$(notdir $(target))' service,all services) \
+	(last 50 lines)..."
+	@# "|| true" suppress errors from 'logs' command (Ctrl+C does not display an error)
+	@$(COMPOSE) $(COMPOSE_SETUP) logs $(if $(target),$(notdir $(target))) -f --tail=50 || true
 
-.PHONY: logs ps ps-all
+ps: check-env
+	@echo "▶  Listing $(if $(filter true, $(all)),all,running) containers...";
+	@$(COMPOSE) $(COMPOSE_SETUP) ps $(if $(filter true, $(all)),-a)
 
-logs:
-	@echo "▶  Tailing logs (last 50 lines)..."
-	@# "|| true" is used to ignore errors from the logs command
-	@$(COMPOSE) $(COMPOSE_SETUP) logs -f --tail=50 || true
+# ==================================================================================================
+# 5) Prune / List Docker Resources
+# ==================================================================================================
+.PHONY: prune list prune-all list-all
 
-ps:
-	@echo "▶  Listing running containers..."
-	@$(COMPOSE) $(COMPOSE_SETUP) ps
+RESOURCE_TARGETS := images containers volumes networks
 
-ps-all:
-	@echo "▶  Listing all containers (including stopped)..."
-	@$(COMPOSE) $(COMPOSE_SETUP) ps -a
+prune:
+	@if [ -z "$(target)" ]; then \
+		echo "ERROR: You must specify target=<resource> to prune."; \
+		echo "Example: 'make prune target=images'"; \
+		exit 1; \
+	fi;
 
-# -------------------------------------------------------------------------------
-# 7) PRUNE / CLEANUP
-# -------------------------------------------------------------------------------
+	@if [ "$(target)" = "all" ]; then \
+		for t in $(RESOURCE_TARGETS); do \
+			$(MAKE) prune target=$$t; \
+		done; \
+		exit 0; \
+	fi; \
+	if ! echo "$(RESOURCE_TARGETS)" | grep -wq "$(target)"; then \
+		echo "ERROR: Invalid target '$(target)'. Available options: $(RESOURCE_TARGETS) all"; \
+		exit 1; \
+	fi; \
+	resource=$$(echo $(target) | sed 's/s$$//'); \
+	echo "▶  Pruning '$$resource' resources..."; \
+	docker $$resource prune -f;
 
-.PHONY: prune-images prune-containers prune-volumes prune-networks prune-all
+	@if [ "$(target)" != "all" ]; then echo; fi
 
-prune-images:
-	@echo "▶  Pruning unused images..."
-	@docker image prune -f
-	@echo
+list:
+	@if [ -z "$(target)" ]; then \
+		echo "ERROR: You must specify target=<resource> to list."; \
+		echo "Example: 'make list target=images'"; \
+		exit 1; \
+	fi;
 
-prune-containers:
-	@echo "▶  Pruning stopped containers..."
-	@docker container prune -f
-	@echo
+	@if [ "$(target)" = "all" ]; then \
+		for t in $(RESOURCE_TARGETS); do \
+			$(MAKE) list target=$$t; \
+		done; \
+		exit 0; \
+	fi; \
+	if ! echo "$(RESOURCE_TARGETS)" | grep -wq "$(target)"; then \
+		echo "ERROR: Invalid target '$(target)'. Available options: $(RESOURCE_TARGETS) all"; \
+		exit 1; \
+	fi; \
+	resource=$$(echo $(target) | sed 's/s$$//'); \
+	echo "▶  Listing '$$resource' resources..."; \
+	docker $$resource ls;
 
-prune-volumes:
-	@echo "▶  Pruning unused volumes..."
-	@docker volume prune -f
-	@echo
-
-prune-networks:
-	@echo "▶  Pruning unused networks..."
-	@docker network prune -f
-	@echo
+	@if [ "$(target)" != "all" ]; then echo; fi
 
 prune-all:
-	@echo
-	@$(MAKE) prune-images prune-containers prune-volumes prune-networks
-
-# -------------------------------------------------------------------------------
-# 8) LIST RESOURCES
-# -------------------------------------------------------------------------------
-
-.PHONY: list-images list-containers list-volumes list-networks list-all
-
-list-images:
-	@echo "▶  Listing Docker images..."
-	@docker image ls
-	@echo
-
-list-containers:
-	@echo "▶  Listing all Docker containers..."
-	@docker ps -a
-	@echo
-
-list-volumes:
-	@echo "▶  Listing Docker volumes..."
-	@docker volume ls
-	@echo
-
-list-networks:
-	@echo "▶  Listing Docker networks..."
-	@docker network ls
-	@echo
+	@$(MAKE) prune target=all
 
 list-all:
-	@echo
-	@$(MAKE) list-images list-containers list-volumes list-networks
+	@$(MAKE) list target=all
 
-# -------------------------------------------------------------------------------
-# 9) ENV FILE CHECK
-#    If ./backend/.env.$(ENV) is missing, copy from .env.$(ENV).example
-# -------------------------------------------------------------------------------
-
-.PHONY: check-env
-check-env:
-	@if [ ! -f $(ENV_FILE) ]; then \
-		echo "--> Missing file: $(ENV_FILE)."; \
-		cp $(ENV_FILE).example $(ENV_FILE); \
-		echo "--> File '$(ENV_FILE)' created from example. Please fill it before continuing."; \
-		read -p "Do you want to open it now with nano editor? (y/N) " RESP; \
-		if [ "$$RESP" != "y" ] && [ "$$RESP" != "Y" ]; then \
-			echo "Execution aborted. Please complete the file manually and run again."; \
-			exit 1; \
-		else \
-			nano $(ENV_FILE); \
-		fi; \
-	fi

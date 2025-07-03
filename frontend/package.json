@@ -1,0 +1,42 @@
+{
+  "name": "@anibalxyz/reconciler-frontend",
+  "private": true,
+  "description": "Reconciler Dashboard app",
+  "keywords": [
+    "reconciler",
+    "finances",
+    "ai",
+    "bot",
+    "assistant",
+    "personal",
+    "individual",
+    "charts",
+    "data",
+    "modern",
+    "react",
+    "spa",
+    "vite",
+    "typescript",
+    "javascript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anibalxyz/reconciler.git",
+    "directory": "frontend/dashboard"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Anibal Boggio",
+    "email": "anibalboggioict@gmail.com",
+    "url": "https://github.com/anibalxyz"
+  },
+  "workspaces": [
+    "dashboard",
+    "public-site"
+  ],
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
