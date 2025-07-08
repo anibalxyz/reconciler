@@ -61,11 +61,28 @@ help:
 # ==================================================================================================
 # 1) Environment Management
 # ==================================================================================================
-.PHONY: set-env get-env check-env
+.PHONY: set-env get-env check-env init-env
 
-AVAILABLE_ENVS := development production  
-ENV := production
+AVAILABLE_ENVS := development production
+
+MAKE_ENVFILE := .env.make
+
+$(shell if [ ! -f $(MAKE_ENVFILE) ]; then echo 'ENV=development' > $(MAKE_ENVFILE); fi)
+
+ENV := $(shell . ./$(MAKE_ENVFILE) && echo $$ENV)
+
 export APP_ENV := $(ENV)
+
+init-env:
+	@if ! grep -q '^ENV=' $(MAKE_ENVFILE) || [ "$(filter $(ENV),$(AVAILABLE_ENVS))" = "" ]; then \
+		echo 'ENV=development' > $(MAKE_ENVFILE); \
+		echo "ERROR: There was an invalid value or format in ENV value"; \
+		echo "→ Changed to default value: 'development'"; \
+		echo "→ Available options: $(AVAILABLE_ENVS)"; \
+		exit 1; \
+	fi
+
+*: init-env
 
 set-env:
 	@if [ -z "$(target)" ]; then \
@@ -85,10 +102,9 @@ set-env:
 		exit 1; \
 	fi
 
-	@echo "▶  Setting ENV to '$(target)' in Makefile..."
-	@sed -i 's/^ENV := .*/ENV := $(target)/' $(MAKEFILE_LIST)
-	@echo "✓  ENV is now '$(target)'. Run 'make up' to bring up that environment."
-
+	@echo "▶  Setting ENV to '$(target)' in '$(MAKE_ENVFILE)' ..."
+	@sed -i 's/^ENV=.*/ENV=$(target)/' $(MAKE_ENVFILE)
+	@echo "✓  ENV set to '$(target)'. Run 'make up' to start (ensure images exist)."
 
 get-env:
 	@echo "▶  Current ENV is '$(ENV)'."
@@ -321,7 +337,7 @@ restart: check-env
 	@$(COMPOSE) $(COMPOSE_SETUP) restart $(if $(target),$(notdir $(target)))
 
 # In 'development', the 'frontend' service is validated despite lacking a container, but
-# Docker handles it correctly. Similarly, 'frontend/dashboard' behaves the same in 'production'.
+# Docker handles it correctly. Similarly, 'frontend/<sub-frontend>' behaves the same in 'production'.
 logs: check-env
 	@if [ -n "$(target)" ]; then \
 		$(MAKE) check-service extra=true; \
@@ -393,4 +409,3 @@ prune-all:
 
 list-all:
 	@$(MAKE) list target=all
-
