@@ -5,23 +5,26 @@ Reconciler is a lightweight and modular application designed to help teams recon
 <details>
 <summary>Table of Contents</summary>
 
-- [Technology Stack](#technology-stack)
-- [Planned Features](#planned-features)
-- [How to Run](#how-to-run)
-  - [Prerequisites](#1-prerequisites)
-  - [Relevant Files](#2-relevant-files)
-  - [Commands and Workflow](#3-commands-and-workflow)
-  - [Running the Application](#4-running-the-application)
-  - [Stopping the Application](#5-stopping-the-application)
-  - [Other Useful Commands](#6-other-useful-commands)
-- [License](#license)
+- [Reconciler](#reconciler)
+  - [Technology Stack](#technology-stack)
+  - [Planned Features](#planned-features)
+  - [Prerequisites](#prerequisites)
+  - [Relevant Files](#relevant-files)
+  - [Running the Application](#running-the-application)
+    - [Commands and Workflow Management](#commands-and-workflow-management)
+    - [How to Run](#how-to-run)
+    - [Accessing the Application](#accessing-the-application)
+    - [Other Useful Commands](#other-useful-commands)
+  - [License](#license)
 
 </details>
 
 ## Technology Stack
 
 - **Backend**: Java 21 (using embedded Jetty)
-- **Frontend**: React + Vite + TypeScript
+- **Frontend**: HTML + CSS + Vite + TypeScript
+  - **Public Site**: Focused on mostly static content with minimal JavaScript, optimized for SEO and fast load times.
+  - **Dashboard**: React + React Router (soon) + Tailwind CSS (probably)
 - **Database**: PostgreSQL
 - **Containerization**: Docker & Docker Compose
 - **Automation & Tooling**: GNU Make, custom `Makefile` for environment and workflow management
@@ -37,38 +40,40 @@ Reconciler is a lightweight and modular application designed to help teams recon
 - **Admin Panel**: Admin-only section to add users and define new system parameters (e.g. categories, sources, action types).
 - **Reports and Exports**: Export data in PDF, Excel, or other conventional formats.
 - **Analytics and Charts**: Visualize financial activity, reconciliation rates, and trends.
+- **Public Site**: General access site with product information and login/registration portal.
 
-## How to Run
-
-### 1. Prerequisites
+## Prerequisites
 
 - **Git** (to clone the repository).
 - **Docker v20.10+** and **Docker Compose v2+** (to run the application in a containerized environment).
 - **Make** (available by default in most modern Linux distributions).
 - **Java 21** (only if you plan to build or run locally outside of Docker).
 
-### 2. Relevant Files
+## Relevant Files
 
 - `Makefile`: Contains commands to simplify developer workflow.
 - `compose.yaml`: Defines the common base for all environments.
 - `compose.<environment>.yaml`: Defines the specific environment configuration.
-- `Dockerfile` & `Dockerfile.dev`: Define how to build the application image (currently only available for backend).
-- `.env.<environment>.example`: Template for environment variables used in the application.
+- `Dockerfile.<environment>`: Defines how to build each service image for a specific environment.  
+  There is also a base `Dockerfile` (without environment suffix) shared by all frontend services and both environments.
+- `.env.<environment>.example`: Template files for environment variables used across backend and frontend services.
 
-### 3. Commands and Workflow
+## Running the Application
 
-All you need to work with this project is the `Makefile`. It provides a set of commands to manage the application lifecycle.
-All commands are documented in the `Makefile` itself. You can view them by running:
+### Commands and Workflow Management
+
+The Makefile provides a unified interface to manage the application's environments, services, lifecycle, images, and Docker resources.
+All commands are well documented in the `Makefile` itself. You can view them by running:
 
 ```bash
 make help
-# Or just:
+# Or simply:
 make
 ```
 
-### 4. Running the Application
+### How to Run
 
-Follow these steps to run the application:
+These steps will guide you through the most basic workflow:
 
 0. Clone the repository and navigate to the project directory:
 
@@ -84,55 +89,57 @@ cd reconciler
 1. Set the desired environment:
 
 ```bash
-make set-env NEW_ENV=<environment>
+make set-env target=<environment> # e.g. development, production
 
-# For example, to set the environment to 'development':
-make set-env NEW_ENV=development
+# For example, to set the environment to 'production':
+make set-env target=production
 ```
 
-2. Bring up the application:
+2. Deploy the application:
 
 ```bash
-make up
+make deploy
 ```
+
+This will internally execute different commands depending on the selected environment:
+
+- Development: `make build-all nocache=true` → `make up`
+- Production: `make pull-all` → `make up`
 
 > [!NOTE]
-> If you have not created the `.env.<environment>` file yet, the command will automatically create it based on the `.env.<environment>.example` template. You will then be prompted to edit it using `nano` before starting the environment. In future releases, you’ll be able to configure your own editor instead of nano. If you reject the prompt, the application will not start, and you will need to modify the `.env.<environment>` file manually.
+> If a required `.env.<environment>` file does not exist, it will be created from its `.example` template. You’ll be prompted to edit it manually before proceeding. Currently, the default editor is `nano`.
 
-3. Test the API:
-
-```bash
-curl http://localhost:<API_HOST_PORT>/api/health
-
-# For example, if you set API_HOST_PORT=8081 in your .env file, you would run:
-curl http://localhost:8081/api/health
-```
-
-You will receive a response like this if everything is working correctly:
-
-```json
-{
-  "status": true
-}
-```
-
-### 5. Stopping the Application
-
-To stop the selected environment, you can run:
+3. Stop the application
 
 ```bash
 make down
 ```
 
-### 6. Other Useful Commands
+### Accessing the Application
 
-Apart from the commands used above, the `Makefile` provides several other commands with various functionalities. Some of the most useful ones include:
+After deploy, you can access the application services through the following URLs (using default ports).
 
-- `make logs`: View the logs of the application.
-- `make rebuild`: Rebuild the API image.
-- `make restart`: Restart the running containers (useful when changes were made in code during development).
-- `make list-<scope>`: List Docker resources such as containers and images. You can also list all resources with `make list-all`.
-- `make prune-<scope>`: Remove unused Docker resources such as containers and images. You can also remove all unused resources with `make prune-all`. Use with **caution**, as this will remove all stopped containers and unreferenced images.
+| Environment | Service             | URL                          |
+| ----------- | ------------------- | ---------------------------- |
+| Development | Backend API         | http://localhost:4001/health |
+| Development | Public Site         | http://localhost:5173/       |
+| Development | Dashboard           | http://localhost:5174/       |
+| Production  | Backend API         | http://localhost:4002/health |
+| Production  | Backend (via Nginx) | http://localhost/api/health  |
+| Production  | Frontend (Nginx)    | http://localhost/            |
+
+> [!NOTE]
+> In production, the application is served via an Nginx reverse proxy which exposes the frontend (dashboard/public-site) on standard HTTP port **80**.
+
+### Other Useful Commands
+
+Besides the basic commands used above, the `Makefile` provides several others with various functionalities. Some of the most useful ones include:
+
+- `make logs target=<service>`: View the logs of the specified running service.
+- `make rebuild target=<service>`: Rebuild the specified service image.
+- `make restart target=<container>`: Restart the specified running container.
+- `make list target=<resource>`: List specific Docker resources. Use `make list-all` to list everything.
+- `make prune target=<resource>`: Remove unused Docker resources. Use `make prune-all` to prune all unused resources. Use with **caution**, as this will remove all stopped containers and unreferenced images even if they are unrelated to this application.
 
 ## License
 
