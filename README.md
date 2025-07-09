@@ -22,7 +22,7 @@ Reconciler is a lightweight and modular application designed to help teams recon
 ## Technology Stack
 
 - **Backend**: Java 21 (using embedded Jetty)
-- **Frontend**: HTML + CSS + Vite + TypeScript
+- **Frontend**: HTML + CSS + Node.js + Vite + TypeScript
   - **Public Site**: Focused on mostly static content with minimal JavaScript, optimized for SEO and fast load times.
   - **Dashboard**: React + React Router (soon) + Tailwind CSS (probably)
 - **Database**: PostgreSQL
@@ -47,7 +47,13 @@ Reconciler is a lightweight and modular application designed to help teams recon
 - **Git** (to clone the repository).
 - **Docker v20.10+** and **Docker Compose v2+** (to run the application in a containerized environment).
 - **Make** (available by default in most modern Linux distributions).
-- **Java 21** (only if you plan to build or run locally outside of Docker).
+- **PostgreSQL client** (`psql`) or any GUI (e.g. DBeaver, pgAdmin). Useful for manually inspecting the database.
+
+> [!TIP]
+> If you plan to run services directly on your host machine (not via Docker), you’ll also need:
+>
+> - **Java 21** (for the backend)
+> - **Node.js 22+** and a package manager such as `npm`, `pnpm`, or `yarn` (for the frontend)
 
 ## Relevant Files
 
