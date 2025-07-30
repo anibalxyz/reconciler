@@ -20,6 +20,8 @@ import org.eclipse.jetty.servlet.FilterHolder;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        PersistenceManager.init();
+
         String dbPort = "5432";
         String dbHost = System.getenv("DB_HOST");
         String dbName = System.getenv("DB_NAME");
@@ -57,6 +59,8 @@ public class Main {
         server.setHandler(context);
         server.start();
         server.join();
+
+        PersistenceManager.shutdown();
     }
 
     private static FilterHolder getFilterHolder() {
