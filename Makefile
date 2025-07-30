@@ -165,7 +165,7 @@ PRODUCTION_SERVICES := $(CORE_SERVICES) nginx
 PUSHABLE_SERVICES := backend/api nginx
 
 # Services used only during lifecycle
-EXTRA_SERVICES := db
+EXTRA_SERVICES := db flyway
 
 EVAL_VALID_SERVICES := $($(shell echo $(ENV) | tr a-z A-Z)_SERVICES)
 

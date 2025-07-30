@@ -1,4 +1,8 @@
 services:
+  db:
+    ports:
+      - "${DB_PORT}:5432"
+
   api:
     pull_policy: never
     volumes:

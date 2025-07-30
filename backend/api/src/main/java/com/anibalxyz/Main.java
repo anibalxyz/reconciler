@@ -20,7 +20,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String dbPort = System.getenv("DB_PORT");
+        String dbPort = "5432";
         String dbHost = System.getenv("DB_HOST");
         String dbName = System.getenv("DB_NAME");
         String dbUser = System.getenv("DB_USER");
@@ -32,12 +32,7 @@ public class Main {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
 
-        FilterHolder cors = new FilterHolder(CrossOriginFilter.class);
-        // Only for testing purposes, should be restricted depending on the environment
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,HEAD,OPTIONS");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Origin,Content-Type,Accept");
-        cors.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true");
+        FilterHolder cors = getFilterHolder();
         context.addFilter(cors, "/*", EnumSet.of(DispatcherType.REQUEST));
 
         context.addServlet(new ServletHolder(new HttpServlet() {
@@ -46,7 +41,7 @@ public class Main {
                 resp.setContentType("application/json");
                 resp.setStatus(HttpServletResponse.SC_OK);
 
-                boolean isDbConnected = false;
+                boolean isDbConnected;
 
                 try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword)) {
                     isDbConnected = conn != null && !conn.isClosed();
@@ -62,5 +57,15 @@ public class Main {
         server.setHandler(context);
         server.start();
         server.join();
+    }
+
+    private static FilterHolder getFilterHolder() {
+        FilterHolder cors = new FilterHolder(CrossOriginFilter.class);
+        // Only for testing purposes, should be restricted depending on the environment
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,HEAD,OPTIONS");
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Origin,Content-Type,Accept");
+        cors.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true");
+        return cors;
     }
 }
