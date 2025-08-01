@@ -14,6 +14,7 @@ public class PersistenceManager {
             return;
         }
 
+        // TODO: extract from here
         String dbPort = "5432";
         String dbHost = System.getenv("DB_HOST");
         String dbName = System.getenv("DB_NAME");
@@ -21,6 +22,7 @@ public class PersistenceManager {
         String dbPassword = System.getenv("DB_PASSWORD");
         String url = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
 
+        // TODO: move to a method
         Map<String, String> props = new HashMap<>();
         props.put("jakarta.persistence.jdbc.url", url);
         props.put("jakarta.persistence.jdbc.user", dbUser);

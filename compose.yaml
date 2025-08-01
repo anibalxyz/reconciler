@@ -18,6 +18,8 @@ services:
     container_name: reconciler-${APP_ENV}-api
     env_file:
       - ./backend/.env.${APP_ENV}
+    environment:
+      - APP_ENV=${APP_ENV}
     ports:
       - "${API_PORT}:4000"
     networks:
