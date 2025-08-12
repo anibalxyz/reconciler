@@ -18,13 +18,13 @@ import java.util.Map;
 public class UserController {
   private UserService userService;
   public Handler deleteById =
-      context -> {
-        int id = getParamId(context);
+      ctx -> {
+        int id = getParamId(ctx);
         try {
           this.userService.deleteUserById(id);
-          context.status(204);
+          ctx.status(204);
         } catch (EntityNotFoundException e) {
-          context.status(404).json(Map.of("error", e.getMessage()));
+          ctx.status(404).json(Map.of("error", e.getMessage()));
         }
       };
   public Handler getAllUsers =
@@ -97,9 +97,8 @@ public class UserController {
     this.userService = userService;
   }
 
-  private int getParamId(Context context) {
-    return context
-        .pathParamAsClass("id", Integer.class)
+  private int getParamId(Context ctx) {
+    return ctx.pathParamAsClass("id", Integer.class)
         .getOrThrow(e -> new BadRequestResponse("Invalid ID format. Must be a number."));
   }
 }

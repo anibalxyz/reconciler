@@ -5,8 +5,8 @@ import io.javalin.http.Context;
 public class ContextProvider {
   private static final ThreadLocal<Context> contextThreadLocal = new ThreadLocal<>();
 
-  public static void set(Context context) {
-    contextThreadLocal.set(context);
+  public static void set(Context ctx) {
+    contextThreadLocal.set(ctx);
   }
 
   public static void clear() {

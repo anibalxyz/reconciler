@@ -65,11 +65,11 @@ public class Router {
 
   private static void setEntityManagerLifecycle(PersistenceManager persistenceManager) {
     server.before(
-        context -> {
-          ContextProvider.set(context);
+        ctx -> {
+          ContextProvider.set(ctx);
           EntityManager em = persistenceManager.getEntityManagerFactory().createEntityManager();
           em.getTransaction().begin();
-          context.attribute("em", em);
+          ctx.attribute("em", em);
         });
     server.after(
         ctx -> {
