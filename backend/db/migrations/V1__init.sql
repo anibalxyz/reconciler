@@ -27,11 +27,11 @@ CREATE TYPE tag_type AS ENUM(
 -- Tables declarations
 
 CREATE TABLE tags (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    color VARCHAR(7) NOT NULL DEFAULT '#CFDFEF',
-    description TEXT NOT NULL,
-    type tag_type NOT NULL
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE,
+  color VARCHAR(7) NOT NULL DEFAULT '#CFDFEF',
+  description TEXT NOT NULL,
+  type tag_type NOT NULL
 );
 
 CREATE TABLE sources (
@@ -68,8 +68,8 @@ CREATE TABLE reconciliations (
 CREATE TABLE reconciliation_discrepancies (
 	reconciliation_id INT NOT NULL REFERENCES reconciliations(id),
 	-- discrepancy_type_id references tags(id) where type = 'DISCREPANCY'
-  	discrepancy_type_id INT NOT NULL REFERENCES tags(id),
-  	created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  discrepancy_type_id INT NOT NULL REFERENCES tags(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (reconciliation_id, discrepancy_type_id)
 );
