@@ -1,9 +1,11 @@
 package com.anibalxyz.users.infra;
 
 import com.anibalxyz.persistence.EntityManagerProvider;
+import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.User;
 import com.anibalxyz.users.domain.UserRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,20 @@ public class JpaUserRepository implements UserRepository {
   }
 
   @Override
+  public Optional<User> findByEmail(Email email) {
+    try {
+      UserEntity userEntity =
+          this.em()
+              .createQuery("SELECT u FROM UserEntity u WHERE u.email = :email", UserEntity.class)
+              .setParameter("email", email.value())
+              .getSingleResult();
+      return Optional.of(userEntity.toDomain());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+
+  @Override
   public List<User> findAll() {
     List<UserEntity> userEntityList =
         this.em().createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
@@ -39,10 +55,12 @@ public class JpaUserRepository implements UserRepository {
   }
 
   @Override
-  public void deleteById(Integer id) {
+  public boolean deleteById(Integer id) {
     UserEntity userEntity = this.em().find(UserEntity.class, id);
     if (userEntity != null) {
       this.em().remove(userEntity);
+      return true;
     }
+    return false;
   }
 }

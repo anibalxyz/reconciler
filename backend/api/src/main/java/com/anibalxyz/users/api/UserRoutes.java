@@ -14,10 +14,10 @@ public class UserRoutes {
 
   public void register() {
     new RouteGroup("/users", this.server)
-        .get("", this.userController.getAllUsers)
-        .post("", this.userController.createUser)
-        .get("/{id}", this.userController.getUserById)
-        .put("/{id}", this.userController.updateUser)
-        .delete("/{id}", this.userController.deleteById);
+        .get("", this.userController::getAllUsers)
+        .post("", this.userController::createUser)
+        .get("/{id}", this.userController::getUserById)
+        .put("/{id}", this.userController::updateUser)
+        .delete("/{id}", this.userController::deleteById);
   }
 }
