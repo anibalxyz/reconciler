@@ -1,6 +1,5 @@
 package com.anibalxyz.users.domain;
 
-import org.jetbrains.annotations.NotNull;
 import org.mindrot.jbcrypt.BCrypt;
 
 public record PasswordHash(String value) {
@@ -21,7 +20,6 @@ public record PasswordHash(String value) {
     return BCrypt.checkpw(raw, this.value);
   }
 
-  @NotNull
   @Override
   public String toString() {
     return "********"; // prevents data leaks through logs
