@@ -1,0 +1,18 @@
+services:
+  api:
+    pull_policy: never
+    ports: []
+    volumes:
+      # Persist Maven dependencies cache to speed up builds
+      - maven:/root/.m2
+    # Enable colored output
+    tty: true
+    stdin_open: true
+  db:
+    profiles: ["disabled"]
+  flyway:
+    profiles: ["disabled"]
+
+volumes:
+  maven:
+    name: "reconciler-test-mvn"

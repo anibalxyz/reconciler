@@ -18,6 +18,7 @@ help:
 	@echo "  extra=true                      # (check-service) Allow targeting services only used in"
 	@echo "                                    lifecycle commands"
 	@echo "  all=true                        # (ps) Show all containers, including stopped"
+	@echo "  test=true                       # (up) Show output and exit on failure"
 	@echo
 	@echo "Additional parameters:"
 	@echo "  command=<push|pull>             # (check-service) Required when running push or pull to"
@@ -40,14 +41,15 @@ help:
 	@echo "  rebuild-all                     # Shortcut: rebuild all services"
 	@echo
 	@echo "Compose & Lifecycle:"
-	@echo "  up             [target=<svc>]   # Start all or one service"
-	@echo "  down           [target=<svc>]   # Stop & remove all or one service"
+	@echo "  up              target=<svc>    # Start all or one service"
+	@echo "  test                            # Shortcut: up test=true"
+	@echo "  down            target=<svc>    # Stop & remove all or one service"
 	@echo "                                    (use keep-orphans=true to keep orphans)"
-	@echo "  start          [target=<svc>]   # Start stopped containers"
-	@echo "  stop           [target=<svc>]   # Stop running containers"
-	@echo "  restart        [target=<svc>]   # Restart containers"
-	@echo "  logs           [target=<svc>]   # Tail logs (last 50 lines)"
-	@echo "  ps             [all=true]       # List running or all containers"
+	@echo "  start           target=<svc>    # Start stopped containers"
+	@echo "  stop            target=<svc>    # Stop running containers"
+	@echo "  restart         target=<svc>    # Restart containers"
+	@echo "  logs            target=<svc>    # Tail logs (last 50 lines)"
+	@echo "  ps              all=true        # List running or all containers"
 	@echo "  deploy                          # Build/pull and then 'up' for current ENV"	
 	@echo
 	@echo "Docker Resource Management:"
@@ -63,7 +65,7 @@ help:
 # ==================================================================================================
 .PHONY: set-env get-env check-env init-env
 
-AVAILABLE_ENVS := development production
+AVAILABLE_ENVS := development production test
 
 MAKE_ENVFILE := .env.make
 
@@ -161,6 +163,7 @@ DOCKER_IMAGE := $(if $(target),anibalxyz/reconciler-$(ENV)-$(notdir $(target)))
 CORE_SERVICES := backend/api frontend frontend/dashboard frontend/public-site
 DEVELOPMENT_SERVICES := $(CORE_SERVICES)
 PRODUCTION_SERVICES := $(CORE_SERVICES) nginx
+TEST_SERVICES := backend/api
 
 PUSHABLE_SERVICES := backend/api nginx
 
@@ -287,7 +290,7 @@ rebuild-all:
 # ==================================================================================================
 # 4) Project Lifecycle Management
 # ==================================================================================================
-.PHONY: up down deploy start stop restart logs ps
+.PHONY: up down deploy start stop restart logs ps test
 
 up: check-env
 	@echo "▶  Bringing up$(if $(target), '$(notdir $(target))' service from) \
@@ -295,7 +298,7 @@ up: check-env
 	@if [ -n "$(target)" ]; then \
 		$(MAKE) check-service extra=true; \
 	fi;
-	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) -d
+	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) $(if $(filter true, $(test)), --exit-code-from api,-d)
 
 down: check-env
 	@if [ -n "$(target)" ]; then \
@@ -305,6 +308,9 @@ down: check-env
 	'$(ENV)' environment..."
 	@$(COMPOSE) $(COMPOSE_SETUP) down $(if $(target),$(notdir $(target))) \
 	$(if $(filter true,$(keep-orphans)),,--remove-orphans)
+
+test: check-env
+	@$(MAKE) up test=true
 
 deploy:
 	@echo "▶  Deploying '$(ENV)' environment..."
