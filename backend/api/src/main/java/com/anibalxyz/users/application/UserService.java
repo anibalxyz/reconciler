@@ -6,7 +6,6 @@ import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
 import com.anibalxyz.users.domain.User;
 import com.anibalxyz.users.domain.UserRepository;
-
 import java.util.List;
 import java.util.Optional;
 

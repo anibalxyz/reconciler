@@ -4,7 +4,6 @@ import com.anibalxyz.users.infra.UserEntity;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
-import org.hibernate.hikaricp.internal.HikariConfigurationUtil;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.tool.schema.Action;
 

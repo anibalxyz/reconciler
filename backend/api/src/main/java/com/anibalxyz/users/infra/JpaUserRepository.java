@@ -6,7 +6,6 @@ import com.anibalxyz.users.domain.User;
 import com.anibalxyz.users.domain.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
-
 import java.util.List;
 import java.util.Optional;
 

@@ -1,6 +1,5 @@
 package com.anibalxyz;
 
-import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.Router;
 
 public class Main {

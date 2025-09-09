@@ -3,13 +3,12 @@ package com.anibalxyz.users.infra;
 import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
 import com.anibalxyz.users.domain.User;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-import jakarta.persistence.GenerationType;
-
 import java.time.LocalDateTime;
 
 @Entity

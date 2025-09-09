@@ -1,19 +1,17 @@
 package com.anibalxyz.server;
 
 import com.anibalxyz.persistence.DatabaseVariables;
+import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.routes.SystemRoutes;
 import com.anibalxyz.users.api.UserController;
 import com.anibalxyz.users.api.UserRoutes;
 import com.anibalxyz.users.application.UserService;
 import com.anibalxyz.users.infra.JpaUserRepository;
-import com.anibalxyz.persistence.EntityManagerProvider;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
-
 import jakarta.persistence.EntityManager;
-
 import java.util.Map;
 
 public class Router {

@@ -1,5 +1,9 @@
 package com.anibalxyz.users.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
 import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.application.UserService;
 import com.anibalxyz.users.domain.Email;
@@ -8,6 +12,10 @@ import com.anibalxyz.users.domain.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.validation.Validator;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,15 +23,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
@@ -64,7 +63,7 @@ public class UserControllerTest {
     verify(this.ctx).json(captor.capture());
     List<UserDetailResponse> actual = captor.getValue();
     List<UserDetailResponse> expected =
-        fakeUsers.stream().map(UserDetailResponse::fromDomain).toList();
+        fakeUsers.stream().map(UserMapper::toDetailResponse).toList();
 
     // then return users as JSON
     assertThat(actual).isEqualTo(expected);
@@ -112,7 +111,7 @@ public class UserControllerTest {
     ArgumentCaptor<UserDetailResponse> captor = ArgumentCaptor.forClass(UserDetailResponse.class);
     verify(this.ctx).json(captor.capture());
     UserDetailResponse actual = captor.getValue();
-    UserDetailResponse expected = UserDetailResponse.fromDomain(fakeUser);
+    UserDetailResponse expected = UserMapper.toDetailResponse(fakeUser);
 
     assertThat(actual).isEqualTo(expected);
   }

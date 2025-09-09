@@ -8,7 +8,6 @@ import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.domain.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
-
 import java.util.List;
 import java.util.Map;
 
