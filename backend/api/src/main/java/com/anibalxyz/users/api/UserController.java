@@ -4,7 +4,6 @@ import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.application.UserService;
-import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.domain.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
@@ -19,14 +18,14 @@ public class UserController {
   }
 
   public void getAllUsers(Context ctx) {
-    List<User> users = this.userService.getAllUsers();
+    List<User> users = userService.getAllUsers();
     List<UserDetailResponse> response = users.stream().map(UserMapper::toDetailResponse).toList();
     ctx.json(response);
   }
 
   public void getUserById(Context ctx) {
     int id = getParamId(ctx);
-    this.userService
+    userService
         .getUserById(id)
         .map(UserMapper::toDetailResponse)
         .ifPresentOrElse(
@@ -42,15 +41,10 @@ public class UserController {
             .check(r -> r.password() != null && !r.password().isBlank(), "Password is required")
             .get();
 
-    try {
-      ctx.status(201)
-          .json(
-              UserMapper.toCreateResponse(
-                  this.userService.createUser(
-                      request.name(), request.email(), request.password())));
-    } catch (IllegalArgumentException e) {
-      ctx.status(400).json(Map.of("error", e.getMessage()));
-    }
+    ctx.status(201)
+        .json(
+            UserMapper.toCreateResponse(
+                userService.createUser(request.name(), request.email(), request.password())));
   }
 
   public void updateUser(Context ctx) {
@@ -62,24 +56,15 @@ public class UserController {
       return;
     }
 
-    try {
-      ctx.status(200)
-          .json(UserMapper.toDetailResponse(this.userService.updateUser(id, userUpdateRequest)));
-    } catch (IllegalArgumentException e) {
-      ctx.status(400).json(Map.of("error", e.getMessage()));
-    } catch (EntityNotFoundException e) {
-      ctx.status(404).json(Map.of("error", e.getMessage()));
-    }
+    ctx.status(200)
+        .json(UserMapper.toDetailResponse(userService.updateUser(id, userUpdateRequest)));
   }
 
   public void deleteById(Context ctx) {
     int id = getParamId(ctx);
-    try {
-      this.userService.deleteUserById(id);
-      ctx.status(204);
-    } catch (EntityNotFoundException e) {
-      ctx.status(404).json(Map.of("error", e.getMessage()));
-    }
+
+    userService.deleteUserById(id);
+    ctx.status(204);
   }
 
   private int getParamId(Context ctx) {

@@ -27,25 +27,19 @@ public final class DatabaseVariables {
   }
 
   public String url() {
-    return this.url;
+    return url;
   }
 
   public String user() {
-    return this.user;
+    return user;
   }
 
   public String password() {
-    return this.password;
+    return password;
   }
 
   @Override
   public String toString() {
-    return "DatabaseVariables["
-        + "jdbcUrl="
-        + this.url
-        + ", "
-        + "user="
-        + this.user
-        + ", password=********]";
+    return "DatabaseVariables[" + "jdbcUrl=" + url + ", " + "user=" + user + ", password=********]";
   }
 }

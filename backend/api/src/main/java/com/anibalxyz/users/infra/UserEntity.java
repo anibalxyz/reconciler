@@ -64,16 +64,11 @@ public class UserEntity {
 
   public User toDomain() {
     return new User(
-        this.id,
-        this.name,
-        new Email(this.email),
-        new PasswordHash(this.passwordHash),
-        this.createdAt,
-        this.updatedAt);
+        id, name, new Email(email), new PasswordHash(passwordHash), createdAt, updatedAt);
   }
 
   public Integer getId() {
-    return this.id;
+    return id;
   }
 
   public void setId(Integer id) {
@@ -81,7 +76,7 @@ public class UserEntity {
   }
 
   public String getName() {
-    return this.name;
+    return name;
   }
 
   public void setName(String name) {
@@ -89,7 +84,7 @@ public class UserEntity {
   }
 
   public String getEmail() {
-    return this.email;
+    return email;
   }
 
   public void setEmail(String email) {
@@ -97,7 +92,7 @@ public class UserEntity {
   }
 
   public String getPasswordHash() {
-    return this.passwordHash;
+    return passwordHash;
   }
 
   public void setPasswordHash(String passwordHash) {
@@ -105,7 +100,7 @@ public class UserEntity {
   }
 
   public LocalDateTime getCreatedAt() {
-    return this.createdAt;
+    return createdAt;
   }
 
   public void setCreatedAt(LocalDateTime createdAt) {
@@ -113,7 +108,7 @@ public class UserEntity {
   }
 
   public LocalDateTime getUpdatedAt() {
-    return this.updatedAt;
+    return updatedAt;
   }
 
   public void setUpdatedAt(LocalDateTime updatedAt) {

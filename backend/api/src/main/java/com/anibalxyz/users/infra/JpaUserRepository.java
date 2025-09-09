@@ -18,12 +18,12 @@ public class JpaUserRepository implements UserRepository {
   }
 
   private EntityManager em() {
-    return this.provider.get();
+    return provider.get();
   }
 
   @Override
   public Optional<User> findById(Integer id) {
-    UserEntity userEntity = this.em().find(UserEntity.class, id);
+    UserEntity userEntity = em().find(UserEntity.class, id);
     return userEntity == null ? Optional.empty() : Optional.of(userEntity.toDomain());
   }
 
@@ -31,8 +31,7 @@ public class JpaUserRepository implements UserRepository {
   public Optional<User> findByEmail(Email email) {
     try {
       UserEntity userEntity =
-          this.em()
-              .createQuery("SELECT u FROM UserEntity u WHERE u.email = :email", UserEntity.class)
+          em().createQuery("SELECT u FROM UserEntity u WHERE u.email = :email", UserEntity.class)
               .setParameter("email", email.value())
               .getSingleResult();
       return Optional.of(userEntity.toDomain());
@@ -44,20 +43,20 @@ public class JpaUserRepository implements UserRepository {
   @Override
   public List<User> findAll() {
     List<UserEntity> userEntityList =
-        this.em().createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
+        em().createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
     return userEntityList.stream().map(UserEntity::toDomain).toList();
   }
 
   @Override
   public User save(User user) {
-    return this.em().merge(UserEntity.fromDomain(user)).toDomain();
+    return em().merge(UserEntity.fromDomain(user)).toDomain();
   }
 
   @Override
   public boolean deleteById(Integer id) {
-    UserEntity userEntity = this.em().find(UserEntity.class, id);
+    UserEntity userEntity = em().find(UserEntity.class, id);
     if (userEntity != null) {
-      this.em().remove(userEntity);
+      em().remove(userEntity);
       return true;
     }
     return false;

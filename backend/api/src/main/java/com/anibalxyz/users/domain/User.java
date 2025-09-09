@@ -30,42 +30,42 @@ public class User {
   }
 
   public User withId(Integer id) {
-    return new User(id, this.name, this.email, this.passwordHash, this.createdAt, this.updatedAt);
+    return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
   public User withName(String name) {
-    return new User(this.id, name, this.email, this.passwordHash, this.createdAt, this.updatedAt);
+    return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
   public User withEmail(Email email) {
-    return new User(this.id, this.name, email, this.passwordHash, this.createdAt, this.updatedAt);
+    return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
   public User withPasswordHash(PasswordHash passwordHash) {
-    return new User(this.id, this.name, this.email, passwordHash, this.createdAt, this.updatedAt);
+    return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
   public Integer getId() {
-    return this.id;
+    return id;
   }
 
   public String getName() {
-    return this.name;
+    return name;
   }
 
   public Email getEmail() {
-    return this.email;
+    return email;
   }
 
   public PasswordHash getPasswordHash() {
-    return this.passwordHash;
+    return passwordHash;
   }
 
   public LocalDateTime getCreatedAt() {
-    return this.createdAt;
+    return createdAt;
   }
 
   public LocalDateTime getUpdatedAt() {
-    return this.updatedAt;
+    return updatedAt;
   }
 }

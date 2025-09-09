@@ -3,7 +3,6 @@ package com.anibalxyz.server.routes;
 import com.anibalxyz.persistence.PersistenceManager;
 import io.javalin.Javalin;
 import jakarta.persistence.EntityManager;
-
 import java.util.Map;
 
 public class SystemRoutes {
@@ -16,13 +15,13 @@ public class SystemRoutes {
   }
 
   public void register() {
-    this.app.get(
+    app.get(
         "/health",
         ctx -> {
           boolean dbIsConnected;
 
           try (EntityManager em =
-              this.persistenceManager.getEntityManagerFactory().createEntityManager()) {
+              persistenceManager.getEntityManagerFactory().createEntityManager()) {
             em.createNativeQuery("SELECT 1").getSingleResult();
             dbIsConnected = true;
           } catch (Exception e) {

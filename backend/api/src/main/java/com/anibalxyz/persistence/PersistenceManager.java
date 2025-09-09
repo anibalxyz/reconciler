@@ -11,18 +11,17 @@ public class PersistenceManager {
   private final EntityManagerFactory emf;
 
   public PersistenceManager(DatabaseVariables dbVars) {
-    this.emf =
-        this.getProperties(dbVars.url(), dbVars.user(), dbVars.password())
-            .createEntityManagerFactory();
+    emf =
+        getProperties(dbVars.url(), dbVars.user(), dbVars.password()).createEntityManagerFactory();
   }
 
   public EntityManagerFactory getEntityManagerFactory() {
-    return this.emf;
+    return emf;
   }
 
   public void shutdown() {
-    if (this.emf != null && this.emf.isOpen()) {
-      this.emf.close();
+    if (emf != null && emf.isOpen()) {
+      emf.close();
     }
   }
 

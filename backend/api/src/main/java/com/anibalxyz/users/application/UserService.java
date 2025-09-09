@@ -18,19 +18,19 @@ public class UserService {
 
   public User createUser(String name, String rawEmail, String rawPassword) {
     Email email = new Email(rawEmail);
-    this.userRepository
+    userRepository
         .findByEmail(email)
         .ifPresent(
             user -> {
               throw new IllegalArgumentException("Email already in use. Please use another");
             });
     PasswordHash passwordHash = PasswordHash.generate(rawPassword);
-    return this.userRepository.save(new User(name, email, passwordHash));
+    return userRepository.save(new User(name, email, passwordHash));
   }
 
   public User updateUser(Integer id, UserUpdatePayload payload) {
     User user =
-        this.userRepository
+        userRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
     if (payload.name() != null) {
@@ -38,7 +38,7 @@ public class UserService {
     }
     if (payload.email() != null) {
       Email newEmail = new Email(payload.email());
-      this.userRepository
+      userRepository
           .findByEmail(newEmail)
           .ifPresent(
               existingUser -> {
@@ -51,19 +51,19 @@ public class UserService {
     if (payload.password() != null) {
       user = user.withPasswordHash(PasswordHash.generate(payload.password()));
     }
-    return this.userRepository.save(user);
+    return userRepository.save(user);
   }
 
   public Optional<User> getUserById(int id) {
-    return this.userRepository.findById(id);
+    return userRepository.findById(id);
   }
 
   public List<User> getAllUsers() {
-    return this.userRepository.findAll();
+    return userRepository.findAll();
   }
 
   public void deleteUserById(int id) {
-    boolean wasDeleted = this.userRepository.deleteById(id);
+    boolean wasDeleted = userRepository.deleteById(id);
     if (!wasDeleted) {
       throw new EntityNotFoundException("User with id " + id + " not found");
     }

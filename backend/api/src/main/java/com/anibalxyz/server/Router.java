@@ -7,6 +7,7 @@ import com.anibalxyz.server.routes.SystemRoutes;
 import com.anibalxyz.users.api.UserController;
 import com.anibalxyz.users.api.UserRoutes;
 import com.anibalxyz.users.application.UserService;
+import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.infra.JpaUserRepository;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import io.javalin.Javalin;
@@ -58,6 +59,16 @@ public class Router {
         JsonMappingException.class,
         (e, ctx) -> {
           ctx.status(400).json(Map.of("error", "Malformed or empty JSON"));
+        });
+    server.exception(
+        IllegalArgumentException.class,
+        (e, ctx) -> {
+          ctx.status(400).json(Map.of("error", e.getMessage()));
+        });
+    server.exception(
+        EntityNotFoundException.class,
+        (e, ctx) -> {
+          ctx.status(404).json(Map.of("error", e.getMessage()));
         });
   }
 

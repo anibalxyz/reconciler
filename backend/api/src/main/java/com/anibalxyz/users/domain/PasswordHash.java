@@ -17,7 +17,7 @@ public record PasswordHash(String value) {
   }
 
   public boolean matches(String raw) {
-    return BCrypt.checkpw(raw, this.value);
+    return BCrypt.checkpw(raw, value);
   }
 
   @Override

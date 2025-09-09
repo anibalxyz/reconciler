@@ -13,22 +13,22 @@ public class RouteGroup {
   }
 
   public RouteGroup get(String path, Handler handler) {
-    this.server.get(this.basePath + path, handler);
+    server.get(basePath + path, handler);
     return this;
   }
 
   public RouteGroup post(String path, Handler handler) {
-    this.server.post(this.basePath + path, handler);
+    server.post(basePath + path, handler);
     return this;
   }
 
   public RouteGroup put(String path, Handler handler) {
-    this.server.put(this.basePath + path, handler);
+    server.put(basePath + path, handler);
     return this;
   }
 
   public RouteGroup delete(String path, Handler handler) {
-    this.server.delete(this.basePath + path, handler);
+    server.delete(basePath + path, handler);
     return this;
   }
 }

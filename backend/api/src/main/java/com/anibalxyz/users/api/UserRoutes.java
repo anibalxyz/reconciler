@@ -13,11 +13,11 @@ public class UserRoutes {
   }
 
   public void register() {
-    new RouteGroup("/users", this.server)
-        .get("", this.userController::getAllUsers)
-        .post("", this.userController::createUser)
-        .get("/{id}", this.userController::getUserById)
-        .put("/{id}", this.userController::updateUser)
-        .delete("/{id}", this.userController::deleteById);
+    new RouteGroup("/users", server)
+        .get("", userController::getAllUsers)
+        .post("", userController::createUser)
+        .get("/{id}", userController::getUserById)
+        .put("/{id}", userController::updateUser)
+        .delete("/{id}", userController::deleteById);
   }
 }
