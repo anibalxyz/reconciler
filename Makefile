@@ -18,7 +18,6 @@ help:
 	@echo "  extra=true                      # (check-service) Allow targeting services only used in"
 	@echo "                                    lifecycle commands"
 	@echo "  all=true                        # (ps) Show all containers, including stopped"
-	@echo "  test=true                       # (up) Show output and exit on failure"
 	@echo
 	@echo "Additional parameters:"
 	@echo "  command=<push|pull>             # (check-service) Required when running push or pull to"
@@ -42,7 +41,7 @@ help:
 	@echo
 	@echo "Compose & Lifecycle:"
 	@echo "  up              target=<svc>    # Start all or one service"
-	@echo "  test                            # Shortcut: up test=true"
+	@echo "  test                            # Perform tests without changing current environment"
 	@echo "  down            target=<svc>    # Stop & remove all or one service"
 	@echo "                                    (use keep-orphans=true to keep orphans)"
 	@echo "  start           target=<svc>    # Start stopped containers"
@@ -298,7 +297,7 @@ up: check-env
 	@if [ -n "$(target)" ]; then \
 		$(MAKE) check-service extra=true; \
 	fi;
-	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) $(if $(filter true, $(test)), --exit-code-from api,-d)
+	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) $(if $(filter test, $(ENV)), --exit-code-from api,-d)
 
 down: check-env
 	@if [ -n "$(target)" ]; then \
@@ -310,7 +309,10 @@ down: check-env
 	$(if $(filter true,$(keep-orphans)),,--remove-orphans)
 
 test: check-env
-	@$(MAKE) up test=true
+	@$(MAKE) set-env target=test
+	@$(MAKE) build-all
+	@$(MAKE) up
+	@$(MAKE) set-env target=$(ENV)
 
 deploy:
 	@echo "▶  Deploying '$(ENV)' environment..."

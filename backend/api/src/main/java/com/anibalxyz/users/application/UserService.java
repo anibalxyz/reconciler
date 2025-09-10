@@ -7,7 +7,6 @@ import com.anibalxyz.users.domain.PasswordHash;
 import com.anibalxyz.users.domain.User;
 import com.anibalxyz.users.domain.UserRepository;
 import java.util.List;
-import java.util.Optional;
 
 public class UserService {
   private final UserRepository userRepository;
@@ -28,7 +27,7 @@ public class UserService {
     return userRepository.save(new User(name, email, passwordHash));
   }
 
-  public User updateUser(Integer id, UserUpdatePayload payload) {
+  public User updateUserById(Integer id, UserUpdatePayload payload) {
     User user =
         userRepository
             .findById(id)
@@ -54,8 +53,10 @@ public class UserService {
     return userRepository.save(user);
   }
 
-  public Optional<User> getUserById(int id) {
-    return userRepository.findById(id);
+  public User getUserById(int id) {
+    return userRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
   }
 
   public List<User> getAllUsers() {

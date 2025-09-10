@@ -4,11 +4,11 @@ import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.application.UserService;
+import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.domain.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import java.util.List;
-import java.util.Map;
 
 public class UserController {
   private final UserService userService;
@@ -20,17 +20,12 @@ public class UserController {
   public void getAllUsers(Context ctx) {
     List<User> users = userService.getAllUsers();
     List<UserDetailResponse> response = users.stream().map(UserMapper::toDetailResponse).toList();
-    ctx.json(response);
+    ctx.status(200).json(response);
   }
 
   public void getUserById(Context ctx) {
     int id = getParamId(ctx);
-    userService
-        .getUserById(id)
-        .map(UserMapper::toDetailResponse)
-        .ifPresentOrElse(
-            ctx::json,
-            () -> ctx.status(404).json(Map.of("error", "User with id " + id + " not found")));
+    ctx.status(200).json(UserMapper.toDetailResponse(userService.getUserById(id)));
   }
 
   public void createUser(Context ctx) {
@@ -47,20 +42,22 @@ public class UserController {
                 userService.createUser(request.name(), request.email(), request.password())));
   }
 
-  public void updateUser(Context ctx) {
-    UserUpdateRequest userUpdateRequest = ctx.bodyAsClass(UserUpdateRequest.class);
+  // TODO: document the rest of the methods' exceptions
+  public void updateUserById(Context ctx)
+      throws IllegalArgumentException, BadRequestResponse, EntityNotFoundException {
     int id = getParamId(ctx);
 
-    if (!userUpdateRequest.isValid()) {
-      ctx.status(400).json(Map.of("error", "At least one attribute must be given"));
-      return;
-    }
+    String badRequestMessage = "At least one attribute must be given";
+    UserUpdateRequest userUpdateRequest =
+        ctx.bodyValidator(UserUpdateRequest.class)
+            .check(UserUpdateRequest::hasAtLeastOneField, badRequestMessage)
+            .get();
 
     ctx.status(200)
-        .json(UserMapper.toDetailResponse(userService.updateUser(id, userUpdateRequest)));
+        .json(UserMapper.toDetailResponse(userService.updateUserById(id, userUpdateRequest)));
   }
 
-  public void deleteById(Context ctx) {
+  public void deleteUserById(Context ctx) {
     int id = getParamId(ctx);
 
     userService.deleteUserById(id);

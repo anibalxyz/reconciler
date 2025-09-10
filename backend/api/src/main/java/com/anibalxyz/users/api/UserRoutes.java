@@ -17,7 +17,7 @@ public class UserRoutes {
         .get("", userController::getAllUsers)
         .post("", userController::createUser)
         .get("/{id}", userController::getUserById)
-        .put("/{id}", userController::updateUser)
-        .delete("/{id}", userController::deleteById);
+        .put("/{id}", userController::updateUserById)
+        .delete("/{id}", userController::deleteUserById);
   }
 }
