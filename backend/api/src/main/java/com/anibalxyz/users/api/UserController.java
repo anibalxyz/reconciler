@@ -8,6 +8,7 @@ import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.domain.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
+import io.javalin.validation.ValidationException;
 import java.util.List;
 
 public class UserController {
@@ -23,12 +24,12 @@ public class UserController {
     ctx.status(200).json(response);
   }
 
-  public void getUserById(Context ctx) {
+  public void getUserById(Context ctx) throws BadRequestResponse, EntityNotFoundException {
     int id = getParamId(ctx);
     ctx.status(200).json(UserMapper.toDetailResponse(userService.getUserById(id)));
   }
 
-  public void createUser(Context ctx) {
+  public void createUser(Context ctx) throws IllegalArgumentException, ValidationException {
     UserCreateRequest request =
         ctx.bodyValidator(UserCreateRequest.class)
             .check(r -> r.name() != null && !r.name().isBlank(), "Name is required")
@@ -42,12 +43,15 @@ public class UserController {
                 userService.createUser(request.name(), request.email(), request.password())));
   }
 
-  // TODO: document the rest of the methods' exceptions
   public void updateUserById(Context ctx)
-      throws IllegalArgumentException, BadRequestResponse, EntityNotFoundException {
+      throws IllegalArgumentException,
+          ValidationException,
+          EntityNotFoundException,
+          BadRequestResponse {
     int id = getParamId(ctx);
 
-    String badRequestMessage = "At least one attribute must be given";
+    String badRequestMessage = "At least one field (name, email, password) must be provided";
+
     UserUpdateRequest userUpdateRequest =
         ctx.bodyValidator(UserUpdateRequest.class)
             .check(UserUpdateRequest::hasAtLeastOneField, badRequestMessage)
@@ -57,14 +61,14 @@ public class UserController {
         .json(UserMapper.toDetailResponse(userService.updateUserById(id, userUpdateRequest)));
   }
 
-  public void deleteUserById(Context ctx) {
+  public void deleteUserById(Context ctx) throws EntityNotFoundException, BadRequestResponse {
     int id = getParamId(ctx);
 
     userService.deleteUserById(id);
     ctx.status(204);
   }
 
-  private int getParamId(Context ctx) {
+  private int getParamId(Context ctx) throws BadRequestResponse {
     return ctx.pathParamAsClass("id", Integer.class)
         .getOrThrow(e -> new BadRequestResponse("Invalid ID format. Must be a number."));
   }

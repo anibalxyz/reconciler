@@ -15,7 +15,8 @@ public class UserService {
     this.userRepository = userRepository;
   }
 
-  public User createUser(String name, String rawEmail, String rawPassword) {
+  public User createUser(String name, String rawEmail, String rawPassword)
+      throws IllegalArgumentException {
     Email email = new Email(rawEmail);
     userRepository
         .findByEmail(email)
@@ -27,7 +28,8 @@ public class UserService {
     return userRepository.save(new User(name, email, passwordHash));
   }
 
-  public User updateUserById(Integer id, UserUpdatePayload payload) {
+  public User updateUserById(Integer id, UserUpdatePayload payload)
+      throws IllegalArgumentException, EntityNotFoundException {
     User user =
         userRepository
             .findById(id)
@@ -53,7 +55,7 @@ public class UserService {
     return userRepository.save(user);
   }
 
-  public User getUserById(int id) {
+  public User getUserById(int id) throws EntityNotFoundException {
     return userRepository
         .findById(id)
         .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
@@ -63,7 +65,7 @@ public class UserService {
     return userRepository.findAll();
   }
 
-  public void deleteUserById(int id) {
+  public void deleteUserById(int id) throws EntityNotFoundException {
     boolean wasDeleted = userRepository.deleteById(id);
     if (!wasDeleted) {
       throw new EntityNotFoundException("User with id " + id + " not found");

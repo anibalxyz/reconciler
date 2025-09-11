@@ -22,12 +22,14 @@ public class JpaUserRepository implements UserRepository {
   }
 
   @Override
+  @SuppressWarnings("resource")
   public Optional<User> findById(Integer id) {
     UserEntity userEntity = em().find(UserEntity.class, id);
     return userEntity == null ? Optional.empty() : Optional.of(userEntity.toDomain());
   }
 
   @Override
+  @SuppressWarnings("resource")
   public Optional<User> findByEmail(Email email) {
     try {
       UserEntity userEntity =
@@ -41,6 +43,7 @@ public class JpaUserRepository implements UserRepository {
   }
 
   @Override
+  @SuppressWarnings("resource")
   public List<User> findAll() {
     List<UserEntity> userEntityList =
         em().createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
@@ -48,11 +51,13 @@ public class JpaUserRepository implements UserRepository {
   }
 
   @Override
-  public User save(User user) {
+  @SuppressWarnings("resource")
+  public User save(User user) throws IllegalArgumentException {
     return em().merge(UserEntity.fromDomain(user)).toDomain();
   }
 
   @Override
+  @SuppressWarnings("resource")
   public boolean deleteById(Integer id) {
     UserEntity userEntity = em().find(UserEntity.class, id);
     if (userEntity != null) {

@@ -12,7 +12,11 @@ import com.anibalxyz.users.infra.JpaUserRepository;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
+import io.javalin.validation.ValidationError;
+import io.javalin.validation.ValidationException;
 import jakarta.persistence.EntityManager;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class Router {
@@ -69,6 +73,18 @@ public class Router {
         EntityNotFoundException.class,
         (e, ctx) -> {
           ctx.status(404).json(Map.of("error", e.getMessage()));
+        });
+    server.exception(
+        ValidationException.class,
+        (e, ctx) -> {
+          List<String> messages =
+              e.getErrors().values().stream()
+                  .flatMap(Collection::stream)
+                  .map(ValidationError::getMessage)
+                  .toList();
+          // TODO: implement an ErrorResponse DTO to standardize error responses, and guarantee the
+          //       order of the fields for better human readability
+          ctx.status(400).json(Map.of("error", "Invalid input provided", "details", messages));
         });
   }
 

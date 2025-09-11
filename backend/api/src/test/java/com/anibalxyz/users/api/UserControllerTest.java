@@ -16,9 +16,12 @@ import com.anibalxyz.users.domain.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.validation.BodyValidator;
+import io.javalin.validation.ValidationError;
+import io.javalin.validation.ValidationException;
 import io.javalin.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -101,12 +104,15 @@ public class UserControllerTest {
 
     @Test
     @DisplayName(
-        "Given a missing property, when createUser is called, then throw BadRequestResponse")
-    public void createUser_missingProperty_throwsBadRequestResponse() {
-      stubBodyValidatorFor(UserCreateRequest.class).thenThrow(new BadRequestResponse());
+        "Given a missing property, when createUser is called, then throw ValidationException")
+    public void createUser_missingProperty_throwsValidationException() {
+      stubBodyValidatorFor(UserCreateRequest.class)
+          .thenThrow(
+              new ValidationException(
+                  Map.of("property", List.of(new ValidationError<>("Property is required")))));
 
       assertThatThrownBy(() -> userController.createUser(ctx))
-          .isInstanceOf(BadRequestResponse.class);
+          .isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -119,12 +125,16 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("Given missing data, when updateUserById is called, then throw BadRequestResponse")
-    public void updateUserById_missingData_throwsBadRequestResponse() {
+    @DisplayName(
+        "Given missing data, when updateUserById is called, then throw ValidationException")
+    public void updateUserById_missingData_throwsValidationException() {
       stubPathParamId().thenReturn(1);
-      stubBodyValidatorFor(UserUpdateRequest.class).thenThrow(new BadRequestResponse());
+      stubBodyValidatorFor(UserUpdateRequest.class)
+          .thenThrow(
+              new ValidationException(
+                  Map.of("property", List.of(new ValidationError<>("Property is required")))));
       assertThatThrownBy(() -> userController.updateUserById(ctx))
-          .isInstanceOf(BadRequestResponse.class);
+          .isInstanceOf(ValidationException.class);
     }
 
     @Test

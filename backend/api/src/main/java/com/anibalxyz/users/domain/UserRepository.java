@@ -10,7 +10,7 @@ public interface UserRepository {
 
   List<User> findAll();
 
-  User save(User user);
+  User save(User user) throws IllegalArgumentException;
 
   boolean deleteById(Integer id);
 }
