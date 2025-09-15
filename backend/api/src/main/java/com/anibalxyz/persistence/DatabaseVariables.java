@@ -1,9 +1,11 @@
 package com.anibalxyz.persistence;
 
-public final class DatabaseVariables {
-  private final String url;
-  private final String user;
-  private final String password;
+import org.jetbrains.annotations.NotNull;
+
+public class DatabaseVariables {
+  public final String url;
+  public final String user;
+  public final String password;
 
   private DatabaseVariables(String url, String user, String password) {
     this.url = url;
@@ -11,19 +13,15 @@ public final class DatabaseVariables {
     this.password = password;
   }
 
-  public static DatabaseVariables fromEnv() {
-    String host = System.getenv("DB_HOST");
-    String name = System.getenv("DB_NAME");
-    String user = System.getenv("DB_USER");
-    String password = System.getenv("DB_PASSWORD");
-
+  public static DatabaseVariables generate(
+      String host, String port, String name, String user, String password) {
     if (host == null || name == null || user == null || password == null) {
       throw new IllegalStateException(
           "Missing required database environment variables (DB_HOST, DB_NAME, DB_USER, DB_PASSWORD)");
     }
+    String url = "jdbc:postgresql://" + host + ":" + port + "/" + name;
 
-    String jdbcUrl = "jdbc:postgresql://" + host + ":5432/" + name;
-    return new DatabaseVariables(jdbcUrl, user, password);
+    return new DatabaseVariables(url, user, password);
   }
 
   public String url() {
@@ -38,6 +36,7 @@ public final class DatabaseVariables {
     return password;
   }
 
+  @NotNull
   @Override
   public String toString() {
     return "DatabaseVariables[" + "jdbcUrl=" + url + ", " + "user=" + user + ", password=********]";

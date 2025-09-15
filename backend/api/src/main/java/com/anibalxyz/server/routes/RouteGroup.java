@@ -1,4 +1,4 @@
-package com.anibalxyz.server;
+package com.anibalxyz.server.routes;
 
 import io.javalin.Javalin;
 import io.javalin.http.Handler;

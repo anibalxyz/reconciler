@@ -297,7 +297,7 @@ up: check-env
 	@if [ -n "$(target)" ]; then \
 		$(MAKE) check-service extra=true; \
 	fi;
-	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) $(if $(filter test, $(ENV)), --exit-code-from api,-d)
+	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) $(if $(filter false, $(detach)),,-d)
 
 down: check-env
 	@if [ -n "$(target)" ]; then \
@@ -311,7 +311,9 @@ down: check-env
 test: check-env
 	@$(MAKE) set-env target=test
 	@$(MAKE) build-all
-	@$(MAKE) up
+	@$(MAKE) up target=db
+	@$(MAKE) up target=flyway
+	@$(MAKE) up target=backend/api detach=false
 	@$(MAKE) set-env target=$(ENV)
 
 deploy:

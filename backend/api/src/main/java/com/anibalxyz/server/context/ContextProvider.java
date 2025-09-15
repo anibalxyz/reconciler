@@ -1,4 +1,4 @@
-package com.anibalxyz.server;
+package com.anibalxyz.server.context;
 
 import io.javalin.http.Context;
 

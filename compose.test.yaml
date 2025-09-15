@@ -8,10 +8,14 @@ services:
     # Enable colored output
     tty: true
     stdin_open: true
+    depends_on:
+      - db
+      - flyway
+
   db:
-    profiles: ["disabled"]
-  flyway:
-    profiles: ["disabled"]
+    ports:
+      - "${DB_PORT}:5432"
+    volumes: []
 
 volumes:
   maven:

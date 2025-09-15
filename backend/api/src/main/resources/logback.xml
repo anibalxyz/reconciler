@@ -7,11 +7,10 @@
     </appender>
 
     <!--
-      Set the default logging level to INFO.
-      This will ignore all DEBUG and TRACE logs.
-      For development, I must set an environment variable LOG_LEVEL=DEBUG
+      Set the default logging level to DEBUG when running locally.
+      Within a container, LOG_LEVEL will always be injected as an environment variable.
     -->
-    <root level="${LOG_LEVEL:-INFO}">
+    <root level="${LOG_LEVEL:-DEBUG}">
         <appender-ref ref="STDOUT"/>
     </root>
 

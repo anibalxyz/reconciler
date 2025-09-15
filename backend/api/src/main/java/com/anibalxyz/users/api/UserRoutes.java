@@ -1,9 +1,10 @@
 package com.anibalxyz.users.api;
 
-import com.anibalxyz.server.RouteGroup;
+import com.anibalxyz.server.routes.RouteGroup;
+import com.anibalxyz.server.routes.Router;
 import io.javalin.Javalin;
 
-public class UserRoutes {
+public class UserRoutes implements Router {
   private final Javalin server;
   private final UserController userController;
 

@@ -6,16 +6,20 @@ import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.tool.schema.Action;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PersistenceManager {
+  private static final Logger log = LoggerFactory.getLogger(PersistenceManager.class);
   private final EntityManagerFactory emf;
+  private final DatabaseVariables dbConfig;
 
-  public PersistenceManager(DatabaseVariables dbVars) {
-    emf =
-        getProperties(dbVars.url(), dbVars.user(), dbVars.password()).createEntityManagerFactory();
+  public PersistenceManager(DatabaseVariables dbConfig) {
+    this.dbConfig = dbConfig;
+    emf = getProperties().createEntityManagerFactory();
   }
 
-  public EntityManagerFactory getEntityManagerFactory() {
+  public EntityManagerFactory emf() {
     return emf;
   }
 
@@ -25,12 +29,11 @@ public class PersistenceManager {
     }
   }
 
-  private HibernatePersistenceConfiguration getProperties(
-      String url, String user, String password) {
+  private HibernatePersistenceConfiguration getProperties() {
     // TODO: set values dynamically (from env or configuration file)
     return new HibernatePersistenceConfiguration("reconcilerPU")
-        .jdbcUrl(url)
-        .jdbcCredentials(user, password)
+        .jdbcUrl(dbConfig.url())
+        .jdbcCredentials(dbConfig.user(), dbConfig.password())
         .provider(HikariCPConnectionProvider.class.getName())
         .property(HikariCPSettings.HIKARI_MAX_SIZE, "20")
         .property(HikariCPSettings.HIKARI_MIN_IDLE_SIZE, "2")

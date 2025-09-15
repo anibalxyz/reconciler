@@ -7,9 +7,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    volumes:
-      # Persistent storage for the DB. Data isn't lost on container shutdown
-      - database:/var/lib/postgresql/data
     networks:
       - main
 

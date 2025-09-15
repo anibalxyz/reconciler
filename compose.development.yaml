@@ -2,6 +2,9 @@ services:
   db:
     ports:
       - "${DB_PORT}:5432"
+    volumes:
+      # Persistent storage for the DB. Data isn't lost on container shutdown
+      - database:/var/lib/postgresql/data
 
   api:
     pull_policy: never

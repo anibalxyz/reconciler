@@ -1,0 +1,105 @@
+package com.anibalxyz.server.config;
+
+import com.anibalxyz.server.dto.ErrorResponse;
+import com.anibalxyz.users.application.exception.EntityNotFoundException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import io.javalin.Javalin;
+import io.javalin.http.BadRequestResponse;
+import io.javalin.validation.ValidationError;
+import io.javalin.validation.ValidationException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class ExceptionsConfig implements ServerConfig {
+
+  private static final Logger log = LoggerFactory.getLogger(ExceptionsConfig.class);
+  private final Javalin server;
+
+  public ExceptionsConfig(Javalin server) {
+    this.server = server;
+  }
+
+  private <E extends Exception> void handleGenericException(
+      Class<E> exceptionClass, int status, String message) {
+    server.exception(
+        exceptionClass,
+        (e, ctx) -> {
+          if (status >= 500) {
+            log.error(e.getMessage(), e);
+          } else {
+            log.warn("Client Error {}: {}", status, e.getMessage());
+          }
+
+          List<String> details =
+              e.getMessage() != null ? List.of(e.getMessage()) : Collections.emptyList();
+          ctx.status(status).json(new ErrorResponse(message, details));
+        });
+  }
+
+  @Override
+  public void apply() {
+    handleGenericException(BadRequestResponse.class, 400, "Bad Request");
+    handleGenericException(EntityNotFoundException.class, 404, "Entity not found");
+    // It seems useless, remains to be checked
+    /*
+     handleGenericException(JsonMappingException.class, 400, "Malformed JSON request");
+     handleGenericException(JsonParseException.class, 400, "Invalid JSON syntax");
+    */
+    handleGenericException(IllegalArgumentException.class, 400, "Invalid argument provided");
+
+    server.exception(
+        ValidationException.class,
+        (e, ctx) -> {
+          ctx.status(400);
+
+          // Malformed JSON. E.g., an unexpected comma
+          boolean deserializationError =
+              e.getErrors().values().stream()
+                  .flatMap(Collection::stream)
+                  .anyMatch(
+                      ve -> {
+                        Throwable ex = ve.exception();
+                        return (ex instanceof JsonParseException);
+                      });
+
+          if (deserializationError) {
+            log.warn("Malformed JSON on {}: {}", ctx.path(), e.getErrors());
+            ctx.json(
+                new ErrorResponse(
+                    "Malformed JSON request", List.of("Malformed JSON in request body")));
+            return;
+          }
+
+          // Unexpected Property. Take the first unrecognized property (if available)
+          Optional<UnrecognizedPropertyException> unknownProp =
+              e.getErrors().values().stream()
+                  .flatMap(Collection::stream)
+                  .map(ValidationError::exception)
+                  .filter(UnrecognizedPropertyException.class::isInstance)
+                  .map(UnrecognizedPropertyException.class::cast)
+                  .findFirst();
+
+          if (unknownProp.isPresent()) {
+            String message = "Unknown property: '" + unknownProp.get().getPropertyName() + "'";
+            log.warn("Unknown property on {}: {}", ctx.path(), message);
+            ctx.json(new ErrorResponse("Unknown property in request body", List.of(message)));
+            return;
+          }
+
+          List<String> messages =
+              e.getErrors().values().stream()
+                  .flatMap(Collection::stream)
+                  .map(ValidationError::getMessage)
+                  .toList();
+          log.warn("Validation failed for request to '{}': {}", ctx.path(), messages);
+          ctx.json(new ErrorResponse("Invalid input provided", messages));
+        });
+
+    handleGenericException(Exception.class, 500, "Internal Server Error");
+  }
+}
