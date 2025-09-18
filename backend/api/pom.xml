@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -25,6 +25,7 @@
         <junit.version>5.13.4</junit.version>
         <mockito.version>5.19.0</mockito.version>
         <assertj.version>3.27.4</assertj.version>
+        <okhttp.version>4.12.0</okhttp.version>
 
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
@@ -58,7 +59,7 @@
                 </executions>
             </plugin>
 
-            <!-- Recommended by IDE-->
+            <!-- Recommended by IDE. TODO: review it-->
 
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -227,6 +228,13 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
             <scope>test</scope>
         </dependency>
 
