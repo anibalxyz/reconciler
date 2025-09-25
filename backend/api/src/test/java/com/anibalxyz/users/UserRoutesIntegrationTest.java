@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.config.AppConfig;
+import com.anibalxyz.server.dto.ErrorResponse;
 import com.anibalxyz.users.api.UserMapper;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.out.UserCreateResponse;
@@ -15,6 +16,7 @@ import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
 import com.anibalxyz.users.domain.User;
+import com.anibalxyz.users.domain.UserRepository;
 import com.anibalxyz.users.infra.JpaUserRepository;
 import com.anibalxyz.users.infra.UserEntity;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -25,7 +27,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -40,6 +45,7 @@ public class UserRoutesIntegrationTest {
   private static String baseUrl;
   private static ObjectMapper objectMapper;
   private EntityManager em;
+  private UserRepository userRepository;
 
   @BeforeAll
   public static void setup() {
@@ -63,6 +69,7 @@ public class UserRoutesIntegrationTest {
   @BeforeEach
   public void openEntityManager() {
     em = emf.createEntityManager();
+    userRepository = new JpaUserRepository(() -> em);
     cleanDatabase();
   }
 
@@ -95,7 +102,10 @@ public class UserRoutesIntegrationTest {
   }
 
   private Response post(String path, Object body) throws IOException {
-    String jsonBody = objectMapper.writeValueAsString(body);
+    String jsonBody =
+        body.getClass().equals(String.class)
+            ? (String) body
+            : objectMapper.writeValueAsString(body);
     Request request =
         new Request.Builder()
             .url(baseUrl + path)
@@ -182,5 +192,89 @@ public class UserRoutesIntegrationTest {
     assertThat(responseBody.email())
         .isEqualTo(requestBody.email())
         .isEqualTo(persistedUser.getEmail());
+  }
+
+  @Test
+  public void POST_users_returns_400_when_invalid_property_is_provided() throws IOException {
+    UserCreateRequest requestBody = new UserCreateRequest("New User", "new.user@mail.com", "1234");
+
+    Response response = post("/users", requestBody);
+    assertThat(response.code()).isEqualTo(400);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody.error()).isEqualTo("Invalid argument provided");
+    assertThat(responseBody.details()).contains("Password must be at least 8 characters.");
+
+    Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
+    assertThat(user).isEmpty();
+  }
+
+  @Test
+  public void POST_users_returns_400_when_there_is_a_missing_property() throws IOException {
+    UserCreateRequest requestBody = new UserCreateRequest("New User", "new.user@mail.com", null);
+
+    Response response = post("/users", requestBody);
+    assertThat(response.code()).isEqualTo(400);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody.error()).isEqualTo("Invalid input provided");
+    assertThat(responseBody.details()).contains("Password is required");
+
+    Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
+    assertThat(user).isEmpty();
+  }
+
+  @Test
+  public void POST_users_returns_400_when_email_already_exists() throws IOException {
+    String existingEmail = "existing.user@mail.com";
+    persistUser("Existing User", existingEmail);
+    UserCreateRequest requestBody =
+        new UserCreateRequest("New User", existingEmail, VALID_PASSWORD);
+
+    Response response = post("/users", requestBody);
+
+    assertThat(response.code()).isEqualTo(400);
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody.error()).isEqualTo("Invalid argument provided");
+    assertThat(responseBody.details()).contains("Email already in use. Please use another");
+
+    assertThat(userRepository.findAll()).hasSize(1);
+  }
+
+  @Test
+  public void POST_users_returns_400_when_unknown_property_is_provided() throws IOException {
+    String unknownProperty = "mail";
+    Map<String, String> requestBody = new HashMap<>();
+    requestBody.put("name", "New User");
+    requestBody.put(unknownProperty, "new.user@mail.com");
+    requestBody.put("password", "1234");
+
+    Response response = post("/users", requestBody);
+    assertThat(response.code()).isEqualTo(400);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody.error()).isEqualTo("Unknown property in request body");
+    assertThat(responseBody.details()).contains("Unknown property: '" + unknownProperty + "'");
+
+    assertThat(userRepository.findAll()).isEmpty();
+  }
+
+  // NOTE: this case is not POST /users specific, but for a while it will be here
+  @Test
+  public void POST_users_returns_400_when_json_is_malformed() throws IOException {
+    String malformedJson =
+"""
+{
+    "name": "nombe",
+    "email":
+}
+""";
+
+    Response response = post("/users", malformedJson);
+
+    assertThat(response.code()).isEqualTo(400);
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody.error()).isEqualTo("Malformed JSON request");
+    assertThat(responseBody.details()).contains("Malformed JSON in request body");
   }
 }

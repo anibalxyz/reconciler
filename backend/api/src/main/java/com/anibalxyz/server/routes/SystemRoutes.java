@@ -5,13 +5,12 @@ import io.javalin.Javalin;
 import jakarta.persistence.EntityManager;
 import java.util.Map;
 
-public class SystemRoutes implements Router {
+public class SystemRoutes extends RouteRegistry {
 
-  private final Javalin server;
   private final PersistenceManager persistenceManager;
 
   public SystemRoutes(Javalin server, PersistenceManager persistenceManager) {
-    this.server = server;
+    super(server);
     this.persistenceManager = persistenceManager;
   }
 
