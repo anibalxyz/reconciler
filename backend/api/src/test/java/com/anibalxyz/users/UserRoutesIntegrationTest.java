@@ -164,6 +164,46 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
+  public void GET_users_id_returns_200_when_user_exists() throws IOException {
+    UserEntity user = persistUser("John Doe", "john@mail.com");
+    UserDetailResponse expectedResponse = UserMapper.toDetailResponse(user.toDomain());
+    int existingId = user.getId();
+
+    Response response = get("/users/" + existingId);
+    assertThat(response.code()).isEqualTo(200);
+
+    UserDetailResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  public void GET_users_id_returns_404_when_user_does_not_exist() throws IOException {
+    int nonExistingId = 999;
+    ErrorResponse expectedResponse =
+        new ErrorResponse(
+            "Entity not found", List.of("User with id " + nonExistingId + " not found"));
+
+    Response response = get("/users/" + nonExistingId);
+    assertThat(response.code()).isEqualTo(404);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  public void GET_users_id_returns_400_when_invalid_id_is_provided() throws IOException {
+    String invalidId = "abc";
+    ErrorResponse expectedResponse =
+        new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
+
+    Response response = get("/users/" + invalidId);
+    assertThat(response.code()).isEqualTo(400);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  @Test
   public void POST_users_creates_a_new_user() throws IOException {
     // ARRANGE
     UserCreateRequest requestBody =
