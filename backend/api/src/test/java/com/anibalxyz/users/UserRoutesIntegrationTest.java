@@ -11,6 +11,7 @@ import com.anibalxyz.server.config.AppConfig;
 import com.anibalxyz.server.dto.ErrorResponse;
 import com.anibalxyz.users.api.UserMapper;
 import com.anibalxyz.users.api.in.UserCreateRequest;
+import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserCreateResponse;
 import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.domain.Email;
@@ -36,9 +37,12 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserRoutesIntegrationTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
+  private static final Logger log = LoggerFactory.getLogger(UserRoutesIntegrationTest.class);
   private static Application app;
   private static EntityManagerFactory emf;
   private static OkHttpClient client;
@@ -110,6 +114,19 @@ public class UserRoutesIntegrationTest {
         new Request.Builder()
             .url(baseUrl + path)
             .post(okhttp3.RequestBody.create(jsonBody, okhttp3.MediaType.get("application/json")))
+            .build();
+    return client.newCall(request).execute();
+  }
+
+  private Response put(String path, Object body) throws IOException {
+    String jsonBody =
+        body.getClass().equals(String.class)
+            ? (String) body
+            : objectMapper.writeValueAsString(body);
+    Request request =
+        new Request.Builder()
+            .url(baseUrl + path)
+            .put(okhttp3.RequestBody.create(jsonBody, okhttp3.MediaType.get("application/json")))
             .build();
     return client.newCall(request).execute();
   }
@@ -234,6 +251,7 @@ public class UserRoutesIntegrationTest {
         .isEqualTo(persistedUser.getEmail());
   }
 
+  // NOTE: invalid property tested: email
   @Test
   public void POST_users_returns_400_when_invalid_property_is_provided() throws IOException {
     UserCreateRequest requestBody = new UserCreateRequest("New User", "new.user@mail.com", "1234");
@@ -316,5 +334,159 @@ public class UserRoutesIntegrationTest {
     ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
     assertThat(responseBody.error()).isEqualTo("Malformed JSON request");
     assertThat(responseBody.details()).contains("Malformed JSON in request body");
+  }
+
+  @Test
+  public void PUT_users_id_returns_200_and_updated_user_when_id_exists_and_data_is_valid()
+      throws IOException {
+    UserEntity user = persistUser("John Doe", "john@mail.com");
+    PasswordHash prevPasswordHash = new PasswordHash(user.getPasswordHash());
+    // LocalDateTime prevUpdatedAt = user.getUpdatedAt();
+    int existingId = user.getId();
+
+    String newPassword = VALID_PASSWORD + "_NEW";
+    UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", newPassword);
+
+    Response response = put("/users/" + existingId, request);
+    assertThat(response.code()).isEqualTo(200);
+
+    UserEntity updatedUser = em.find(UserEntity.class, existingId);
+    em.refresh(updatedUser);
+    PasswordHash updatedPasswordHash = new PasswordHash(updatedUser.getPasswordHash());
+    assertThat(updatedUser.getName()).isEqualTo(request.name());
+    assertThat(updatedUser.getEmail()).isEqualTo(request.email());
+    assertTrue(updatedPasswordHash.matches(newPassword));
+    assertThat(updatedPasswordHash.value()).isNotEqualTo(prevPasswordHash.value());
+    /* TODO: uncomment when DB performs an automatic update
+    assertThat(updatedUser.getUpdatedAt())
+        .isEqualTo(responseBody.updatedAt())
+        .isAfter(prevUpdatedAt);
+    */
+
+    UserDetailResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody.name()).isEqualTo(request.name());
+    assertThat(responseBody.email()).isEqualTo(request.email());
+    assertThat(responseBody.updatedAt()).isEqualTo(updatedUser.getUpdatedAt());
+  }
+
+  @Test
+  public void PUT_users_id_returns_400_when_invalid_id_is_provided() throws IOException {
+    String invalidId = "abc";
+    UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
+    ErrorResponse expectedResponse =
+        new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
+
+    Response response = put("/users/" + invalidId, request);
+    assertThat(response.code()).isEqualTo(400);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  public void PUT_users_id_returns_404_when_user_does_not_exist() throws IOException {
+    int nonExistingId = 999;
+    UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
+    ErrorResponse expectedResponse =
+        new ErrorResponse("Entity not found", List.of("User not found"));
+
+    Response response = put("/users/" + nonExistingId, request);
+    assertThat(response.code()).isEqualTo(404);
+
+    Optional<User> optionalUser = userRepository.findById(nonExistingId);
+    assertThat(optionalUser).isEmpty();
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  public void PUT_users_id_returns_400_when_unknown_property_is_provided() throws IOException {
+    UserEntity user = persistUser("John Doe", "john@mail.com");
+    int existingId = user.getId();
+
+    String unknownProperty = "mail";
+    Map<String, String> requestBody = new HashMap<>();
+    requestBody.put("name", "New User");
+    requestBody.put(unknownProperty, "new.user@mail.com");
+    requestBody.put("password", "1234");
+
+    ErrorResponse expectedResponse =
+        new ErrorResponse(
+            "Unknown property in request body",
+            List.of("Unknown property: '" + unknownProperty + "'"));
+
+    Response response = put("/users/" + existingId, requestBody);
+    assertThat(response.code()).isEqualTo(400);
+
+    User optionalUser = userRepository.findById(existingId).orElseThrow();
+    assertThat(optionalUser).isEqualTo(user.toDomain());
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  public void PUT_users_id_returns_400_when_no_properties_are_provided() throws IOException {
+    UserEntity user = persistUser("John Doe", "john@mail.com");
+    int existingId = user.getId();
+
+    UserUpdateRequest requestBody = new UserUpdateRequest(null, null, null);
+    ErrorResponse expectedResponse =
+        new ErrorResponse(
+            "Invalid input provided",
+            List.of("At least one field (name, email, password) must be provided"));
+
+    Response response = put("/users/" + existingId, requestBody);
+    assertThat(response.code()).isEqualTo(400);
+
+    User optionalUser = userRepository.findById(existingId).orElseThrow();
+    assertThat(optionalUser).isEqualTo(user.toDomain());
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  public void PUT_users_id_returns_400_when_email_already_exists() throws IOException {
+    UserEntity userToUpdate = persistUser("User To Update", "update.me@mail.com");
+    UserEntity existingUser = persistUser("Existing User", "existing@mail.com");
+    int userToUpdateId = userToUpdate.getId();
+
+    UserUpdateRequest requestBody = new UserUpdateRequest(null, existingUser.getEmail(), null);
+    ErrorResponse expectedResponse =
+        new ErrorResponse(
+            "Invalid argument provided", List.of("Email already in use. Please use another"));
+
+    Response response = put("/users/" + userToUpdateId, requestBody);
+    assertThat(response.code()).isEqualTo(400);
+
+    User userAfterAttempt = userRepository.findById(userToUpdateId).orElseThrow();
+    assertThat(userAfterAttempt.getEmail().value()).isEqualTo(userToUpdate.getEmail());
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  // NOTE: invalid property tested: email
+  @Test
+  public void PUT_users_id_returns_400_when_invalid_property_is_provided() throws IOException {
+    UserEntity originalUser = persistUser("John Doe", "john@mail.com");
+    int existingId = originalUser.getId();
+
+    String invalidEmail = "invalid-email";
+    UserUpdateRequest requestBody = new UserUpdateRequest("New User", invalidEmail, "12345678");
+    ErrorResponse expectedResponse =
+        new ErrorResponse(
+            "Invalid argument provided", List.of("Invalid email format: " + invalidEmail));
+
+    Response response = put("/users/" + existingId, requestBody);
+    assertThat(response.code()).isEqualTo(400);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+
+    User userAfterAttempt = userRepository.findById(existingId).orElseThrow();
+    assertThat(userAfterAttempt).isEqualTo(originalUser.toDomain());
   }
 }

@@ -76,4 +76,19 @@ public class User {
 User(id=%s, name=%s, email=%s, createdAt=%s, updatedAt=%s)"""
         .formatted(id, name, email.value(), createdAt, updatedAt);
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    User user = (User) o;
+
+    if (!id.equals(user.id)) return false;
+    if (!name.equals(user.name)) return false;
+    if (!email.equals(user.email)) return false;
+    if (!passwordHash.equals(user.passwordHash)) return false;
+    if (!createdAt.equals(user.createdAt)) return false;
+    return updatedAt.equals(user.updatedAt);
+  }
 }
