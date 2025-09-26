@@ -54,7 +54,7 @@ public class UserRoutesIntegrationTest {
   @BeforeAll
   public static void setup() {
     app = Application.create(AppConfig.loadForTest());
-    app.javalin().start(0);
+    app.start(0);
 
     client = new OkHttpClient();
     baseUrl = "http://localhost:" + app.javalin().port();
@@ -102,6 +102,11 @@ public class UserRoutesIntegrationTest {
 
   private Response get(String path) throws IOException {
     Request request = new Request.Builder().url(baseUrl + path).get().build();
+    return client.newCall(request).execute();
+  }
+
+  private Response delete(String path) throws IOException {
+    Request request = new Request.Builder().url(baseUrl + path).delete().build();
     return client.newCall(request).execute();
   }
 
@@ -488,5 +493,45 @@ public class UserRoutesIntegrationTest {
 
     User userAfterAttempt = userRepository.findById(existingId).orElseThrow();
     assertThat(userAfterAttempt).isEqualTo(originalUser.toDomain());
+  }
+
+  @Test
+  public void DELETE_users_id_returns_204_when_user_exists() throws IOException {
+    UserEntity user = persistUser("John Doe", "john@mail.com");
+    int existingId = user.getId();
+
+    Response response = delete("/users/" + existingId);
+    assertThat(response.code()).isEqualTo(204);
+
+    em.clear();
+    Optional<User> optionalUser = userRepository.findById(existingId);
+    assertThat(optionalUser).isEmpty();
+  }
+
+  @Test
+  public void DELETE_users_id_returns_404_when_user_does_not_exist() throws IOException {
+    int nonExistingId = 999;
+    ErrorResponse expectedResponse =
+        new ErrorResponse(
+            "Entity not found", List.of("User with id " + nonExistingId + " not found"));
+
+    Response response = delete("/users/" + nonExistingId);
+    assertThat(response.code()).isEqualTo(404);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  public void DELETE_users_id_returns_400_when_invalid_id_is_provided() throws IOException {
+    String invalidId = "abc";
+    ErrorResponse expectedResponse =
+        new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
+
+    Response response = delete("/users/" + invalidId);
+    assertThat(response.code()).isEqualTo(400);
+
+    ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+    assertThat(responseBody).isEqualTo(expectedResponse);
   }
 }

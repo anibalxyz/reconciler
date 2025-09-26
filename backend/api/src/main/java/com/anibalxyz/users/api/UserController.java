@@ -62,9 +62,7 @@ public class UserController {
   }
 
   public void deleteUserById(Context ctx) throws EntityNotFoundException, BadRequestResponse {
-    int id = getParamId(ctx);
-
-    userService.deleteUserById(id);
+    userService.deleteUserById(getParamId(ctx));
     ctx.status(204);
   }
 
