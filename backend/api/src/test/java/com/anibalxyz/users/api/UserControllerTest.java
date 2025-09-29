@@ -68,8 +68,7 @@ public class UserControllerTest {
   class FailureScenarios {
 
     @Test
-    @DisplayName(
-        "Given a non-existing id, when getUserById is called, then throw EntityNotFoundException")
+    @DisplayName("getUserById: given a non-existing id, then throw EntityNotFoundException")
     public void getUserById_nonExistingId_throwsEntityNotFoundException() {
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
@@ -80,7 +79,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("Given an invalid id, when getUserById is called, then throw BadRequestResponse")
+    @DisplayName("getUserById: given an invalid id, then throw BadRequestResponse")
     public void getUserById_invalidId_throwsBadRequestResponse() {
       stubPathParamId().thenThrow(new BadRequestResponse());
 
@@ -89,8 +88,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given an invalid property, when createUser is called, then throw IllegalArgumentException")
+    @DisplayName("createUser: given an invalid property, then throw IllegalArgumentException")
     public void createUser_invalidProperty_throwsIllegalArgumentException() {
       UserCreateRequest request = new UserCreateRequest("John Doe", "mail.com", "abc");
       stubBodyValidatorFor(UserCreateRequest.class).thenReturn(request);
@@ -102,8 +100,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given a missing property, when createUser is called, then throw ValidationException")
+    @DisplayName("createUser: given a missing property, then throw ValidationException")
     public void createUser_missingProperty_throwsValidationException() {
       stubBodyValidatorFor(UserCreateRequest.class)
           .thenThrow(
@@ -115,8 +112,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given an invalid id, when updateUserById is called, then throw BadRequestResponse")
+    @DisplayName("updateUserById: given an invalid id, then throw BadRequestResponse")
     public void updateUserById_invalidId_throwsBadRequestResponse() {
       stubPathParamId().thenThrow(new BadRequestResponse());
       assertThatThrownBy(() -> userController.updateUserById(ctx))
@@ -124,8 +120,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given missing data, when updateUserById is called, then throw ValidationException")
+    @DisplayName("updateUserById: given missing data, then throw ValidationException")
     public void updateUserById_missingData_throwsValidationException() {
       stubPathParamId().thenReturn(1);
       stubBodyValidatorFor(UserUpdateRequest.class)
@@ -137,8 +132,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given an invalid property, when updateUserById is called, then throw IllegalArgumentException")
+    @DisplayName("updateUserById: given an invalid property, then throw IllegalArgumentException")
     public void updateUserById_invalidProperty_throwsIllegalArgumentException() {
       UserUpdateRequest request = new UserUpdateRequest("John Doe", "mail.com", "abc");
       int validId = 1;
@@ -153,8 +147,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given a non-existing id, when updateUserById is called, then throw EntityNotFoundException")
+    @DisplayName("updateUserById: given a non-existing id, then throw EntityNotFoundException")
     public void updateUserById_nonExistingId_throwsEntityNotFoundException() {
       UserUpdateRequest request = new UserUpdateRequest("John Doe", "mail.com", "abc");
       int nonExistingId = 999;
@@ -169,8 +162,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given an invalid id, when deleteUserById is called, then throw BadRequestResponse")
+    @DisplayName("deleteUserById: given an invalid id, then throw BadRequestResponse")
     public void deleteUserById_invalidId_throwsBadRequestResponse() {
       stubPathParamId().thenThrow(new BadRequestResponse());
       assertThatThrownBy(() -> userController.deleteUserById(ctx))
@@ -178,8 +170,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given a non-existing id, when deleteUserById is called, then throw EntityNotFoundException")
+    @DisplayName("deleteUserById: given a non-existing id, then throw EntityNotFoundException")
     public void deleteUserById_nonExistingId_throwsEntityNotFoundException() {
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
@@ -198,8 +189,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given there are users, when getAllUsers is called, then return 200 and users as JSON")
+    @DisplayName("getAllUsers: given users exist, then return 200 and users as JSON")
     public void getAllUsers_return200AndUsersJson() {
       LocalDateTime localDateTime = LocalDateTime.now();
       // Given there are users
@@ -237,8 +227,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given there are no users, when getAllUsers is called, then return 200 and empty JSON array")
+    @DisplayName("getAllUsers: given no users exist, then return 200 and empty JSON array")
     public void getAllUsers_return200AndEmptyJsonArray() {
       List<User> fakeUsers = List.of();
 
@@ -255,8 +244,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "Given an existing id, when getUserById is called, then return 200 and user as JSON")
+    @DisplayName("getUserById: given an existing id, then return 200 and user as JSON")
     public void getUserById_existingId_returns200AndUserJson() {
       LocalDateTime localDateTime = LocalDateTime.now();
       int id = 1;
@@ -283,7 +271,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("Given valid user data, when createUser is called, then return 201 and new user")
+    @DisplayName("createUser: given valid data, then return 201 and new user")
     public void createUser_validData_return201AndNewUser() {
       LocalDateTime localDateTime = LocalDateTime.now();
       UserCreateRequest request =
@@ -313,7 +301,7 @@ public class UserControllerTest {
 
     @Test
     @DisplayName(
-        "Given an existing id and valid data, when updateUserById is called, then return 200 and updated user")
+        "updateUserById: given an existing id and valid data, then return 200 and updated user")
     public void updateUserById_existingIdAndValidData_returns200AndUpdatedUser() {
       UserUpdateRequest request =
           new UserUpdateRequest("John Doe", "john@mail.com", "password12345678");
@@ -344,7 +332,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("Given an existing id, when deleteUserById is called, then return 204 No Content")
+    @DisplayName("deleteUserById: given an existing id, then return 204 No Content")
     public void deleteUserById_existingId_returns204NoContent() {
       int validId = 1;
       stubPathParamId().thenReturn(validId);

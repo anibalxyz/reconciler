@@ -158,8 +158,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void GET_users_returns_list_when_users_exist() throws IOException {
-    // ARRANGE
+  @DisplayName("GET /users: given users exist, then return 200 and the list of users")
+  public void GET_users_usersExist_return200AndListOfUsers() throws IOException {
     List<UserEntity> persistedUsers =
         List.of(persistUser("Name", "name@mail.com"), persistUser("Alfredo", "alfredo@mail.com"));
     List<UserDetailResponse> expectedData =
@@ -167,17 +167,16 @@ public class UserRoutesIntegrationTest {
             .map(userEntity -> UserMapper.toDetailResponse(userEntity.toDomain()))
             .toList();
 
-    // ACT
     Response response = get("/users");
 
-    // ASSERT
     assertThat(response.code()).isEqualTo(200);
     List<UserDetailResponse> actualData = parseBody(response, new TypeReference<>() {});
     assertThat(actualData).usingRecursiveFieldByFieldElementComparator().isEqualTo(expectedData);
   }
 
   @Test
-  public void GET_users_returns_empty_list_when_no_users_exist() throws IOException {
+  @DisplayName("GET /users: given no users exist, then return 200 and an empty list")
+  public void GET_users_noUsersExist_return200AndEmptyList() throws IOException {
     Response response = get("/users");
 
     assertThat(response.code()).isEqualTo(200);
@@ -186,7 +185,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void GET_users_id_returns_200_when_user_exists() throws IOException {
+  @DisplayName("GET /users/{id}: given an existing user id, then return 200 and the user data")
+  public void GET_users_id_existingId_return200AndUser() throws IOException {
     UserEntity user = persistUser("John Doe", "john@mail.com");
     UserDetailResponse expectedResponse = UserMapper.toDetailResponse(user.toDomain());
     int existingId = user.getId();
@@ -199,7 +199,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void GET_users_id_returns_404_when_user_does_not_exist() throws IOException {
+  @DisplayName("GET /users/{id}: given a non-existing id, then return 404 Not Found")
+  public void GET_users_id_nonExistingId_return404() throws IOException {
     int nonExistingId = 999;
     ErrorResponse expectedResponse =
         new ErrorResponse(
@@ -213,7 +214,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void GET_users_id_returns_400_when_invalid_id_is_provided() throws IOException {
+  @DisplayName("GET /users/{id}: given an invalid id format, then return 400 Bad Request")
+  public void GET_users_id_invalidIdFormat_return400() throws IOException {
     String invalidId = "abc";
     ErrorResponse expectedResponse =
         new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
@@ -226,12 +228,11 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void POST_users_creates_a_new_user() throws IOException {
-    // ARRANGE
+  @DisplayName("POST /users: given valid user data, then return 201 and create the user")
+  public void POST_users_validData_return201AndCreateUser() throws IOException {
     UserCreateRequest requestBody =
         new UserCreateRequest("New User", "new.user@mail.com", VALID_PASSWORD);
 
-    // ACT
     Response response = post("/users", requestBody);
     assertThat(response.code()).isEqualTo(201);
     UserCreateResponse responseBody = parseBody(response, new TypeReference<>() {});
@@ -258,7 +259,8 @@ public class UserRoutesIntegrationTest {
 
   // NOTE: invalid property tested: email
   @Test
-  public void POST_users_returns_400_when_invalid_property_is_provided() throws IOException {
+  @DisplayName("POST /users: given an invalid password, then return 400 Bad Request")
+  public void POST_users_invalidPassword_return400() throws IOException {
     UserCreateRequest requestBody = new UserCreateRequest("New User", "new.user@mail.com", "1234");
 
     Response response = post("/users", requestBody);
@@ -273,7 +275,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void POST_users_returns_400_when_there_is_a_missing_property() throws IOException {
+  @DisplayName("POST /users: given a there is a missing property, then return 400 Bad Request")
+  public void POST_users_missingProperty_return400() throws IOException {
     UserCreateRequest requestBody = new UserCreateRequest("New User", "new.user@mail.com", null);
 
     Response response = post("/users", requestBody);
@@ -288,7 +291,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void POST_users_returns_400_when_email_already_exists() throws IOException {
+  @DisplayName("POST /users: given an existing email, then return 400 Bad Request")
+  public void POST_users_existingEmail_return400() throws IOException {
     String existingEmail = "existing.user@mail.com";
     persistUser("Existing User", existingEmail);
     UserCreateRequest requestBody =
@@ -305,7 +309,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void POST_users_returns_400_when_unknown_property_is_provided() throws IOException {
+  @DisplayName("POST /users: given there is an unknown property, then return 400 Bad Request")
+  public void POST_users_unknownProperty_return400() throws IOException {
     String unknownProperty = "mail";
     Map<String, String> requestBody = new HashMap<>();
     requestBody.put("name", "New User");
@@ -322,9 +327,10 @@ public class UserRoutesIntegrationTest {
     assertThat(userRepository.findAll()).isEmpty();
   }
 
-  // NOTE: this case is not POST /users specific, but for a while it will be here
+  // NOTE: this case is not "POST /users"'s specific, but for a while it will be here
   @Test
-  public void POST_users_returns_400_when_json_is_malformed() throws IOException {
+  @DisplayName("POST /users: given a malformed JSON payload, then return 400 Bad Request")
+  public void POST_users_malformedJson_return400() throws IOException {
     String malformedJson =
 """
 {
@@ -342,8 +348,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void PUT_users_id_returns_200_and_updated_user_when_id_exists_and_data_is_valid()
-      throws IOException {
+  @DisplayName("PUT /users/{id}: given valid id and data, then return 200 and the updated user")
+  public void PUT_users_id_validIdAndData_thenReturn200AndUpdatedUser() throws IOException {
     UserEntity user = persistUser("John Doe", "john@mail.com");
     PasswordHash prevPasswordHash = new PasswordHash(user.getPasswordHash());
     // LocalDateTime prevUpdatedAt = user.getUpdatedAt();
@@ -375,7 +381,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void PUT_users_id_returns_400_when_invalid_id_is_provided() throws IOException {
+  @DisplayName("PUT /users/{id}: given an invalid id format, then return 400 Bad Request")
+  public void PUT_users_id_invalidIdFormat_return400() throws IOException {
     String invalidId = "abc";
     UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
     ErrorResponse expectedResponse =
@@ -389,7 +396,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void PUT_users_id_returns_404_when_user_does_not_exist() throws IOException {
+  @DisplayName("PUT /users/{id}: given a non-existing id, then return 404 Not Found")
+  public void PUT_users_id_nonExistingId_return404() throws IOException {
     int nonExistingId = 999;
     UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
     ErrorResponse expectedResponse =
@@ -406,7 +414,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void PUT_users_id_returns_400_when_unknown_property_is_provided() throws IOException {
+  @DisplayName("PUT /users/{id}: given an unknown property, then return 400 Bad Request")
+  public void PUT_users_id_unknownProperty_return400() throws IOException {
     UserEntity user = persistUser("John Doe", "john@mail.com");
     int existingId = user.getId();
 
@@ -432,7 +441,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void PUT_users_id_returns_400_when_no_properties_are_provided() throws IOException {
+  @DisplayName("PUT /users/{id}: given no properties are provided, then return 400 Bad Request")
+  public void PUT_users_id_noPropertiesAreProvided_return400() throws IOException {
     UserEntity user = persistUser("John Doe", "john@mail.com");
     int existingId = user.getId();
 
@@ -453,7 +463,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void PUT_users_id_returns_400_when_email_already_exists() throws IOException {
+  @DisplayName("PUT /users/{id}: given a duplicate email, then return 400 Bad Request")
+  public void PUT_users_id_duplicateEmail_return400() throws IOException {
     UserEntity userToUpdate = persistUser("User To Update", "update.me@mail.com");
     UserEntity existingUser = persistUser("Existing User", "existing@mail.com");
     int userToUpdateId = userToUpdate.getId();
@@ -475,7 +486,8 @@ public class UserRoutesIntegrationTest {
 
   // NOTE: invalid property tested: email
   @Test
-  public void PUT_users_id_returns_400_when_invalid_property_is_provided() throws IOException {
+  @DisplayName("PUT /users/{id}: given an invalid email format, then return 400 Bad Request")
+  public void PUT_users_id_invalidEmailFormat_return400() throws IOException {
     UserEntity originalUser = persistUser("John Doe", "john@mail.com");
     int existingId = originalUser.getId();
 
@@ -496,7 +508,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void DELETE_users_id_returns_204_when_user_exists() throws IOException {
+  @DisplayName("DELETE /users/{id}: given an existing id, then return 204 and delete the user")
+  public void DELETE_users_id_existingId_return204() throws IOException {
     UserEntity user = persistUser("John Doe", "john@mail.com");
     int existingId = user.getId();
 
@@ -509,7 +522,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void DELETE_users_id_returns_404_when_user_does_not_exist() throws IOException {
+  @DisplayName("DELETE /users/{id}: given a non-existing id, then return 404")
+  public void DELETE_users_id_nonExistingId_return404() throws IOException {
     int nonExistingId = 999;
     ErrorResponse expectedResponse =
         new ErrorResponse(
@@ -523,7 +537,8 @@ public class UserRoutesIntegrationTest {
   }
 
   @Test
-  public void DELETE_users_id_returns_400_when_invalid_id_is_provided() throws IOException {
+  @DisplayName("DELETE /users/{id}: given an invalid id format, then return 400")
+  public void DELETE_users_id_invalidIdFormat_return400() throws IOException {
     String invalidId = "abc";
     ErrorResponse expectedResponse =
         new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));

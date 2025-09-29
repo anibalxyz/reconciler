@@ -48,6 +48,11 @@ public class UserService {
     }
     if (payload.email() != null) {
       Email newEmail = new Email(payload.email());
+
+      if (newEmail.equals(user.getEmail())) {
+        return user;
+      }
+
       userRepository
           .findByEmail(newEmail)
           .ifPresent(

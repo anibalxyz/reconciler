@@ -14,6 +14,7 @@ import com.anibalxyz.users.domain.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -50,7 +51,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void getAllUsers_thereAreUsers_returnUsersList() {
+  @DisplayName("getAllUsers: given users exist, then return a list of all users")
+  public void getAllUsers_usersExist_returnListOfUsers() {
     LocalDateTime currentDate = LocalDateTime.now();
     List<User> expectedUsers =
         List.of(
@@ -76,7 +78,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void getAllUsers_thereAreNoUsers_returnEmptyList() {
+  @DisplayName("getAllUsers: given no users exist, then return an empty list")
+  public void getAllUsers_noUsersExist_returnEmptyList() {
     List<User> expectedResult = List.of();
     when(userRepository.findAll()).thenReturn(expectedResult);
 
@@ -86,7 +89,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void getUserById_userExists_returnUser() {
+  @DisplayName("getUserById: given an existing id, then return the correct user")
+  public void getUserById_existingId_returnUser() {
     LocalDateTime currentDate = LocalDateTime.now();
     User expectedUser =
         new User(
@@ -104,16 +108,19 @@ public class UserServiceTest {
   }
 
   @Test
-  public void getUserById_userDoesNotExist_throwEntityNotFoundException() {
+  @DisplayName("getUserById: given a non-existing id, then throw EntityNotFoundException")
+  public void getUserById_nonExistingId_throwEntityNotFoundException() {
     int nonExistingId = 999;
     when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> userService.getUserById(nonExistingId))
-        .isInstanceOf(EntityNotFoundException.class);
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("User with id " + nonExistingId + " not found");
   }
 
   @Test
-  public void createUser_validDataIsProvided_returnCreatedUser() {
+  @DisplayName("createUser: given valid data, then return the created user")
+  public void createUser_validData_returnCreatedUser() {
     int validId = 1;
     LocalDateTime currentDate = LocalDateTime.now();
     UserUpdatePayload payload = createPayload("User 1", "user1@mail.com", VALID_PASSWORD);
@@ -147,7 +154,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void createUser_emailAlreadyExists_throwIllegalArgumentException() {
+  @DisplayName("createUser: given an existing email, then throw IllegalArgumentException")
+  public void createUser_existingEmail_throwIllegalArgumentException() {
     LocalDateTime currentDate = LocalDateTime.now();
     UserUpdatePayload payload = createPayload("User 1", "user1@mail.com", VALID_PASSWORD);
     User existingUser =
@@ -168,7 +176,9 @@ public class UserServiceTest {
 
   @ParameterizedTest
   @CsvSource({"blank", "format"})
-  public void createUser_emailIsInvalid_throwIllegalArgumentException(String invalidationCause) {
+  @DisplayName("createUser: given an invalid email format, then throw IllegalArgumentException")
+  public void createUser_invalidEmailFormat_throwIllegalArgumentException(
+      String invalidationCause) {
     String email = invalidationCause.equals("format") ? "mailemail.com" : " ";
     UserUpdatePayload payload = createPayload("User", email, VALID_PASSWORD);
 
@@ -179,7 +189,8 @@ public class UserServiceTest {
 
   @ParameterizedTest
   @CsvSource({"blank", "format"})
-  public void createUser_passwordIsInvalid_throwIllegalArgumentException(String invalidationCause) {
+  @DisplayName("createUser: given an invalid password, then throw IllegalArgumentException")
+  public void createUser_invalidPassword_throwIllegalArgumentException(String invalidationCause) {
     String password = invalidationCause.equals("format") ? "invalid" : " ";
     UserUpdatePayload payload = createPayload("User", "mail@email.com", password);
     when(userRepository.findByEmail(new Email(payload.email()))).thenReturn(Optional.empty());
@@ -190,7 +201,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void updateUserById_existingIdAndValidNameAreProvided_returnUpdatedUser() {
+  @DisplayName("updateUserById: given a valid id and name, then return the updated user")
+  public void updateUserById_validIdAndName_returnUpdatedUser() {
     int existingId = 1;
     UserUpdatePayload payload = createPayload("New Name", null, null);
     LocalDateTime currentDate = LocalDateTime.now();
@@ -215,7 +227,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void updateUserById_existingIdAndValidEmailAreProvided_returnUpdatedUser() {
+  @DisplayName("updateUserById: given a valid id and email, then return the updated user")
+  public void updateUserById_validIdAndEmail_returnUpdatedUser() {
     int existingId = 1;
     UserUpdatePayload payload = createPayload(null, "new@mail.com", null);
     LocalDateTime currentDate = LocalDateTime.now();
@@ -241,7 +254,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void updateUserById_existingIdAndValidPasswordAreProvided_returnUpdatedUser() {
+  @DisplayName("updateUserById: given a valid id and password, then return the updated user")
+  public void updateUserById_validIdAndPassword_returnUpdatedUser() {
     int existingId = 1;
     UserUpdatePayload payload = createPayload(null, null, "new" + VALID_PASSWORD);
     LocalDateTime currentDate = LocalDateTime.now();
@@ -278,7 +292,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void updateUserById_userDoesNotExist_throwEntityNotFoundException() {
+  @DisplayName("updateUserById: given a non-existing id, then throw EntityNotFoundException")
+  public void updateUserById_nonExistingId_throwEntityNotFoundException() {
     int nonExistingId = 999;
     UserUpdatePayload payload = createPayload("New Name", null, null);
 
@@ -291,7 +306,8 @@ public class UserServiceTest {
 
   @ParameterizedTest
   @CsvSource({"blank", "format"})
-  public void updateUserById_existingIdAndInvalidEmailAreProvided_throwIllegalArgumentException(
+  @DisplayName("updateUserById: given an invalid email format, then throw IllegalArgumentException")
+  public void updateUserById_invalidEmailFormat_throwIllegalArgumentException(
       String invalidationCause) {
     int existingId = 1;
     String email = invalidationCause.equals("format") ? "invalidemail" : " ";
@@ -315,7 +331,8 @@ public class UserServiceTest {
 
   @ParameterizedTest
   @CsvSource({"blank", "format"})
-  public void updateUserById_existingIdAndInvalidPasswordAreProvided_throwIllegalArgumentException(
+  @DisplayName("updateUserById: given an invalid password, then throw IllegalArgumentException")
+  public void updateUserById_invalidPasswordFormat_throwIllegalArgumentException(
       String invalidationCause) {
     int existingId = 1;
     String password = invalidationCause.equals("format") ? "invalid" : " ";
@@ -337,42 +354,58 @@ public class UserServiceTest {
         .hasMessage("Password must be at least 8 characters.");
   }
 
-  @ParameterizedTest
-  @CsvSource({"true", "false"})
-  public void updateUserById_existingIdAndEmailAlreadyInUse_throwIllegalArgumentException(
-      boolean isOwner) {
+  @Test
+  @DisplayName(
+      "updateUserById: given an email already in use by the user, then return the unmodified user")
+  public void updateUserById_emailAlreadyUsedByUser_returnUnmodifiedUser() {
     int updatingId = 1;
     UserUpdatePayload payload = createPayload(null, "updating@mail.com", null);
-    LocalDateTime currentDate = LocalDateTime.now();
+    LocalDateTime now = LocalDateTime.now();
     User existingUser =
         new User(
-            isOwner ? updatingId : 2,
+            updatingId,
             "Previous",
-            isOwner ? new Email(payload.email()) : new Email("previous@mail.com"),
+            new Email(payload.email()),
             PasswordHash.generate(VALID_PASSWORD),
-            currentDate,
-            currentDate);
+            now,
+            now);
+
+    when(userRepository.findById(updatingId)).thenReturn(Optional.of(existingUser));
+
+    User actualUser = userService.updateUserById(updatingId, payload);
+
+    User expectedUser = existingUser.withEmail(new Email(payload.email()));
+    assertThat(actualUser).isEqualTo(expectedUser);
+  }
+
+  @Test
+  @DisplayName(
+      "updateUserById: given an email already in use by another user, then throw IllegalArgumentException")
+  public void updateUserById_emailAlreadyUsedByAnotherUser_throwIllegalArgumentException() {
+    int updatingId = 1;
+    UserUpdatePayload payload = createPayload(null, "updating@mail.com", null);
+    LocalDateTime now = LocalDateTime.now();
+    User existingUser =
+        new User(
+            2,
+            "Previous",
+            new Email("previous@mail.com"),
+            PasswordHash.generate(VALID_PASSWORD),
+            now,
+            now);
 
     when(userRepository.findById(updatingId)).thenReturn(Optional.of(existingUser));
     when(userRepository.findByEmail(new Email(payload.email())))
         .thenReturn(Optional.of(existingUser));
 
-    if (isOwner) {
-      User expectedUser = existingUser.withEmail(new Email(payload.email()));
-      when(userRepository.save(existingUser)).thenAnswer(invocation -> invocation.getArgument(0));
-
-      User actualUser = userService.updateUserById(updatingId, payload);
-
-      assertThat(actualUser).isEqualTo(expectedUser);
-    } else {
-      assertThatThrownBy(() -> userService.updateUserById(updatingId, payload))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessage("Email already in use. Please use another");
-    }
+    assertThatThrownBy(() -> userService.updateUserById(updatingId, payload))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Email already in use. Please use another");
   }
 
   @Test
-  public void updateUserById_existingIdAndMissingDataAreProvided_returnSameUser() {
+  @DisplayName("updateUserById: given an empty payload, then return the unmodified user")
+  public void updateUserById_emptyPayload_returnSameUser() {
     int existingId = 1;
     UserUpdatePayload payload = createPayload(null, null, null);
     LocalDateTime currentDate = LocalDateTime.now();
@@ -394,7 +427,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void deleteUserById_userExists_doNotThrowException() {
+  @DisplayName("deleteUserById: given an existing id, then delete user")
+  public void deleteUserById_existingId_deleteUser() {
     int existingId = 1;
     when(userRepository.deleteById(existingId)).thenReturn(true);
 
@@ -402,7 +436,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void deleteUserById_userDoesNotExist_throwEntityNotFoundException() {
+  @DisplayName("deleteUserById: given a non-existing id, then throw EntityNotFoundException")
+  public void deleteUserById_nonExistingId_throwEntityNotFoundException() {
     int nonExistingId = 999;
     when(userRepository.deleteById(nonExistingId)).thenReturn(false);
 
