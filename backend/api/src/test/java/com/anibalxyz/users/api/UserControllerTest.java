@@ -92,11 +92,10 @@ public class UserControllerTest {
     @DisplayName(
         "Given an invalid property, when createUser is called, then throw IllegalArgumentException")
     public void createUser_invalidProperty_throwsIllegalArgumentException() {
-      stubBodyValidatorFor(UserCreateRequest.class)
-          .thenReturn(new UserCreateRequest("John Doe", "mail.com", "abc"));
+      UserCreateRequest request = new UserCreateRequest("John Doe", "mail.com", "abc");
+      stubBodyValidatorFor(UserCreateRequest.class).thenReturn(request);
 
-      when(userService.createUser(anyString(), anyString(), anyString()))
-          .thenThrow(new IllegalArgumentException());
+      when(userService.createUser(request)).thenThrow(new IllegalArgumentException());
 
       assertThatThrownBy(() -> userController.createUser(ctx))
           .isInstanceOf(IllegalArgumentException.class);
@@ -300,8 +299,7 @@ public class UserControllerTest {
 
       stubBodyValidatorFor(UserCreateRequest.class).thenReturn(request);
 
-      when(userService.createUser(request.name(), request.email(), request.password()))
-          .thenReturn(fakeUser);
+      when(userService.createUser(request)).thenReturn(fakeUser);
 
       userController.createUser(ctx);
 

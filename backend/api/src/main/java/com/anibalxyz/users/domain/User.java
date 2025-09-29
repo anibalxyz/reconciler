@@ -45,6 +45,14 @@ public class User {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
+  public User withCreatedAt(LocalDateTime createdAt) {
+    return new User(id, name, email, passwordHash, createdAt, updatedAt);
+  }
+
+  public User withUpdatedAt(LocalDateTime updatedAt) {
+    return new User(id, name, email, passwordHash, createdAt, updatedAt);
+  }
+
   public Integer getId() {
     return id;
   }
@@ -84,11 +92,11 @@ User(id=%s, name=%s, email=%s, createdAt=%s, updatedAt=%s)"""
 
     User user = (User) o;
 
-    if (!id.equals(user.id)) return false;
-    if (!name.equals(user.name)) return false;
-    if (!email.equals(user.email)) return false;
-    if (!passwordHash.equals(user.passwordHash)) return false;
-    if (!createdAt.equals(user.createdAt)) return false;
-    return updatedAt.equals(user.updatedAt);
+    return java.util.Objects.equals(id, user.id)
+        && java.util.Objects.equals(name, user.name)
+        && java.util.Objects.equals(email, user.email)
+        && java.util.Objects.equals(passwordHash, user.passwordHash)
+        && java.util.Objects.equals(createdAt, user.createdAt)
+        && java.util.Objects.equals(updatedAt, user.updatedAt);
   }
 }

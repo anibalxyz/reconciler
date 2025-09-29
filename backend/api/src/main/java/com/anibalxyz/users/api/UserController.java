@@ -37,10 +37,7 @@ public class UserController {
             .check(r -> r.password() != null && !r.password().isBlank(), "Password is required")
             .get();
 
-    ctx.status(201)
-        .json(
-            UserMapper.toCreateResponse(
-                userService.createUser(request.name(), request.email(), request.password())));
+    ctx.status(201).json(UserMapper.toCreateResponse(userService.createUser(request)));
   }
 
   public void updateUserById(Context ctx)

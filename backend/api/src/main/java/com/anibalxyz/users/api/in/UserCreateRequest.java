@@ -1,3 +1,6 @@
 package com.anibalxyz.users.api.in;
 
-public record UserCreateRequest(String name, String email, String password) {}
+import com.anibalxyz.users.application.in.UserUpdatePayload;
+
+public record UserCreateRequest(String name, String email, String password)
+    implements UserUpdatePayload {}
