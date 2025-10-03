@@ -81,8 +81,8 @@ public class User {
   public String toString() {
     return
 """
-User(id=%s, name=%s, email=%s, createdAt=%s, updatedAt=%s)"""
-        .formatted(id, name, email.value(), createdAt, updatedAt);
+User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
+        .formatted(id, name, email.value(), passwordHash, createdAt, updatedAt);
   }
 
   @Override

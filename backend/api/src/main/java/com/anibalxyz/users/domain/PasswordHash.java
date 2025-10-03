@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 import org.mindrot.jbcrypt.BCrypt;
 
 public record PasswordHash(String value) {
+  // TODO: make it dynamic if needed/useful
+  public static int SALT_CODE = 10;
+
   public PasswordHash {
     if (!isValidHash(value)) {
       throw new IllegalArgumentException("Invalid password hash format.");
@@ -11,7 +14,7 @@ public record PasswordHash(String value) {
   }
 
   public static boolean isValidHash(String hash) {
-    return (hash != null && !hash.isBlank() && hash.startsWith("$2a$10$"));
+    return hash != null && hash.length() == 60 && hash.startsWith("$2a$" + SALT_CODE + "$");
   }
 
   public static boolean isValidRaw(String raw) {
@@ -23,7 +26,7 @@ public record PasswordHash(String value) {
     if (!isValidRaw(raw)) {
       throw new IllegalArgumentException("Password must be at least 8 characters.");
     }
-    return new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt()));
+    return new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(SALT_CODE)));
   }
 
   public boolean matches(String raw) {

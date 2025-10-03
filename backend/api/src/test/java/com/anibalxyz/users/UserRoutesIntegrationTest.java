@@ -274,6 +274,7 @@ public class UserRoutesIntegrationTest {
     assertThat(user).isEmpty();
   }
 
+  // TODO: user ParameterizedTest to test other properties
   @Test
   @DisplayName("POST /users: given a there is a missing property, then return 400 Bad Request")
   public void POST_users_missingProperty_return400() throws IOException {
