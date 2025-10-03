@@ -83,8 +83,13 @@
                 </executions>
             </plugin>
 
-            <!-- Fix Mockito Agent for Java 21+ Warnings -->
-            <!-- `-Xshare:off` fix OpenJDK 64-Bit Server VM warning-->
+            <!-- Configures JVM arguments for tests:
+                  - `@{argLine}`: Injects JaCoCo agent for code coverage.
+                  - `-javaagent...`: Loads Mockito agent to fix warnings.
+                  - `––add-opens...`: Allows Mockito's internal machinery to access JDK internals
+                  - `-Xshare:off`: Disables class sharing to fix an OpenJDK VM warning.
+             -->
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -92,23 +97,46 @@
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <argLine>
+                        @{argLine}
                         -Xshare:off
                         --add-opens=java.base/java.lang=ALL-UNNAMED
                         -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar=inline
                     </argLine>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <argLine>
+                        @{argLine}
                         -Xshare:off
                         --add-opens=java.base/java.lang=ALL-UNNAMED
                         -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar=inline
                     </argLine>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

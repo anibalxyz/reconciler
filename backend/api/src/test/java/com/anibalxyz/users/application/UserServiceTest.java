@@ -371,11 +371,11 @@ public class UserServiceTest {
             now);
 
     when(userRepository.findById(updatingId)).thenReturn(Optional.of(existingUser));
+    when(userRepository.save(existingUser)).thenAnswer(invocation -> invocation.getArgument(0));
 
-    User actualUser = userService.updateUserById(updatingId, payload);
+    User updatedUser = userService.updateUserById(updatingId, payload);
 
-    User expectedUser = existingUser.withEmail(new Email(payload.email()));
-    assertThat(actualUser).isEqualTo(expectedUser);
+    assertThat(updatedUser).isEqualTo(existingUser);
   }
 
   @Test

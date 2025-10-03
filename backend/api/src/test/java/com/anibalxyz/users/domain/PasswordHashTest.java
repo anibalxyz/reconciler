@@ -18,9 +18,10 @@ public class PasswordHashTest {
   private static Stream<String> provideInvalidHashes() {
     return Stream.of(
         " ",
-        "invalid-prefix$hash",
-        HASH_PREFIX + "l".repeat(54), // too long (total 61)
-        HASH_PREFIX + "s".repeat(52)); // too short (total 59)
+        "invalid-prefix"
+            + "i".repeat(60 - "invalid-prefix".length()), // valid length but invalid prefix
+        HASH_PREFIX + "l".repeat(60 - HASH_PREFIX.length() + 1), // too long (total 61)
+        HASH_PREFIX + "s".repeat(60 - HASH_PREFIX.length() - 1)); // too short (total 59)
   }
 
   @ParameterizedTest

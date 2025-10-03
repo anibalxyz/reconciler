@@ -49,20 +49,18 @@ public class UserService {
     if (payload.email() != null) {
       Email newEmail = new Email(payload.email());
 
-      if (newEmail.equals(user.getEmail())) {
-        return user;
-      }
-
-      userRepository
-          .findByEmail(newEmail)
-          .ifPresent(
-              existingUser -> {
-                if (!existingUser.getId().equals(id)) {
+      // Avoids an unneeded DB query (findByEmail)
+      if (!newEmail.equals(user.getEmail())) {
+        userRepository
+            .findByEmail(newEmail)
+            .ifPresent(
+                existingUser -> {
                   throw new IllegalArgumentException("Email already in use. Please use another");
-                }
-              });
-      user = user.withEmail(newEmail);
+                });
+        user = user.withEmail(newEmail);
+      }
     }
+
     if (payload.password() != null) {
       user = user.withPasswordHash(PasswordHash.generate(payload.password()));
     }

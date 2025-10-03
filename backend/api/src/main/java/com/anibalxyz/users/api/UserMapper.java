@@ -5,6 +5,9 @@ import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.domain.User;
 
 public class UserMapper {
+
+  private UserMapper() {} // avoids false lack of coverage
+
   public static UserDetailResponse toDetailResponse(User user) {
     return new UserDetailResponse(
         user.getId(),

@@ -37,12 +37,13 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.junit.jupiter.api.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class UserRoutesIntegrationTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
-  private static final Logger log = LoggerFactory.getLogger(UserRoutesIntegrationTest.class);
   private static Application app;
   private static EntityManagerFactory emf;
   private static OkHttpClient client;
@@ -68,6 +69,11 @@ public class UserRoutesIntegrationTest {
   @AfterAll
   public static void shutdown() {
     app.stop();
+  }
+
+  private static String capitalize(String s) {
+    if (s == null || s.isEmpty()) return s;
+    return s.substring(0, 1).toUpperCase() + s.substring(1);
   }
 
   @BeforeEach
@@ -274,21 +280,37 @@ public class UserRoutesIntegrationTest {
     assertThat(user).isEmpty();
   }
 
-  // TODO: user ParameterizedTest to test other properties
-  @Test
+  @ParameterizedTest
+  @CsvSource({
+    "name, null",
+    "name, blank",
+    "email, null",
+    "email, blank",
+    "password, null",
+    "password, blank"
+  })
   @DisplayName("POST /users: given a there is a missing property, then return 400 Bad Request")
-  public void POST_users_missingProperty_return400() throws IOException {
-    UserCreateRequest requestBody = new UserCreateRequest("New User", "new.user@mail.com", null);
+  public void POST_users_missingProperty_return400(String missingProp, String value)
+      throws IOException {
+    String invalidValue = value.equals("null") ? null : "";
+
+    String name = missingProp.equals("name") ? invalidValue : "New User";
+    String email = missingProp.equals("email") ? invalidValue : "new.user@mail.com";
+    String password = missingProp.equals("password") ? invalidValue : VALID_PASSWORD;
+
+    UserCreateRequest requestBody = new UserCreateRequest(name, email, password);
 
     Response response = post("/users", requestBody);
     assertThat(response.code()).isEqualTo(400);
 
     ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
     assertThat(responseBody.error()).isEqualTo("Invalid input provided");
-    assertThat(responseBody.details()).contains("Password is required");
+    assertThat(responseBody.details()).contains(capitalize(missingProp) + " is required");
 
-    Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
-    assertThat(user).isEmpty();
+    if (!missingProp.equals("email")) {
+      Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
+      assertThat(user).isEmpty();
+    } // TODO: implement 'else' by adding "findByName" method to UserRepository
   }
 
   @Test
@@ -348,36 +370,52 @@ public class UserRoutesIntegrationTest {
     assertThat(responseBody.details()).contains("Malformed JSON in request body");
   }
 
-  @Test
-  @DisplayName("PUT /users/{id}: given valid id and data, then return 200 and the updated user")
-  public void PUT_users_id_validIdAndData_thenReturn200AndUpdatedUser() throws IOException {
+  @ParameterizedTest
+  @ValueSource(strings = {"name", "email", "password"})
+  @DisplayName("PUT /users/{id}: given valid id and property, then return 200 and the updated user")
+  public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp)
+      throws IOException {
     UserEntity user = persistUser("John Doe", "john@mail.com");
     PasswordHash prevPasswordHash = new PasswordHash(user.getPasswordHash());
     // LocalDateTime prevUpdatedAt = user.getUpdatedAt();
     int existingId = user.getId();
 
-    String newPassword = VALID_PASSWORD + "_NEW";
-    UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", newPassword);
+    UserCreateRequest request =
+        new UserCreateRequest(
+            updatingProp.equals("name") ? "New User" : null,
+            updatingProp.equals("email") ? "new.user@mail.com" : null,
+            updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD) : null);
 
     Response response = put("/users/" + existingId, request);
     assertThat(response.code()).isEqualTo(200);
 
     UserEntity updatedUser = em.find(UserEntity.class, existingId);
     em.refresh(updatedUser);
-    PasswordHash updatedPasswordHash = new PasswordHash(updatedUser.getPasswordHash());
-    assertThat(updatedUser.getName()).isEqualTo(request.name());
-    assertThat(updatedUser.getEmail()).isEqualTo(request.email());
-    assertTrue(updatedPasswordHash.matches(newPassword));
-    assertThat(updatedPasswordHash.value()).isNotEqualTo(prevPasswordHash.value());
+    UserDetailResponse responseBody = parseBody(response, new TypeReference<>() {});
+
+    switch (updatingProp) {
+      case "name":
+        assertThat(updatedUser.getName()).isEqualTo(request.name());
+        assertThat(responseBody.name()).isEqualTo(request.name());
+        break;
+      case "email":
+        assertThat(updatedUser.getEmail()).isEqualTo(request.email());
+        assertThat(responseBody.email()).isEqualTo(request.email());
+        break;
+      case "password":
+        PasswordHash updatedPasswordHash = new PasswordHash(updatedUser.getPasswordHash());
+        assertTrue(updatedPasswordHash.matches(request.password()));
+        assertThat(updatedPasswordHash.value()).isNotEqualTo(prevPasswordHash.value());
+        break;
+      default:
+        break;
+    }
+
     /* TODO: uncomment when DB performs an automatic update
     assertThat(updatedUser.getUpdatedAt())
         .isEqualTo(responseBody.updatedAt())
         .isAfter(prevUpdatedAt);
     */
-
-    UserDetailResponse responseBody = parseBody(response, new TypeReference<>() {});
-    assertThat(responseBody.name()).isEqualTo(request.name());
-    assertThat(responseBody.email()).isEqualTo(request.email());
     assertThat(responseBody.updatedAt()).isEqualTo(updatedUser.getUpdatedAt());
   }
 
@@ -441,13 +479,15 @@ public class UserRoutesIntegrationTest {
     assertThat(responseBody).isEqualTo(expectedResponse);
   }
 
-  @Test
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = {" "})
   @DisplayName("PUT /users/{id}: given no properties are provided, then return 400 Bad Request")
-  public void PUT_users_id_noPropertiesAreProvided_return400() throws IOException {
+  public void PUT_users_id_noPropertiesAreProvided_return400(String value) throws IOException {
     UserEntity user = persistUser("John Doe", "john@mail.com");
     int existingId = user.getId();
 
-    UserUpdateRequest requestBody = new UserUpdateRequest(null, null, null);
+    UserUpdateRequest requestBody = new UserUpdateRequest(value, value, value);
     ErrorResponse expectedResponse =
         new ErrorResponse(
             "Invalid input provided",
