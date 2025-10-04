@@ -1,5 +1,6 @@
 package com.anibalxyz.users.domain;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public record Email(String value) {
@@ -9,6 +10,11 @@ public record Email(String value) {
     if (!isValid(value)) {
       throw new IllegalArgumentException("Invalid email format: " + value);
     }
+    value = normalize(value);
+  }
+
+  public static String normalize(String email) {
+    return email.toLowerCase(Locale.ROOT).trim();
   }
 
   public static boolean isValid(String email) {

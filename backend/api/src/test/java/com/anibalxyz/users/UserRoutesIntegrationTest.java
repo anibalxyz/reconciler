@@ -259,7 +259,7 @@ public class UserRoutesIntegrationTest {
         .isEqualTo(requestBody.name())
         .isEqualTo(persistedUser.getName());
     assertThat(responseBody.email())
-        .isEqualTo(requestBody.email())
+        .isEqualTo(Email.normalize(requestBody.email()))
         .isEqualTo(persistedUser.getEmail());
   }
 
@@ -399,7 +399,7 @@ public class UserRoutesIntegrationTest {
         assertThat(responseBody.name()).isEqualTo(request.name());
         break;
       case "email":
-        assertThat(updatedUser.getEmail()).isEqualTo(request.email());
+        assertThat(updatedUser.getEmail()).isEqualTo(Email.normalize(request.email()));
         assertThat(responseBody.email()).isEqualTo(request.email());
         break;
       case "password":
