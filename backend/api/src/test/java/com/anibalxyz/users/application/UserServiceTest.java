@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
+import com.anibalxyz.server.config.AppConfig;
+import com.anibalxyz.server.config.EnvVarSet;
 import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.application.in.UserUpdatePayload;
 import com.anibalxyz.users.domain.Email;
@@ -14,12 +16,13 @@ import com.anibalxyz.users.domain.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,9 +30,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class UserServiceTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
 
+  private static EnvVarSet env;
+
   @Mock private UserRepository userRepository;
 
-  @InjectMocks private UserService userService;
+  private UserService userService;
 
   private static UserUpdatePayload createPayload(String name, String email, String password) {
     return new UserUpdatePayload() {
@@ -50,6 +55,16 @@ public class UserServiceTest {
     };
   }
 
+  @BeforeAll
+  public static void setup() {
+    env = AppConfig.loadForTest().env();
+  }
+
+  @BeforeEach
+  public void dependencyInjection() {
+    userService = new UserService(userRepository, env);
+  }
+
   @Test
   @DisplayName("getAllUsers: given users exist, then return a list of all users")
   public void getAllUsers_usersExist_returnListOfUsers() {
@@ -60,14 +75,14 @@ public class UserServiceTest {
                 1,
                 "User 1",
                 new Email("user1@mail.com"),
-                PasswordHash.generate(VALID_PASSWORD),
+                PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
                 currentDate,
                 currentDate),
             new User(
                 2,
                 "User 2",
                 new Email("user2@mail.com"),
-                PasswordHash.generate(VALID_PASSWORD),
+                PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
                 currentDate,
                 currentDate));
     when(userRepository.findAll()).thenReturn(expectedUsers);
@@ -97,7 +112,7 @@ public class UserServiceTest {
             1,
             "User 1",
             new Email("user1@mail.com"),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             currentDate,
             currentDate);
     when(userRepository.findById(expectedUser.getId())).thenReturn(Optional.of(expectedUser));
@@ -126,7 +141,9 @@ public class UserServiceTest {
     UserUpdatePayload payload = createPayload("User 1", "user1@mail.com", VALID_PASSWORD);
     User creatingUser =
         new User(
-            payload.name(), new Email(payload.email()), PasswordHash.generate(payload.password()));
+            payload.name(),
+            new Email(payload.email()),
+            PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()));
     User expectedUser =
         creatingUser.withId(validId).withCreatedAt(currentDate).withUpdatedAt(currentDate);
 
@@ -163,7 +180,7 @@ public class UserServiceTest {
             1,
             payload.name(),
             new Email(payload.email()),
-            PasswordHash.generate(payload.password()),
+            PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()),
             currentDate,
             currentDate);
     when(userRepository.findByEmail(new Email(payload.email())))
@@ -197,7 +214,7 @@ public class UserServiceTest {
 
     assertThatThrownBy(() -> userService.createUser(payload))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Password must be at least 8 characters.");
+        .hasMessage("Password must be between 8 and 72 characters.");
   }
 
   @Test
@@ -211,7 +228,7 @@ public class UserServiceTest {
             existingId,
             "Previous",
             new Email("previous@mail.com"),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             currentDate,
             currentDate);
 
@@ -237,7 +254,7 @@ public class UserServiceTest {
             existingId,
             "Previous",
             new Email("previous@mail.com"),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             currentDate,
             currentDate);
 
@@ -264,12 +281,13 @@ public class UserServiceTest {
             existingId,
             "Previous",
             new Email("previous@email.com"),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             currentDate,
             currentDate);
 
     User expectedUpdatedUser =
-        existingUser.withPasswordHash(PasswordHash.generate(payload.password()));
+        existingUser.withPasswordHash(
+            PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()));
 
     when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
     when(userRepository.save(
@@ -318,7 +336,7 @@ public class UserServiceTest {
             existingId,
             "Previous",
             new Email("previous@mail.com"),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             currentDate,
             currentDate);
 
@@ -343,7 +361,7 @@ public class UserServiceTest {
             existingId,
             "Previous",
             new Email("previous@mail.com"),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             currentDate,
             currentDate);
 
@@ -351,7 +369,7 @@ public class UserServiceTest {
 
     assertThatThrownBy(() -> userService.updateUserById(existingId, payload))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Password must be at least 8 characters.");
+        .hasMessage("Password must be between 8 and 72 characters.");
   }
 
   @Test
@@ -366,7 +384,7 @@ public class UserServiceTest {
             updatingId,
             "Previous",
             new Email(payload.email()),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             now,
             now);
 
@@ -390,7 +408,7 @@ public class UserServiceTest {
             2,
             "Previous",
             new Email("previous@mail.com"),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             now,
             now);
 
@@ -414,7 +432,7 @@ public class UserServiceTest {
             existingId,
             "Previous",
             new Email("previous@email.com"),
-            PasswordHash.generate(VALID_PASSWORD),
+            PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
             currentDate,
             currentDate);
 

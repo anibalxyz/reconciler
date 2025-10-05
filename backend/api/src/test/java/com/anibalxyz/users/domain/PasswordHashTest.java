@@ -12,7 +12,8 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public class PasswordHashTest {
-  private static final String HASH_PREFIX = "$2a$" + PasswordHash.SALT_CODE + "$";
+  private static final int SALT_ROUNDS = 12;
+  private static final String HASH_PREFIX = "$2a$" + SALT_ROUNDS + "$";
   private static final String VALID_RAW_PASSWORD = "a-valid-password-123";
 
   private static Stream<String> provideInvalidHashes() {
@@ -24,11 +25,15 @@ public class PasswordHashTest {
         HASH_PREFIX + "s".repeat(60 - HASH_PREFIX.length() - 1)); // too short (total 59)
   }
 
+  private static Stream<String> provideInvalidPasswords() {
+    return Stream.of(" ", "short", "1234567", "l".repeat(73));
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "a22_chars_salt_part.b31_chars_hash_part_xxxxxxxxxxxxx",
-        "another_22_chars_salt.another_31_chars_hash_part_xxxx"
+        "a22.chars.salt.part.b31.chars.hash.part.xxxxxxxxxxxxx",
+        "another.22.chars.salt.another.31.chars.hash.part.xxxx"
       })
   @DisplayName("constructor: given a valid hash, then create a PasswordHash object")
   public void constructor_validHash_createsPasswordHashObject(String saltAndHashPart) {
@@ -58,19 +63,19 @@ public class PasswordHashTest {
       })
   @DisplayName("generate: given a valid raw password, then return a valid PasswordHash object")
   public void generate_validRawPassword_returnsPasswordHashObject(String rawPassword) {
-    PasswordHash passwordHash = PasswordHash.generate(rawPassword);
+    PasswordHash passwordHash = PasswordHash.generate(rawPassword, SALT_ROUNDS);
 
     assertThat(passwordHash.value()).startsWith(HASH_PREFIX).hasSize(60);
   }
 
   @ParameterizedTest
   @NullAndEmptySource
-  @ValueSource(strings = {" ", "short", "1234567"})
+  @MethodSource("provideInvalidPasswords")
   @DisplayName("generate: given an invalid raw password, then throw IllegalArgumentException")
   public void generate_invalidRawPassword_throwIllegalArgumentException(String rawPassword) {
-    assertThatThrownBy(() -> PasswordHash.generate(rawPassword))
+    assertThatThrownBy(() -> PasswordHash.generate(rawPassword, SALT_ROUNDS))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Password must be at least 8 characters.");
+        .hasMessage("Password must be between 8 and 72 characters.");
   }
 
   @ParameterizedTest
@@ -85,7 +90,7 @@ public class PasswordHashTest {
       })
   @DisplayName("matches: given a matching raw password, then return true")
   public void matches_givenMatchingRawPassword_returnTrue(String rawPassword) {
-    PasswordHash passwordHash = PasswordHash.generate(rawPassword);
+    PasswordHash passwordHash = PasswordHash.generate(rawPassword, SALT_ROUNDS);
 
     assertTrue(passwordHash.matches(rawPassword));
   }
@@ -93,7 +98,7 @@ public class PasswordHashTest {
   @Test
   @DisplayName("matches: given a non-matching raw password, then return false")
   public void matches_givenNonMatchingRawPassword_returnFalse() {
-    PasswordHash passwordHash = PasswordHash.generate(VALID_RAW_PASSWORD);
+    PasswordHash passwordHash = PasswordHash.generate(VALID_RAW_PASSWORD, SALT_ROUNDS);
 
     assertFalse(passwordHash.matches("wrong-password"));
   }
@@ -101,7 +106,7 @@ public class PasswordHashTest {
   @Test
   @DisplayName("toString: given any PasswordHash object, then return an asterisks string")
   public void toString_anyPasswordHash_returnAsterisksString() {
-    PasswordHash passwordHash = PasswordHash.generate(VALID_RAW_PASSWORD);
+    PasswordHash passwordHash = PasswordHash.generate(VALID_RAW_PASSWORD, SALT_ROUNDS);
 
     assertThat(passwordHash.toString()).isEqualTo("********");
   }

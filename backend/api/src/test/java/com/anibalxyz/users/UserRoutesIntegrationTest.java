@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.config.AppConfig;
+import com.anibalxyz.server.config.EnvVarSet;
 import com.anibalxyz.server.dto.ErrorResponse;
 import com.anibalxyz.users.api.UserMapper;
 import com.anibalxyz.users.api.in.UserCreateRequest;
@@ -45,6 +46,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 public class UserRoutesIntegrationTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
   private static Application app;
+  private static EnvVarSet env;
   private static EntityManagerFactory emf;
   private static OkHttpClient client;
   private static String baseUrl;
@@ -54,7 +56,9 @@ public class UserRoutesIntegrationTest {
 
   @BeforeAll
   public static void setup() {
-    app = Application.create(AppConfig.loadForTest());
+    AppConfig appConfig = AppConfig.loadForTest();
+    env = appConfig.env();
+    app = Application.create(appConfig);
     app.start(0);
 
     client = new OkHttpClient();
@@ -152,9 +156,11 @@ public class UserRoutesIntegrationTest {
     em.getTransaction().begin();
 
     EntityManagerProvider emp = () -> em;
+    int logRounds = env.BCRYPT_LOG_ROUNDS();
     User saved =
         new JpaUserRepository(emp)
-            .save(new User(name, new Email(email), PasswordHash.generate(VALID_PASSWORD)));
+            .save(
+                new User(name, new Email(email), PasswordHash.generate(VALID_PASSWORD, logRounds)));
 
     em.getTransaction().commit();
 
@@ -274,7 +280,7 @@ public class UserRoutesIntegrationTest {
 
     ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
     assertThat(responseBody.error()).isEqualTo("Invalid argument provided");
-    assertThat(responseBody.details()).contains("Password must be at least 8 characters.");
+    assertThat(responseBody.details()).contains("Password must be between 8 and 72 characters.");
 
     Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
     assertThat(user).isEmpty();

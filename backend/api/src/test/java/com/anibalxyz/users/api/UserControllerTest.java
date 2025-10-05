@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+import com.anibalxyz.server.config.AppConfig;
+import com.anibalxyz.server.config.EnvVarSet;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserCreateResponse;
@@ -22,10 +24,7 @@ import io.javalin.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -36,11 +35,18 @@ import org.mockito.stubbing.OngoingStubbing;
 @ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
 
+  private static EnvVarSet env;
+
   @Mock private UserService userService;
 
   @Mock private Context ctx;
 
   @InjectMocks private UserController userController;
+
+  @BeforeAll
+  public static void setup() {
+    env = AppConfig.loadForTest().env();
+  }
 
   @SuppressWarnings("unchecked")
   private OngoingStubbing<Integer> stubPathParamId() {
@@ -192,6 +198,7 @@ public class UserControllerTest {
     @DisplayName("getAllUsers: given users exist, then return 200 and users as JSON")
     public void getAllUsers_return200AndUsersJson() {
       LocalDateTime localDateTime = LocalDateTime.now();
+      int logRounds = env.BCRYPT_LOG_ROUNDS();
       // Given there are users
       List<User> fakeUsers =
           List.of(
@@ -199,14 +206,14 @@ public class UserControllerTest {
                   1,
                   "John Doe",
                   new Email("john.doe@example.com"),
-                  PasswordHash.generate("12345678"),
+                  PasswordHash.generate("12345678", logRounds),
                   localDateTime,
                   localDateTime),
               new User(
                   2,
                   "Jane Smith",
                   new Email("jane.smith@example.com"),
-                  PasswordHash.generate("87654321"),
+                  PasswordHash.generate("87654321", logRounds),
                   localDateTime,
                   localDateTime));
 
@@ -247,13 +254,14 @@ public class UserControllerTest {
     @DisplayName("getUserById: given an existing id, then return 200 and user as JSON")
     public void getUserById_existingId_returns200AndUserJson() {
       LocalDateTime localDateTime = LocalDateTime.now();
+      int logRounds = env.BCRYPT_LOG_ROUNDS();
       int id = 1;
       User fakeUser =
           new User(
               id,
               "John Doe",
               new Email("johndoe@gmail.com"),
-              PasswordHash.generate("12345678"),
+              PasswordHash.generate("12345678", logRounds),
               localDateTime,
               localDateTime);
 
@@ -274,6 +282,7 @@ public class UserControllerTest {
     @DisplayName("createUser: given valid data, then return 201 and new user")
     public void createUser_validData_return201AndNewUser() {
       LocalDateTime localDateTime = LocalDateTime.now();
+      int logRounds = env.BCRYPT_LOG_ROUNDS();
       UserCreateRequest request =
           new UserCreateRequest("John Doe", "johndoe@gmail.com", "12345678");
       User fakeUser =
@@ -281,7 +290,7 @@ public class UserControllerTest {
               1,
               request.name(),
               new Email(request.email()),
-              PasswordHash.generate(request.password()),
+              PasswordHash.generate(request.password(), logRounds),
               localDateTime,
               localDateTime);
 
@@ -308,12 +317,13 @@ public class UserControllerTest {
       int id = 1;
 
       LocalDateTime localDateTime = LocalDateTime.now();
+      int logRounds = env.BCRYPT_LOG_ROUNDS();
       User fakeUser =
           new User(
               id,
               request.name(),
               new Email(request.email()),
-              PasswordHash.generate(request.password()),
+              PasswordHash.generate(request.password(), logRounds),
               localDateTime,
               localDateTime);
 

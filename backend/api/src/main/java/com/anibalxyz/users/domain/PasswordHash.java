@@ -1,11 +1,13 @@
 package com.anibalxyz.users.domain;
 
+import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.mindrot.jbcrypt.BCrypt;
 
+// TODO: throw more specific and user friendly exceptions
 public record PasswordHash(String value) {
-  // TODO: make it dynamic if needed/useful
-  public static int SALT_CODE = 10;
+  private static final Pattern BCRYPT_PATTERN =
+      Pattern.compile("\\A\\$2a\\$\\d\\d\\$[./0-9A-Za-z]{53}");
 
   public PasswordHash {
     if (!isValidHash(value)) {
@@ -14,19 +16,18 @@ public record PasswordHash(String value) {
   }
 
   public static boolean isValidHash(String hash) {
-    return hash != null && hash.length() == 60 && hash.startsWith("$2a$" + SALT_CODE + "$");
+    return hash != null && BCRYPT_PATTERN.matcher(hash).matches();
   }
 
   public static boolean isValidRaw(String raw) {
-    // TODO: add more business rules/validations
-    return (raw != null && !raw.isBlank() && raw.length() >= 8);
+    return (raw != null && !raw.isBlank() && raw.length() >= 8 && raw.length() <= 72);
   }
 
-  public static PasswordHash generate(String raw) {
+  public static PasswordHash generate(String raw, int saltRounds) {
     if (!isValidRaw(raw)) {
-      throw new IllegalArgumentException("Password must be at least 8 characters.");
+      throw new IllegalArgumentException("Password must be between 8 and 72 characters.");
     }
-    return new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(SALT_CODE)));
+    return new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(saltRounds)));
   }
 
   public boolean matches(String raw) {

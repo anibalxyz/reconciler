@@ -11,5 +11,3 @@ public abstract class RouteRegistry {
 
   public abstract void register();
 }
-
-// TODO: change name

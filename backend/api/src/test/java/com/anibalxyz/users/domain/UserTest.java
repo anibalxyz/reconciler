@@ -11,10 +11,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 public class UserTest {
 
+  private static final int BCRYPT_LOG_ROUNDS = 12;
+
   private static final int ID = 1;
   private static final String NAME = "John Doe";
   private static final Email EMAIL = new Email("email@mail.com");
-  private static final PasswordHash PASSWORD_HASH = PasswordHash.generate("password1234");
+  private static final PasswordHash PASSWORD_HASH =
+      PasswordHash.generate("password1234", BCRYPT_LOG_ROUNDS);
   private static final LocalDateTime TIMESTAMP = LocalDateTime.now();
 
   private User baseUser;
@@ -91,7 +94,7 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
         break;
 
       case "passwordHash":
-        PasswordHash newPasswordHash = PasswordHash.generate("newPassword1234");
+        PasswordHash newPasswordHash = PasswordHash.generate("newPassword1234", BCRYPT_LOG_ROUNDS);
         userUsingWith = baseUser.withPasswordHash(newPasswordHash);
         userUsingConstructor = new User(ID, NAME, EMAIL, newPasswordHash, TIMESTAMP, TIMESTAMP);
         break;
@@ -154,7 +157,7 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
                   ID,
                   NAME,
                   EMAIL,
-                  PasswordHash.generate("differentPassword"),
+                  PasswordHash.generate("differentPassword", BCRYPT_LOG_ROUNDS),
                   TIMESTAMP,
                   TIMESTAMP);
           case "createdAt" ->

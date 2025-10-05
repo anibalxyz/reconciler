@@ -7,11 +7,11 @@ import io.javalin.json.JavalinJackson;
 public class InitConfig implements ServerConfig {
 
   private final JavalinConfig javalinConfig;
-  private final AppConfig config;
+  private final EnvVarSet env;
 
-  public InitConfig(JavalinConfig javalinConfig, AppConfig config) {
+  public InitConfig(JavalinConfig javalinConfig, EnvVarSet env) {
     this.javalinConfig = javalinConfig;
-    this.config = config;
+    this.env = env;
   }
 
   @Override
@@ -24,7 +24,7 @@ public class InitConfig implements ServerConfig {
         cors ->
             cors.addRule(
                 rule -> {
-                  if ((config.env().equals("development"))) {
+                  if ((env.APP_ENV().equals("development"))) {
                     rule.anyHost();
                   } else {
                     rule.allowHost("allowed.com");
@@ -33,8 +33,6 @@ public class InitConfig implements ServerConfig {
     javalinConfig.jsonMapper(
         new JavalinJackson()
             .updateMapper(
-                mapper -> {
-                  mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-                }));
+                mapper -> mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)));
   }
 }

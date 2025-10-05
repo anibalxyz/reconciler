@@ -1,5 +1,6 @@
 package com.anibalxyz.users.application;
 
+import com.anibalxyz.server.config.EnvVarSet;
 import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.application.in.UserUpdatePayload;
 import com.anibalxyz.users.domain.Email;
@@ -10,9 +11,11 @@ import java.util.List;
 
 public class UserService {
   private final UserRepository userRepository;
+  private final EnvVarSet env;
 
-  public UserService(UserRepository userRepository) {
+  public UserService(UserRepository userRepository, EnvVarSet env) {
     this.userRepository = userRepository;
+    this.env = env;
   }
 
   public List<User> getAllUsers() {
@@ -33,7 +36,7 @@ public class UserService {
             user -> {
               throw new IllegalArgumentException("Email already in use. Please use another");
             });
-    PasswordHash passwordHash = PasswordHash.generate(payload.password());
+    PasswordHash passwordHash = PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS());
     return userRepository.save(new User(payload.name(), email, passwordHash));
   }
 
@@ -62,7 +65,8 @@ public class UserService {
     }
 
     if (payload.password() != null) {
-      user = user.withPasswordHash(PasswordHash.generate(payload.password()));
+      user =
+          user.withPasswordHash(PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()));
     }
     return userRepository.save(user);
   }

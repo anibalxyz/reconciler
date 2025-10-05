@@ -1,6 +1,7 @@
 package com.anibalxyz.server;
 
 import com.anibalxyz.persistence.EntityManagerProvider;
+import com.anibalxyz.server.config.AppConfig;
 import com.anibalxyz.users.api.UserController;
 import com.anibalxyz.users.application.UserService;
 import com.anibalxyz.users.domain.UserRepository;
@@ -10,9 +11,9 @@ import com.anibalxyz.users.infra.JpaUserRepository;
 public class DependencyContainer {
   private final UserController userController;
 
-  public DependencyContainer(EntityManagerProvider emProvider) {
+  public DependencyContainer(AppConfig appConfig, EntityManagerProvider emProvider) {
     UserRepository userRepository = new JpaUserRepository(emProvider);
-    UserService userService = new UserService(userRepository);
+    UserService userService = new UserService(userRepository, appConfig.env());
     userController = new UserController(userService);
   }
 

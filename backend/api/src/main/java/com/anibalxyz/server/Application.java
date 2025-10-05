@@ -28,10 +28,11 @@ public class Application {
   public static Application createForTest(AppConfig config) {
     PersistenceManager persistenceManager = new PersistenceManager(config.database());
 
-    Javalin server = Javalin.create(javalinConfig -> new InitConfig(javalinConfig, config).apply());
+    Javalin server =
+        Javalin.create(javalinConfig -> new InitConfig(javalinConfig, config.env()).apply());
 
     DependencyContainer container =
-        new DependencyContainer(new JavalinContextEntityManagerProvider());
+        new DependencyContainer(config, new JavalinContextEntityManagerProvider());
 
     List<RouteRegistry> routeRegistries =
         List.of(
@@ -51,10 +52,11 @@ public class Application {
   public static Application createForDevelopment(AppConfig config) {
     PersistenceManager persistenceManager = new PersistenceManager(config.database());
 
-    Javalin server = Javalin.create(javalinConfig -> new InitConfig(javalinConfig, config).apply());
+    Javalin server =
+        Javalin.create(javalinConfig -> new InitConfig(javalinConfig, config.env()).apply());
 
     DependencyContainer container =
-        new DependencyContainer(new JavalinContextEntityManagerProvider());
+        new DependencyContainer(config, new JavalinContextEntityManagerProvider());
 
     List<RouteRegistry> routeRegistries =
         List.of(
@@ -70,13 +72,14 @@ public class Application {
   }
 
   public static Application create(AppConfig config) {
-    if (config.env().equals("development")) {
+    String appEnv = config.env().APP_ENV();
+    if (appEnv.equals("development")) {
       return createForDevelopment(config);
     }
-    if (config.env().equals("test")) {
+    if (appEnv.equals("test")) {
       return createForTest(config);
     }
-    throw new IllegalStateException("Unknown environment: " + config.env());
+    throw new IllegalStateException("Unknown environment: " + appEnv);
   }
 
   public Javalin javalin() {
