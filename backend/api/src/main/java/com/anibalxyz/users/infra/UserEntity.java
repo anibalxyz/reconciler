@@ -3,13 +3,10 @@ package com.anibalxyz.users.infra;
 import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
 import com.anibalxyz.users.domain.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.generator.EventType;
 
 @Entity
 @Table(name = "users")
@@ -29,10 +26,12 @@ public class UserEntity {
   @Column(name = "password_hash", nullable = false, length = 255)
   private String passwordHash;
 
-  @Column(name = "created_at", insertable = false, updatable = false)
+  @CurrentTimestamp(event = EventType.INSERT)
+  @Column(name = "created_at")
   private LocalDateTime createdAt;
 
-  @Column(name = "updated_at", insertable = false, updatable = false)
+  @CurrentTimestamp
+  @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
   public UserEntity() {}
