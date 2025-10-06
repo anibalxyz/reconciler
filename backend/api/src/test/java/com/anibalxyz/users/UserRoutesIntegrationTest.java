@@ -270,10 +270,9 @@ public class UserRoutesIntegrationTest {
       assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(capitalize(missingProp) + " is required");
 
-      if (!missingProp.equals("email")) {
-        Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
-        assertThat(user).isEmpty();
-      } // TODO: implement 'else' by adding "findByName" method to UserRepository
+      Long userCount =
+          em.createQuery("SELECT COUNT(u) FROM UserEntity u", Long.class).getSingleResult();
+      assertThat(userCount).isZero();
     }
 
     @Test

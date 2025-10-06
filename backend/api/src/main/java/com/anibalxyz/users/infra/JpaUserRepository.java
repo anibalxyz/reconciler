@@ -23,6 +23,14 @@ public class JpaUserRepository implements UserRepository {
 
   @Override
   @SuppressWarnings("resource")
+  public List<User> findAll() {
+    List<UserEntity> userEntityList =
+        em().createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
+    return userEntityList.stream().map(UserEntity::toDomain).toList();
+  }
+
+  @Override
+  @SuppressWarnings("resource")
   public Optional<User> findById(Integer id) {
     UserEntity userEntity = em().find(UserEntity.class, id);
     return userEntity == null ? Optional.empty() : Optional.of(userEntity.toDomain());
@@ -40,14 +48,6 @@ public class JpaUserRepository implements UserRepository {
     } catch (NoResultException e) {
       return Optional.empty();
     }
-  }
-
-  @Override
-  @SuppressWarnings("resource")
-  public List<User> findAll() {
-    List<UserEntity> userEntityList =
-        em().createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
-    return userEntityList.stream().map(UserEntity::toDomain).toList();
   }
 
   @Override
