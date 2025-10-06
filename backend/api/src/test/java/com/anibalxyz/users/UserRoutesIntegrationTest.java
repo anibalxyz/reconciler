@@ -358,7 +358,8 @@ public class UserRoutesIntegrationTest {
       int nonExistingId = 999;
       UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
       ErrorResponse expectedResponse =
-          new ErrorResponse("Entity not found", List.of("User not found"));
+          new ErrorResponse(
+              "Entity not found", List.of("User with id " + nonExistingId + " not found"));
 
       Response response = put("/users/" + nonExistingId, request);
       assertThat(response.code()).isEqualTo(404);

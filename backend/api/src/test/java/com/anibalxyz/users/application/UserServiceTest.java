@@ -382,7 +382,7 @@ public class UserServiceTest {
 
       assertThatThrownBy(() -> userService.updateUserById(nonExistingId, payload))
           .isInstanceOf(EntityNotFoundException.class)
-          .hasMessage("User not found");
+          .hasMessage("User with id " + nonExistingId + " not found");
     }
 
     @ParameterizedTest

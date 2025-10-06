@@ -45,7 +45,7 @@ public class UserService {
     User user =
         userRepository
             .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+            .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
     if (payload.name() != null) {
       user = user.withName(payload.name());
     }
