@@ -34,15 +34,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.*;
 
 public class UserRoutesIntegrationTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
@@ -197,6 +196,12 @@ public class UserRoutesIntegrationTest {
   @DisplayName("Failure Scenarios")
   class FailureScenarios {
 
+    private static Stream<Arguments> provideInvalidPasswordsAndMessages() {
+      return Stream.of(
+          Arguments.of("short", "Password must be at least 8 characters long"),
+          Arguments.of("p".repeat(73), "Password cannot be longer than 72 characters"));
+    }
+
     @Test
     @DisplayName("GET /users/{id}: given a non-existing id, then return 404 Not Found")
     public void GET_users_id_nonExistingId_return404() {
@@ -226,19 +231,19 @@ public class UserRoutesIntegrationTest {
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
-    // NOTE: invalid property tested: email
-    @Test
+    @ParameterizedTest
+    @MethodSource("provideInvalidPasswordsAndMessages")
     @DisplayName("POST /users: given an invalid password, then return 400 Bad Request")
-    public void POST_users_invalidPassword_return400() {
+    public void POST_users_invalidPassword_return400(String password, String message) {
       UserCreateRequest requestBody =
-          new UserCreateRequest("New User", "new.user@mail.com", "1234");
+          new UserCreateRequest("New User", "new.user@mail.com", password);
 
       Response response = post("/users", requestBody);
       assertThat(response.code()).isEqualTo(400);
 
       ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Invalid argument provided");
-      assertThat(responseBody.details()).contains("Password must be between 8 and 72 characters.");
+      assertThat(responseBody.details()).contains(message);
 
       Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
       assertThat(user).isEmpty();
@@ -438,7 +443,6 @@ public class UserRoutesIntegrationTest {
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
-    // NOTE: invalid property tested: email
     @Test
     @DisplayName("PUT /users/{id}: given an invalid email format, then return 400 Bad Request")
     public void PUT_users_id_invalidEmailFormat_return400() {
@@ -456,6 +460,25 @@ public class UserRoutesIntegrationTest {
 
       ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
+
+      User userAfterAttempt = userRepository.findById(existingId).orElseThrow();
+      assertThat(userAfterAttempt).isEqualTo(originalUser.toDomain());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidPasswordsAndMessages")
+    @DisplayName("PUT /users/{id}: given an invalid password, then return 400 Bad Request")
+    public void PUT_users_id_invalidPassword_return400(String password, String message) {
+      UserEntity originalUser = persistUser("Original Name", "original@mail.com");
+      int existingId = originalUser.getId();
+      UserUpdateRequest requestBody = new UserUpdateRequest(null, null, password);
+
+      Response response = put("/users/" + existingId, requestBody);
+      assertThat(response.code()).isEqualTo(400);
+
+      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      assertThat(responseBody.error()).isEqualTo("Invalid argument provided");
+      assertThat(responseBody.details()).contains(message);
 
       User userAfterAttempt = userRepository.findById(existingId).orElseThrow();
       assertThat(userAfterAttempt).isEqualTo(originalUser.toDomain());

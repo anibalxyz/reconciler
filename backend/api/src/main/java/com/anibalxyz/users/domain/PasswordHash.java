@@ -1,17 +1,17 @@
 package com.anibalxyz.users.domain;
 
+import com.anibalxyz.users.domain.exception.InvalidPasswordFormatException;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.mindrot.jbcrypt.BCrypt;
 
-// TODO: throw more specific and user friendly exceptions
 public record PasswordHash(String value) {
   private static final Pattern BCRYPT_PATTERN =
       Pattern.compile("\\A\\$2a\\$\\d\\d\\$[./0-9A-Za-z]{53}");
 
   public PasswordHash {
     if (!isValidHash(value)) {
-      throw new IllegalArgumentException("Invalid password hash format.");
+      throw new IllegalArgumentException("Invalid password hash format");
     }
   }
 
@@ -19,14 +19,20 @@ public record PasswordHash(String value) {
     return hash != null && BCRYPT_PATTERN.matcher(hash).matches();
   }
 
-  public static boolean isValidRaw(String raw) {
-    return (raw != null && !raw.isBlank() && raw.length() >= 8 && raw.length() <= 72);
+  private static void validateRawPassword(String raw) {
+    if (raw == null || raw.isBlank()) {
+      throw new InvalidPasswordFormatException("Password cannot be null or empty");
+    }
+    if (raw.length() < 8) {
+      throw new InvalidPasswordFormatException("Password must be at least 8 characters long");
+    }
+    if (raw.length() > 72) {
+      throw new InvalidPasswordFormatException("Password cannot be longer than 72 characters");
+    }
   }
 
   public static PasswordHash generate(String raw, int saltRounds) {
-    if (!isValidRaw(raw)) {
-      throw new IllegalArgumentException("Password must be between 8 and 72 characters.");
-    }
+    validateRawPassword(raw);
     return new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(saltRounds)));
   }
 

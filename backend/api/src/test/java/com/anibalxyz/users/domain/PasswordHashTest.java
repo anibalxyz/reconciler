@@ -3,10 +3,12 @@ package com.anibalxyz.users.domain;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.anibalxyz.users.domain.exception.InvalidPasswordFormatException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -25,8 +27,13 @@ public class PasswordHashTest {
         HASH_PREFIX + "s".repeat(60 - HASH_PREFIX.length() - 1)); // too short (total 59)
   }
 
-  private static Stream<String> provideInvalidPasswords() {
-    return Stream.of(" ", "short", "1234567", "l".repeat(73));
+  private static Stream<Arguments> provideInvalidPasswordsAndMessages() {
+    return Stream.of(
+        Arguments.of(null, "Password cannot be null or empty"),
+        Arguments.of("", "Password cannot be null or empty"),
+        Arguments.of(" ", "Password cannot be null or empty"),
+        Arguments.of("short", "Password must be at least 8 characters long"),
+        Arguments.of("l".repeat(73), "Password cannot be longer than 72 characters"));
   }
 
   @ParameterizedTest
@@ -48,7 +55,7 @@ public class PasswordHashTest {
   public void constructor_invalidHash_throwIllegalArgumentException(String invalidHash) {
     assertThatThrownBy(() -> new PasswordHash(invalidHash))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Invalid password hash format.");
+        .hasMessage("Invalid password hash format");
   }
 
   @ParameterizedTest
@@ -69,13 +76,13 @@ public class PasswordHashTest {
   }
 
   @ParameterizedTest
-  @NullAndEmptySource
-  @MethodSource("provideInvalidPasswords")
-  @DisplayName("generate: given an invalid raw password, then throw IllegalArgumentException")
-  public void generate_invalidRawPassword_throwIllegalArgumentException(String rawPassword) {
+  @MethodSource("provideInvalidPasswordsAndMessages")
+  @DisplayName("generate: given an invalid raw password, then throw InvalidPasswordFormatException")
+  public void generate_invalidRawPassword_throwInvalidPasswordFormatException(
+      String rawPassword, String expectedMessage) {
     assertThatThrownBy(() -> PasswordHash.generate(rawPassword, SALT_ROUNDS))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Password must be between 8 and 72 characters.");
+        .isInstanceOf(InvalidPasswordFormatException.class)
+        .hasMessage(expectedMessage);
   }
 
   @ParameterizedTest

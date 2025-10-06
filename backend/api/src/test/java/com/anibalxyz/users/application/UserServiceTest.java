@@ -13,6 +13,7 @@ import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
 import com.anibalxyz.users.domain.User;
 import com.anibalxyz.users.domain.UserRepository;
+import com.anibalxyz.users.domain.exception.InvalidPasswordFormatException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,9 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -357,16 +361,15 @@ public class UserServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"blank", "format"})
-    @DisplayName("createUser: given an invalid password, then throw IllegalArgumentException")
-    public void createUser_invalidPassword_throwIllegalArgumentException(String invalidationCause) {
-      String password = invalidationCause.equals("format") ? "invalid" : " ";
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "invalid"})
+    @DisplayName("createUser: given an invalid password, then throw InvalidPasswordFormatException")
+    public void createUser_invalidPassword_throwInvalidPasswordFormatException(String password) {
       UserUpdatePayload payload = createPayload("User", "mail@email.com", password);
       when(userRepository.findByEmail(new Email(payload.email()))).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> userService.createUser(payload))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessage("Password must be between 8 and 72 characters.");
+          .isInstanceOf(InvalidPasswordFormatException.class);
     }
 
     @Test
@@ -409,12 +412,13 @@ public class UserServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"blank", "format"})
-    @DisplayName("updateUserById: given an invalid password, then throw IllegalArgumentException")
-    public void updateUserById_invalidPasswordFormat_throwIllegalArgumentException(
-        String invalidationCause) {
+    @EmptySource
+    @ValueSource(strings = {" ", "invalid"})
+    @DisplayName(
+        "updateUserById: given an invalid password format, then throw InvalidPasswordFormatException")
+    public void updateUserById_invalidPasswordFormat_throwInvalidPasswordFormatException(
+        String password) {
       int existingId = 1;
-      String password = invalidationCause.equals("format") ? "invalid" : " ";
       UserUpdatePayload payload = createPayload(null, null, password);
       LocalDateTime currentDate = LocalDateTime.now();
       User existingUser =
@@ -428,9 +432,9 @@ public class UserServiceTest {
 
       when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
 
+      // the message doesn't matter as it is being unit-tested
       assertThatThrownBy(() -> userService.updateUserById(existingId, payload))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessage("Password must be between 8 and 72 characters.");
+          .isInstanceOf(InvalidPasswordFormatException.class);
     }
 
     @Test
