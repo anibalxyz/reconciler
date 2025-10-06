@@ -82,7 +82,7 @@ public class User {
     return
 """
 User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
-        .formatted(id, name, email.value(), passwordHash, createdAt, updatedAt);
+        .formatted(id, name, email.value(), passwordHash.toString(), createdAt, updatedAt);
   }
 
   @Override
