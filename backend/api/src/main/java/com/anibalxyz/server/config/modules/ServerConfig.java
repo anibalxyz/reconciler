@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config;
+package com.anibalxyz.server.config.modules;
 
 /**
  * Represents a modular piece of server configuration logic.

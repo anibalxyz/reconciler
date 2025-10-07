@@ -4,13 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.server.config.AppConfig;
-import com.anibalxyz.server.config.AppEnvironmentSource;
+import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserCreateResponse;
 import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.application.UserService;
+import com.anibalxyz.users.application.UsersEnvironment;
 import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
@@ -35,7 +35,7 @@ import org.mockito.stubbing.OngoingStubbing;
 @ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
 
-  private static AppEnvironmentSource env;
+  private static UsersEnvironment env;
 
   @Mock private UserService userService;
 
@@ -45,7 +45,7 @@ public class UserControllerTest {
 
   @BeforeAll
   public static void setup() {
-    env = AppConfig.loadForTest().env();
+    env = ConfigurationFactory.loadForTest().env();
   }
 
   @SuppressWarnings("unchecked")

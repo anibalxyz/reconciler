@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config;
+package com.anibalxyz.server.config.modules;
 
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.context.ContextProvider;

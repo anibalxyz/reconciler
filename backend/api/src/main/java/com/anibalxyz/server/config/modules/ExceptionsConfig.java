@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config;
+package com.anibalxyz.server.config.modules;
 
 import com.anibalxyz.server.dto.ErrorResponse;
 import com.anibalxyz.users.application.exception.EntityNotFoundException;
