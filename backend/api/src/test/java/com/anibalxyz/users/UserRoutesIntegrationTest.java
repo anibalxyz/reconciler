@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.config.AppConfig;
-import com.anibalxyz.server.config.EnvVarSet;
+import com.anibalxyz.server.config.AppEnvironmentSource;
 import com.anibalxyz.server.dto.ErrorResponse;
 import com.anibalxyz.users.api.UserMapper;
 import com.anibalxyz.users.api.in.UserCreateRequest;
@@ -46,7 +46,7 @@ import org.junit.jupiter.params.provider.*;
 public class UserRoutesIntegrationTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
   private static Application app;
-  private static EnvVarSet env;
+  private static AppEnvironmentSource env;
   private static EntityManagerFactory emf;
   private static OkHttpClient client;
   private static String baseUrl;

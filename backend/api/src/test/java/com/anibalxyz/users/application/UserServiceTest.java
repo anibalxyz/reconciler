@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 import com.anibalxyz.server.config.AppConfig;
-import com.anibalxyz.server.config.EnvVarSet;
+import com.anibalxyz.server.config.AppEnvironmentSource;
 import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.application.in.UserUpdatePayload;
 import com.anibalxyz.users.domain.Email;
@@ -31,7 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class UserServiceTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
 
-  private static EnvVarSet env;
+  private static AppEnvironmentSource env;
 
   @Mock private UserRepository userRepository;
 

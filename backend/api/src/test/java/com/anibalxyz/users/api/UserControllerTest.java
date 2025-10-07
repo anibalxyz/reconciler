@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.server.config.AppConfig;
-import com.anibalxyz.server.config.EnvVarSet;
+import com.anibalxyz.server.config.AppEnvironmentSource;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserCreateResponse;
@@ -35,7 +35,7 @@ import org.mockito.stubbing.OngoingStubbing;
 @ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
 
-  private static EnvVarSet env;
+  private static AppEnvironmentSource env;
 
   @Mock private UserService userService;
 
