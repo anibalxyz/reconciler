@@ -4,10 +4,10 @@ import com.anibalxyz.users.application.in.UserUpdatePayload;
 
 /**
  * Represents the request body for creating a new user.
- * <p>
- * This record serves as a Data Transfer Object (DTO) for incoming POST requests to /users.
- * It implements the {@link UserUpdatePayload} interface, allowing it to be passed to the
- * application service layer. All fields are mandatory for creation.
+ *
+ * <p>This record serves as a Data Transfer Object (DTO) for incoming POST requests to /users. It
+ * implements the {@link UserUpdatePayload} interface, allowing it to be passed to the application
+ * service layer. All fields are mandatory for creation.
  *
  * @param name The name of the new user.
  * @param email The email of the new user.

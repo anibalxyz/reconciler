@@ -4,10 +4,10 @@ import java.time.LocalDateTime;
 
 /**
  * Represents the detailed response body for a user.
- * <p>
- * This record serves as a Data Transfer Object (DTO) for public-facing user details,
- * typically returned from GET /users and GET /users/{id} endpoints. It excludes sensitive
- * information like the password hash.
+ *
+ * <p>This record serves as a Data Transfer Object (DTO) for public-facing user details, typically
+ * returned from GET /users and GET /users/{id} endpoints. It excludes sensitive information like
+ * the password hash.
  *
  * @param id The unique identifier of the user.
  * @param name The name of the user.

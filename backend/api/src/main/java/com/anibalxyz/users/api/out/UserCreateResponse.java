@@ -2,8 +2,8 @@ package com.anibalxyz.users.api.out;
 
 /**
  * Represents the response body after successfully creating a new user.
- * <p>
- * This record serves as a Data Transfer Object (DTO) for the response to a POST /users request.
+ *
+ * <p>This record serves as a Data Transfer Object (DTO) for the response to a POST /users request.
  * It provides essential, non-sensitive information about the newly created user.
  *
  * @param id The unique identifier of the newly created user.
