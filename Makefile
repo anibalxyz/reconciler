@@ -40,14 +40,15 @@ help:
 	@echo "  rebuild-all                     # Shortcut: rebuild all services"
 	@echo
 	@echo "Compose & Lifecycle:"
-	@echo "  up             [target=<svc>]   # Start all or one service"
-	@echo "  down           [target=<svc>]   # Stop & remove all or one service"
+	@echo "  up              target=<svc>    # Start all or one service"
+	@echo "  test                            # Perform tests without changing current environment"
+	@echo "  down            target=<svc>    # Stop & remove all or one service"
 	@echo "                                    (use keep-orphans=true to keep orphans)"
-	@echo "  start          [target=<svc>]   # Start stopped containers"
-	@echo "  stop           [target=<svc>]   # Stop running containers"
-	@echo "  restart        [target=<svc>]   # Restart containers"
-	@echo "  logs           [target=<svc>]   # Tail logs (last 50 lines)"
-	@echo "  ps             [all=true]       # List running or all containers"
+	@echo "  start           target=<svc>    # Start stopped containers"
+	@echo "  stop            target=<svc>    # Stop running containers"
+	@echo "  restart         target=<svc>    # Restart containers"
+	@echo "  logs            target=<svc>    # Tail logs (last 50 lines)"
+	@echo "  ps              all=true        # List running or all containers"
 	@echo "  deploy                          # Build/pull and then 'up' for current ENV"	
 	@echo
 	@echo "Docker Resource Management:"
@@ -63,7 +64,7 @@ help:
 # ==================================================================================================
 .PHONY: set-env get-env check-env init-env
 
-AVAILABLE_ENVS := development production
+AVAILABLE_ENVS := development production test
 
 MAKE_ENVFILE := .env.make
 
@@ -161,11 +162,12 @@ DOCKER_IMAGE := $(if $(target),anibalxyz/reconciler-$(ENV)-$(notdir $(target)))
 CORE_SERVICES := backend/api frontend frontend/dashboard frontend/public-site
 DEVELOPMENT_SERVICES := $(CORE_SERVICES)
 PRODUCTION_SERVICES := $(CORE_SERVICES) nginx
+TEST_SERVICES := backend/api
 
 PUSHABLE_SERVICES := backend/api nginx
 
 # Services used only during lifecycle
-EXTRA_SERVICES := db
+EXTRA_SERVICES := db flyway
 
 EVAL_VALID_SERVICES := $($(shell echo $(ENV) | tr a-z A-Z)_SERVICES)
 
@@ -287,7 +289,7 @@ rebuild-all:
 # ==================================================================================================
 # 4) Project Lifecycle Management
 # ==================================================================================================
-.PHONY: up down deploy start stop restart logs ps
+.PHONY: up down deploy start stop restart logs ps test
 
 up: check-env
 	@echo "▶  Bringing up$(if $(target), '$(notdir $(target))' service from) \
@@ -295,7 +297,7 @@ up: check-env
 	@if [ -n "$(target)" ]; then \
 		$(MAKE) check-service extra=true; \
 	fi;
-	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) -d
+	@$(COMPOSE) $(COMPOSE_SETUP) up $(if $(target),$(notdir $(target))) $(if $(filter false, $(detach)),,-d)
 
 down: check-env
 	@if [ -n "$(target)" ]; then \
@@ -305,6 +307,14 @@ down: check-env
 	'$(ENV)' environment..."
 	@$(COMPOSE) $(COMPOSE_SETUP) down $(if $(target),$(notdir $(target))) \
 	$(if $(filter true,$(keep-orphans)),,--remove-orphans)
+
+test: check-env
+	@$(MAKE) set-env target=test
+	@$(MAKE) build-all
+	@$(MAKE) up target=db
+	@$(MAKE) up target=flyway
+	@$(MAKE) up target=backend/api detach=false
+	@$(MAKE) set-env target=$(ENV)
 
 deploy:
 	@echo "▶  Deploying '$(ENV)' environment..."

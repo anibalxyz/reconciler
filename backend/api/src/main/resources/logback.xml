@@ -1,0 +1,35 @@
+<configuration>
+
+    <property name="APP_ENV" value="${APP_ENV:-development}"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- NOTE: if using Docker (or manually inject env variable), it functions dynamically,
+               if not then defaults 'development'
+    -->
+    <!-- Development environment configuration -->
+    <if condition='property("APP_ENV").equals("development")'>
+        <then>
+            <root level="DEBUG">
+                <appender-ref ref="STDOUT"/>
+            </root>
+            <logger name="io.javalin" level="INFO"/>
+            <logger name="org.eclipse.jetty" level="INFO"/>
+            <logger name="org.hibernate" level="WARN"/>
+        </then>
+        <!-- Production environment configuration -->
+        <else>
+            <root level="INFO">
+                <appender-ref ref="STDOUT"/>
+            </root>
+            <logger name="io.javalin" level="WARN"/>
+            <logger name="org.eclipse.jetty" level="WARN"/>
+            <logger name="org.hibernate" level="WARN"/>
+        </else>
+    </if>
+
+</configuration>
