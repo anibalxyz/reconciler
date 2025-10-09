@@ -55,9 +55,12 @@ public class ConfigurationFactory {
     String name = getEnvVar("DB_NAME", System::getenv);
     String user = getEnvVar("DB_USER", System::getenv);
     String password = getEnvVar("DB_PASSWORD", System::getenv);
+    String apiUrl = "http://localhost:" + getEnvVar("API_PORT", System::getenv);
+    String contactEmail = getEnvVar("CONTACT_EMAIL", System::getenv);
 
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", System::getenv));
-    AppEnvironmentSource env = new AppEnvironmentSource(appEnv, bcryptLogRounds);
+    AppEnvironmentSource env =
+        new AppEnvironmentSource(appEnv, bcryptLogRounds, apiUrl, contactEmail);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(host, DEFAULT_DB_PORT, name, user, password));
@@ -83,14 +86,18 @@ public class ConfigurationFactory {
     String name = getEnvVar("DB_NAME", props::getProperty);
     String user = getEnvVar("DB_USER", props::getProperty);
     String password = getEnvVar("DB_PASSWORD", props::getProperty);
+    String apiUrl = "http://localhost:" + getEnvVar("API_PORT", props::getProperty);
+    String contactEmail = getEnvVar("CONTACT_EMAIL", props::getProperty);
 
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", props::getProperty));
-    AppEnvironmentSource env = new AppEnvironmentSource(appEnv, bcryptLogRounds);
+    AppEnvironmentSource env =
+        new AppEnvironmentSource(appEnv, bcryptLogRounds, apiUrl, contactEmail);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(DEFAULT_LOCAL_HOST, port, name, user, password));
   }
 
+  // TODO: env variables origin could be selected here
   /**
    * Safely retrieves a configuration value from a given source.
    *

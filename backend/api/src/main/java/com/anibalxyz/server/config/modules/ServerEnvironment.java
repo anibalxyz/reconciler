@@ -13,4 +13,8 @@ public interface ServerEnvironment {
    * @return The current application environment (e.g., "development", "test").
    */
   String APP_ENV();
+
+  String API_URL();
+
+  String CONTACT_EMAIL();
 }

@@ -2,16 +2,15 @@ package com.anibalxyz.server;
 
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.ExceptionsConfig;
-import com.anibalxyz.server.config.modules.InitConfig;
-import com.anibalxyz.server.config.modules.LifeCycleConfig;
-import com.anibalxyz.server.config.modules.ServerConfig;
+import com.anibalxyz.server.config.modules.*;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import com.anibalxyz.server.routes.RouteRegistry;
 import com.anibalxyz.server.routes.SystemRoutes;
 import com.anibalxyz.users.api.UserRoutes;
 import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * The main application class, acting as the Composition Root.
@@ -91,8 +90,13 @@ public class Application {
   public static Application createForDevelopment(ApplicationConfiguration config) {
     PersistenceManager persistenceManager = new PersistenceManager(config.database());
 
-    Javalin server =
-        Javalin.create(javalinConfig -> new InitConfig(javalinConfig, config.env()).apply());
+    Consumer<JavalinConfig> initConfig =
+        javalinConfig -> {
+          new InitConfig(javalinConfig, config.env()).apply();
+          new SwaggerConfig(javalinConfig, config.env()).apply();
+        };
+
+    Javalin server = Javalin.create(initConfig);
 
     DependencyContainer container =
         new DependencyContainer(config.env(), new JavalinContextEntityManagerProvider());
