@@ -29,8 +29,8 @@ public class SystemRoutes extends RouteRegistry {
     this.persistenceManager = persistenceManager;
   }
 
-  @Override
   /** Registers the {@code /health} endpoint. */
+  @Override
   public void register() {
     server.get(
         "/health",

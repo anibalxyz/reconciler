@@ -1,5 +1,7 @@
 package com.anibalxyz.users.api;
 
+import com.anibalxyz.server.dto.ErrorResponse;
+import com.anibalxyz.server.openapi.ErrorResponseExamples;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserCreateResponse;
@@ -7,12 +9,7 @@ import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
-import io.javalin.openapi.HttpMethod;
-import io.javalin.openapi.OpenApi;
-import io.javalin.openapi.OpenApiContent;
-import io.javalin.openapi.OpenApiParam;
-import io.javalin.openapi.OpenApiRequestBody;
-import io.javalin.openapi.OpenApiResponse;
+import io.javalin.openapi.*;
 import io.javalin.validation.ValidationException;
 
 /**
@@ -33,7 +30,15 @@ public interface UserApi {
       responses = {
         @OpenApiResponse(
             status = "200",
-            content = @OpenApiContent(from = UserDetailResponse[].class))
+            description = "A list of all users.",
+            content = @OpenApiContent(from = UserDetailResponse[].class)),
+        @OpenApiResponse(
+            status = "500",
+            description = "Internal server error.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.INTERNAL_SERVER_ERROR))
       })
   void getAllUsers(Context ctx);
 
@@ -43,13 +48,33 @@ public interface UserApi {
       path = "/users/{id}",
       methods = HttpMethod.GET,
       tags = {"Users"},
-      pathParams = {@OpenApiParam(name = "id", type = Integer.class, description = "The user ID")},
+      pathParams = {
+        @OpenApiParam(
+            name = "id",
+            type = Integer.class,
+            description = "The unique identifier of the user.",
+            required = true,
+            example = "1")
+      },
       responses = {
         @OpenApiResponse(
             status = "200",
+            description = "Successfully retrieved the user.",
             content = @OpenApiContent(from = UserDetailResponse.class)),
-        @OpenApiResponse(status = "400", description = "Invalid ID format"),
-        @OpenApiResponse(status = "404", description = "User not found")
+        @OpenApiResponse(
+            status = "400",
+            description = "Invalid ID format supplied.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.INVALID_ID)),
+        @OpenApiResponse(
+            status = "404",
+            description = "User with the specified ID not found.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.USER_NOT_FOUND))
       })
   void getUserById(Context ctx);
 
@@ -59,15 +84,24 @@ public interface UserApi {
       path = "/users",
       methods = HttpMethod.POST,
       tags = {"Users"},
-      requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = UserCreateRequest.class)),
+      requestBody =
+          @OpenApiRequestBody(
+              description = "The user to create.",
+              required = true,
+              content = @OpenApiContent(from = UserCreateRequest.class)),
       responses = {
         @OpenApiResponse(
             status = "201",
-            description = "User created successfully",
+            description = "User created successfully.",
             content = @OpenApiContent(from = UserCreateResponse.class)),
         @OpenApiResponse(
             status = "400",
-            description = "Invalid input data (e.g., duplicate email, missing fields)")
+            description =
+                "Invalid input data, such as a duplicate email, missing fields, or invalid password format.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.CREATE_USER_BAD_REQUEST))
       })
   void createUser(Context ctx);
 
@@ -77,14 +111,38 @@ public interface UserApi {
       path = "/users/{id}",
       methods = HttpMethod.PUT,
       tags = {"Users"},
-      pathParams = {@OpenApiParam(name = "id", type = Integer.class, description = "The user ID")},
-      requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = UserUpdateRequest.class)),
+      pathParams = {
+        @OpenApiParam(
+            name = "id",
+            type = Integer.class,
+            description = "The unique identifier of the user to update.",
+            required = true,
+            example = "1")
+      },
+      requestBody =
+          @OpenApiRequestBody(
+              description = "The user data to update. At least one field must be provided.",
+              required = true,
+              content = @OpenApiContent(from = UserUpdateRequest.class)),
       responses = {
         @OpenApiResponse(
             status = "200",
+            description = "User updated successfully.",
             content = @OpenApiContent(from = UserDetailResponse.class)),
-        @OpenApiResponse(status = "400", description = "Invalid input data or empty payload"),
-        @OpenApiResponse(status = "404", description = "User not found")
+        @OpenApiResponse(
+            status = "400",
+            description = "Invalid input data, empty payload, or duplicate email.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.UPDATE_USER_BAD_REQUEST)),
+        @OpenApiResponse(
+            status = "404",
+            description = "User with the specified ID not found.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.USER_NOT_FOUND))
       })
   void updateUserById(Context ctx)
       throws IllegalArgumentException,
@@ -98,10 +156,23 @@ public interface UserApi {
       path = "/users/{id}",
       methods = HttpMethod.DELETE,
       tags = {"Users"},
-      pathParams = {@OpenApiParam(name = "id", type = Integer.class, description = "The user ID")},
+      pathParams = {
+        @OpenApiParam(
+            name = "id",
+            type = Integer.class,
+            description = "The unique identifier of the user to delete.",
+            required = true,
+            example = "1")
+      },
       responses = {
-        @OpenApiResponse(status = "204", description = "User deleted successfully"),
-        @OpenApiResponse(status = "404", description = "User not found")
+        @OpenApiResponse(status = "204", description = "User deleted successfully."),
+        @OpenApiResponse(
+            status = "404",
+            description = "User with the specified ID not found.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.USER_NOT_FOUND))
       })
   void deleteUserById(Context ctx);
 }
