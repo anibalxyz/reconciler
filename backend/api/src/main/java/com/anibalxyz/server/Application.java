@@ -5,7 +5,7 @@ import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.modules.*;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import com.anibalxyz.server.routes.RouteRegistry;
-import com.anibalxyz.server.routes.SystemRoutes;
+import com.anibalxyz.system.api.SystemRoutes;
 import com.anibalxyz.users.api.UserRoutes;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
@@ -61,12 +61,13 @@ public class Application {
         Javalin.create(javalinConfig -> new InitConfig(javalinConfig, config.env()).apply());
 
     DependencyContainer container =
-        new DependencyContainer(config.env(), new JavalinContextEntityManagerProvider());
+        new DependencyContainer(
+            config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
 
     List<RouteRegistry> routeRegistries =
         List.of(
             new UserRoutes(server, container.getUserController()),
-            new SystemRoutes(server, persistenceManager));
+            new SystemRoutes(server, container.getSystemController()));
     List<ServerConfig> serverConfigs =
         List.of(new LifeCycleConfig(server, persistenceManager), new ExceptionsConfig(server));
 
@@ -99,12 +100,13 @@ public class Application {
     Javalin server = Javalin.create(initConfig);
 
     DependencyContainer container =
-        new DependencyContainer(config.env(), new JavalinContextEntityManagerProvider());
+        new DependencyContainer(
+            config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
 
     List<RouteRegistry> routeRegistries =
         List.of(
             new UserRoutes(server, container.getUserController()),
-            new SystemRoutes(server, persistenceManager));
+            new SystemRoutes(server, container.getSystemController()));
     List<ServerConfig> serverConfigs =
         List.of(new LifeCycleConfig(server, persistenceManager), new ExceptionsConfig(server));
 
