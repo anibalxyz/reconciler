@@ -31,11 +31,20 @@ public class SwaggerConfig implements ServerConfig {
   private final JavalinConfig javalinConfig;
   private final ServerEnvironment env;
 
+  /**
+   * Constructs a SwaggerConfig.
+   *
+   * @param javalinConfig The Javalin configuration object to be modified.
+   * @param env The application's server environment configuration.
+   */
   public SwaggerConfig(JavalinConfig javalinConfig, ServerEnvironment env) {
     this.javalinConfig = javalinConfig;
     this.env = env;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void apply() {
     String infoDescription =
