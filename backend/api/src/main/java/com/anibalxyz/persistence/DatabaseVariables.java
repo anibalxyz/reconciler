@@ -66,7 +66,9 @@ public class DatabaseVariables {
     return password;
   }
 
-  /** Returns a string representation of the object, masking the password for security. */
+  /**
+   * @return The string representation of the object, masking the password for security.
+   */
   @NotNull
   @Override
   public String toString() {
