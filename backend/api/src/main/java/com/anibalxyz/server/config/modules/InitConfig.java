@@ -31,9 +31,7 @@ public class InitConfig implements ServerConfig {
     this.env = env;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void apply() {
     javalinConfig.useVirtualThreads = true;
@@ -45,7 +43,7 @@ public class InitConfig implements ServerConfig {
         cors ->
             cors.addRule(
                 rule -> {
-                  if ((env.APP_ENV().equals("development"))) {
+                  if ((env.APP_ENV().equals("dev"))) {
                     rule.anyHost();
                   } else {
                     rule.allowHost("allowed.com");

@@ -9,7 +9,7 @@ import com.anibalxyz.users.application.UsersEnvironment;
  * <p>This record provides a type-safe representation of settings loaded from the environment (e.g.,
  * .env files or system variables), preventing the use of "magic strings" throughout the codebase.
  *
- * @param APP_ENV The current application environment (e.g., "development", "test", "production").
+ * @param APP_ENV The current application environment (e.g., "dev", "test", "prod").
  * @param BCRYPT_LOG_ROUNDS The computational cost for the BCrypt password hashing algorithm.
  * @param API_URL The base URL of the API.
  * @param CONTACT_EMAIL The contact email for the API.

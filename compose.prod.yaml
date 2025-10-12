@@ -5,8 +5,8 @@ services:
       # Persistent storage for the DB. Data isn't lost on container shutdown
       - database:/var/lib/postgresql/data
   nginx:
-    image: anibalxyz/reconciler-production-nginx:latest
-    container_name: reconciler-production-nginx
+    image: anibalxyz/reconciler-prod-nginx:latest
+    container_name: reconciler-prod-nginx
     pull_policy: missing # In real production, this should be set to 'always'
     ports:
       - "80:80"

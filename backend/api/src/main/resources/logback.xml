@@ -1,6 +1,6 @@
 <configuration>
 
-    <property name="APP_ENV" value="${APP_ENV:-development}"/>
+    <property name="APP_ENV" value="${APP_ENV:-dev}"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -9,10 +9,10 @@
     </appender>
 
     <!-- NOTE: if using Docker (or manually inject env variable), it functions dynamically,
-               if not then defaults 'development'
+               if not then defaults 'dev'
     -->
     <!-- Development environment configuration -->
-    <if condition='property("APP_ENV").equals("development")'>
+    <if condition='property("APP_ENV").equals("dev")'>
         <then>
             <root level="DEBUG">
                 <appender-ref ref="STDOUT"/>

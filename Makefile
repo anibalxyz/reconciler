@@ -24,7 +24,7 @@ help:
 	@echo "                                    verify allowed services"
 	@echo
 	@echo "Environment Management:"
-	@echo "  set-env        target=<env>     # Set Makefile ENV (development | production)"
+	@echo "  set-env        target=<env>     # Set Makefile ENV (dev | prod)"
 	@echo "  get-env                         # Show current ENV"
 	@echo "  check-env                       # Verify that required .env files exist"
 	@echo
@@ -64,11 +64,11 @@ help:
 # ==================================================================================================
 .PHONY: set-env get-env check-env init-env
 
-AVAILABLE_ENVS := development production test
+AVAILABLE_ENVS := dev prod test
 
 MAKE_ENVFILE := .env.make
 
-$(shell if [ ! -f $(MAKE_ENVFILE) ]; then echo 'ENV=development' > $(MAKE_ENVFILE); fi)
+$(shell if [ ! -f $(MAKE_ENVFILE) ]; then echo 'ENV=dev' > $(MAKE_ENVFILE); fi)
 
 ENV := $(shell . ./$(MAKE_ENVFILE) && echo $$ENV)
 
@@ -76,9 +76,9 @@ export APP_ENV := $(ENV)
 
 init-env:
 	@if ! grep -q '^ENV=' $(MAKE_ENVFILE) || [ "$(filter $(ENV),$(AVAILABLE_ENVS))" = "" ]; then \
-		echo 'ENV=development' > $(MAKE_ENVFILE); \
+		echo 'ENV=dev' > $(MAKE_ENVFILE); \
 		echo "ERROR: There was an invalid value or format in ENV value"; \
-		echo "→ Changed to default value: 'development'"; \
+		echo "→ Changed to default value: 'dev'"; \
 		echo "→ Available options: $(AVAILABLE_ENVS)"; \
 		exit 1; \
 	fi
@@ -87,7 +87,7 @@ init-env:
 
 set-env:
 	@if [ -z "$(target)" ]; then \
-		echo "ERROR: You must specify target. Example: 'make set-env target=production'"; \
+		echo "ERROR: You must specify target. Example: 'make set-env target=prod'"; \
 		exit 1; \
 	fi
 
@@ -160,8 +160,8 @@ DOCKER_IMAGE := $(if $(target),anibalxyz/reconciler-$(ENV)-$(notdir $(target)))
 
 # Defines the build targets for different environments
 CORE_SERVICES := backend/api frontend frontend/dashboard frontend/public-site
-DEVELOPMENT_SERVICES := $(CORE_SERVICES)
-PRODUCTION_SERVICES := $(CORE_SERVICES) nginx
+DEV_SERVICES := $(CORE_SERVICES)
+PROD_SERVICES := $(CORE_SERVICES) nginx
 TEST_SERVICES := backend/api
 
 PUSHABLE_SERVICES := backend/api nginx
@@ -209,8 +209,8 @@ build:
 		./$(target)/
 
 push:
-	@if [ "$(ENV)" = "development" ]; then \
-		echo "ERROR: Pushing images is not allowed in 'development' environment."; \
+	@if [ "$(ENV)" = "dev" ]; then \
+		echo "ERROR: Pushing images is not allowed in 'dev' environment."; \
 		exit 1; \
 	fi;
 
@@ -232,8 +232,8 @@ push:
 	docker push $(DOCKER_IMAGE);
 
 pull:
-	@if [ "$(ENV)" = "development" ]; then \
-		echo "ERROR: Pulling images is not allowed in 'development' environment."; \
+	@if [ "$(ENV)" = "dev" ]; then \
+		echo "ERROR: Pulling images is not allowed in 'dev' environment."; \
 		exit 1; \
 	fi;
 
@@ -318,7 +318,7 @@ test: check-env
 
 deploy:
 	@echo "▶  Deploying '$(ENV)' environment..."
-	@if [ "$(ENV)" = "development" ]; then \
+	@if [ "$(ENV)" = "dev" ]; then \
 		$(MAKE) build-all nocache=true; \
 	else \
 		$(MAKE) pull-all; \
@@ -346,8 +346,8 @@ restart: check-env
 	fi;
 	@$(COMPOSE) $(COMPOSE_SETUP) restart $(if $(target),$(notdir $(target)))
 
-# In 'development', the 'frontend' service is validated despite lacking a container, but
-# Docker handles it correctly. Similarly, 'frontend/<sub-frontend>' behaves the same in 'production'.
+# In development, the 'frontend' service is validated despite lacking a container, but
+# Docker handles it correctly. Similarly, 'frontend/<sub-frontend>' behaves the same in production.
 logs: check-env
 	@if [ -n "$(target)" ]; then \
 		$(MAKE) check-service extra=true; \

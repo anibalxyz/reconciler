@@ -13,3 +13,7 @@
 # Global environment variables
 .env*
 !.env*.example
+
+# AI Agents
+
+AGENTS.md
