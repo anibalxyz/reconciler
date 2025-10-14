@@ -1,0 +1,10 @@
+[project]
+name = "reconciler-cli"
+version = "0.1.0"
+dependencies = ["typer"]
+
+[project.scripts]
+cli = "cli.main:app"
+
+[tool.setuptools]
+packages = ["cli"]
