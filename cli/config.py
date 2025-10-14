@@ -1,9 +1,14 @@
-import subprocess
 from pathlib import Path
 from typing import List, Dict
 
 AVAILABLE_ENVS: List[str] = ["dev", "prod", "test"]
 DEFAULT_ENV: str = AVAILABLE_ENVS[0]
+
+ENV_DIRS: List[Path] = [Path("backend"), Path("frontend")]
+ENV_FILES: Dict[str, List[Path]] = {
+    str(env): [Path(d, f".env.{env}") for d in ENV_DIRS] for env in AVAILABLE_ENVS
+}
+
 
 CONFIG_FILE_PATH = Path("cli.cfg")
 
@@ -17,29 +22,6 @@ SERVICES: Dict[str, str] = {
     "FLYWAY": "flyway",
     "NGINX": "nginx",
 }
-
-BUILDABLE_SERVICES: List[str] = [
-    SERVICES["API"],
-    SERVICES["FRONTEND"],
-    SERVICES["PUBLIC_SITE"],
-    SERVICES["DASHBOARD"],
-]
-
-BUILDABLE_SERVICES_BY_ENV: Dict[str, List[str]] = {
-    "dev": BUILDABLE_SERVICES,
-    "prod": BUILDABLE_SERVICES + [SERVICES["NGINX"]],
-    "test": [SERVICES["API"]],
-}
-
-LIFECYCLE_SERVICES = [SERVICES["DB"], SERVICES["FLYWAY"]]
-
-# Services allowed to be pushed to or pulled from a registry
-REGISTRY_SERVICES = [SERVICES["API"], SERVICES["NGINX"]]
-
-
-# build the compose final command and execute it
-def compose():
-    return
 
 
 def get_config_value(path: Path, key: str) -> str | None:
@@ -106,14 +88,3 @@ def set_config_env(env: str):
 
     with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as f:
         f.writelines(lines)
-
-
-DOCKER_RESOURCES: List[str] = ["images", "containers", "volumes", "networks"]
-
-
-def list_resources(rss: str):
-    if not rss in DOCKER_RESOURCES:
-        raise ValueError(f"Invalid resource: {rss}")
-
-    print(f"Listing {rss}...")
-    subprocess.run(["docker", rss[:-1], "ls"], check=True)
