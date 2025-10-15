@@ -5,8 +5,8 @@ from typing import Annotated, List, Dict
 
 import typer
 
-from cli import config as cfg
-from cli.config import get_config_env, SERVICES
+from cli.modules.config import get_current_env
+from cli.modules.constants import SERVICES, ENV_FILES
 
 core_lifecycle_services = [SERVICES["DB"], SERVICES["FLYWAY"]]
 
@@ -23,8 +23,8 @@ LIFECYCLE_SERVICES: Dict[str, List[str]] = {
 
 
 def validate_env():
-    env: str = cfg.get_config_env()
-    for f in cfg.ENV_FILES.get(env):
+    env: str = get_current_env()
+    for f in ENV_FILES.get(env):
         if not f.exists():
             print(f"WARNING: Environment file {f} does not exist")
             example = f.with_name(f.name + ".example")
@@ -41,10 +41,10 @@ def validate_env():
 
 # build the compose final command and execute it
 def compose(cmd: List[str]):
-    env = cfg.get_config_env()
+    env = get_current_env()
     compose_files = ["-f", "compose.yaml", "-f", f"compose.{env}.yaml"]
     env_files = []
-    for f in cfg.ENV_FILES.get(env):
+    for f in ENV_FILES.get(env):
         env_files += ["--env-file", str(f)]
     project_name = [
         "--project-name",
@@ -59,7 +59,7 @@ def compose(cmd: List[str]):
 
 
 def get_lifecycle_services():
-    result: List[str] = LIFECYCLE_SERVICES.get(get_config_env()).copy()
+    result: List[str] = LIFECYCLE_SERVICES.get(get_current_env()).copy()
     result.append("all")
     for i in range(len(result)):
         result[i] = result[i].split("/")[-1]

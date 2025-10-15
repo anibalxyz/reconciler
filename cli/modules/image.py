@@ -4,8 +4,9 @@ from typing import List, Dict, Annotated
 
 import typer
 
-from cli.config import get_config_env, SERVICES
 from cli.modules import compose
+from cli.modules.config import get_current_env
+from cli.modules.constants import SERVICES
 
 app = typer.Typer(help="Manage docker images", no_args_is_help=True)
 
@@ -27,7 +28,7 @@ REGISTRY_SERVICES = [SERVICES["API"], SERVICES["NGINX"]]
 
 
 def get_buildable_services():
-    result: List[str] = BUILDABLE_SERVICES.get(get_config_env()).copy()
+    result: List[str] = BUILDABLE_SERVICES.get(get_current_env()).copy()
     result.append("all")
     for i in range(len(result)):
         result[i] = result[i].split("/")[-1]
@@ -43,7 +44,7 @@ def get_registry_services():
 
 def docker(cmd_ref: List[str], service: str):
     cmd = cmd_ref.copy()
-    env = get_config_env()
+    env = get_current_env()
     image = f"anibalxyz/reconciler-{env}-"
     # .replace() used because of PUBLIC_SITE
     service_with_dir = SERVICES[service.upper().replace("-", "_")]
@@ -149,7 +150,7 @@ def push(
         ),
     ],
 ):
-    if not get_config_env() == "prod":
+    if not get_current_env() == "prod":
         print("ERROR: Pushing images is only allowed in production")
         raise typer.Exit(code=1)
 
@@ -172,7 +173,7 @@ def pull(
         ),
     ],
 ):
-    if not get_config_env() == "prod":
+    if not get_current_env() == "prod":
         print("ERROR: Pulling images is only allowed in production")
         raise typer.Exit(code=1)
 
