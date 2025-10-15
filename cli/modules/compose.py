@@ -6,7 +6,7 @@ from typing import Annotated, List, Dict
 import typer
 
 from cli import config as cfg
-from cli.config import SERVICES
+from cli.config import get_config_env, SERVICES
 
 core_lifecycle_services = [SERVICES["DB"], SERVICES["FLYWAY"]]
 
@@ -53,23 +53,23 @@ def compose(cmd: List[str]):
 
     base_cmd = ["docker", "compose"] + compose_files + env_files + project_name
 
-    # Copy the current environment and add APP_ENV to it
     run_env = os.environ.copy()
     run_env["APP_ENV"] = env
-    subprocess.run(base_cmd + cmd, check=True, env=run_env)
+    subprocess.run(base_cmd + cmd, env=run_env)
 
 
 def get_lifecycle_services():
-    lista: List[str] = LIFECYCLE_SERVICES.get(cfg.get_config_env()).copy()
-    lista.append("all")
-    for i in range(len(lista)):
-        lista[i] = lista[i].split("/")[-1]
-    return lista
+    result: List[str] = LIFECYCLE_SERVICES.get(get_config_env()).copy()
+    result.append("all")
+    for i in range(len(result)):
+        result[i] = result[i].split("/")[-1]
+    return result
 
 
 def run_lifecycle_command(command: List[str], services: List[str]):
     services = services or ["all"]
     valid_services = get_lifecycle_services()
+
     invalid = [s for s in services if s not in valid_services]
 
     if invalid:
@@ -117,7 +117,7 @@ def down(
     run_lifecycle_command(["down", "--remove-orphans"], services)
 
 
-# TODO: make start/stop/restart work over running services only
+# TODO: make start/stop/restart/down work over running services only
 @app.command()
 def start(
     services: Annotated[

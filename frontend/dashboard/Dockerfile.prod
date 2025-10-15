@@ -1,4 +1,4 @@
-FROM anibalxyz/reconciler-production-frontend AS builder
+FROM anibalxyz/reconciler-prod-frontend AS builder
 
 WORKDIR /app
 

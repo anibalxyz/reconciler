@@ -33,7 +33,7 @@ def prune(
             help="The resource to be pruned",
             autocompletion=lambda: DOCKER_RESOURCES + ["all"],
         ),
-    ] = "all",
+    ],
 ):
     if rss == "all":
         for r in DOCKER_RESOURCES:
