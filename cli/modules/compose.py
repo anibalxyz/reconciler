@@ -5,8 +5,9 @@ from typing import Annotated, List, Dict
 
 import typer
 
-from cli.modules.config import get_current_env
+from cli.modules.config import get_current_env, set_env
 from cli.modules.constants import SERVICES, ENV_FILES
+from cli.modules.image import build, get_buildable_services
 
 core_lifecycle_services = [SERVICES["DB"], SERVICES["FLYWAY"]]
 
@@ -83,7 +84,7 @@ def run_lifecycle_command(command: List[str], services: List[str]):
 
 
 app = typer.Typer(
-    help="Manage docker-compose lifecycle (up, down, logs, etc.)",
+    help="Manage Docker Compose lifecycle",
     no_args_is_help=True,
     callback=validate_env,
 )
@@ -98,9 +99,16 @@ def up(
             autocompletion=get_lifecycle_services,
         ),
     ] = None,
+    detach: Annotated[
+        bool,
+        typer.Option(help="Enables the use of detach mode."),
+    ] = True,
 ):
     """Brings up containers, networks, and volumes."""
-    run_lifecycle_command(["up", "--detach"], services)
+    cmd = ["up"]
+    if detach:
+        cmd.append("--detach")
+    run_lifecycle_command(cmd, services)
 
 
 @app.command()
@@ -172,3 +180,66 @@ def logs(
 ):
     """Follows log output for services."""
     run_lifecycle_command(["logs", "--follow", "--tail=50"], services)
+
+
+@app.command()
+def rebuild(
+    services: Annotated[
+        List[str],
+        typer.Argument(
+            help="Service(s) to rebuild. Accepts multiple values.",
+            autocompletion=get_buildable_services,
+        ),
+    ],
+    cache: Annotated[
+        bool,
+        typer.Option(help="Enables the use of cache during build."),
+    ] = True,
+):
+    # Filter the list to get only the services that can be managed by docker-compose.
+    runnable_services = [s for s in services if s in get_lifecycle_services()]
+
+    print(f"▶  Rebuilding service(s): {', '.join(services)}")
+
+    print("\n-- Step 1: Taking down services (if running) --")
+    if runnable_services:
+        down(services=runnable_services)
+    else:
+        print("INFO: No runnable services found to take down. Skipping.")
+
+    cache_status = "enabled" if cache else "disabled"
+    print(f"\n-- Step 2: Building images with cache {cache_status} --")
+    build(services=services, cache=cache)
+
+    print("\n-- Step 3: Bringing services up --")
+    if runnable_services:
+        up(services=runnable_services)
+    else:
+        print("No runnable services to bring up. Skipping...")
+
+
+# TODO: add global config for "secure" execution (enabled for pipelines)
+@app.command()
+def test(
+    cache: Annotated[
+        bool,
+        typer.Option(help="Enables the use of cache during build."),
+    ] = True,
+):
+    env_snap = get_current_env()
+    try:
+        set_env("test")
+
+        buildable = get_buildable_services()
+        buildable.remove("all")
+        build(buildable, cache)
+
+        up(["db", "flyway"])
+        up(["api"], False)
+    finally:
+        try:
+            lifecycle = get_lifecycle_services()
+            lifecycle.remove("all")
+            down(lifecycle)
+        finally:
+            set_env(env_snap)

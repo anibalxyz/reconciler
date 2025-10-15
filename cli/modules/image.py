@@ -4,7 +4,6 @@ from typing import List, Dict, Annotated
 
 import typer
 
-from cli.modules import compose
 from cli.modules.config import get_current_env
 from cli.modules.constants import SERVICES
 
@@ -94,7 +93,7 @@ def build(
     ],
     cache: Annotated[
         bool,
-        typer.Option(help="Disables the use of cache during build."),
+        typer.Option(help="Enables the use of cache during build."),
     ] = True,
 ):
     cmd = ["build"]
@@ -102,42 +101,6 @@ def build(
         cmd.append("--no-cache")
     run_image_command(cmd, services)
     return
-
-
-@app.command()
-def rebuild(
-    services: Annotated[
-        List[str],
-        typer.Argument(
-            help="Service(s) to rebuild. Accepts multiple values.",
-            autocompletion=get_buildable_services,
-        ),
-    ],
-    cache: Annotated[
-        bool,
-        typer.Option(help="Disables the use of cache during build."),
-    ] = False,
-):
-    # Filter the list to get only the services that can be managed by docker-compose.
-    runnable_services = [s for s in services if s in compose.get_lifecycle_services()]
-
-    print(f"▶  Rebuilding service(s): {', '.join(services)}")
-
-    print("\n-- Step 1: Taking down services (if running) --")
-    if runnable_services:
-        compose.down(services=runnable_services)
-    else:
-        print("INFO: No runnable services found to take down. Skipping.")
-
-    cache_status = "enabled" if cache else "disabled"
-    print(f"\n-- Step 2: Building images with cache {cache_status} --")
-    build(services=services, cache=cache)
-
-    print("\n-- Step 3: Bringing services up --")
-    if runnable_services:
-        compose.up(services=runnable_services)
-    else:
-        print("No runnable services to bring up. Skipping...")
 
 
 @app.command()
