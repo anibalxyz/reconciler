@@ -24,8 +24,9 @@ export default function App() {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-        const data: { status: boolean } = await response.json();
-        const status: ApiStatus = data.status ? "healthy" : "unhealthy";
+        const data: { dbIsConnected: boolean } = await response.json();
+        console.log("Health check response:", data);
+        const status: ApiStatus = data.dbIsConnected ? "healthy" : "unhealthy";
 
         setStatus(status);
       } catch (err: any) {

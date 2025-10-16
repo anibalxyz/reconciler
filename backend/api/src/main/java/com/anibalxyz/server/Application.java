@@ -96,6 +96,13 @@ public class Application {
 
     Javalin server = Javalin.create(initConfig);
 
+    // TODO: separate environments logic
+    if (config.env().APP_ENV().equals("dev")) {
+      server.get("/", ctx -> ctx.redirect("/swagger"));
+    } else {
+      server.get("/", ctx -> ctx.redirect("/openapi"));
+    }
+
     DependencyContainer container =
         new DependencyContainer(
             config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
@@ -123,7 +130,7 @@ public class Application {
    */
   public static Application create(ApplicationConfiguration config) {
     String appEnv = config.env().APP_ENV();
-    if (appEnv.equals("dev")) {
+    if (appEnv.equals("dev") || appEnv.equals("prod")) {
       // TODO: also used in "production", for the moment both are the same
       return createForDev(config);
     }

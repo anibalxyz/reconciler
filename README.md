@@ -76,10 +76,10 @@ A brief overview of the most important files and directories in the project:
 - **Docker v20.10+** and Docker Compose v2+ (to run the application).
 - **Python 3.8+** and **pip** (to use the CLI tool).
 
-> [!TIP]
-> This project is designed to be run with Docker, which is the recommended approach. However, if you wish to run the
-> services locally on your host machine, you will need to install and configure the following:
->
+> [!WARNING]
+> This project is designed to be run with Docker, which is the recommended approach. Running services locally on your
+> host machine is not officially supported and may lead to unexpected errors or require additional manual configuration.
+> If you want to run the services locally, you will need to install and configure the following:
 > - **Java 21** and **Maven**: To build and run the backend API.
 > - **Node.js 22+** and a package manager (`npm`, `pnpm`, or `yarn`): To build and run the frontend applications.
 > - **PostgreSQL Server**: A running instance for the application to connect to.
@@ -166,17 +166,22 @@ cli compose down all
 
 After running `compose up`, you can access the services at the following URLs.
 
+> [!TIP]
+> The only "pretty" interface available out-of-the-box is the **Swagger UI** for the API, which provides a comprehensive
+> and interactive documentation for all API endpoints. The frontend applications (Dashboard and Public Site) are not
+> fully initialized yet, but can be accessed if you wish to see their current state.
+
 > [!NOTE]
 > The ports listed below are the default values defined in the `.env` files. If you change them, you will need to adjust
 > the URLs accordingly.
 
-| Environment | Service             | URL                          |
-|:------------|:--------------------|:-----------------------------|
-| `dev`       | API                 | http://localhost:4001/health |
-| `dev`       | Public Site         | http://localhost:5173/       |
-| `dev`       | Dashboard           | http://localhost:5174/       |
-| `prod`      | Nginx Reverse Proxy | http://localhost/            |
-| `prod`      | API via Nginx       | http://localhost/api/health  |
+| Environment | Service            | URL                    |
+|:------------|:-------------------|:-----------------------|
+| `dev`       | API                | http://localhost:4001/ |
+| `dev`       | Public Site        | http://localhost:5173/ |
+| `dev`       | Dashboard          | http://localhost:5174/ |
+| `prod`      | Frontend via Nginx | http://localhost/      |
+| `prod`      | API via Nginx      | http://localhost/api/  |
 
 ## License
 

@@ -42,9 +42,7 @@ public class SwaggerConfig implements ServerConfig {
     this.env = env;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void apply() {
     String infoDescription =
@@ -111,10 +109,12 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                       return content.toPrettyString();
                                     }))));
 
-    javalinConfig.registerPlugin(
-        new SwaggerPlugin(
-            swaggerConfig -> {
-              swaggerConfig.setUiPath("/swagger");
-            }));
+    if (env.APP_ENV().equals("dev")) {
+      javalinConfig.registerPlugin(
+          new SwaggerPlugin(
+              swaggerConfig -> {
+                swaggerConfig.setUiPath("/swagger");
+              }));
+    }
   }
 }
