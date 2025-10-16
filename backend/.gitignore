@@ -31,3 +31,8 @@ nbproject/private/
 # Environment variables
 .env*
 !.env*.example
+
+# Agents / AI Assistants
+
+AGENTS.md
+GEMINI.md

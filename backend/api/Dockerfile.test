@@ -1,0 +1,14 @@
+FROM maven:3.9.9-eclipse-temurin-21
+
+WORKDIR /app
+
+COPY pom.xml .
+
+RUN mvn dependency:go-offline -B
+
+COPY src ./src
+
+# The 'verify' phase compiles and runs all tests.
+# The container will execute this command, stream output, and then exit.
+# TODO: check if needs -B option (or add it dinamically)
+CMD ["mvn", "verify"]

@@ -1,0 +1,66 @@
+services:
+  db:
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      # Persistent storage for the DB. Data isn't lost on container shutdown
+      - database:/var/lib/postgresql/data
+
+  api:
+    pull_policy: never
+    volumes:
+      # Mount source code and config for manual reload during development
+      - ./backend/api/pom.xml:/app/pom.xml:cached
+      - ./backend/api/src:/app/src:cached
+      # Persist Maven dependencies cache to speed up builds
+      - maven:/root/.m2
+
+  dashboard:
+    image: anibalxyz/reconciler-dev-dashboard:latest
+    pull_policy: never
+    container_name: reconciler-dev-dashboard
+    env_file:
+      - ./frontend/.env.dev
+    ports:
+      - "${DASHBOARD_PORT}:5174"
+    volumes:
+      # Enables hot reload by mounting dashboard source code
+      - ./frontend/dashboard:/app/dashboard:cached
+      # Shares access to the entire frontend workspace
+      - ./frontend:/app:cached
+      # Provides shared node_modules for all frontend services
+      # Prevents sync with local and avoids anonymous volumes
+      - node_modules:/app/node_modules:cached
+      # Ensures it's neither synced nor persisted
+      - type: tmpfs
+        target: /app/dashboard/node_modules
+
+    depends_on:
+      - api
+    networks:
+      - main
+
+  public-site:
+    image: anibalxyz/reconciler-dev-public-site:latest
+    pull_policy: never
+    container_name: reconciler-dev-public-site
+    env_file:
+      - ./frontend/.env.dev
+    ports:
+      - "${PUBLIC_SITE_PORT}:5173"
+    volumes:
+      - ./frontend/public-site:/app/public-site:cached
+      - ./frontend:/app:cached
+      - node_modules:/app/node_modules:cached
+      - type: tmpfs
+        target: /app/public-site/node_modules
+    depends_on:
+      - api
+    networks:
+      - main
+
+volumes:
+  maven:
+    name: "reconciler-dev-mvn"
+  node_modules:
+    name: "reconciler-dev-node"

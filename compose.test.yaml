@@ -1,0 +1,22 @@
+services:
+  api:
+    pull_policy: never
+    ports: []
+    volumes:
+      # Persist Maven dependencies cache to speed up builds
+      - maven:/root/.m2
+    # Enable colored output
+    tty: true
+    stdin_open: true
+    depends_on:
+      - db
+      - flyway
+
+  db:
+    ports:
+      - "${DB_PORT}:5432"
+    volumes: []
+
+volumes:
+  maven:
+    name: "reconciler-test-mvn"

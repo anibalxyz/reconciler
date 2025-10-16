@@ -13,3 +13,11 @@
 # Global environment variables
 .env*
 !.env*.example
+
+# AI Agents
+AGENTS.md
+
+# CLI / python
+*.egg-info
+__pycache__
+cli.cfg
