@@ -122,7 +122,7 @@ def down(
         ),
     ] = None,
 ):
-    """Stops and removes containers, networks, and volumes."""
+    """Stops and removes containers and networks."""
     run_lifecycle_command(["down", "--remove-orphans"], services)
 
 

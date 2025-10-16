@@ -1,151 +1,179 @@
 # Reconciler
 
-Reconciler is a lightweight and modular application designed to help teams reconcile financial transactions between bank statements and internal systems. Built with industry best practices, it aims to provide an intuitive and customizable platform with powerful utilities for both individual users and collaborative environments.
+Reconciler is a lightweight and modular application designed to help teams reconcile financial transactions between bank
+statements and internal systems. Built with industry best practices, it aims to provide an intuitive and customizable
+platform with powerful utilities for both individual users and collaborative environments.
 
 <details>
 <summary>Table of Contents</summary>
 
-- [Reconciler](#reconciler)
-  - [Technology Stack](#technology-stack)
-  - [Planned Features](#planned-features)
-  - [Prerequisites](#prerequisites)
-  - [Relevant Files](#relevant-files)
-  - [Running the Application](#running-the-application)
-    - [Commands and Workflow Management](#commands-and-workflow-management)
-    - [How to Run](#how-to-run)
-    - [Accessing the Application](#accessing-the-application)
-    - [Other Useful Commands](#other-useful-commands)
-  - [License](#license)
+- [Planned Features](#planned-features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [CLI Usage](#cli-usage)
+- [Accessing the Application](#accessing-the-application)
+- [License](#license)
 
 </details>
 
-## Technology Stack
-
-- **Backend**: Java 21 (using embedded Jetty)
-- **Frontend**: HTML + CSS + Node.js + Vite + TypeScript
-  - **Public Site**: Focused on mostly static content with minimal JavaScript, optimized for SEO and fast load times.
-  - **Dashboard**: React + React Router (soon) + Tailwind CSS (probably)
-- **Database**: PostgreSQL
-- **Containerization**: Docker & Docker Compose
-- **Automation & Tooling**: GNU Make, custom `Makefile` for environment and workflow management
-
 ## Planned Features
 
-- **Initial Setup**: Configure core parameters such as transaction sources, categories, and available log actions. This step is required only once after deployment.
-- **User Authentication**: Basic login system using predefined credentials. Users can later update their password, but only admins can create or manage accounts.
+- **Initial Setup**: Configure core parameters such as transaction sources, categories, and available log actions. This
+  step is required only once after deployment.
+- **User Authentication**: Basic login system using predefined credentials. Users can later update their password, but
+  only admins can create or manage accounts.
 - **Dashboard**: Central hub for navigating application features.
 - **Transaction Upload**: Upload data from both bank and internal systems in supported formats.
 - **Automated Reconciliation**: Automatically identifies matches and discrepancies between uploaded transactions.
 - **Manual Discrepancy Resolution**: Interface for resolving unmatched or ambiguous records.
-- **Admin Panel**: Admin-only section to add users and define new system parameters (e.g. categories, sources, action types).
+- **Admin Panel**: Admin-only section to add users and define new system parameters (e.g. categories, sources, action
+  types).
 - **Reports and Exports**: Export data in PDF, Excel, or other conventional formats.
 - **Analytics and Charts**: Visualize financial activity, reconciliation rates, and trends.
 - **Public Site**: General access site with product information and login/registration portal.
 
+## Tech Stack
+
+- **Backend**: Java 21 with Javalin
+- **Frontend**: TypeScript with Vite
+    - **Dashboard**: React
+    - **Public Site**: Plain TypeScript and HTML
+- **Database**: PostgreSQL with Flyway for migrations
+- **Web Server**: Nginx (for production)
+- **CLI**: Python 3 with Typer
+- **Containerization**: Docker & Docker Compose
+
+## Project Structure
+
+A brief overview of the most important files and directories in the project.
+
+```
+.
+├── cli/                 # Source code for the Python CLI tool
+│   └── main.py          # Entrypoint for the CLI
+├── backend/
+│   ├── api/             # Java API (Javalin) source code
+│   │   └── pom.xml      # Backend dependencies (Maven)
+│   └── db/
+│       └── migrations/  # Database migrations (Flyway)
+├── frontend/
+│   ├── dashboard/       # React application for the dashboard
+│   └── public-site/     # TypeScript application for the public site
+├── nginx/               # Nginx configuration for the production environment
+├── compose.yaml         # Base Docker Compose configuration for all services
+├── compose.<env>.yaml   # Docker Compose overrides for the <env> environment
+├── pyproject.toml       # Project definition and dependencies for the CLI tool
+└── README.md            # This file
+```
+
 ## Prerequisites
 
 - **Git** (to clone the repository).
-- **Docker v20.10+** and **Docker Compose v2+** (to run the application in a containerized environment).
-- **Make** (available by default in most modern Linux distributions).
-- **PostgreSQL client** (`psql`) or any GUI (e.g. DBeaver, pgAdmin). Useful for manually inspecting the database.
+- **Docker v20.10+** and Docker Compose v2+ (to run the application).
+- **Python 3.8+** and **pip** (to use the CLI tool).
 
 > [!TIP]
-> If you plan to run services directly on your host machine (not via Docker), you’ll also need:
+> This project is designed to be run with Docker, which is the recommended approach. However, if you wish to run the
+> services locally on your host machine, you will need to install and configure the following:
 >
-> - **Java 21** (for the backend)
-> - **Node.js 22+** and a package manager such as `npm`, `pnpm`, or `yarn` (for the frontend)
+> - **Java 21** and **Maven**: To build and run the backend API.
+> - **Node.js 22+** and a package manager (`npm`, `pnpm`, or `yarn`): To build and run the frontend applications.
+> - **PostgreSQL Server**: A running instance for the application to connect to.
+> - **Flyway Command-Line Tool**: To run database migrations against your local PostgreSQL instance.
+> - **Nginx**: To replicate the production environment's reverse proxy setup.
 
-## Relevant Files
+## Getting Started
 
-- `Makefile`: Contains commands to simplify developer workflow.
-- `compose.yaml`: Defines the common base for all environments.
-- `compose.<environment>.yaml`: Defines the specific environment configuration.
-- `Dockerfile.<environment>`: Defines how to build each service image for a specific environment.  
-  There is also a base `Dockerfile` (without environment suffix) shared by all frontend services and both environments.
-- `.env.<environment>.example`: Template files for environment variables used across backend and frontend services.
-
-## Running the Application
-
-### Commands and Workflow Management
-
-The Makefile provides a unified interface to manage the application's environments, services, lifecycle, images, and Docker resources.
-All commands are well documented in the `Makefile` itself. You can view them by running:
-
-```bash
-make help
-# Or simply:
-make
-```
-
-### How to Run
-
-These steps will guide you through the most basic workflow:
-
-0. Clone the repository and navigate to the project directory:
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/anibalxyz/reconciler.git
 cd reconciler
-
-# Or if you prefer SSH:
-git clone git@github.com:anibalxyz/reconciler.git
-cd reconciler
 ```
 
-1. Set the desired environment:
+### 2. Install the CLI
+
+This project is managed by a powerful, custom-built command-line interface. The CLI provides a unified and intuitive way
+to manage the application's environments and lifecycle, but we will see it in action below ✨.
+
+The CLI is a Python application. It is recommended to install it in a virtual environment.
 
 ```bash
-make set-env target=<environment> # e.g. development, production
+# Create and activate a virtual environment (optional but recommended)
+python3 -m venv ./cli/.venv
+source ./cli/.venv/bin/activate
 
-# For example, to set the environment to 'production':
-make set-env target=production
+# Install the CLI in editable mode
+pip install -e .[dev]
 ```
-
-2. Deploy the application:
 
 ```bash
-make deploy
+# If dont want to use editable mode
+pip install .
 ```
 
-This will internally execute different commands depending on the selected environment:
+Thanks to [Typer](https://typer.tiangolo.com/), the CLI is fully self-documented, so you can get help for any command or
+subcommand by simply adding `--help` to it.
 
-- Development: `make build-all nocache=true` → `make up`
-- Production: `make pull-all` → `make up`
+```bash
+# Try it out!
+cli --help
+```
+
+### 3. Set Up The Environment
+
+The CLI can manage different environments (e.g., `dev`, `prod`, `test`). Set your desired environment and initialize the
+configuration files in one go using the `--init` flag. This is the recommended way to get started.
+
+```bash
+# Syntax: cli set env <environment> --init
+cli set env dev --init
+```
+
+This command will:
+
+1. Persist the chosen environment in the `cli.cfg` file.
+2. If they don't exist, create `.env.*` files from their `.example` templates and prompt you to edit them with `nano`.
+
+### 4. Run the Application
+
+First, build the Docker images for all services in the current environment.
+
+```bash
+cli image build all
+```
+
+Then, start the services using Docker Compose.
+
+```bash
+cli compose up all
+```
+
+### 5. Stop the Application
+
+To stop and remove all running containers and networks, use `compose down`.
+
+```bash
+cli compose down all
+```
+
+## Accessing the Application
+
+After running `compose up`, you can access the services at the following URLs.
 
 > [!NOTE]
-> If a required `.env.<environment>` file does not exist, it will be created from its `.example` template. You’ll be prompted to edit it manually before proceeding. Currently, the default editor is `nano`.
-
-3. Stop the application
-
-```bash
-make down
-```
-
-### Accessing the Application
-
-After deploy, you can access the application services through the following URLs (using default ports).
+> The ports listed below are the default values defined in the `.env` files. If you change them, you will need to adjust
+> the URLs accordingly.
 
 | Environment | Service             | URL                          |
-| ----------- | ------------------- | ---------------------------- |
-| Development | Backend API         | http://localhost:4001/health |
-| Development | Public Site         | http://localhost:5173/       |
-| Development | Dashboard           | http://localhost:5174/       |
-| Production  | Backend API         | http://localhost:4002/health |
-| Production  | Backend (via Nginx) | http://localhost/api/health  |
-| Production  | Frontend (Nginx)    | http://localhost/            |
-
-> [!NOTE]
-> In production, the application is served via an Nginx reverse proxy which exposes the frontend (dashboard/public-site) on standard HTTP port **80**.
-
-### Other Useful Commands
-
-Besides the basic commands used above, the `Makefile` provides several others with various functionalities. Some of the most useful ones include:
-
-- `make logs target=<service>`: View the logs of the specified running service.
-- `make rebuild target=<service>`: Rebuild the specified service image.
-- `make restart target=<container>`: Restart the specified running container.
-- `make list target=<resource>`: List specific Docker resources. Use `make list-all` to list everything.
-- `make prune target=<resource>`: Remove unused Docker resources. Use `make prune-all` to prune all unused resources. Use with **caution**, as this will remove all stopped containers and unreferenced images even if they are unrelated to this application.
+|:------------|:--------------------|:-----------------------------|
+| `dev`       | API                 | http://localhost:4001/health |
+| `dev`       | Public Site         | http://localhost:5173/       |
+| `dev`       | Dashboard           | http://localhost:5174/       |
+| `prod`      | Nginx Reverse Proxy | http://localhost/            |
+| `prod`      | API via Nginx       | http://localhost/api/health  |
 
 ## License
 
