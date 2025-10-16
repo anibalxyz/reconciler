@@ -96,6 +96,13 @@ public class Application {
 
     Javalin server = Javalin.create(initConfig);
 
+    // TODO: separate environments logic
+    if (config.env().APP_ENV().equals("dev")) {
+      server.get("/", ctx -> ctx.redirect("/swagger"));
+    } else {
+      server.get("/", ctx -> ctx.redirect("/openapi"));
+    }
+
     DependencyContainer container =
         new DependencyContainer(
             config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
