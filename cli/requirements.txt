@@ -1,4 +1,0 @@
-pip==25.2 # compatibility with PyCharm
-black==25.9.0 # formatter
-
-typer==0.19.2

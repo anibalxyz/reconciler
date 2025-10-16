@@ -1,11 +1,10 @@
 import os
-import shutil
 import subprocess
 from typing import Annotated, List, Dict
 
 import typer
 
-from cli.modules.config import get_current_env, set_env
+from cli.modules.config import get_current_env, set_env, validate_env
 from cli.modules.constants import SERVICES, ENV_FILES
 from cli.modules.image import build, get_buildable_services
 
@@ -22,28 +21,6 @@ LIFECYCLE_SERVICES: Dict[str, List[str]] = {
     "test": core_lifecycle_services + [SERVICES["API"]],
 }
 
-
-def validate_env():
-    """
-    Validates that all required environment files for the current environment exist.
-
-    If a file does not exist, it is created from its example file.
-    The user is then prompted to fill in the missing values.
-    """
-    env: str = get_current_env()
-    for f in ENV_FILES.get(env):
-        if not f.exists():
-            print(f"WARNING: Environment file {f} does not exist")
-            example = f.with_name(f.name + ".example")
-            shutil.copy(example, f)
-            print(f"INFO: Created it from example. Please fill it before continuing...")
-            if typer.confirm("Do you want to open it now with nano editor?"):
-                subprocess.run(["nano", f])
-            else:
-                print(
-                    "Execution aborted. Please complete the file manually and run again."
-                )
-                raise typer.Exit(1)
 
 
 def compose(cmd: List[str]):

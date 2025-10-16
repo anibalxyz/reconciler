@@ -1,9 +1,11 @@
+import shutil
+import subprocess
 from pathlib import Path
 from typing import List, Annotated
 
 import typer
 
-from cli.modules.constants import AVAILABLE_ENVS, DEFAULT_ENV
+from cli.modules.constants import AVAILABLE_ENVS, DEFAULT_ENV, ENV_FILES
 
 CONFIG_FILE_PATH = Path("cli.cfg")
 
@@ -104,6 +106,29 @@ def get_current_env() -> str:
     return DEFAULT_ENV
 
 
+def validate_env():
+    """
+    Validates that all required environment files for the current environment exist.
+
+    If a file does not exist, it is created from its example file.
+    The user is then prompted to fill in the missing values.
+    """
+    env: str = get_current_env()
+    for f in ENV_FILES.get(env):
+        if not f.exists():
+            print(f"WARNING: Environment file {f} does not exist")
+            example = f.with_name(f.name + ".example")
+            shutil.copy(example, f)
+            print(f"INFO: Created it from example. Please fill it before continuing...")
+            if typer.confirm("Do you want to open it now with nano editor?"):
+                subprocess.run(["nano", f])
+            else:
+                print(
+                    "Execution aborted. Please complete the file manually and run again."
+                )
+                raise typer.Exit(1)
+
+
 set_app = typer.Typer(
     help="Set a configuration value", name="set", no_args_is_help=True
 )
@@ -129,6 +154,9 @@ def set_env(
             autocompletion=lambda: AVAILABLE_ENVS,
         ),
     ],
+    init: Annotated[
+        bool, typer.Option(help="Generate required env files for the given environment")
+    ] = False,
 ):
     """
     Sets the current environment in the configuration file.
@@ -140,3 +168,6 @@ def set_env(
 
     output_msg = set_config_value("ENV", env)
     print(output_msg)
+
+    if init:
+        validate_env()
