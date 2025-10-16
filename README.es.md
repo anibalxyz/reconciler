@@ -1,3 +1,5 @@
+[English Version](README.md)
+
 # Reconciler
 
 Reconciler es una aplicación ligera y modular diseñada para ayudar a los equipos a conciliar transacciones financieras
@@ -76,16 +78,15 @@ Una breve descripción de los archivos y directorios más importantes del proyec
 - **Docker v20.10+** y Docker Compose v2+ (para ejecutar la aplicación).
 - **Python 3.8+** y **pip** (para usar la herramienta CLI).
 
-> [!TIP]
-> Este proyecto está diseñado para ejecutarse con Docker, que es el enfoque recomendado. Sin embargo, si desea ejecutar
-> los servicios localmente, deberá instalar y configurar lo siguiente:
+> [!WARNING]
+> Este proyecto está diseñado para ejecutarse con Docker, que es el enfoque recomendado. Ejecutar los servicios
+> localmente en su máquina host no es oficialmente compatible y puede provocar errores inesperados o requerir
+> configuración manual adicional. Si desea ejecutar los servicios localmente, deberá instalar y configurar lo siguiente:
 >
 > - **Java 21** y **Maven**: Para construir y ejecutar la API de backend.
-> - **Node.js 22+** y un administrador de paquetes (`npm`, `pnpm` o `yarn`): Para construir y ejecutar las aplicaciones
-    frontend.
+> - **Node.js 22+** y un administrador de paquetes (e.g. `npm`): Para construir y ejecutar las aplicaciones frontend.
 > - **Servidor PostgreSQL**: Una instancia en ejecución para que la aplicación se conecte.
-> - **Herramienta de línea de comandos de Flyway**: Para ejecutar migraciones de base de datos en su instancia local de
-    PostgreSQL.
+> - **CLI de Flyway**: Para ejecutar migraciones de base de datos en su instancia local de PostgreSQL.
 > - **Nginx**: Para replicar la configuración del proxy inverso del entorno de producción.
 
 ## Primeros Pasos
@@ -169,17 +170,22 @@ cli compose down all
 
 Después de ejecutar `compose up`, puede acceder a los servicios en las siguientes URL.
 
+> [!TIP]
+> La única interfaz "bonita" disponible de forma predeterminada es la **Swagger UI** para la API, que proporciona una
+> documentación completa e interactiva para todos los endpoints de la API. Las aplicaciones frontend (Panel de Control y
+> Sitio Público) aún no están completamente inicializadas, pero se puede acceder a ellas si desea ver su estado actual.
+
 > [!NOTE]
 > Los puertos que se enumeran a continuación son los valores predeterminados definidos en los archivos `.env`. Si los
 > cambia, deberá ajustar las URL en consecuencia.
 
-| Entorno | Servicio              | URL                          |
-|:--------|:----------------------|:-----------------------------|
-| `dev`   | API                   | http://localhost:4001/health |
-| `dev`   | Sitio Público         | http://localhost:5173/       |
-| `dev`   | Panel de Control      | http://localhost:5174/       |
-| `prod`  | Proxy Inverso Nginx   | http://localhost/            |
-| `prod`  | API a través de Nginx | http://localhost/api/health  |
+| Entorno | Servicio                   | URL                    |
+|:--------|:---------------------------|:-----------------------|
+| `dev`   | API                        | http://localhost:4001/ |
+| `dev`   | Sitio Público              | http://localhost:5173/ |
+| `dev`   | Panel de Control           | http://localhost:5174/ |
+| `prod`  | Frontend a través de Nginx | http://localhost/      |
+| `prod`  | API a través de Nginx      | http://localhost/api/  |
 
 ## Licencia
 
