@@ -1,5 +1,5 @@
-FROM anibalxyz/reconciler-production-dashboard AS dashboard
-FROM anibalxyz/reconciler-production-public-site AS public-site
+FROM anibalxyz/reconciler-prod-dashboard AS dashboard
+FROM anibalxyz/reconciler-prod-public-site AS public-site
 
 FROM nginx:stable-alpine AS final
 

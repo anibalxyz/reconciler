@@ -43,7 +43,7 @@ public class ConfigurationFactory {
   // TODO: add Hikari configuration from env variables
   /**
    * Loads configuration from system environment variables. This is the standard method for
-   * containerized environments like production.
+   * containerized environments.
    *
    * @return A new {@link ApplicationConfiguration} instance.
    */

@@ -85,7 +85,7 @@ public class Application {
    * @param config The application configuration, loaded for the development environment.
    * @return A fully configured {@code Application} instance ready for development.
    */
-  public static Application createForDevelopment(ApplicationConfiguration config) {
+  public static Application createForDev(ApplicationConfiguration config) {
     PersistenceManager persistenceManager = new PersistenceManager(config.database());
 
     Consumer<JavalinConfig> initConfig =
@@ -123,9 +123,9 @@ public class Application {
    */
   public static Application create(ApplicationConfiguration config) {
     String appEnv = config.env().APP_ENV();
-    if (appEnv.equals("development")) {
+    if (appEnv.equals("dev")) {
       // TODO: also used in "production", for the moment both are the same
-      return createForDevelopment(config);
+      return createForDev(config);
     }
     if (appEnv.equals("test")) {
       return createForTest(config);
@@ -163,9 +163,7 @@ public class Application {
     javalin.start(port);
   }
 
-  /**
-   * Stops the web server and shuts down the persistence layer gracefully.
-   */
+  /** Stops the web server and shuts down the persistence layer gracefully. */
   public void stop() {
     javalin.stop();
     persistenceManager.shutdown();

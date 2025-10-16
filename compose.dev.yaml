@@ -16,11 +16,11 @@ services:
       - maven:/root/.m2
 
   dashboard:
-    image: anibalxyz/reconciler-development-dashboard:latest
+    image: anibalxyz/reconciler-dev-dashboard:latest
     pull_policy: never
-    container_name: reconciler-development-dashboard
+    container_name: reconciler-dev-dashboard
     env_file:
-      - ./frontend/.env.development
+      - ./frontend/.env.dev
     ports:
       - "${DASHBOARD_PORT}:5174"
     volumes:
@@ -41,11 +41,11 @@ services:
       - main
 
   public-site:
-    image: anibalxyz/reconciler-development-public-site:latest
+    image: anibalxyz/reconciler-dev-public-site:latest
     pull_policy: never
-    container_name: reconciler-development-public-site
+    container_name: reconciler-dev-public-site
     env_file:
-      - ./frontend/.env.development
+      - ./frontend/.env.dev
     ports:
       - "${PUBLIC_SITE_PORT}:5173"
     volumes:
@@ -61,6 +61,6 @@ services:
 
 volumes:
   maven:
-    name: "reconciler-development-mvn"
+    name: "reconciler-dev-mvn"
   node_modules:
-    name: "reconciler-development-node"
+    name: "reconciler-dev-node"
