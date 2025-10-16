@@ -123,7 +123,7 @@ public class Application {
    */
   public static Application create(ApplicationConfiguration config) {
     String appEnv = config.env().APP_ENV();
-    if (appEnv.equals("dev")) {
+    if (appEnv.equals("dev") || appEnv.equals("prod")) {
       // TODO: also used in "production", for the moment both are the same
       return createForDev(config);
     }

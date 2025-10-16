@@ -17,10 +17,9 @@ LIFECYCLE_SERVICES: Dict[str, List[str]] = {
         SERVICES["PUBLIC_SITE"],
         SERVICES["DASHBOARD"],
     ],
-    "prod": core_lifecycle_services + [SERVICES["NGINX"]],
+    "prod": core_lifecycle_services + [SERVICES["NGINX"], SERVICES["API"]],
     "test": core_lifecycle_services + [SERVICES["API"]],
 }
-
 
 
 def compose(cmd: List[str]):
