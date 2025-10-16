@@ -27,6 +27,9 @@ REGISTRY_SERVICES = [SERVICES["API"], SERVICES["NGINX"]]
 
 
 def get_buildable_services():
+    """
+    Returns a list of all services that can be built in the current environment.
+    """
     result: List[str] = BUILDABLE_SERVICES.get(get_current_env()).copy()
     result.append("all")
     for i in range(len(result)):
@@ -35,6 +38,9 @@ def get_buildable_services():
 
 
 def get_registry_services():
+    """
+    Returns a list of all services that can be pushed to or pulled from a registry.
+    """
     result: List[str] = REGISTRY_SERVICES.copy()
     for i in range(len(result)):
         result[i] = result[i].split("/")[-1]
@@ -42,6 +48,13 @@ def get_registry_services():
 
 
 def docker(cmd_ref: List[str], service: str):
+    """
+    Builds and executes a Docker command for a given service.
+
+    Args:
+        cmd_ref: The Docker command to execute (e.g., ["build", "--no-cache"]).
+        service: The service to run the command on.
+    """
     cmd = cmd_ref.copy()
     env = get_current_env()
     image = f"anibalxyz/reconciler-{env}-"
@@ -66,6 +79,16 @@ def docker(cmd_ref: List[str], service: str):
 
 
 def run_image_command(command: List[str], services: List[str]):
+    """
+    Runs a Docker image command for a list of services.
+
+    Args:
+        command: The Docker command to execute.
+        services: A list of services to run the command on.
+
+    Raises:
+        typer.BadParameter: If any of the services are invalid.
+    """
     valid_services = get_buildable_services().copy()
     invalid = [s for s in services if s not in valid_services]
 
@@ -96,6 +119,9 @@ def build(
         typer.Option(help="Enables the use of cache during build."),
     ] = True,
 ):
+    """
+    Builds Docker images for the specified services.
+    """
     cmd = ["build"]
     if not cache:
         cmd.append("--no-cache")
@@ -113,6 +139,11 @@ def push(
         ),
     ],
 ):
+    """
+    Pushes Docker images to a registry.
+
+    This command is only allowed in the production environment.
+    """
     if not get_current_env() == "prod":
         print("ERROR: Pushing images is only allowed in production")
         raise typer.Exit(code=1)
@@ -136,6 +167,11 @@ def pull(
         ),
     ],
 ):
+    """
+    Pulls Docker images from a registry.
+
+    This command is only allowed in the production environment.
+    """
     if not get_current_env() == "prod":
         print("ERROR: Pulling images is only allowed in production")
         raise typer.Exit(code=1)

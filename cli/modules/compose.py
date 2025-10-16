@@ -24,6 +24,12 @@ LIFECYCLE_SERVICES: Dict[str, List[str]] = {
 
 
 def validate_env():
+    """
+    Validates that all required environment files for the current environment exist.
+
+    If a file does not exist, it is created from its example file.
+    The user is then prompted to fill in the missing values.
+    """
     env: str = get_current_env()
     for f in ENV_FILES.get(env):
         if not f.exists():
@@ -40,8 +46,13 @@ def validate_env():
                 raise typer.Exit(1)
 
 
-# build the compose final command and execute it
 def compose(cmd: List[str]):
+    """
+    Builds and executes a docker-compose command.
+
+    Args:
+        cmd: The docker-compose command to execute (e.g., ["up", "-d"]).
+    """
     env = get_current_env()
     compose_files = ["-f", "compose.yaml", "-f", f"compose.{env}.yaml"]
     env_files = []
@@ -60,6 +71,9 @@ def compose(cmd: List[str]):
 
 
 def get_lifecycle_services():
+    """
+    Returns a list of all services that can be managed by docker-compose in the current environment.
+    """
     result: List[str] = LIFECYCLE_SERVICES.get(get_current_env()).copy()
     result.append("all")
     for i in range(len(result)):
@@ -68,6 +82,16 @@ def get_lifecycle_services():
 
 
 def run_lifecycle_command(command: List[str], services: List[str]):
+    """
+    Runs a docker-compose lifecycle command for a list of services.
+
+    Args:
+        command: The command to run (e.g., ["up"]).
+        services: A list of services to run the command on.
+
+    Raises:
+        typer.BadParameter: If any of the services are invalid.
+    """
     services = services or ["all"]
     valid_services = get_lifecycle_services()
 
@@ -196,6 +220,14 @@ def rebuild(
         typer.Option(help="Enables the use of cache during build."),
     ] = True,
 ):
+    """
+    Rebuilds and restarts the specified services.
+
+    This command performs the following steps:\n
+    1. Takes down the specified services if they are running\n
+    2. Builds the Docker images for the specified services\n
+    3. Brings the services back up\n
+    """
     # Filter the list to get only the services that can be managed by docker-compose.
     runnable_services = [s for s in services if s in get_lifecycle_services()]
 
@@ -226,6 +258,17 @@ def test(
         typer.Option(help="Enables the use of cache during build."),
     ] = True,
 ):
+    """
+    Runs the test suite.
+
+    This command performs the following steps:\n
+    1. Switches to the test environment\n
+    2. Builds all buildable services\n
+    3. Brings up the database and Flyway services\n
+    4. Brings up the API service and runs the tests\n
+    5. Tears down all services\n
+    6. Switches back to the original environment\n
+    """
     env_snap = get_current_env()
     try:
         set_env("test")

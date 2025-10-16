@@ -9,20 +9,28 @@ app = typer.Typer(help="Manage docker resources", no_args_is_help=True)
 DOCKER_RESOURCES: List[str] = ["images", "containers", "volumes", "networks"]
 
 
-def list_resources(rss: str):
+def execute_resource_command(verb: str, rss: str):
+    """
+    Executes a command on a Docker resource.
+
+    Args:
+        verb: The command to execute (e.g., "list", "prune").
+        rss: The type of resource.
+
+    Raises:
+        ValueError: If the resource type or verb is invalid.
+    """
     if not rss in DOCKER_RESOURCES:
         raise ValueError(f"Invalid resource: {rss}")
 
-    print(f"Listing {rss}...")
-    subprocess.run(["docker", rss[:-1], "ls"], check=True)
-
-
-def prune_resources(rss: str):
-    if not rss in DOCKER_RESOURCES:
-        raise ValueError(f"Invalid resource: {rss}")
-
-    print(f"Pruning {rss}...")
-    subprocess.run(["docker", rss[:-1], "prune", "-f"], check=True)
+    if verb == "list":
+        print(f"Listing {rss}...")
+        subprocess.run(["docker", rss[:-1], "ls"])
+    elif verb == "prune":
+        print(f"Pruning {rss}...")
+        subprocess.run(["docker", rss[:-1], "prune", "-f"])
+    else:
+        raise ValueError(f"Invalid verb: {verb}")
 
 
 @app.command()
@@ -35,13 +43,16 @@ def prune(
         ),
     ],
 ):
+    """
+    Prunes Docker resources of a given type, or all resources if "all" is specified.
+    """
     if rss == "all":
         for r in DOCKER_RESOURCES:
-            prune_resources(r)
+            execute_resource_command("prune", r)
             if r != DOCKER_RESOURCES[-1]:
                 print()
     else:
-        prune_resources(rss)
+        execute_resource_command("prune", rss)
     return
 
 
@@ -55,11 +66,14 @@ def list(
         ),
     ] = "all",
 ):
+    """
+    Lists Docker resources of a given type, or all resources if "all" is specified.
+    """
     if rss == "all":
         for r in DOCKER_RESOURCES:
-            list_resources(r)
+            execute_resource_command("list", r)
             if r != DOCKER_RESOURCES[-1]:
                 print()
     else:
-        list_resources(rss)
+        execute_resource_command("list", rss)
     return

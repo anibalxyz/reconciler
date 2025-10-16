@@ -9,6 +9,15 @@ CONFIG_FILE_PATH = Path("cli.cfg")
 
 
 def get_config_value(key: str) -> str | None:
+    """
+    Retrieves a configuration value for a given key from the configuration file.
+
+    Args:
+        key: The configuration key to look for.
+
+    Returns:
+        The value of the configuration key, or None if not found.
+    """
     if not CONFIG_FILE_PATH.exists():
         return None
 
@@ -26,6 +35,20 @@ def get_config_value(key: str) -> str | None:
 
 
 def set_config_value(key: str, value: str) -> str:
+    """
+    Sets a configuration value for a given key in the configuration file.
+
+    If the configuration file does not exist, it will be created.
+    If the key does not exist, it will be added to the file.
+    If the key already exists, its value will be updated.
+
+    Args:
+        key: The configuration key to set.
+        value: The value to set for the key.
+
+    Returns:
+        A message indicating the result of the operation.
+    """
     lines: List[str] = []
     file_exists = CONFIG_FILE_PATH.exists()
     if file_exists:
@@ -56,6 +79,15 @@ def set_config_value(key: str, value: str) -> str:
 
 
 def get_current_env() -> str:
+    """
+    Retrieves the current environment from the configuration file.
+
+    If the configuration file or the ENV key is not found, it sets the environment to the default value.
+    If the environment is invalid, it resets it to the default value.
+
+    Returns:
+        The current environment.
+    """
     if not CONFIG_FILE_PATH.exists():
         set_config_value("ENV", DEFAULT_ENV)
         return DEFAULT_ENV
@@ -82,6 +114,9 @@ get_app = typer.Typer(
 
 @get_app.command(name="env")
 def get_env():
+    """
+    Gets the current environment from the configuration file.
+    """
     print(f"▶  Current environment: '{get_current_env()}'")
 
 
@@ -95,6 +130,9 @@ def set_env(
         ),
     ],
 ):
+    """
+    Sets the current environment in the configuration file.
+    """
     if not env in AVAILABLE_ENVS:
         print(f"ERROR: Invalid environment: {env}")
         print(f"Available environments: {AVAILABLE_ENVS}")
