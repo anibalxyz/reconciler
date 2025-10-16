@@ -1,5 +1,7 @@
 # Reconciler
 
+[Versión en español](README.es.md)
+
 Reconciler is a lightweight and modular application designed to help teams reconcile financial transactions between bank
 statements and internal systems. Built with industry best practices, it aims to provide an intuitive and customizable
 platform with powerful utilities for both individual users and collaborative environments.
@@ -47,7 +49,7 @@ platform with powerful utilities for both individual users and collaborative env
 
 ## Project Structure
 
-A brief overview of the most important files and directories in the project.
+A brief overview of the most important files and directories in the project:
 
 ```
 .
@@ -96,7 +98,8 @@ cd reconciler
 ### 2. Install the CLI
 
 This project is managed by a powerful, custom-built command-line interface. The CLI provides a unified and intuitive way
-to manage the application's environments and lifecycle, but we will see it in action below ✨.
+to manage the application's environments and lifecycle. It has various characteristics, but we will see it in action
+below!
 
 The CLI is a Python application. It is recommended to install it in a virtual environment.
 
