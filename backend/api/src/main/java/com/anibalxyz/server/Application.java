@@ -1,13 +1,13 @@
 package com.anibalxyz.server;
 
-import com.anibalxyz.auth.api.AuthRoutes;
+import com.anibalxyz.features.auth.api.AuthRoutes;
+import com.anibalxyz.features.system.api.SystemRoutes;
+import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.modules.*;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import com.anibalxyz.server.routes.RouteRegistry;
-import com.anibalxyz.system.api.SystemRoutes;
-import com.anibalxyz.users.api.UserRoutes;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import java.util.List;

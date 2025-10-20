@@ -5,23 +5,23 @@ import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.anibalxyz.features.users.api.UserMapper;
+import com.anibalxyz.features.users.api.in.UserCreateRequest;
+import com.anibalxyz.features.users.api.in.UserUpdateRequest;
+import com.anibalxyz.features.users.api.out.UserCreateResponse;
+import com.anibalxyz.features.users.api.out.UserDetailResponse;
+import com.anibalxyz.features.users.application.UsersEnvironment;
+import com.anibalxyz.features.users.domain.Email;
+import com.anibalxyz.features.users.domain.PasswordHash;
+import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.UserRepository;
+import com.anibalxyz.features.users.infra.JpaUserRepository;
+import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import com.anibalxyz.server.dto.ErrorResponse;
-import com.anibalxyz.users.api.UserMapper;
-import com.anibalxyz.users.api.in.UserCreateRequest;
-import com.anibalxyz.users.api.in.UserUpdateRequest;
-import com.anibalxyz.users.api.out.UserCreateResponse;
-import com.anibalxyz.users.api.out.UserDetailResponse;
-import com.anibalxyz.users.application.UsersEnvironment;
-import com.anibalxyz.users.domain.Email;
-import com.anibalxyz.users.domain.PasswordHash;
-import com.anibalxyz.users.domain.User;
-import com.anibalxyz.users.domain.UserRepository;
-import com.anibalxyz.users.infra.JpaUserRepository;
-import com.anibalxyz.users.infra.UserEntity;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -432,8 +432,7 @@ public class UserRoutesIntegrationTest {
 
       UserUpdateRequest requestBody = new UserUpdateRequest(null, existingUser.getEmail(), null);
       ErrorResponse expectedResponse =
-          new ErrorResponse(
-              "Conflict", List.of("Email already in use. Please use another"));
+          new ErrorResponse("Conflict", List.of("Email already in use. Please use another"));
 
       Response response = put("/users/" + userToUpdateId, requestBody);
       assertThat(response.code()).isEqualTo(409);

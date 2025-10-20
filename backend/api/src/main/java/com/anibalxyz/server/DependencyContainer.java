@@ -1,15 +1,15 @@
 package com.anibalxyz.server;
 
-import com.anibalxyz.auth.api.AuthController;
-import com.anibalxyz.auth.application.AuthService;
+import com.anibalxyz.features.auth.api.AuthController;
+import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.system.api.SystemController;
+import com.anibalxyz.features.users.api.UserController;
+import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.domain.UserRepository;
+import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.system.api.SystemController;
-import com.anibalxyz.users.api.UserController;
-import com.anibalxyz.users.application.UserService;
-import com.anibalxyz.users.domain.UserRepository;
-import com.anibalxyz.users.infra.JpaUserRepository;
 
 /**
  * A manual dependency injection container for the application.

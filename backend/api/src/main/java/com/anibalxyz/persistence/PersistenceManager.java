@@ -1,6 +1,6 @@
 package com.anibalxyz.persistence;
 
-import com.anibalxyz.users.infra.UserEntity;
+import com.anibalxyz.features.users.infra.UserEntity;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;

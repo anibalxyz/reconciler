@@ -1,9 +1,9 @@
 package com.anibalxyz.server.config.modules;
 
-import com.anibalxyz.application.exception.ConflictException;
-import com.anibalxyz.application.exception.InvalidInputException;
-import com.anibalxyz.application.exception.ResourceNotFoundException;
-import com.anibalxyz.auth.application.exception.InvalidCredentialsException;
+import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
+import com.anibalxyz.features.common.application.exception.ConflictException;
+import com.anibalxyz.features.common.application.exception.InvalidInputException;
+import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.server.dto.ErrorResponse;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;

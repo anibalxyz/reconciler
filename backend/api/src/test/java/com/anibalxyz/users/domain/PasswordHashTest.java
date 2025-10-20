@@ -3,7 +3,8 @@ package com.anibalxyz.users.domain;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.anibalxyz.users.domain.exception.InvalidPasswordFormatException;
+import com.anibalxyz.features.users.domain.PasswordHash;
+import com.anibalxyz.features.users.domain.exception.InvalidPasswordFormatException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

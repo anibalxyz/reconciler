@@ -1,7 +1,7 @@
 package com.anibalxyz.server.context;
 
+import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.persistence.EntityManagerProvider;
-import com.anibalxyz.users.infra.JpaUserRepository;
 import jakarta.persistence.EntityManager;
 
 /**

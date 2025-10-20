@@ -1,8 +1,8 @@
 package com.anibalxyz.server.config.environment;
 
-import com.anibalxyz.auth.application.AuthEnvironment;
+import com.anibalxyz.features.auth.application.AuthEnvironment;
+import com.anibalxyz.features.users.application.UsersEnvironment;
 import com.anibalxyz.server.config.modules.ServerEnvironment;
-import com.anibalxyz.users.application.UsersEnvironment;
 import java.time.Duration;
 
 /**
