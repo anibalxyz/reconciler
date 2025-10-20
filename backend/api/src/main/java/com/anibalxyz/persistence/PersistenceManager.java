@@ -64,6 +64,8 @@ public class PersistenceManager {
         .property(HikariCPSettings.HIKARI_MAX_SIZE, "20")
         .property(HikariCPSettings.HIKARI_MIN_IDLE_SIZE, "2")
         .property(HikariCPSettings.HIKARI_ACQUISITION_TIMEOUT, "15000")
+        .property(HikariCPSettings.HIKARI_VALIDATION_TIMEOUT, "5000")
+        .property(HikariCPSettings.HIKARI_INITIALIZATION_TIMEOUT, "60000")
         .property(HikariCPSettings.HIKARI_IDLE_TIMEOUT, "300000")
         .schemaToolingAction(Action.VALIDATE)
         .managedClasses(UserEntity.class);
