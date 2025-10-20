@@ -209,7 +209,7 @@ public class UserRoutesIntegrationTest {
       int nonExistingId = 999;
       ErrorResponse expectedResponse =
           new ErrorResponse(
-              "Entity not found", List.of("User with id " + nonExistingId + " not found"));
+              "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
       Response response = get("/users/" + nonExistingId);
       assertThat(response.code()).isEqualTo(404);
@@ -243,7 +243,7 @@ public class UserRoutesIntegrationTest {
       assertThat(response.code()).isEqualTo(400);
 
       ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
-      assertThat(responseBody.error()).isEqualTo("Invalid argument provided");
+      assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(message);
 
       Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
@@ -282,8 +282,8 @@ public class UserRoutesIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /users: given an existing email, then return 400 Bad Request")
-    public void POST_users_existingEmail_return400() {
+    @DisplayName("POST /users: given an existing email, then return 409 Conflict")
+    public void POST_users_existingEmail_return409() {
       String existingEmail = "existing.user@mail.com";
       persistUser("Existing User", existingEmail);
       UserCreateRequest requestBody =
@@ -291,9 +291,9 @@ public class UserRoutesIntegrationTest {
 
       Response response = post("/users", requestBody);
 
-      assertThat(response.code()).isEqualTo(400);
+      assertThat(response.code()).isEqualTo(409);
       ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
-      assertThat(responseBody.error()).isEqualTo("Invalid argument provided");
+      assertThat(responseBody.error()).isEqualTo("Conflict");
       assertThat(responseBody.details()).contains("Email already in use. Please use another");
 
       assertThat(userRepository.findAll()).hasSize(1);
@@ -360,7 +360,7 @@ public class UserRoutesIntegrationTest {
       UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
       ErrorResponse expectedResponse =
           new ErrorResponse(
-              "Entity not found", List.of("User with id " + nonExistingId + " not found"));
+              "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
       Response response = put("/users/" + nonExistingId, request);
       assertThat(response.code()).isEqualTo(404);
@@ -424,8 +424,8 @@ public class UserRoutesIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /users/{id}: given a duplicate email, then return 400 Bad Request")
-    public void PUT_users_id_duplicateEmail_return400() {
+    @DisplayName("PUT /users/{id}: given a duplicate email, then return 409 Conflict")
+    public void PUT_users_id_duplicateEmail_return409() {
       UserEntity userToUpdate = persistUser("User To Update", "update.me@mail.com");
       UserEntity existingUser = persistUser("Existing User", "existing@mail.com");
       int userToUpdateId = userToUpdate.getId();
@@ -433,10 +433,10 @@ public class UserRoutesIntegrationTest {
       UserUpdateRequest requestBody = new UserUpdateRequest(null, existingUser.getEmail(), null);
       ErrorResponse expectedResponse =
           new ErrorResponse(
-              "Invalid argument provided", List.of("Email already in use. Please use another"));
+              "Conflict", List.of("Email already in use. Please use another"));
 
       Response response = put("/users/" + userToUpdateId, requestBody);
-      assertThat(response.code()).isEqualTo(400);
+      assertThat(response.code()).isEqualTo(409);
 
       User userAfterAttempt = userRepository.findById(userToUpdateId).orElseThrow();
       assertThat(userAfterAttempt.getEmail().value()).isEqualTo(userToUpdate.getEmail());
@@ -455,7 +455,7 @@ public class UserRoutesIntegrationTest {
       UserUpdateRequest requestBody = new UserUpdateRequest("New User", invalidEmail, "12345678");
       ErrorResponse expectedResponse =
           new ErrorResponse(
-              "Invalid argument provided", List.of("Invalid email format: " + invalidEmail));
+              "Invalid input provided", List.of("Invalid email format: " + invalidEmail));
 
       Response response = put("/users/" + existingId, requestBody);
       assertThat(response.code()).isEqualTo(400);
@@ -479,7 +479,7 @@ public class UserRoutesIntegrationTest {
       assertThat(response.code()).isEqualTo(400);
 
       ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
-      assertThat(responseBody.error()).isEqualTo("Invalid argument provided");
+      assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(message);
 
       User userAfterAttempt = userRepository.findById(existingId).orElseThrow();
@@ -492,7 +492,7 @@ public class UserRoutesIntegrationTest {
       int nonExistingId = 999;
       ErrorResponse expectedResponse =
           new ErrorResponse(
-              "Entity not found", List.of("User with id " + nonExistingId + " not found"));
+              "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
       Response response = delete("/users/" + nonExistingId);
       assertThat(response.code()).isEqualTo(404);

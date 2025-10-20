@@ -5,14 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
+import com.anibalxyz.application.exception.ConflictException;
+import com.anibalxyz.application.exception.InvalidInputException;
+import com.anibalxyz.application.exception.ResourceNotFoundException;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
-import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.application.in.UserUpdatePayload;
 import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
 import com.anibalxyz.users.domain.User;
 import com.anibalxyz.users.domain.UserRepository;
-import com.anibalxyz.users.domain.exception.InvalidPasswordFormatException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -315,19 +316,19 @@ public class UserServiceTest {
   class FailureScenarios {
 
     @Test
-    @DisplayName("getUserById: given a non-existing id, then throw EntityNotFoundException")
-    public void getUserById_nonExistingId_throwEntityNotFoundException() {
+    @DisplayName("getUserById: given a non-existing id, then throw ResourceNotFoundException")
+    public void getUserById_nonExistingId_throwResourceNotFoundException() {
       int nonExistingId = 999;
       when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> userService.getUserById(nonExistingId))
-          .isInstanceOf(EntityNotFoundException.class)
+          .isInstanceOf(ResourceNotFoundException.class)
           .hasMessage("User with id " + nonExistingId + " not found");
     }
 
     @Test
-    @DisplayName("createUser: given an existing email, then throw IllegalArgumentException")
-    public void createUser_existingEmail_throwIllegalArgumentException() {
+    @DisplayName("createUser: given an existing email, then throw ConflictException")
+    public void createUser_existingEmail_throwConflictException() {
       LocalDateTime currentDate = LocalDateTime.now();
       UserUpdatePayload payload = createPayload("User 1", "user1@mail.com", VALID_PASSWORD);
       User existingUser =
@@ -342,53 +343,51 @@ public class UserServiceTest {
           .thenReturn(Optional.of(existingUser));
 
       assertThatThrownBy(() -> userService.createUser(payload))
-          .isInstanceOf(IllegalArgumentException.class)
+          .isInstanceOf(ConflictException.class)
           .hasMessage("Email already in use. Please use another");
     }
 
     @ParameterizedTest
     @CsvSource({"blank", "format"})
-    @DisplayName("createUser: given an invalid email format, then throw IllegalArgumentException")
-    public void createUser_invalidEmailFormat_throwIllegalArgumentException(
-        String invalidationCause) {
+    @DisplayName("createUser: given an invalid email format, then throw InvalidInputException")
+    public void createUser_invalidEmailFormat_throwInvalidInputException(String invalidationCause) {
       String email = invalidationCause.equals("format") ? "mailemail.com" : " ";
       UserUpdatePayload payload = createPayload("User", email, VALID_PASSWORD);
 
       assertThatThrownBy(() -> userService.createUser(payload))
-          .isInstanceOf(IllegalArgumentException.class)
+          .isInstanceOf(InvalidInputException.class)
           .hasMessage("Invalid email format: " + payload.email());
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "invalid"})
-    @DisplayName("createUser: given an invalid password, then throw InvalidPasswordFormatException")
+    @DisplayName("createUser: given an invalid password, then throw InvalidInputException")
     public void createUser_invalidPassword_throwInvalidPasswordFormatException(String password) {
       UserUpdatePayload payload = createPayload("User", "mail@email.com", password);
       when(userRepository.findByEmail(new Email(payload.email()))).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> userService.createUser(payload))
-          .isInstanceOf(InvalidPasswordFormatException.class);
+          .isInstanceOf(InvalidInputException.class);
     }
 
     @Test
-    @DisplayName("updateUserById: given a non-existing id, then throw EntityNotFoundException")
-    public void updateUserById_nonExistingId_throwEntityNotFoundException() {
+    @DisplayName("updateUserById: given a non-existing id, then throw ResourceNotFoundException")
+    public void updateUserById_nonExistingId_throwResourceNotFoundException() {
       int nonExistingId = 999;
       UserUpdatePayload payload = createPayload("New Name", null, null);
 
       when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> userService.updateUserById(nonExistingId, payload))
-          .isInstanceOf(EntityNotFoundException.class)
+          .isInstanceOf(ResourceNotFoundException.class)
           .hasMessage("User with id " + nonExistingId + " not found");
     }
 
     @ParameterizedTest
     @CsvSource({"blank", "format"})
-    @DisplayName(
-        "updateUserById: given an invalid email format, then throw IllegalArgumentException")
-    public void updateUserById_invalidEmailFormat_throwIllegalArgumentException(
+    @DisplayName("updateUserById: given an invalid email format, then throw InvalidInputException")
+    public void updateUserById_invalidEmailFormat_throwInvalidInputException(
         String invalidationCause) {
       int existingId = 1;
       String email = invalidationCause.equals("format") ? "invalidemail" : " ";
@@ -406,7 +405,7 @@ public class UserServiceTest {
       when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
 
       assertThatThrownBy(() -> userService.updateUserById(existingId, payload))
-          .isInstanceOf(IllegalArgumentException.class)
+          .isInstanceOf(InvalidInputException.class)
           .hasMessage("Invalid email format: " + payload.email());
     }
 
@@ -414,7 +413,7 @@ public class UserServiceTest {
     @EmptySource
     @ValueSource(strings = {" ", "invalid"})
     @DisplayName(
-        "updateUserById: given an invalid password format, then throw InvalidPasswordFormatException")
+        "updateUserById: given an invalid password format, then throw InvalidInputException")
     public void updateUserById_invalidPasswordFormat_throwInvalidPasswordFormatException(
         String password) {
       int existingId = 1;
@@ -433,13 +432,13 @@ public class UserServiceTest {
 
       // the message doesn't matter as it is being unit-tested
       assertThatThrownBy(() -> userService.updateUserById(existingId, payload))
-          .isInstanceOf(InvalidPasswordFormatException.class);
+          .isInstanceOf(InvalidInputException.class);
     }
 
     @Test
     @DisplayName(
-        "updateUserById: given an email already in use by another user, then throw IllegalArgumentException")
-    public void updateUserById_emailAlreadyUsedByAnotherUser_throwIllegalArgumentException() {
+        "updateUserById: given an email already in use by another user, then throw ConflictException")
+    public void updateUserById_emailAlreadyUsedByAnotherUser_throwConflictException() {
       int updatingId = 1;
       UserUpdatePayload payload = createPayload(null, "updating@mail.com", null);
       LocalDateTime now = LocalDateTime.now();
@@ -457,18 +456,18 @@ public class UserServiceTest {
           .thenReturn(Optional.of(existingUser));
 
       assertThatThrownBy(() -> userService.updateUserById(updatingId, payload))
-          .isInstanceOf(IllegalArgumentException.class)
+          .isInstanceOf(ConflictException.class)
           .hasMessage("Email already in use. Please use another");
     }
 
     @Test
-    @DisplayName("deleteUserById: given a non-existing id, then throw EntityNotFoundException")
-    public void deleteUserById_nonExistingId_throwEntityNotFoundException() {
+    @DisplayName("deleteUserById: given a non-existing id, then throw ResourceNotFoundException")
+    public void deleteUserById_nonExistingId_throwResourceNotFoundException() {
       int nonExistingId = 999;
       when(userRepository.deleteById(nonExistingId)).thenReturn(false);
 
       assertThatThrownBy(() -> userService.deleteUserById(nonExistingId))
-          .isInstanceOf(EntityNotFoundException.class)
+          .isInstanceOf(ResourceNotFoundException.class)
           .hasMessage("User with id " + nonExistingId + " not found");
     }
   }

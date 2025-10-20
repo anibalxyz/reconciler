@@ -48,10 +48,12 @@ public record PasswordHash(String value) {
       throw new InvalidPasswordFormatException("Password cannot be null or empty");
     }
     if (raw.length() < MIN_LENGTH) {
-      throw new InvalidPasswordFormatException("Password must be at least " + MIN_LENGTH + " characters long");
+      throw new InvalidPasswordFormatException(
+          "Password must be at least " + MIN_LENGTH + " characters long");
     }
     if (raw.length() > MAX_LENGTH) {
-      throw new InvalidPasswordFormatException("Password cannot be longer than " + MAX_LENGTH + " characters");
+      throw new InvalidPasswordFormatException(
+          "Password cannot be longer than " + MAX_LENGTH + " characters");
     }
   }
 
@@ -80,13 +82,13 @@ public record PasswordHash(String value) {
     return BCrypt.checkpw(raw, value);
   }
 
-  @NotNull
-  @Override
   /**
    * Overrides toString to prevent leaking the hash value in logs.
    *
    * @return A fixed-string mask "********".
    */
+  @NotNull
+  @Override
   public String toString() {
     return "********"; // prevents data leaks through logs
   }

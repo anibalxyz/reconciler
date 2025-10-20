@@ -1,7 +1,10 @@
 package com.anibalxyz.server.config.modules;
 
+import com.anibalxyz.application.exception.ConflictException;
+import com.anibalxyz.application.exception.InvalidInputException;
+import com.anibalxyz.application.exception.ResourceNotFoundException;
+import com.anibalxyz.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.server.dto.ErrorResponse;
-import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.javalin.Javalin;
@@ -19,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * A {@link ServerConfig} module for configuring global exception handlers.
  *
  * <p>This class centralizes exception handling for the entire application. It maps specific
- * exceptions (like {@link EntityNotFoundException}, {@link ValidationException}) to appropriate
+ * exceptions (like {@link ResourceNotFoundException}, {@link ValidationException}) to appropriate
  * HTTP status codes and formats the response using a standard {@link ErrorResponse} object. This
  * ensures consistent error handling and reporting across all endpoints.
  *
@@ -60,18 +63,20 @@ public class ExceptionsConfig implements ServerConfig {
         });
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void apply() {
     handleGenericException(BadRequestResponse.class, 400, "Bad Request");
-    handleGenericException(EntityNotFoundException.class, 404, "Entity not found");
+    handleGenericException(ResourceNotFoundException.class, 404, "Resource not found");
+    handleGenericException(InvalidCredentialsException.class, 401, "Invalid credentials");
+    handleGenericException(ConflictException.class, 409, "Conflict");
+    handleGenericException(InvalidInputException.class, 400, "Invalid input provided");
     // It seems useless, remains to be checked
     /*
      handleGenericException(JsonMappingException.class, 400, "Malformed JSON request");
      handleGenericException(JsonParseException.class, 400, "Invalid JSON syntax");
     */
+    // TODO: review if this is necessary
     handleGenericException(IllegalArgumentException.class, 400, "Invalid argument provided");
 
     server.exception(
@@ -123,5 +128,12 @@ public class ExceptionsConfig implements ServerConfig {
         });
 
     handleGenericException(Exception.class, 500, "Internal Server Error");
+
+    // Avoids giving extra information if error is handled by Javalin
+    server.error(
+        500,
+        ctx -> {
+          ctx.json(new ErrorResponse("Internal Server Error"));
+        });
   }
 }

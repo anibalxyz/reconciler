@@ -1,12 +1,12 @@
 package com.anibalxyz.users.api;
 
+import com.anibalxyz.application.exception.ResourceNotFoundException;
 import com.anibalxyz.server.dto.ErrorResponse;
 import com.anibalxyz.server.openapi.ErrorResponseExamples;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserCreateResponse;
 import com.anibalxyz.users.api.out.UserDetailResponse;
-import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
@@ -131,7 +131,7 @@ public interface UserApi {
    *     parameter and the user update request body.
    * @throws IllegalArgumentException if the provided arguments are invalid.
    * @throws ValidationException if validation of the request body fails.
-   * @throws EntityNotFoundException if the user with the specified ID is not found.
+   * @throws ResourceNotFoundException if the user with the specified ID is not found.
    * @throws BadRequestResponse if the request is malformed or invalid.
    */
   @OpenApi(

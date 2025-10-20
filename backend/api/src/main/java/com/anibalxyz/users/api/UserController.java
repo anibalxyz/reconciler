@@ -1,10 +1,11 @@
 package com.anibalxyz.users.api;
 
+import com.anibalxyz.application.exception.ConflictException;
+import com.anibalxyz.application.exception.ResourceNotFoundException;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
 import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.application.UserService;
-import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.domain.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
@@ -50,7 +51,7 @@ public class UserController implements UserApi {
    * <p>Retrieves a user by ID and maps it to a {@link UserDetailResponse} object.
    */
   @Override
-  public void getUserById(Context ctx) throws BadRequestResponse, EntityNotFoundException {
+  public void getUserById(Context ctx) throws BadRequestResponse, ResourceNotFoundException {
     int id = getParamId(ctx);
     ctx.status(200).json(UserMapper.toDetailResponse(userService.getUserById(id)));
   }
@@ -62,7 +63,7 @@ public class UserController implements UserApi {
    * com.anibalxyz.users.api.out.UserCreateResponse}.
    */
   @Override
-  public void createUser(Context ctx) throws IllegalArgumentException, ValidationException {
+  public void createUser(Context ctx) throws ConflictException, ValidationException {
     UserCreateRequest request =
         ctx.bodyValidator(UserCreateRequest.class)
             .check(r -> r.name() != null && !r.name().isBlank(), "Name is required")
@@ -81,9 +82,9 @@ public class UserController implements UserApi {
    */
   @Override
   public void updateUserById(Context ctx)
-      throws IllegalArgumentException,
+      throws ConflictException,
           ValidationException,
-          EntityNotFoundException,
+          ResourceNotFoundException,
           BadRequestResponse {
     int id = getParamId(ctx);
 
@@ -102,7 +103,7 @@ public class UserController implements UserApi {
    * {@inheritDoc}
    */
   @Override
-  public void deleteUserById(Context ctx) throws EntityNotFoundException, BadRequestResponse {
+  public void deleteUserById(Context ctx) throws ResourceNotFoundException, BadRequestResponse {
     userService.deleteUserById(getParamId(ctx));
     ctx.status(204);
   }

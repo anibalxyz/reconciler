@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+import com.anibalxyz.application.exception.ConflictException;
+import com.anibalxyz.application.exception.InvalidInputException;
+import com.anibalxyz.application.exception.ResourceNotFoundException;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
@@ -11,7 +14,6 @@ import com.anibalxyz.users.api.out.UserCreateResponse;
 import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.application.UserService;
 import com.anibalxyz.users.application.UsersEnvironment;
-import com.anibalxyz.users.application.exception.EntityNotFoundException;
 import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
 import com.anibalxyz.users.domain.User;
@@ -74,14 +76,14 @@ public class UserControllerTest {
   class FailureScenarios {
 
     @Test
-    @DisplayName("getUserById: given a non-existing id, then throw EntityNotFoundException")
-    public void getUserById_nonExistingId_throwsEntityNotFoundException() {
+    @DisplayName("getUserById: given a non-existing id, then throw ResourceNotFoundException")
+    public void getUserById_nonExistingId_throwsResourceNotFoundException() {
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
-      when(userService.getUserById(nonExistingId)).thenThrow(new EntityNotFoundException());
+      when(userService.getUserById(nonExistingId)).thenThrow(new ResourceNotFoundException(""));
 
       assertThatThrownBy(() -> userController.getUserById(ctx))
-          .isInstanceOf(EntityNotFoundException.class);
+          .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -94,15 +96,15 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("createUser: given an invalid property, then throw IllegalArgumentException")
-    public void createUser_invalidProperty_throwsIllegalArgumentException() {
+    @DisplayName("createUser: given an invalid property, then throw InvalidInputException")
+    public void createUser_invalidProperty_throwsInvalidInputException() {
       UserCreateRequest request = new UserCreateRequest("John Doe", "mail.com", "abc");
       stubBodyValidatorFor(UserCreateRequest.class).thenReturn(request);
 
-      when(userService.createUser(request)).thenThrow(new IllegalArgumentException());
+      when(userService.createUser(request)).thenThrow(new InvalidInputException(""));
 
       assertThatThrownBy(() -> userController.createUser(ctx))
-          .isInstanceOf(IllegalArgumentException.class);
+          .isInstanceOf(InvalidInputException.class);
     }
 
     @Test
@@ -138,33 +140,33 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("updateUserById: given an invalid property, then throw IllegalArgumentException")
-    public void updateUserById_invalidProperty_throwsIllegalArgumentException() {
+    @DisplayName("updateUserById: given an invalid property, then throw InvalidInputException")
+    public void updateUserById_invalidProperty_throwsInvalidInputException() {
       UserUpdateRequest request = new UserUpdateRequest("John Doe", "mail.com", "abc");
       int validId = 1;
 
       stubPathParamId().thenReturn(validId);
       stubBodyValidatorFor(UserUpdateRequest.class).thenReturn(request);
 
-      when(userService.updateUserById(validId, request)).thenThrow(new IllegalArgumentException());
+      when(userService.updateUserById(validId, request)).thenThrow(new InvalidInputException(""));
 
       assertThatThrownBy(() -> userController.updateUserById(ctx))
-          .isInstanceOf(IllegalArgumentException.class);
+          .isInstanceOf(InvalidInputException.class);
     }
 
     @Test
-    @DisplayName("updateUserById: given a non-existing id, then throw EntityNotFoundException")
-    public void updateUserById_nonExistingId_throwsEntityNotFoundException() {
+    @DisplayName("updateUserById: given a non-existing id, then throw ResourceNotFoundException")
+    public void updateUserById_nonExistingId_throwsResourceNotFoundException() {
       UserUpdateRequest request = new UserUpdateRequest("John Doe", "mail.com", "abc");
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
       stubBodyValidatorFor(UserUpdateRequest.class).thenReturn(request);
 
       when(userService.updateUserById(nonExistingId, request))
-          .thenThrow(new EntityNotFoundException());
+          .thenThrow(new ResourceNotFoundException(""));
 
       assertThatThrownBy(() -> userController.updateUserById(ctx))
-          .isInstanceOf(EntityNotFoundException.class);
+          .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -176,13 +178,13 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("deleteUserById: given a non-existing id, then throw EntityNotFoundException")
-    public void deleteUserById_nonExistingId_throwsEntityNotFoundException() {
+    @DisplayName("deleteUserById: given a non-existing id, then throw ResourceNotFoundException")
+    public void deleteUserById_nonExistingId_throwsResourceNotFoundException() {
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
-      doThrow(new EntityNotFoundException()).when(userService).deleteUserById(nonExistingId);
+      doThrow(new ResourceNotFoundException("")).when(userService).deleteUserById(nonExistingId);
       assertThatThrownBy(() -> userController.deleteUserById(ctx))
-          .isInstanceOf(EntityNotFoundException.class);
+          .isInstanceOf(ResourceNotFoundException.class);
     }
   }
 

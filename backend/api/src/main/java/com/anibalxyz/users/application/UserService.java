@@ -1,6 +1,8 @@
 package com.anibalxyz.users.application;
 
-import com.anibalxyz.users.application.exception.EntityNotFoundException;
+import com.anibalxyz.application.exception.ConflictException;
+import com.anibalxyz.application.exception.InvalidInputException;
+import com.anibalxyz.application.exception.ResourceNotFoundException;
 import com.anibalxyz.users.application.in.UserUpdatePayload;
 import com.anibalxyz.users.domain.Email;
 import com.anibalxyz.users.domain.PasswordHash;
@@ -47,12 +49,12 @@ public class UserService {
    *
    * @param id The ID of the user to retrieve.
    * @return The found {@link User} object.
-   * @throws EntityNotFoundException if no user with the given ID is found.
+   * @throws ResourceNotFoundException if no user with the given ID is found.
    */
-  public User getUserById(int id) throws EntityNotFoundException {
+  public User getUserById(int id) throws ResourceNotFoundException {
     return userRepository
         .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+        .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
   }
 
   /**
@@ -60,18 +62,25 @@ public class UserService {
    *
    * @param payload The data for the new user, implementing {@link UserUpdatePayload}.
    * @return The newly created and persisted {@link User} object.
-   * @throws IllegalArgumentException if the email is already in use.
+   * @throws ConflictException if the email is already in use.
+   * @throws InvalidInputException if the email or password format is invalid.
    */
-  public User createUser(UserUpdatePayload payload) throws IllegalArgumentException {
-    Email email = new Email(payload.email());
-    userRepository
-        .findByEmail(email)
-        .ifPresent(
-            user -> {
-              throw new IllegalArgumentException("Email already in use. Please use another");
-            });
-    PasswordHash passwordHash = PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS());
-    return userRepository.save(new User(payload.name(), email, passwordHash));
+  public User createUser(UserUpdatePayload payload)
+      throws ConflictException, InvalidInputException {
+    try {
+      Email email = new Email(payload.email());
+      userRepository
+          .findByEmail(email)
+          .ifPresent(
+              user -> {
+                throw new ConflictException("Email already in use. Please use another");
+              });
+      PasswordHash passwordHash =
+          PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS());
+      return userRepository.save(new User(payload.name(), email, passwordHash));
+    } catch (IllegalArgumentException e) {
+      throw new InvalidInputException(e.getMessage());
+    }
   }
 
   /**
@@ -83,50 +92,56 @@ public class UserService {
    * @param id The ID of the user to update.
    * @param payload A {@link UserUpdatePayload} containing the fields to update.
    * @return The updated {@link User} object.
-   * @throws EntityNotFoundException if no user with the given ID is found.
-   * @throws IllegalArgumentException if the new email is already in use by another user.
+   * @throws ResourceNotFoundException if no user with the given ID is found.
+   * @throws ConflictException if the new email is already in use by another user.
+   * @throws InvalidInputException if the email or password format is invalid.
    */
   public User updateUserById(Integer id, UserUpdatePayload payload)
-      throws IllegalArgumentException, EntityNotFoundException {
+      throws ConflictException, ResourceNotFoundException, InvalidInputException {
     User user =
         userRepository
             .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
-    if (payload.name() != null) {
-      user = user.withName(payload.name());
-    }
-    if (payload.email() != null) {
-      Email newEmail = new Email(payload.email());
-
-      // Avoids an unneeded DB query (findByEmail)
-      if (!newEmail.equals(user.getEmail())) {
-        userRepository
-            .findByEmail(newEmail)
-            .ifPresent(
-                existingUser -> {
-                  throw new IllegalArgumentException("Email already in use. Please use another");
-                });
-        user = user.withEmail(newEmail);
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+    try {
+      if (payload.name() != null) {
+        user = user.withName(payload.name());
       }
-    }
+      if (payload.email() != null) {
+        Email newEmail = new Email(payload.email());
 
-    if (payload.password() != null) {
-      user =
-          user.withPasswordHash(PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()));
+        // Avoids an unneeded DB query (findByEmail)
+        if (!newEmail.equals(user.getEmail())) {
+          userRepository
+              .findByEmail(newEmail)
+              .ifPresent(
+                  existingUser -> {
+                    throw new ConflictException("Email already in use. Please use another");
+                  });
+          user = user.withEmail(newEmail);
+        }
+      }
+
+      if (payload.password() != null) {
+        user =
+            user.withPasswordHash(
+                PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()));
+      }
+      return userRepository.save(user);
+    } catch (IllegalArgumentException e) {
+      throw new InvalidInputException(e.getMessage());
     }
-    return userRepository.save(user);
   }
 
   /**
    * Deletes a user by their ID.
    *
    * @param id The ID of the user to delete.
-   * @throws EntityNotFoundException if the user could not be found or was not deleted.
+   * @throws ResourceNotFoundException if the user could not be found or was not deleted.
    */
-  public void deleteUserById(int id) throws EntityNotFoundException {
+  public void deleteUserById(int id) throws ResourceNotFoundException {
     boolean wasDeleted = userRepository.deleteById(id);
     if (!wasDeleted) {
-      throw new EntityNotFoundException("User with id " + id + " not found");
+      throw new ResourceNotFoundException("User with id " + id + " not found");
     }
   }
 }
