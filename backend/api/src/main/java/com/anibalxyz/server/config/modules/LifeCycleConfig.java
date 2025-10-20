@@ -66,9 +66,7 @@ public class LifeCycleConfig implements ServerConfig {
         });
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void apply() {
     setEntityManagerLifecycle();

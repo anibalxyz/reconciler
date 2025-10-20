@@ -1,5 +1,6 @@
 package com.anibalxyz.server;
 
+import com.anibalxyz.auth.api.AuthRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.modules.*;
@@ -64,8 +65,8 @@ public class Application {
 
     List<RouteRegistry> routeRegistries =
         List.of(
-            new UserRoutes(server, container.getUserController()),
-            new SystemRoutes(server, container.getSystemController()));
+            new UserRoutes(server, container.userController()),
+            new SystemRoutes(server, container.systemController()));
     List<ServerConfig> serverConfigs =
         List.of(new LifeCycleConfig(server, persistenceManager), new ExceptionsConfig(server));
 
@@ -109,8 +110,9 @@ public class Application {
 
     List<RouteRegistry> routeRegistries =
         List.of(
-            new UserRoutes(server, container.getUserController()),
-            new SystemRoutes(server, container.getSystemController()));
+            new UserRoutes(server, container.userController()),
+            new AuthRoutes(server, container.authController()),
+            new SystemRoutes(server, container.systemController()));
     List<ServerConfig> serverConfigs =
         List.of(new LifeCycleConfig(server, persistenceManager), new ExceptionsConfig(server));
 

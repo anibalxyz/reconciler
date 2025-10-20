@@ -22,14 +22,19 @@ import io.javalin.openapi.OpenApiStringValidation;
  */
 public record UserUpdateRequest(
     @OpenApiExample("John Doe")
-    @OpenApiStringValidation(minLength = "1", maxLength = "" + User.NAME_MAX_LENGTH)
-    String name,
+        @OpenApiStringValidation(minLength = "1", maxLength = "" + User.NAME_MAX_LENGTH)
+        String name,
     @OpenApiExample("john.doe@example.com")
-    @OpenApiStringValidation(format = "email", maxLength = "" + Email.MAX_LENGTH, pattern = Email.PATTERN)
-    String email,
+        @OpenApiStringValidation(
+            format = "email",
+            maxLength = "" + Email.MAX_LENGTH,
+            pattern = Email.PATTERN)
+        String email,
     @OpenApiExample("a-new-strong-password-456")
-    @OpenApiStringValidation(minLength = "" + PasswordHash.MIN_LENGTH, maxLength = "" + PasswordHash.MAX_LENGTH)
-    String password)
+        @OpenApiStringValidation(
+            minLength = "" + PasswordHash.MIN_LENGTH,
+            maxLength = "" + PasswordHash.MAX_LENGTH)
+        String password)
     implements UserUpdatePayload {
   /**
    * Checks if at least one field in the request is provided and not blank. This is used for request

@@ -22,15 +22,20 @@ import io.javalin.openapi.OpenApiStringValidation;
  */
 public record UserCreateRequest(
     @OpenApiExample("John Doe")
-    @OpenApiRequired
-    @OpenApiStringValidation(minLength = "1", maxLength = "" + User.NAME_MAX_LENGTH)
-    String name,
+        @OpenApiRequired
+        @OpenApiStringValidation(minLength = "1", maxLength = "" + User.NAME_MAX_LENGTH)
+        String name,
     @OpenApiExample("john.doe@example.com")
-    @OpenApiRequired
-    @OpenApiStringValidation(format = "email", maxLength = "" + Email.MAX_LENGTH, pattern = Email.PATTERN)
-    String email,
+        @OpenApiRequired
+        @OpenApiStringValidation(
+            format = "email",
+            maxLength = "" + Email.MAX_LENGTH,
+            pattern = Email.PATTERN)
+        String email,
     @OpenApiExample("strong-password-123")
-    @OpenApiRequired
-    @OpenApiStringValidation(minLength = "" + PasswordHash.MIN_LENGTH, maxLength = "" + PasswordHash.MAX_LENGTH)
-    String password)
+        @OpenApiRequired
+        @OpenApiStringValidation(
+            minLength = "" + PasswordHash.MIN_LENGTH,
+            maxLength = "" + PasswordHash.MAX_LENGTH)
+        String password)
     implements UserUpdatePayload {}

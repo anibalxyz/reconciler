@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.application.exception.ConflictException;
 import com.anibalxyz.application.exception.InvalidInputException;
 import com.anibalxyz.application.exception.ResourceNotFoundException;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;

@@ -13,8 +13,6 @@ package com.anibalxyz.server.config.modules;
  */
 public interface ServerConfig {
 
-  /**
-   * Applies the configuration logic to the server.
-   */
+  /** Applies the configuration logic to the server. */
   void apply();
 }

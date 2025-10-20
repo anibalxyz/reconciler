@@ -43,14 +43,10 @@ public class UserEntity {
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
-  /**
-   * Default constructor required by JPA.
-   */
+  /** Default constructor required by JPA. */
   public UserEntity() {}
 
-  /**
-   * Fully-parameterized constructor.
-   */
+  /** Fully-parameterized constructor. */
   public UserEntity(
       Integer id,
       String name,

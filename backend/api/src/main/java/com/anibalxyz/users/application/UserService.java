@@ -57,6 +57,18 @@ public class UserService {
         .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
   }
 
+  // TODO: documentate
+  public User getUserByEmail(String email) throws ResourceNotFoundException {
+    try {
+      return userRepository
+          .findByEmail(new Email(email))
+          .orElseThrow(
+              () -> new ResourceNotFoundException("User with email " + email + " not found"));
+    } catch (IllegalArgumentException e) {
+      throw new InvalidInputException(e.getMessage());
+    }
+  }
+
   /**
    * Creates a new user based on the provided payload.
    *

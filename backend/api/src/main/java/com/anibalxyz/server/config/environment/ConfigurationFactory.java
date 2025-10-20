@@ -4,6 +4,7 @@ import com.anibalxyz.persistence.DatabaseVariables;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.Properties;
 import java.util.function.Function;
 
@@ -56,9 +57,16 @@ public class ConfigurationFactory {
     String apiUrl = "http://localhost:" + getEnvVar("API_PORT", System::getenv);
     String contactEmail = getEnvVar("CONTACT_EMAIL", System::getenv);
 
+    // jwt
+    String jwtSecret = getEnvVar("JWT_SECRET", System::getenv);
+    String jwtIssuer = getEnvVar("JWT_ISSUER", System::getenv);
+    Duration jwtExpirationTime =
+        Duration.ofMinutes(Long.parseLong(getEnvVar("JWT_EXPIRATION_TIME", System::getenv)));
+
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", System::getenv));
     AppEnvironmentSource env =
-        new AppEnvironmentSource(appEnv, bcryptLogRounds, apiUrl, contactEmail);
+        new AppEnvironmentSource(
+            appEnv, bcryptLogRounds, apiUrl, contactEmail, jwtSecret, jwtIssuer, jwtExpirationTime);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(host, DEFAULT_DB_PORT, name, user, password));
@@ -86,9 +94,16 @@ public class ConfigurationFactory {
     String apiUrl = "http://localhost:" + getEnvVar("API_PORT", props::getProperty);
     String contactEmail = getEnvVar("CONTACT_EMAIL", props::getProperty);
 
+    // jwt
+    String jwtSecret = getEnvVar("JWT_SECRET", props::getProperty);
+    String jwtIssuer = getEnvVar("JWT_ISSUER", props::getProperty);
+    Duration jwtExpirationTime =
+        Duration.ofMinutes(Long.parseLong(getEnvVar("JWT_EXPIRATION_TIME", props::getProperty)));
+
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", props::getProperty));
     AppEnvironmentSource env =
-        new AppEnvironmentSource(appEnv, bcryptLogRounds, apiUrl, contactEmail);
+        new AppEnvironmentSource(
+            appEnv, bcryptLogRounds, apiUrl, contactEmail, jwtSecret, jwtIssuer, jwtExpirationTime);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(DEFAULT_LOCAL_HOST, port, name, user, password));

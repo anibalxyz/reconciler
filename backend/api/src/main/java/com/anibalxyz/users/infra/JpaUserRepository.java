@@ -41,8 +41,8 @@ public class JpaUserRepository implements UserRepository {
   /**
    * {@inheritDoc}
    *
-   * <p>This implementation retrieves all {@link UserEntity} objects from the database and maps
-   * them to domain {@link User} objects.
+   * <p>This implementation retrieves all {@link UserEntity} objects from the database and maps them
+   * to domain {@link User} objects.
    */
   @Override
   @SuppressWarnings("resource")
@@ -55,8 +55,8 @@ public class JpaUserRepository implements UserRepository {
   /**
    * {@inheritDoc}
    *
-   * <p>This implementation retrieves a {@link UserEntity} by its ID and maps it to a domain
-   * {@link User} object.
+   * <p>This implementation retrieves a {@link UserEntity} by its ID and maps it to a domain {@link
+   * User} object.
    */
   @Override
   @SuppressWarnings("resource")

@@ -21,7 +21,7 @@
         <hibernate.version>7.1.0.Final</hibernate.version>
         <jbcrypt.version>0.4</jbcrypt.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <logback.version>1.5.18</logback.version>
+        <logback.version>1.5.19</logback.version>
         <janino.version>3.1.12</janino.version>
         <junit.version>5.13.4</junit.version>
         <mockito.version>5.19.0</mockito.version>
@@ -30,6 +30,7 @@
 
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
+        <jjwt.version>0.13.0</jjwt.version>
     </properties>
 
     <build>
@@ -304,6 +305,25 @@
             <artifactId>okhttp</artifactId>
             <version>${okhttp.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- JWT -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
     </dependencies>

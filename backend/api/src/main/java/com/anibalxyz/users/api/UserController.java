@@ -4,6 +4,7 @@ import com.anibalxyz.application.exception.ConflictException;
 import com.anibalxyz.application.exception.ResourceNotFoundException;
 import com.anibalxyz.users.api.in.UserCreateRequest;
 import com.anibalxyz.users.api.in.UserUpdateRequest;
+import com.anibalxyz.users.api.out.UserCreateResponse;
 import com.anibalxyz.users.api.out.UserDetailResponse;
 import com.anibalxyz.users.application.UserService;
 import com.anibalxyz.users.domain.User;
@@ -60,7 +61,7 @@ public class UserController implements UserApi {
    * {@inheritDoc}
    *
    * <p>Creates a new user from the {@link UserCreateRequest} and returns a {@link
-   * com.anibalxyz.users.api.out.UserCreateResponse}.
+   * UserCreateResponse}.
    */
   @Override
   public void createUser(Context ctx) throws ConflictException, ValidationException {
@@ -82,10 +83,7 @@ public class UserController implements UserApi {
    */
   @Override
   public void updateUserById(Context ctx)
-      throws ConflictException,
-          ValidationException,
-          ResourceNotFoundException,
-          BadRequestResponse {
+      throws ConflictException, ValidationException, ResourceNotFoundException, BadRequestResponse {
     int id = getParamId(ctx);
 
     String badRequestMessage = "At least one field (name, email, password) must be provided";
@@ -99,9 +97,7 @@ public class UserController implements UserApi {
         .json(UserMapper.toDetailResponse(userService.updateUserById(id, userUpdateRequest)));
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void deleteUserById(Context ctx) throws ResourceNotFoundException, BadRequestResponse {
     userService.deleteUserById(getParamId(ctx));

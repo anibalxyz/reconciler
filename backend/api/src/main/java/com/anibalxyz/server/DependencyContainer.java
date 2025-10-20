@@ -1,5 +1,7 @@
 package com.anibalxyz.server;
 
+import com.anibalxyz.auth.api.AuthController;
+import com.anibalxyz.auth.application.AuthService;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
@@ -21,6 +23,7 @@ import com.anibalxyz.users.infra.JpaUserRepository;
  */
 public class DependencyContainer {
   private final UserController userController;
+  private final AuthController authController;
   private final SystemController systemController;
 
   /**
@@ -28,6 +31,7 @@ public class DependencyContainer {
    *
    * @param env The application's environment configuration source.
    * @param emProvider The provider for the request-scoped EntityManager.
+   * @param persistenceManager The application's persistence manager.
    */
   public DependencyContainer(
       AppEnvironmentSource env,
@@ -37,20 +41,30 @@ public class DependencyContainer {
     UserService userService = new UserService(userRepository, env);
     userController = new UserController(userService);
 
+    AuthService authService = new AuthService(env, userService);
+    authController = new AuthController(authService);
+
     systemController = new SystemController(persistenceManager);
   }
 
   /**
    * @return The singleton instance of {@link UserController}.
    */
-  public UserController getUserController() {
+  public UserController userController() {
     return userController;
+  }
+
+  /**
+   * @return The singleton instance of {@link AuthController}.
+   */
+  public AuthController authController() {
+    return authController;
   }
 
   /**
    * @return The singleton instance of {@link SystemController}.
    */
-  public SystemController getSystemController() {
+  public SystemController systemController() {
     return systemController;
   }
 }

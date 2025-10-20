@@ -21,8 +21,8 @@ public interface SystemApi {
   /**
    * Handles GET requests to the /health endpoint.
    *
-   * <p>This method provides a health check of the system, typically verifying connectivity to critical
-   * services like the database.
+   * <p>This method provides a health check of the system, typically verifying connectivity to
+   * critical services like the database.
    *
    * @param ctx The Javalin context object for the request.
    */

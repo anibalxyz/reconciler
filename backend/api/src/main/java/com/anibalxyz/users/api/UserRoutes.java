@@ -27,9 +27,7 @@ public class UserRoutes extends RouteRegistry {
     this.userApi = userApi;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   public void register() {
     new RouteGroup("/users", server)
         .get("", userApi::getAllUsers)
