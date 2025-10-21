@@ -1,5 +1,7 @@
 package com.anibalxyz.features.users.api;
 
+import static com.anibalxyz.features.Helper.capturedJsonAs;
+import static com.anibalxyz.features.Helper.stubBodyValidatorFor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -18,7 +20,6 @@ import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
-import io.javalin.validation.BodyValidator;
 import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
 import io.javalin.validation.Validator;
@@ -27,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -58,20 +58,6 @@ public class UserControllerTest {
     return when(mockValidator.getOrThrow(any()));
   }
 
-  @SuppressWarnings("unchecked")
-  private <T> OngoingStubbing<T> stubBodyValidatorFor(Class<T> clazz) {
-    BodyValidator<T> mockValidator = (BodyValidator<T>) mock(BodyValidator.class);
-    when(ctx.bodyValidator(clazz)).thenReturn(mockValidator);
-    when(mockValidator.check(any(), anyString())).thenReturn(mockValidator);
-    return when(mockValidator.get());
-  }
-
-  private <T> T capturedJsonAs(Class<T> clazz) {
-    ArgumentCaptor<T> captor = ArgumentCaptor.forClass(clazz);
-    verify(ctx).json(captor.capture());
-    return captor.getValue();
-  }
-
   @Nested
   @DisplayName("Failure Scenarios")
   class FailureScenarios {
@@ -100,7 +86,7 @@ public class UserControllerTest {
     @DisplayName("createUser: given an invalid property, then throw InvalidInputException")
     public void createUser_invalidProperty_throwsInvalidInputException() {
       UserCreateRequest request = new UserCreateRequest("John Doe", "mail.com", "abc");
-      stubBodyValidatorFor(UserCreateRequest.class).thenReturn(request);
+      stubBodyValidatorFor(ctx, UserCreateRequest.class).thenReturn(request);
 
       when(userService.createUser(request)).thenThrow(new InvalidInputException(""));
 
@@ -111,7 +97,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("createUser: given a missing property, then throw ValidationException")
     public void createUser_missingProperty_throwsValidationException() {
-      stubBodyValidatorFor(UserCreateRequest.class)
+      stubBodyValidatorFor(ctx, UserCreateRequest.class)
           .thenThrow(
               new ValidationException(
                   Map.of("property", List.of(new ValidationError<>("Property is required")))));
@@ -132,7 +118,7 @@ public class UserControllerTest {
     @DisplayName("updateUserById: given missing data, then throw ValidationException")
     public void updateUserById_missingData_throwsValidationException() {
       stubPathParamId().thenReturn(1);
-      stubBodyValidatorFor(UserUpdateRequest.class)
+      stubBodyValidatorFor(ctx, UserUpdateRequest.class)
           .thenThrow(
               new ValidationException(
                   Map.of("property", List.of(new ValidationError<>("Property is required")))));
@@ -147,7 +133,7 @@ public class UserControllerTest {
       int validId = 1;
 
       stubPathParamId().thenReturn(validId);
-      stubBodyValidatorFor(UserUpdateRequest.class).thenReturn(request);
+      stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
 
       when(userService.updateUserById(validId, request)).thenThrow(new InvalidInputException(""));
 
@@ -161,7 +147,7 @@ public class UserControllerTest {
       UserUpdateRequest request = new UserUpdateRequest("John Doe", "mail.com", "abc");
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
-      stubBodyValidatorFor(UserUpdateRequest.class).thenReturn(request);
+      stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
 
       when(userService.updateUserById(nonExistingId, request))
           .thenThrow(new ResourceNotFoundException(""));
@@ -227,7 +213,7 @@ public class UserControllerTest {
       verify(ctx).status(200);
 
       @SuppressWarnings("unchecked")
-      List<UserDetailResponse> actual = capturedJsonAs(List.class);
+      List<UserDetailResponse> actual = capturedJsonAs(ctx, List.class);
 
       List<UserDetailResponse> expected =
           fakeUsers.stream().map(UserMapper::toDetailResponse).toList();
@@ -247,7 +233,7 @@ public class UserControllerTest {
       verify(ctx).status(200);
 
       @SuppressWarnings("unchecked")
-      List<UserDetailResponse> actual = capturedJsonAs(List.class);
+      List<UserDetailResponse> actual = capturedJsonAs(ctx, List.class);
       List<UserDetailResponse> expected = List.of();
 
       assertThat(actual).isEqualTo(expected);
@@ -275,7 +261,7 @@ public class UserControllerTest {
 
       verify(ctx).status(200);
 
-      UserDetailResponse actual = capturedJsonAs(UserDetailResponse.class);
+      UserDetailResponse actual = capturedJsonAs(ctx, UserDetailResponse.class);
       UserDetailResponse expected = UserMapper.toDetailResponse(fakeUser);
 
       assertThat(actual).isEqualTo(expected);
@@ -297,7 +283,7 @@ public class UserControllerTest {
               localDateTime,
               localDateTime);
 
-      stubBodyValidatorFor(UserCreateRequest.class).thenReturn(request);
+      stubBodyValidatorFor(ctx, UserCreateRequest.class).thenReturn(request);
 
       when(userService.createUser(request)).thenReturn(fakeUser);
 
@@ -305,7 +291,7 @@ public class UserControllerTest {
 
       verify(ctx).status(201);
 
-      UserCreateResponse actualResponse = capturedJsonAs(UserCreateResponse.class);
+      UserCreateResponse actualResponse = capturedJsonAs(ctx, UserCreateResponse.class);
       UserCreateResponse expectedResponse = UserMapper.toCreateResponse(fakeUser);
 
       assertThat(actualResponse).isEqualTo(expectedResponse);
@@ -331,7 +317,7 @@ public class UserControllerTest {
               localDateTime);
 
       stubPathParamId().thenReturn(id);
-      stubBodyValidatorFor(UserUpdateRequest.class).thenReturn(request);
+      stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
       when(userService.updateUserById(id, request)).thenReturn(fakeUser);
 
       userController.updateUserById(ctx);
@@ -339,7 +325,7 @@ public class UserControllerTest {
       verify(ctx).status(200);
 
       UserDetailResponse expectedResponse = UserMapper.toDetailResponse(fakeUser);
-      UserDetailResponse actualResponse = capturedJsonAs(UserDetailResponse.class);
+      UserDetailResponse actualResponse = capturedJsonAs(ctx, UserDetailResponse.class);
 
       assertThat(actualResponse).isEqualTo(expectedResponse);
     }
