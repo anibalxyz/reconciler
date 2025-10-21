@@ -6,7 +6,7 @@ import io.javalin.Javalin;
  * An abstract base class for modular route registration.
  *
  * <p>Classes that extend {@code RouteRegistry} are responsible for defining a set of related API
- * routes (e.g., all routes for the "users" feature). This pattern allows the main {@link
+ * routes (e.g., all routes for the "users" features). This pattern allows the main {@link
  * com.anibalxyz.server.Application} to discover and register all route modules without being
  * tightly coupled to them.
  *
@@ -28,7 +28,7 @@ public abstract class RouteRegistry {
    * Defines and registers all routes for this module.
    *
    * <p>Implementations of this method should contain the complete routing logic for a specific
-   * feature or resource (e.g., all endpoints under "/users"). This is typically done using {@link
+   * features or resource (e.g., all endpoints under "/users"). This is typically done using {@link
    * RouteGroup} to organize endpoints under a common path prefix and map them to controller
    * handlers.
    */

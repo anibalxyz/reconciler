@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.application;
 
 /**
- * Defines a port for providing environment configuration to the Users feature.
+ * Defines a port for providing environment configuration to the Users features.
  *
  * <p>This interface acts as a contract that the application layer requires for
  * environment-dependent settings. It decouples the {@link UserService} from the concrete source of

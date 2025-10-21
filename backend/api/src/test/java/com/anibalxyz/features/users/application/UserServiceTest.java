@@ -1,4 +1,4 @@
-package com.anibalxyz.users.application;
+package com.anibalxyz.features.users.application;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -8,8 +8,6 @@ import static org.mockito.Mockito.when;
 import com.anibalxyz.features.common.application.exception.ConflictException;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
-import com.anibalxyz.features.users.application.UserService;
-import com.anibalxyz.features.users.application.UsersEnvironment;
 import com.anibalxyz.features.users.application.in.UserUpdatePayload;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;

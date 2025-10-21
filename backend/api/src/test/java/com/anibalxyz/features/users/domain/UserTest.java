@@ -1,10 +1,7 @@
-package com.anibalxyz.users.domain;
+package com.anibalxyz.features.users.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

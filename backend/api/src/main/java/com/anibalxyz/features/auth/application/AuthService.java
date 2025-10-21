@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.application;
 
-import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
+import com.anibalxyz.features.auth.application.in.LoginPayload;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.User;
@@ -22,9 +22,12 @@ public class AuthService {
 
   public AuthService(AuthEnvironment env, UserService userService) {
     // TODO: check if this logic belongs here
+    if (env.JWT_SECRET() == null || env.JWT_SECRET().isBlank()) {
+      throw new IllegalArgumentException("JWT_SECRET must not be null or empty");
+    }
     byte[] secretBytes = env.JWT_SECRET().getBytes(StandardCharsets.UTF_8);
     if (secretBytes.length < 32) {
-      throw new IllegalArgumentException("JWT_SECRET must be at least 256 bits (32 bytes).");
+      throw new IllegalArgumentException("JWT_SECRET must be at least 256 bits (32 bytes)");
     }
 
     this.key = Keys.hmacShaKeyFor(secretBytes);
@@ -48,10 +51,10 @@ public class AuthService {
         .compact();
   }
 
-  public String authenticateUser(LoginRequest request) {
+  public String authenticateUser(LoginPayload payload) throws InvalidCredentialsException {
     try {
-      User user = userService.getUserByEmail(request.email());
-      if (user.getPasswordHash().matches(request.password())) {
+      User user = userService.getUserByEmail(payload.email());
+      if (user.getPasswordHash().matches(payload.password())) {
         return generateToken(user);
       } else {
         throw new InvalidCredentialsException("Invalid credentials");

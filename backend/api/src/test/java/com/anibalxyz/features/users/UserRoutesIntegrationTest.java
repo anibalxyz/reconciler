@@ -1,4 +1,4 @@
-package com.anibalxyz.users;
+package com.anibalxyz.features.users;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;

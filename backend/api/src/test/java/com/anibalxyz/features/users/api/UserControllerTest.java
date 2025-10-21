@@ -1,4 +1,4 @@
-package com.anibalxyz.users.api;
+package com.anibalxyz.features.users.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -6,8 +6,6 @@ import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
-import com.anibalxyz.features.users.api.UserController;
-import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
