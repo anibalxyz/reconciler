@@ -53,6 +53,14 @@ public final class ErrorResponseExamples {
               ]
             }""";
 
+  /** Example response for invalid authentication credentials. */
+  public static final String INVALID_CREDENTIALS =
+      """
+            {
+              "error": "Invalid credentials",
+              "details": []
+            }""";
+
   /** Example response for a generic, unexpected server error. */
   public static final String INTERNAL_SERVER_ERROR =
       """

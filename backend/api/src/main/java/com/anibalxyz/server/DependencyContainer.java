@@ -1,5 +1,6 @@
 package com.anibalxyz.server;
 
+import com.anibalxyz.features.auth.api.AuthApi;
 import com.anibalxyz.features.auth.api.AuthController;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.system.api.SystemController;
@@ -23,7 +24,7 @@ import com.anibalxyz.server.config.environment.AppEnvironmentSource;
  */
 public class DependencyContainer {
   private final UserController userController;
-  private final AuthController authController;
+  private final AuthApi authController;
   private final SystemController systemController;
 
   /**
@@ -55,9 +56,9 @@ public class DependencyContainer {
   }
 
   /**
-   * @return The singleton instance of {@link AuthController}.
+   * @return The singleton instance of {@link AuthApi}.
    */
-  public AuthController authController() {
+  public AuthApi authController() {
     return authController;
   }
 

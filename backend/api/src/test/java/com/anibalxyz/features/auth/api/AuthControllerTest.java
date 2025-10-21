@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.auth.api.in.LoginRequest;
+import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import io.javalin.http.Context;
@@ -27,7 +28,7 @@ import org.mockito.stubbing.OngoingStubbing;
 @ExtendWith(MockitoExtension.class)
 public class AuthControllerTest {
   private static final String VALID_JWT =
-"""
+      """
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiY\
 WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
 """;
@@ -68,8 +69,8 @@ WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV
       authController.login(ctx);
 
       verify(ctx).status(200);
-      String response = capturedJsonAs(String.class);
-      assertThat(response).isEqualTo(VALID_JWT);
+      AuthResponse response = capturedJsonAs(AuthResponse.class);
+      assertThat(response.accessToken()).isEqualTo(VALID_JWT);
     }
   }
 
@@ -99,3 +100,4 @@ WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV
     }
   }
 }
+

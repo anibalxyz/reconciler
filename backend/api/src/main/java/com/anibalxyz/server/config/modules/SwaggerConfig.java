@@ -104,6 +104,28 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                                   .trim()));
                                       tagsArray.add(usersTag);
 
+                                      var authTag = content.objectNode();
+                                      authTag.set("name", new TextNode("Authentication"));
+                                      authTag.set(
+                                          "description",
+                                          new TextNode(
+                                              """
+                                              Endpoints for user authentication, including login and logout.
+                                              """
+                                                  .trim()));
+                                      tagsArray.add(authTag);
+
+                                      var systemTag = content.objectNode();
+                                      systemTag.set("name", new TextNode("System"));
+                                      systemTag.set(
+                                          "description",
+                                          new TextNode(
+                                              """
+                                              System-level operations, such as health checks and status monitoring.
+                                              """
+                                                  .trim()));
+                                      tagsArray.add(systemTag);
+
                                       content.set("tags", tagsArray);
 
                                       return content.toPrettyString();
