@@ -57,7 +57,14 @@ public class UserService {
         .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
   }
 
-  // TODO: documentate
+  /**
+   * Retrieves a single user by their email address.
+   *
+   * @param email The email of the user to retrieve.
+   * @return The found {@link User} object.
+   * @throws ResourceNotFoundException if no user with the given email is found.
+   * @throws InvalidInputException if the email format is invalid.
+   */
   public User getUserByEmail(String email) throws ResourceNotFoundException {
     try {
       return userRepository

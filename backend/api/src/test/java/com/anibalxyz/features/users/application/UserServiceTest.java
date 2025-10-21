@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("User Service Tests")
 public class UserServiceTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
 
@@ -122,6 +123,26 @@ public class UserServiceTest {
       when(userRepository.findById(expectedUser.getId())).thenReturn(Optional.of(expectedUser));
 
       User actualUser = userService.getUserById(expectedUser.getId());
+
+      assertThat(actualUser).isEqualTo(expectedUser);
+    }
+
+    @Test
+    @DisplayName("getUserByEmail: given an existing email, then return the correct user")
+    public void getUserByEmail_existingEmail_returnUser() {
+      LocalDateTime currentDate = LocalDateTime.now();
+      User expectedUser =
+          new User(
+              1,
+              "User 1",
+              new Email("user1@mail.com"),
+              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              currentDate,
+              currentDate);
+      when(userRepository.findByEmail(new Email(expectedUser.getEmail().value())))
+          .thenReturn(Optional.of(expectedUser));
+
+      User actualUser = userService.getUserByEmail(expectedUser.getEmail().value());
 
       assertThat(actualUser).isEqualTo(expectedUser);
     }
@@ -324,6 +345,29 @@ public class UserServiceTest {
       assertThatThrownBy(() -> userService.getUserById(nonExistingId))
           .isInstanceOf(ResourceNotFoundException.class)
           .hasMessage("User with id " + nonExistingId + " not found");
+    }
+
+    @Test
+    @DisplayName("getUserByEmail: given a non-existing email, then throw ResourceNotFoundException")
+    public void getUserByEmail_nonExistingEmail_throwResourceNotFoundException() {
+      String nonExistingEmail = "non.existing@mail.com";
+      when(userRepository.findByEmail(new Email(nonExistingEmail)))
+          .thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> userService.getUserByEmail(nonExistingEmail))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("User with email " + nonExistingEmail + " not found");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"blank", "format"})
+    @DisplayName("getUserByEmail: given an invalid email format, then throw InvalidInputException")
+    public void getUserByEmail_invalidEmailFormat_throwInvalidInputException(String invalidationCause) {
+      String email = invalidationCause.equals("format") ? "mailemail.com" : " ";
+
+      assertThatThrownBy(() -> userService.getUserByEmail(email))
+          .isInstanceOf(InvalidInputException.class)
+          .hasMessage("Invalid email format: " + email);
     }
 
     @Test

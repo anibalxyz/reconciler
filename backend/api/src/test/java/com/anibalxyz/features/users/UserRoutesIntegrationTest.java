@@ -44,6 +44,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
+@DisplayName("User Routes Integration Tests")
 public class UserRoutesIntegrationTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
   private static Application app;

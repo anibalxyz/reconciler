@@ -3,6 +3,7 @@ package com.anibalxyz.server;
 import com.anibalxyz.features.auth.api.AuthApi;
 import com.anibalxyz.features.auth.api.AuthController;
 import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.system.api.SystemController;
 import com.anibalxyz.features.users.api.UserController;
 import com.anibalxyz.features.users.application.UserService;
@@ -11,6 +12,7 @@ import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
+import com.anibalxyz.server.security.JwtMiddleware;
 
 /**
  * A manual dependency injection container for the application.
@@ -27,6 +29,8 @@ public class DependencyContainer {
   private final AuthApi authController;
   private final SystemController systemController;
 
+  private final JwtMiddleware jwtMiddleware;
+
   /**
    * Constructs the dependency container and initializes the object graph.
    *
@@ -42,8 +46,10 @@ public class DependencyContainer {
     UserService userService = new UserService(userRepository, env);
     userController = new UserController(userService);
 
-    AuthService authService = new AuthService(env, userService);
+    JwtService jwtService = new JwtService(env);
+    AuthService authService = new AuthService(userService, jwtService);
     authController = new AuthController(authService);
+    jwtMiddleware = new JwtMiddleware(jwtService);
 
     systemController = new SystemController(persistenceManager);
   }
@@ -67,5 +73,12 @@ public class DependencyContainer {
    */
   public SystemController systemController() {
     return systemController;
+  }
+
+  /**
+   * @return The singleton instance of {@link JwtMiddleware}.
+   */
+  public JwtMiddleware jwtMiddleware() {
+    return jwtMiddleware;
   }
 }

@@ -6,6 +6,7 @@ import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.modules.*;
+import com.anibalxyz.server.config.modules.definitions.RuntimeConfig;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import com.anibalxyz.server.routes.RouteRegistry;
 import io.javalin.Javalin;
@@ -57,7 +58,7 @@ public class Application {
     PersistenceManager persistenceManager = new PersistenceManager(config.database());
 
     Javalin server =
-        Javalin.create(javalinConfig -> new InitConfig(javalinConfig, config.env()).apply());
+        Javalin.create(javalinConfig -> new ServerConfig(javalinConfig, config.env()).apply());
 
     DependencyContainer container =
         new DependencyContainer(
@@ -67,11 +68,11 @@ public class Application {
         List.of(
             new UserRoutes(server, container.userController()),
             new SystemRoutes(server, container.systemController()));
-    List<ServerConfig> serverConfigs =
-        List.of(new LifeCycleConfig(server, persistenceManager), new ExceptionsConfig(server));
+    List<RuntimeConfig> serverConfigs =
+        List.of(new LifecycleConfig(server, persistenceManager), new ExceptionsConfig(server));
 
     routeRegistries.forEach(RouteRegistry::register);
-    serverConfigs.forEach(ServerConfig::apply);
+    serverConfigs.forEach(RuntimeConfig::apply);
 
     return new Application(server, persistenceManager, config);
   }
@@ -81,7 +82,7 @@ public class Application {
    *
    * <p>This factory method sets up the entire application stack, including the persistence layer,
    * dependency container, server configurations, and route registries, all tailored for local
-   * development.
+   * development. This includes the registration of authentication routes and JWT middleware.
    *
    * @param config The application configuration, loaded for the development environment.
    * @return A fully configured {@code Application} instance ready for development.
@@ -91,7 +92,7 @@ public class Application {
 
     Consumer<JavalinConfig> initConfig =
         javalinConfig -> {
-          new InitConfig(javalinConfig, config.env()).apply();
+          new ServerConfig(javalinConfig, config.env()).apply();
           new SwaggerConfig(javalinConfig, config.env()).apply();
         };
 
@@ -113,11 +114,14 @@ public class Application {
             new UserRoutes(server, container.userController()),
             new AuthRoutes(server, container.authController()),
             new SystemRoutes(server, container.systemController()));
-    List<ServerConfig> serverConfigs =
-        List.of(new LifeCycleConfig(server, persistenceManager), new ExceptionsConfig(server));
+    List<RuntimeConfig> serverConfigs =
+        List.of(
+            new LifecycleConfig(server, persistenceManager),
+            new ExceptionsConfig(server),
+            new JwtMiddlewareConfig(server, container.jwtMiddleware()));
 
     routeRegistries.forEach(RouteRegistry::register);
-    serverConfigs.forEach(ServerConfig::apply);
+    serverConfigs.forEach(RuntimeConfig::apply);
 
     return new Application(server, persistenceManager, config);
   }
@@ -133,7 +137,6 @@ public class Application {
   public static Application create(ApplicationConfiguration config) {
     String appEnv = config.env().APP_ENV();
     if (appEnv.equals("dev") || appEnv.equals("prod")) {
-      // TODO: also used in "production", for the moment both are the same
       return createForDev(config);
     }
     if (appEnv.equals("test")) {

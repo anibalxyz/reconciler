@@ -34,6 +34,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 
 @ExtendWith(MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
+@DisplayName("User Controller Tests")
 public class UserControllerTest {
 
   private static UsersEnvironment env;

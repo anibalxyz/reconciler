@@ -10,6 +10,7 @@ import com.anibalxyz.server.openapi.ErrorResponseExamples;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
+import io.javalin.openapi.OpenApiSecurity;
 import io.javalin.validation.ValidationException;
 
 /**
@@ -34,11 +35,19 @@ public interface UserApi {
       path = "/users",
       methods = HttpMethod.GET,
       tags = {"Users"},
+      security = @OpenApiSecurity(name = "bearerAuth"),
       responses = {
         @OpenApiResponse(
             status = "200",
             description = "A list of all users.",
             content = @OpenApiContent(from = UserDetailResponse[].class)),
+        @OpenApiResponse(
+            status = "401",
+            description = "Authentication information is missing or invalid.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "500",
             description = "Internal server error.",
@@ -61,6 +70,7 @@ public interface UserApi {
       path = "/users/{id}",
       methods = HttpMethod.GET,
       tags = {"Users"},
+      security = @OpenApiSecurity(name = "bearerAuth"),
       pathParams = {
         @OpenApiParam(
             name = "id",
@@ -74,6 +84,13 @@ public interface UserApi {
             status = "200",
             description = "Successfully retrieved the user.",
             content = @OpenApiContent(from = UserDetailResponse.class)),
+        @OpenApiResponse(
+            status = "401",
+            description = "Authentication information is missing or invalid.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "400",
             description = "Invalid ID format supplied.",
@@ -140,6 +157,7 @@ public interface UserApi {
       path = "/users/{id}",
       methods = HttpMethod.PUT,
       tags = {"Users"},
+      security = @OpenApiSecurity(name = "bearerAuth"),
       pathParams = {
         @OpenApiParam(
             name = "id",
@@ -158,6 +176,13 @@ public interface UserApi {
             status = "200",
             description = "User updated successfully.",
             content = @OpenApiContent(from = UserDetailResponse.class)),
+        @OpenApiResponse(
+            status = "401",
+            description = "Authentication information is missing or invalid.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "400",
             description = "Invalid input data, empty payload, or duplicate email.",
@@ -187,6 +212,7 @@ public interface UserApi {
       path = "/users/{id}",
       methods = HttpMethod.DELETE,
       tags = {"Users"},
+      security = @OpenApiSecurity(name = "bearerAuth"),
       pathParams = {
         @OpenApiParam(
             name = "id",
@@ -197,6 +223,13 @@ public interface UserApi {
       },
       responses = {
         @OpenApiResponse(status = "204", description = "User deleted successfully."),
+        @OpenApiResponse(
+            status = "401",
+            description = "Authentication information is missing or invalid.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "404",
             description = "User with the specified ID not found.",

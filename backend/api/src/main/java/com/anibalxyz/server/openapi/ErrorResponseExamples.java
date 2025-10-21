@@ -1,5 +1,6 @@
 package com.anibalxyz.server.openapi;
 
+// TODO: divide it into feature-specific examples
 /**
  * Provides standardized, reusable JSON example strings for OpenAPI error responses.
  *
@@ -50,6 +51,16 @@ public final class ErrorResponseExamples {
               "error": "Invalid input provided",
               "details": [
                 "At least one field (name, email, password) must be provided"
+              ]
+            }""";
+
+  /** Example response for requests missing or providing invalid authentication tokens. */
+  public static final String UNAUTHORIZED =
+      """
+            {
+              "error": "Unauthorized",
+              "details": [
+                "Authentication information is missing or invalid."
               ]
             }""";
 

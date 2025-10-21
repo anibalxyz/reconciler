@@ -16,6 +16,7 @@ import io.javalin.validation.ValidationException;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,9 +27,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Auth Controller Tests")
 public class AuthControllerTest {
   private static final String VALID_JWT =
-      """
+"""
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiY\
 WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
 """;
@@ -53,6 +55,7 @@ WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV
   }
 
   @Nested
+  @DisplayName("Success Scenarios")
   class SuccessScenarios {
 
     @BeforeEach
@@ -61,6 +64,7 @@ WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV
     }
 
     @Test
+    @DisplayName("login: given valid credentials, then return JWT")
     public void login_validCredentials_returnJwt() {
       LoginRequest request = new LoginRequest("", "");
       stubBodyValidatorFor(LoginRequest.class).thenReturn(request);
@@ -75,9 +79,11 @@ WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV
   }
 
   @Nested
+  @DisplayName("Failure Scenarios")
   class FailureScenarios {
 
     @Test
+    @DisplayName("login: given invalid input, then throw ValidationException")
     public void login_invalidInput_throwsValidationException() {
       stubBodyValidatorFor(LoginRequest.class)
           .thenThrow(
@@ -88,6 +94,7 @@ WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV
     }
 
     @Test
+    @DisplayName("login: given invalid credentials, then throw InvalidCredentialsException")
     public void login_invalidCredentials_throwsInvalidCredentialsException() {
       LoginRequest request = new LoginRequest("invalid@email.com", "wrongpassword");
       stubBodyValidatorFor(LoginRequest.class).thenReturn(request);
@@ -100,4 +107,3 @@ WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV
     }
   }
 }
-

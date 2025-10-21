@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@DisplayName("User Domain Object Tests")
 public class UserTest {
 
   private static final int BCRYPT_LOG_ROUNDS = 12;

@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A factory for creating application configuration from various sources.
@@ -22,6 +24,7 @@ public class ConfigurationFactory {
   private static final String DEFAULT_DB_PORT = "5432";
   // Used when running locally because container is mapped to localhost
   private static final String DEFAULT_LOCAL_HOST = "localhost";
+  private static final Logger log = LoggerFactory.getLogger(ConfigurationFactory.class);
 
   /** Private constructor to prevent instantiation of this utility class. */
   private ConfigurationFactory() {}
@@ -36,8 +39,10 @@ public class ConfigurationFactory {
    */
   public static ApplicationConfiguration loadForTest() {
     if (System.getenv("APP_ENV") != null) {
+      log.info("Loading configuration from system environment variables");
       return loadFromEnv();
     }
+    log.info("Loading configuration from dotenv file");
     return loadFromEnvFile("test");
   }
 

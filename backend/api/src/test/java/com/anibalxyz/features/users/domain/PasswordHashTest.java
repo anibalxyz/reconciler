@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@DisplayName("PasswordHash Value Object Tests")
 public class PasswordHashTest {
   private static final int SALT_ROUNDS = 12;
   private static final String HASH_PREFIX = "$2a$" + SALT_ROUNDS + "$";

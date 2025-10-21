@@ -26,6 +26,15 @@ public class AuthController implements AuthApi {
     this.authService = authService;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Handles user login requests. Validates the provided email and password, authenticates the
+   * user, and returns a JWT token upon successful authentication.
+   *
+   * @param ctx The Javalin context for the request.
+   */
+  @Override
   public void login(Context ctx) {
     LoginRequest request =
         ctx.bodyValidator(LoginRequest.class)
