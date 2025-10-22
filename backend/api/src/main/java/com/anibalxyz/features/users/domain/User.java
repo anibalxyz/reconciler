@@ -1,6 +1,6 @@
 package com.anibalxyz.features.users.domain;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Represents a User in the domain.
@@ -18,8 +18,8 @@ public class User {
   private final String name;
   private final Email email;
   private final PasswordHash passwordHash;
-  private final LocalDateTime createdAt;
-  private final LocalDateTime updatedAt;
+  private final Instant createdAt;
+  private final Instant updatedAt;
 
   /**
    * Fully-parameterized constructor to reconstitute a User object, typically from a data store.
@@ -36,8 +36,8 @@ public class User {
       String name,
       Email email,
       PasswordHash passwordHash,
-      LocalDateTime createdAt,
-      LocalDateTime updatedAt) {
+      Instant createdAt,
+      Instant updatedAt) {
     this.id = id;
     this.name = name;
     this.email = email;
@@ -104,7 +104,7 @@ public class User {
    * @param createdAt The new creation timestamp.
    * @return A new {@code User} instance.
    */
-  public User withCreatedAt(LocalDateTime createdAt) {
+  public User withCreatedAt(Instant createdAt) {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
@@ -114,7 +114,7 @@ public class User {
    * @param updatedAt The new modification timestamp.
    * @return A new {@code User} instance.
    */
-  public User withUpdatedAt(LocalDateTime updatedAt) {
+  public User withUpdatedAt(Instant updatedAt) {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
@@ -149,14 +149,14 @@ public class User {
   /**
    * @return The timestamp when the user was created. Can be null for a new user.
    */
-  public LocalDateTime getCreatedAt() {
+  public Instant getCreatedAt() {
     return createdAt;
   }
 
   /**
    * @return The timestamp of the last update. Can be null for a new user.
    */
-  public LocalDateTime getUpdatedAt() {
+  public Instant getUpdatedAt() {
     return updatedAt;
   }
 

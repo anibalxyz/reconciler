@@ -12,7 +12,7 @@ import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -60,7 +60,7 @@ public class AuthServiceTest {
     @DisplayName("authenticateUser: given valid credentials, then return JWT")
     public void authenticateUser_validCredentials_returnJwt() {
       LoginPayload payload = createPayload(VALID_EMAIL, VALID_PASSWORD);
-      LocalDateTime now = LocalDateTime.now();
+      Instant now = Instant.now();
       User user =
           new User(
               1,
@@ -89,7 +89,7 @@ public class AuthServiceTest {
     @DisplayName("authenticateUser: given invalid password, then throw InvalidCredentialsException")
     public void authenticateUser_invalidPassword_throwAuthenticationException() {
       LoginPayload payload = createPayload(VALID_EMAIL, VALID_PASSWORD);
-      LocalDateTime now = LocalDateTime.now();
+      Instant now = Instant.now();
 
       when(userService.getUserByEmail(VALID_EMAIL))
           .thenReturn(

@@ -4,7 +4,7 @@ import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.generator.EventType;
 
@@ -37,11 +37,11 @@ public class UserEntity {
 
   @CurrentTimestamp(event = EventType.INSERT)
   @Column(name = "created_at")
-  private LocalDateTime createdAt;
+  private Instant createdAt;
 
   @CurrentTimestamp
   @Column(name = "updated_at")
-  private LocalDateTime updatedAt;
+  private Instant updatedAt;
 
   /** Default constructor required by JPA. */
   public UserEntity() {}
@@ -52,8 +52,8 @@ public class UserEntity {
       String name,
       String email,
       String passwordHash,
-      LocalDateTime createdAt,
-      LocalDateTime updatedAt) {
+      Instant createdAt,
+      Instant updatedAt) {
     this.id = id;
     this.name = name;
     this.email = email;
@@ -167,7 +167,7 @@ public class UserEntity {
    *
    * @return The creation timestamp.
    */
-  public LocalDateTime getCreatedAt() {
+  public Instant getCreatedAt() {
     return createdAt;
   }
 
@@ -176,7 +176,7 @@ public class UserEntity {
    *
    * @param createdAt The new creation timestamp.
    */
-  public void setCreatedAt(LocalDateTime createdAt) {
+  public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
   }
 
@@ -185,7 +185,7 @@ public class UserEntity {
    *
    * @return The last update timestamp.
    */
-  public LocalDateTime getUpdatedAt() {
+  public Instant getUpdatedAt() {
     return updatedAt;
   }
 
@@ -194,7 +194,7 @@ public class UserEntity {
    *
    * @param updatedAt The new update timestamp.
    */
-  public void setUpdatedAt(LocalDateTime updatedAt) {
+  public void setUpdatedAt(Instant updatedAt) {
     this.updatedAt = updatedAt;
   }
 }

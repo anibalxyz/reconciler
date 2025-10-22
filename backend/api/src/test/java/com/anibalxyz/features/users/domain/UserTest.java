@@ -2,7 +2,7 @@ package com.anibalxyz.features.users.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ public class UserTest {
   private static final Email EMAIL = new Email("email@mail.com");
   private static final PasswordHash PASSWORD_HASH =
       PasswordHash.generate("password1234", BCRYPT_LOG_ROUNDS);
-  private static final LocalDateTime TIMESTAMP = LocalDateTime.now();
+  private static final Instant TIMESTAMP = Instant.now();
 
   private User baseUser;
 
@@ -101,13 +101,13 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
         break;
 
       case "createdAt":
-        LocalDateTime newCreatedAt = TIMESTAMP.minusDays(1);
+        Instant newCreatedAt = TIMESTAMP.minusSeconds(60 * 60 * 24);
         userUsingWith = baseUser.withCreatedAt(newCreatedAt);
         userUsingConstructor = new User(ID, NAME, EMAIL, PASSWORD_HASH, newCreatedAt, TIMESTAMP);
         break;
 
       case "updatedAt":
-        LocalDateTime newUpdatedAt = TIMESTAMP.plusDays(1);
+        Instant newUpdatedAt = TIMESTAMP.plusSeconds(60 * 60 * 24);
         userUsingWith = baseUser.withUpdatedAt(newUpdatedAt);
         userUsingConstructor = new User(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, newUpdatedAt);
         break;
@@ -162,9 +162,11 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
                   TIMESTAMP,
                   TIMESTAMP);
           case "createdAt" ->
-              new User(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP.plusDays(1), TIMESTAMP);
+              new User(
+                  ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP.plusSeconds(60 * 60 * 24), TIMESTAMP);
           case "updatedAt" ->
-              new User(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP.plusDays(1));
+              new User(
+                  ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP.plusSeconds(60 * 60 * 24));
           default -> throw new IllegalArgumentException("Invalid property name: " + propName);
         };
     assertThat(baseUser).isNotEqualTo(differentUser);

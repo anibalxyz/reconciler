@@ -29,7 +29,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -597,7 +597,7 @@ public class UserRoutesIntegrationTest {
     public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp) {
       UserEntity user = persistUser("John Doe", "john@mail.com");
       PasswordHash prevPasswordHash = new PasswordHash(user.getPasswordHash());
-      LocalDateTime prevUpdatedAt = user.getUpdatedAt();
+      Instant prevUpdatedAt = user.getUpdatedAt();
       int existingId = user.getId();
 
       UserUpdateRequest request =

@@ -14,7 +14,7 @@ import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
@@ -73,7 +73,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("getAllUsers: given users exist, then return a list of all users")
     public void getAllUsers_usersExist_returnListOfUsers() {
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       List<User> expectedUsers =
           List.of(
               new User(
@@ -111,7 +111,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("getUserById: given an existing id, then return the correct user")
     public void getUserById_existingId_returnUser() {
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       User expectedUser =
           new User(
               1,
@@ -130,7 +130,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("getUserByEmail: given an existing email, then return the correct user")
     public void getUserByEmail_existingEmail_returnUser() {
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       User expectedUser =
           new User(
               1,
@@ -151,7 +151,7 @@ public class UserServiceTest {
     @DisplayName("createUser: given valid data, then return the created user")
     public void createUser_validData_returnCreatedUser() {
       int validId = 1;
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       UserUpdatePayload payload = createPayload("User 1", "user1@mail.com", VALID_PASSWORD);
       User creatingUser =
           new User(
@@ -189,7 +189,7 @@ public class UserServiceTest {
     public void updateUserById_validIdAndName_returnUpdatedUser() {
       int existingId = 1;
       UserUpdatePayload payload = createPayload("New Name", null, null);
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       User existingUser =
           new User(
               existingId,
@@ -215,7 +215,7 @@ public class UserServiceTest {
     public void updateUserById_validIdAndEmail_returnUpdatedUser() {
       int existingId = 1;
       UserUpdatePayload payload = createPayload(null, "new@mail.com", null);
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       User existingUser =
           new User(
               existingId,
@@ -242,7 +242,7 @@ public class UserServiceTest {
     public void updateUserById_validIdAndPassword_returnUpdatedUser() {
       int existingId = 1;
       UserUpdatePayload payload = createPayload(null, null, "new" + VALID_PASSWORD);
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       User existingUser =
           new User(
               existingId,
@@ -263,8 +263,8 @@ public class UserServiceTest {
                       user.getId() == existingId
                           && user.getEmail().equals(expectedUpdatedUser.getEmail())
                           && user.getPasswordHash().matches(payload.password())
-                          && user.getUpdatedAt().isEqual(expectedUpdatedUser.getUpdatedAt())
-                          && user.getCreatedAt().isEqual(expectedUpdatedUser.getCreatedAt()))))
+                          && user.getUpdatedAt().equals(expectedUpdatedUser.getUpdatedAt())
+                          && user.getCreatedAt().equals(expectedUpdatedUser.getCreatedAt()))))
           .thenAnswer(invocation -> invocation.getArgument(0));
 
       User actualUpdatedUser = userService.updateUserById(existingId, payload);
@@ -282,7 +282,7 @@ public class UserServiceTest {
     public void updateUserById_emailAlreadyUsedByUser_returnUnmodifiedUser() {
       int updatingId = 1;
       UserUpdatePayload payload = createPayload(null, "updating@mail.com", null);
-      LocalDateTime now = LocalDateTime.now();
+      Instant now = Instant.now();
       User existingUser =
           new User(
               updatingId,
@@ -305,7 +305,7 @@ public class UserServiceTest {
     public void updateUserById_emptyPayload_returnSameUser() {
       int existingId = 1;
       UserUpdatePayload payload = createPayload(null, null, null);
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       User existingUser =
           new User(
               existingId,
@@ -351,8 +351,7 @@ public class UserServiceTest {
     @DisplayName("getUserByEmail: given a non-existing email, then throw ResourceNotFoundException")
     public void getUserByEmail_nonExistingEmail_throwResourceNotFoundException() {
       String nonExistingEmail = "non.existing@mail.com";
-      when(userRepository.findByEmail(new Email(nonExistingEmail)))
-          .thenReturn(Optional.empty());
+      when(userRepository.findByEmail(new Email(nonExistingEmail))).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> userService.getUserByEmail(nonExistingEmail))
           .isInstanceOf(ResourceNotFoundException.class)
@@ -362,7 +361,8 @@ public class UserServiceTest {
     @ParameterizedTest
     @CsvSource({"blank", "format"})
     @DisplayName("getUserByEmail: given an invalid email format, then throw InvalidInputException")
-    public void getUserByEmail_invalidEmailFormat_throwInvalidInputException(String invalidationCause) {
+    public void getUserByEmail_invalidEmailFormat_throwInvalidInputException(
+        String invalidationCause) {
       String email = invalidationCause.equals("format") ? "mailemail.com" : " ";
 
       assertThatThrownBy(() -> userService.getUserByEmail(email))
@@ -373,7 +373,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("createUser: given an existing email, then throw ConflictException")
     public void createUser_existingEmail_throwConflictException() {
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       UserUpdatePayload payload = createPayload("User 1", "user1@mail.com", VALID_PASSWORD);
       User existingUser =
           new User(
@@ -436,7 +436,7 @@ public class UserServiceTest {
       int existingId = 1;
       String email = invalidationCause.equals("format") ? "invalidemail" : " ";
       UserUpdatePayload payload = createPayload(null, email, null);
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       User existingUser =
           new User(
               existingId,
@@ -462,7 +462,7 @@ public class UserServiceTest {
         String password) {
       int existingId = 1;
       UserUpdatePayload payload = createPayload(null, null, password);
-      LocalDateTime currentDate = LocalDateTime.now();
+      Instant currentDate = Instant.now();
       User existingUser =
           new User(
               existingId,
@@ -485,7 +485,7 @@ public class UserServiceTest {
     public void updateUserById_emailAlreadyUsedByAnotherUser_throwConflictException() {
       int updatingId = 1;
       UserUpdatePayload payload = createPayload(null, "updating@mail.com", null);
-      LocalDateTime now = LocalDateTime.now();
+      Instant now = Instant.now();
       User existingUser =
           new User(
               2,

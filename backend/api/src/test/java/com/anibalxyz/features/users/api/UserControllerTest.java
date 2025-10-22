@@ -23,7 +23,7 @@ import io.javalin.http.Context;
 import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
 import io.javalin.validation.Validator;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.*;
@@ -186,7 +186,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("getAllUsers: given users exist, then return 200 and users as JSON")
     public void getAllUsers_return200AndUsersJson() {
-      LocalDateTime localDateTime = LocalDateTime.now();
+      Instant instant = Instant.now();
       int logRounds = env.BCRYPT_LOG_ROUNDS();
       // Given there are users
       List<User> fakeUsers =
@@ -196,15 +196,15 @@ public class UserControllerTest {
                   "John Doe",
                   new Email("john.doe@example.com"),
                   PasswordHash.generate("12345678", logRounds),
-                  localDateTime,
-                  localDateTime),
+                  instant,
+                  instant),
               new User(
                   2,
                   "Jane Smith",
                   new Email("jane.smith@example.com"),
                   PasswordHash.generate("87654321", logRounds),
-                  localDateTime,
-                  localDateTime));
+                  instant,
+                  instant));
 
       // When getAllUsers is called
       when(userService.getAllUsers()).thenReturn(fakeUsers);
@@ -242,7 +242,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("getUserById: given an existing id, then return 200 and user as JSON")
     public void getUserById_existingId_returns200AndUserJson() {
-      LocalDateTime localDateTime = LocalDateTime.now();
+      Instant instant = Instant.now();
       int logRounds = env.BCRYPT_LOG_ROUNDS();
       int id = 1;
       User fakeUser =
@@ -251,8 +251,8 @@ public class UserControllerTest {
               "John Doe",
               new Email("johndoe@gmail.com"),
               PasswordHash.generate("12345678", logRounds),
-              localDateTime,
-              localDateTime);
+              instant,
+              instant);
 
       stubPathParamId().thenReturn(id);
       when(userService.getUserById(id)).thenReturn(fakeUser);
@@ -270,7 +270,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("createUser: given valid data, then return 201 and new user")
     public void createUser_validData_return201AndNewUser() {
-      LocalDateTime localDateTime = LocalDateTime.now();
+      Instant instant = Instant.now();
       int logRounds = env.BCRYPT_LOG_ROUNDS();
       UserCreateRequest request =
           new UserCreateRequest("John Doe", "johndoe@gmail.com", "12345678");
@@ -280,8 +280,8 @@ public class UserControllerTest {
               request.name(),
               new Email(request.email()),
               PasswordHash.generate(request.password(), logRounds),
-              localDateTime,
-              localDateTime);
+              instant,
+              instant);
 
       stubBodyValidatorFor(ctx, UserCreateRequest.class).thenReturn(request);
 
@@ -305,7 +305,7 @@ public class UserControllerTest {
           new UserUpdateRequest("John Doe", "john@mail.com", "password12345678");
       int id = 1;
 
-      LocalDateTime localDateTime = LocalDateTime.now();
+      Instant instant = Instant.now();
       int logRounds = env.BCRYPT_LOG_ROUNDS();
       User fakeUser =
           new User(
@@ -313,8 +313,8 @@ public class UserControllerTest {
               request.name(),
               new Email(request.email()),
               PasswordHash.generate(request.password(), logRounds),
-              localDateTime,
-              localDateTime);
+              instant,
+              instant);
 
       stubPathParamId().thenReturn(id);
       stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
