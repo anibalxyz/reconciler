@@ -1,5 +1,6 @@
 package com.anibalxyz.persistence;
 
+import com.anibalxyz.features.auth.infra.RefreshTokenEntity;
 import com.anibalxyz.features.users.infra.UserEntity;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.cfg.HikariCPSettings;
@@ -68,6 +69,6 @@ public class PersistenceManager {
         .property(HikariCPSettings.HIKARI_INITIALIZATION_TIMEOUT, "60000")
         .property(HikariCPSettings.HIKARI_IDLE_TIMEOUT, "300000")
         .schemaToolingAction(Action.VALIDATE)
-        .managedClasses(UserEntity.class);
+        .managedClasses(UserEntity.class, RefreshTokenEntity.class);
   }
 }

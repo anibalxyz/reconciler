@@ -34,11 +34,7 @@ public class UserController implements UserApi {
     this.userService = userService;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Retrieves all users and maps them to {@link UserDetailResponse} objects.
-   */
+  /** {@inheritDoc} */
   @Override
   public void getAllUsers(Context ctx) {
     List<User> users = userService.getAllUsers();
@@ -46,23 +42,14 @@ public class UserController implements UserApi {
     ctx.status(200).json(response);
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Retrieves a user by ID and maps it to a {@link UserDetailResponse} object.
-   */
+  /** {@inheritDoc} */
   @Override
   public void getUserById(Context ctx) throws BadRequestResponse, ResourceNotFoundException {
     int id = getParamId(ctx);
     ctx.status(200).json(UserMapper.toDetailResponse(userService.getUserById(id)));
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Creates a new user from the {@link UserCreateRequest} and returns a {@link
-   * UserCreateResponse}.
-   */
+  /** {@inheritDoc} */
   @Override
   public void createUser(Context ctx) throws ConflictException, ValidationException {
     UserCreateRequest request =
@@ -75,12 +62,7 @@ public class UserController implements UserApi {
     ctx.status(201).json(UserMapper.toCreateResponse(userService.createUser(request)));
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Updates an existing user based on the {@link UserUpdateRequest} and returns the updated
-   * {@link UserDetailResponse}.
-   */
+  /** {@inheritDoc} */
   @Override
   public void updateUserById(Context ctx)
       throws ConflictException, ValidationException, ResourceNotFoundException, BadRequestResponse {

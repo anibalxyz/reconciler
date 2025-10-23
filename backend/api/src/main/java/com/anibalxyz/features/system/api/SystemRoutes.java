@@ -2,6 +2,7 @@ package com.anibalxyz.features.system.api;
 
 import com.anibalxyz.server.routes.RouteGroup;
 import com.anibalxyz.server.routes.RouteRegistry;
+import com.anibalxyz.server.security.Role;
 import io.javalin.Javalin;
 
 /**
@@ -31,6 +32,6 @@ public class SystemRoutes extends RouteRegistry {
   /** {@inheritDoc} */
   @Override
   public void register() {
-    new RouteGroup("/health", server).get("", systemApi::healthCheck);
+    new RouteGroup("/health", server).get(systemApi::healthCheck, Role.GUEST);
   }
 }

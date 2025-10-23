@@ -9,11 +9,14 @@ import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
+import com.anibalxyz.features.auth.application.AuthResult;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
+import com.anibalxyz.features.auth.domain.RefreshToken;
 import io.javalin.http.Context;
 import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,11 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Auth Controller Tests")
 public class AuthControllerTest {
-  private static final String VALID_JWT =
-"""
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiY\
-WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
-""";
+  private static final String VALID_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
 
   @Mock private AuthService authService;
   @Mock private Context ctx;
@@ -53,7 +52,9 @@ WRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV
     public void login_validCredentials_returnJwt() {
       LoginRequest request = new LoginRequest("", "");
       stubBodyValidatorFor(ctx, LoginRequest.class).thenReturn(request);
-      when(authService.authenticateUser(request)).thenReturn(VALID_JWT);
+      RefreshToken dummyRefreshToken = new RefreshToken(1L, "d-token", null, Instant.now(), false);
+      AuthResult dummyAuthResult = new AuthResult(VALID_JWT, dummyRefreshToken);
+      when(authService.authenticateUser(request)).thenReturn(dummyAuthResult);
 
       authController.login(ctx);
 

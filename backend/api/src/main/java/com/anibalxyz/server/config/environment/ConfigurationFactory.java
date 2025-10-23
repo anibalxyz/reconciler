@@ -65,13 +65,24 @@ public class ConfigurationFactory {
     // jwt
     String jwtSecret = getEnvVar("JWT_SECRET", System::getenv);
     String jwtIssuer = getEnvVar("JWT_ISSUER", System::getenv);
-    Duration jwtExpirationTime =
-        Duration.ofMinutes(Long.parseLong(getEnvVar("JWT_EXPIRATION_TIME", System::getenv)));
+    Duration jwtAccessExpirationTime =
+        Duration.ofMinutes(
+            Long.parseLong(getEnvVar("JWT_ACCESS_EXPIRATION_TIME_MINUTES", System::getenv)));
+    Duration jwtRefreshExpirationTime =
+        Duration.ofDays(
+            Long.parseLong(getEnvVar("JWT_REFRESH_EXPIRATION_TIME_DAYS", System::getenv)));
 
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", System::getenv));
     AppEnvironmentSource env =
         new AppEnvironmentSource(
-            appEnv, bcryptLogRounds, apiUrl, contactEmail, jwtSecret, jwtIssuer, jwtExpirationTime);
+            appEnv,
+            bcryptLogRounds,
+            apiUrl,
+            contactEmail,
+            jwtSecret,
+            jwtIssuer,
+            jwtAccessExpirationTime,
+            jwtRefreshExpirationTime);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(host, DEFAULT_DB_PORT, name, user, password));
@@ -102,13 +113,24 @@ public class ConfigurationFactory {
     // jwt
     String jwtSecret = getEnvVar("JWT_SECRET", props::getProperty);
     String jwtIssuer = getEnvVar("JWT_ISSUER", props::getProperty);
-    Duration jwtExpirationTime =
-        Duration.ofMinutes(Long.parseLong(getEnvVar("JWT_EXPIRATION_TIME", props::getProperty)));
+    Duration jwtAccessExpirationTime =
+        Duration.ofMinutes(
+            Long.parseLong(getEnvVar("JWT_ACCESS_EXPIRATION_TIME_MINUTES", props::getProperty)));
+    Duration jwtRefreshExpirationTime =
+        Duration.ofDays(
+            Long.parseLong(getEnvVar("JWT_REFRESH_EXPIRATION_TIME_DAYS", props::getProperty)));
 
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", props::getProperty));
     AppEnvironmentSource env =
         new AppEnvironmentSource(
-            appEnv, bcryptLogRounds, apiUrl, contactEmail, jwtSecret, jwtIssuer, jwtExpirationTime);
+            appEnv,
+            bcryptLogRounds,
+            apiUrl,
+            contactEmail,
+            jwtSecret,
+            jwtIssuer,
+            jwtAccessExpirationTime,
+            jwtRefreshExpirationTime);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(DEFAULT_LOCAL_HOST, port, name, user, password));

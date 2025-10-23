@@ -1,8 +1,9 @@
 package com.anibalxyz.server.config.environment;
 
-import com.anibalxyz.features.auth.application.AuthEnvironment;
+import com.anibalxyz.features.auth.application.env.JwtEnvironment;
+import com.anibalxyz.features.auth.application.env.RefreshTokenEnvironment;
 import com.anibalxyz.features.users.application.UsersEnvironment;
-import com.anibalxyz.server.config.modules.ServerEnvironment;
+import com.anibalxyz.server.config.modules.definitions.ServerEnvironment;
 import java.time.Duration;
 
 /**
@@ -24,5 +25,6 @@ public record AppEnvironmentSource(
     String CONTACT_EMAIL,
     String JWT_SECRET,
     String JWT_ISSUER,
-    Duration JWT_EXPIRATION_TIME)
-    implements UsersEnvironment, ServerEnvironment, AuthEnvironment {}
+    Duration JWT_ACCESS_EXPIRATION_TIME_MINUTES,
+    Duration JWT_REFRESH_EXPIRATION_TIME_DAYS)
+    implements UsersEnvironment, ServerEnvironment, JwtEnvironment, RefreshTokenEnvironment {}

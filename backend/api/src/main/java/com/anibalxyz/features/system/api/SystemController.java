@@ -25,11 +25,7 @@ public class SystemController implements SystemApi {
     this.persistenceManager = persistenceManager;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * <p>This implementation checks the database connection by executing a simple query.
-   */
+  /** {@inheritDoc} */
   @Override
   public void healthCheck(Context ctx) {
     boolean dbIsConnected;

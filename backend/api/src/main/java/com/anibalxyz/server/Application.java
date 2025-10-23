@@ -44,6 +44,7 @@ public class Application {
     this.config = config;
   }
 
+  // TODO: create different and flexible factory methods for different features
   /**
    * Creates and configures an {@link Application} instance for the 'test' environment.
    *
@@ -69,7 +70,9 @@ public class Application {
             new UserRoutes(server, container.userController()),
             new SystemRoutes(server, container.systemController()));
     List<RuntimeConfig> serverConfigs =
-        List.of(new LifecycleConfig(server, persistenceManager), new ExceptionsConfig(server));
+        List.of(
+            new LifecycleConfig(server, persistenceManager, config.env().APP_ENV()),
+            new ExceptionsConfig(server));
 
     routeRegistries.forEach(RouteRegistry::register);
     serverConfigs.forEach(RuntimeConfig::apply);
@@ -116,7 +119,7 @@ public class Application {
             new SystemRoutes(server, container.systemController()));
     List<RuntimeConfig> serverConfigs =
         List.of(
-            new LifecycleConfig(server, persistenceManager),
+            new LifecycleConfig(server, persistenceManager, config.env().APP_ENV()),
             new ExceptionsConfig(server),
             new JwtMiddlewareConfig(server, container.jwtMiddleware()));
 

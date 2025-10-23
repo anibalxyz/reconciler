@@ -1,5 +1,6 @@
 package com.anibalxyz.features.auth.application;
 
+import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -33,7 +34,7 @@ public class JwtService {
    * @param env The authentication environment configuration.
    * @throws IllegalArgumentException if the JWT secret is invalid or too short.
    */
-  public JwtService(AuthEnvironment env) {
+  public JwtService(JwtEnvironment env) {
     if (env.JWT_SECRET() == null || env.JWT_SECRET().isBlank()) {
       throw new IllegalArgumentException("JWT_SECRET must not be null or empty");
     }
@@ -44,7 +45,7 @@ public class JwtService {
 
     this.key = Keys.hmacShaKeyFor(secretBytes);
     this.issuer = env.JWT_ISSUER();
-    this.expirationMinutes = env.JWT_EXPIRATION_TIME().toMinutes();
+    this.expirationMinutes = env.JWT_ACCESS_EXPIRATION_TIME_MINUTES().toMinutes();
   }
 
   /**

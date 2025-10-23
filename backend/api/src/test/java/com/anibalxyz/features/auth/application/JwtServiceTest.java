@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import io.jsonwebtoken.Claims;
@@ -20,16 +21,15 @@ import org.junit.jupiter.params.provider.ValueSource;
 @DisplayName("JWT Service Tests")
 public class JwtServiceTest {
 
-  private static AuthEnvironment env;
+  private static JwtEnvironment env;
 
   @BeforeAll
   public static void setup() {
     env = ConfigurationFactory.loadForTest().env();
   }
 
-  private AuthEnvironment createEnv(
-      String jwtSecret, String jwtIssuer, Duration jwtExpirationTime) {
-    return new AuthEnvironment() {
+  private JwtEnvironment createEnv(String jwtSecret, String jwtIssuer, Duration jwtExpirationTime) {
+    return new JwtEnvironment() {
       @Override
       public String JWT_SECRET() {
         return jwtSecret;
@@ -41,7 +41,7 @@ public class JwtServiceTest {
       }
 
       @Override
-      public Duration JWT_EXPIRATION_TIME() {
+      public Duration JWT_ACCESS_EXPIRATION_TIME_MINUTES() {
         return jwtExpirationTime;
       }
     };
@@ -84,7 +84,7 @@ public class JwtServiceTest {
     @ValueSource(strings = {"too_short"})
     @DisplayName("constructor: given invalid JWT secret, then throw IllegalArgumentException")
     public void constructor_jwtSecretIsInvalid_throwIllegalArgumentException(String jwtSecret) {
-      AuthEnvironment badEnv = createEnv(jwtSecret, null, null);
+      JwtEnvironment badEnv = createEnv(jwtSecret, null, null);
       assertThatThrownBy(() -> new JwtService(badEnv))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageStartingWith("JWT_SECRET must");
@@ -93,7 +93,7 @@ public class JwtServiceTest {
     @Test
     @DisplayName("validateToken: given an expired token, then throw InvalidCredentialsException")
     public void validateToken_expiredToken_throwInvalidCredentialsException() {
-      AuthEnvironment shortLivedEnv =
+      JwtEnvironment shortLivedEnv =
           createEnv(env.JWT_SECRET(), env.JWT_ISSUER(), Duration.ofSeconds(1));
       JwtService jwtService = new JwtService(shortLivedEnv);
       Integer userId = 123;
@@ -126,11 +126,11 @@ public class JwtServiceTest {
     @DisplayName(
         "validateToken: given a token with invalid signature, then throw InvalidCredentialsException")
     public void validateToken_invalidSignatureToken_throwInvalidCredentialsException() {
-      AuthEnvironment differentSecretEnv =
+      JwtEnvironment differentSecretEnv =
           createEnv(
               "another_secret_greather_than_32_bytes_for_testing",
               env.JWT_ISSUER(),
-              env.JWT_EXPIRATION_TIME());
+              env.JWT_ACCESS_EXPIRATION_TIME_MINUTES());
       JwtService jwtService = new JwtService(env);
       JwtService jwtServiceWithDifferentSecret = new JwtService(differentSecretEnv);
       Integer userId = 123;

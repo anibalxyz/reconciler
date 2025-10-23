@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config.modules;
+package com.anibalxyz.server.config.modules.definitions;
 
 /**
  * Defines the contract for providing general server-level environment configuration.

@@ -2,6 +2,7 @@ package com.anibalxyz.features.users.api;
 
 import com.anibalxyz.server.routes.RouteGroup;
 import com.anibalxyz.server.routes.RouteRegistry;
+import com.anibalxyz.server.security.Role;
 import io.javalin.Javalin;
 
 /**
@@ -30,10 +31,10 @@ public class UserRoutes extends RouteRegistry {
   /** {@inheritDoc} */
   public void register() {
     new RouteGroup("/users", server)
-        .get("", userApi::getAllUsers)
-        .post("", userApi::createUser)
-        .get("/{id}", userApi::getUserById)
-        .put("/{id}", userApi::updateUserById)
-        .delete("/{id}", userApi::deleteUserById);
+        .get(userApi::getAllUsers, Role.AUTHENTICATED)
+        .post(userApi::createUser, Role.GUEST)
+        .get("/{id}", userApi::getUserById, Role.AUTHENTICATED)
+        .put("/{id}", userApi::updateUserById, Role.AUTHENTICATED)
+        .delete("/{id}", userApi::deleteUserById, Role.AUTHENTICATED);
   }
 }

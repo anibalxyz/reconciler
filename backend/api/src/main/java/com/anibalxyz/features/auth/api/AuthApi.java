@@ -22,16 +22,8 @@ import io.javalin.openapi.OpenApiResponse;
  */
 public interface AuthApi {
 
-  /**
-   * Handles POST requests to the /auth/login endpoint.
-   *
-   * <p>This method authenticates a user using the provided credentials and returns a JWT token
-   * upon successful authentication.
-   *
-   * @param ctx The context for the HTTP request and response.
-   */
   @OpenApi(
-      summary = "Authenticate user and get JWT token",
+      summary = "Authenticate user and get access token",
       operationId = "login",
       path = "/auth/login",
       methods = HttpMethod.POST,
@@ -44,7 +36,8 @@ public interface AuthApi {
       responses = {
         @OpenApiResponse(
             status = "200",
-            description = "Authentication successful, returns JWT token",
+            description =
+                "Authentication successful. Returns access token in body, refresh token in HttpOnly cookie.",
             content = @OpenApiContent(from = AuthResponse.class)),
         @OpenApiResponse(
             status = "400",
@@ -62,4 +55,30 @@ public interface AuthApi {
                     example = ErrorResponseExamples.INVALID_CREDENTIALS))
       })
   void login(Context ctx);
+
+  @OpenApi(
+      summary = "Refresh access token",
+      operationId = "refreshToken",
+      path = "/auth/refresh",
+      methods = HttpMethod.POST,
+      tags = {"Authentication"},
+      responses = {
+        @OpenApiResponse(
+            status = "200",
+            description =
+                "Token refreshed successfully. Returns new access token in body, new refresh token in HttpOnly cookie.",
+            content = @OpenApiContent(from = AuthResponse.class)),
+        @OpenApiResponse(
+            status = "401",
+            description = "Invalid or expired refresh token.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.INVALID_CREDENTIALS)),
+        @OpenApiResponse(
+            status = "400",
+            description = "Bad request (e.g., missing refresh token).",
+            content = @OpenApiContent(from = ErrorResponse.class))
+      })
+  void refresh(Context ctx);
 }

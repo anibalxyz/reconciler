@@ -4,6 +4,9 @@ import com.anibalxyz.features.auth.api.AuthApi;
 import com.anibalxyz.features.auth.api.AuthController;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.JwtService;
+import com.anibalxyz.features.auth.application.RefreshTokenService;
+import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
+import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
 import com.anibalxyz.features.system.api.SystemController;
 import com.anibalxyz.features.users.api.UserController;
 import com.anibalxyz.features.users.application.UserService;
@@ -46,8 +49,11 @@ public class DependencyContainer {
     UserService userService = new UserService(userRepository, env);
     userController = new UserController(userService);
 
+    RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
+    RefreshTokenService refreshTokenService = new RefreshTokenService(refreshTokenRepository, env);
+
     JwtService jwtService = new JwtService(env);
-    AuthService authService = new AuthService(userService, jwtService);
+    AuthService authService = new AuthService(userService, jwtService, refreshTokenService);
     authController = new AuthController(authService);
     jwtMiddleware = new JwtMiddleware(jwtService);
 

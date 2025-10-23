@@ -2,11 +2,13 @@ package com.anibalxyz.features.auth.application;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.application.in.LoginPayload;
+import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.Email;
@@ -32,6 +34,7 @@ public class AuthServiceTest {
   private AuthService authService;
   @Mock private UserService userService;
   @Mock private JwtService jwtService;
+  @Mock private RefreshTokenService refreshTokenService;
 
   private static LoginPayload createPayload(String email, String password) {
     return new LoginPayload() {
@@ -49,7 +52,7 @@ public class AuthServiceTest {
 
   @BeforeEach
   public void dependencyInjection() {
-    authService = new AuthService(userService, jwtService);
+    authService = new AuthService(userService, jwtService, refreshTokenService);
   }
 
   @Nested
@@ -57,8 +60,8 @@ public class AuthServiceTest {
   class SuccessScenarios {
 
     @Test
-    @DisplayName("authenticateUser: given valid credentials, then return JWT")
-    public void authenticateUser_validCredentials_returnJwt() {
+    @DisplayName("authenticateUser: given valid credentials, then return AuthResult")
+    public void authenticateUser_validCredentials_returnAuthResult() {
       LoginPayload payload = createPayload(VALID_EMAIL, VALID_PASSWORD);
       Instant now = Instant.now();
       User user =
@@ -71,12 +74,15 @@ public class AuthServiceTest {
               now);
       when(userService.getUserByEmail(VALID_EMAIL)).thenReturn(user);
       when(jwtService.generateToken(anyInt())).thenReturn(VALID_JWT);
+      when(refreshTokenService.createRefreshToken(any(User.class)))
+          .thenReturn(new RefreshToken(1L, "dummy-token", user, Instant.now().plusSeconds(1000), false));
 
       assertDoesNotThrow(
           () -> {
-            String jwt = authService.authenticateUser(payload);
-            assertTrue(jwt != null && !jwt.isEmpty());
-            assertEquals(VALID_JWT, jwt);
+            AuthResult authResult = authService.authenticateUser(payload);
+            assertNotNull(authResult.accessToken());
+            assertNotNull(authResult.refreshToken());
+            assertEquals(VALID_JWT, authResult.accessToken());
           });
     }
   }
