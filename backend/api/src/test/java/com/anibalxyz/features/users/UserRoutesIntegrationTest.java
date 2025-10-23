@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.anibalxyz.features.users.api.UserMapper;
+import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
@@ -19,6 +20,7 @@ import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.server.Application;
+import com.anibalxyz.server.DependencyContainer;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import com.anibalxyz.server.dto.ErrorResponse;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -58,9 +61,8 @@ public class UserRoutesIntegrationTest {
 
   @BeforeAll
   public static void setup() {
-    ApplicationConfiguration appConfiguration = ConfigurationFactory.loadForTest();
-    env = appConfiguration.env();
-    app = Application.create(appConfiguration);
+    app = createApplication();
+    env = app.config().env();
     app.start(0);
 
     client = new OkHttpClient();
@@ -70,6 +72,16 @@ public class UserRoutesIntegrationTest {
         new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+  }
+
+  private static Application createApplication() {
+    ApplicationConfiguration appConfiguration = ConfigurationFactory.loadForTest();
+    Consumer<DependencyContainer> customRoutesRegistries =
+        container -> {
+          new UserRoutes(container.server(), container.userController()).register();
+        };
+
+    return Application.buildApplication(appConfiguration, null, null, customRoutesRegistries);
   }
 
   @AfterAll
