@@ -34,7 +34,7 @@ public class JwtMiddleware implements Handler {
 
   /** {@inheritDoc} */
   @Override
-  public void handle(@NotNull Context ctx) throws Exception {
+  public void handle(@NotNull Context ctx) {
     String authHeader = ctx.header(AUTHORIZATION_HEADER);
 
     if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
@@ -44,8 +44,6 @@ public class JwtMiddleware implements Handler {
     String token = authHeader.substring(BEARER_PREFIX.length());
 
     try {
-      // Validate token and extract claims
-      // For now, we only care about the subject (user ID)
       Integer userId = Integer.parseInt(jwtService.validateToken(token).getSubject());
       ctx.attribute(JWT_USER_ID, userId);
     } catch (InvalidCredentialsException e) {

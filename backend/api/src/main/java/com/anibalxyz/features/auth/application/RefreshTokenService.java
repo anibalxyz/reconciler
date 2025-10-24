@@ -79,4 +79,13 @@ public class RefreshTokenService {
 
     return createRefreshToken(oldToken.user());
   }
+
+  /**
+   * Cleans up expired refresh tokens from the data store.
+   *
+   * @return The number of deleted tokens.
+   */
+  public int cleanupExpiredTokens() {
+    return refreshTokenRepository.deleteExpiredTokens();
+  }
 }

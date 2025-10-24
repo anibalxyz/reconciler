@@ -28,4 +28,11 @@ public interface RefreshTokenRepository {
    * @return An {@link Optional} containing the refresh token if found, or an empty Optional if not.
    */
   Optional<RefreshToken> findByToken(String token);
+
+  /**
+   * Deletes all refresh tokens that have expired.
+   *
+   * @return The number of deleted tokens.
+   */
+  int deleteExpiredTokens();
 }

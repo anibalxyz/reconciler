@@ -33,6 +33,7 @@ public class DependencyContainer {
   private final UserController userController;
   private final AuthApi authController;
   private final SystemController systemController;
+  private final RefreshTokenService refreshTokenService;
 
   private final JwtMiddleware jwtMiddleware;
 
@@ -56,7 +57,7 @@ public class DependencyContainer {
     userController = new UserController(userService);
 
     RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
-    RefreshTokenService refreshTokenService = new RefreshTokenService(refreshTokenRepository, env);
+    refreshTokenService = new RefreshTokenService(refreshTokenRepository, env);
 
     JwtService jwtService = new JwtService(env);
     AuthService authService = new AuthService(userService, jwtService, refreshTokenService);
@@ -92,6 +93,13 @@ public class DependencyContainer {
    */
   public JwtMiddleware jwtMiddleware() {
     return jwtMiddleware;
+  }
+
+  /**
+   * @return The singleton instance of {@link RefreshTokenService}.
+   */
+  public RefreshTokenService refreshTokenService() {
+    return refreshTokenService;
   }
 
   /**

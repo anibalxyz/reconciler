@@ -56,4 +56,13 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
       return Optional.empty();
     }
   }
+
+  /** {@inheritDoc} */
+  @Override
+  @SuppressWarnings("resource")
+  public int deleteExpiredTokens() {
+    return em()
+        .createQuery("DELETE FROM RefreshTokenEntity rt WHERE rt.expiryDate < CURRENT_TIMESTAMP")
+        .executeUpdate();
+  }
 }

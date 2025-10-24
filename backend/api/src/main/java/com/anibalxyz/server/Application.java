@@ -83,6 +83,7 @@ public class Application {
           new UserRoutes(container.server(), container.userController()).register();
           new AuthRoutes(container.server(), container.authController()).register();
           new JwtMiddlewareConfig(container.server(), container.jwtMiddleware()).apply();
+          new SchedulerConfig(container.server(), container.refreshTokenService()).apply();
         };
 
     return buildApplication(config, startupConfig, runtimeConfigs, routeRegistries);
