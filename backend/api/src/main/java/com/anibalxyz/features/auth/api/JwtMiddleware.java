@@ -1,4 +1,4 @@
-package com.anibalxyz.server.security;
+package com.anibalxyz.features.auth.api;
 
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;

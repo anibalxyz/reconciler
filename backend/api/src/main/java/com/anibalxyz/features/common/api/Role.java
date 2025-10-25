@@ -1,4 +1,4 @@
-package com.anibalxyz.server.security;
+package com.anibalxyz.features.common.api;
 
 import io.javalin.security.RouteRole;
 

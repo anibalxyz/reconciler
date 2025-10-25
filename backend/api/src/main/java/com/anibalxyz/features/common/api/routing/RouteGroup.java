@@ -1,6 +1,6 @@
 package com.anibalxyz.features.common.api.routing;
 
-import com.anibalxyz.server.security.Role;
+import com.anibalxyz.features.common.api.Role;
 import io.javalin.Javalin;
 import io.javalin.http.Handler;
 

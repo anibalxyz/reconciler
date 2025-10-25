@@ -2,6 +2,7 @@ package com.anibalxyz.server;
 
 import com.anibalxyz.features.auth.api.AuthApi;
 import com.anibalxyz.features.auth.api.AuthController;
+import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.application.RefreshTokenService;
@@ -15,7 +16,6 @@ import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.server.security.JwtMiddleware;
 import io.javalin.Javalin;
 
 /**
