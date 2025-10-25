@@ -1,9 +1,9 @@
 package com.anibalxyz.features.auth.api;
 
 import com.anibalxyz.features.auth.api.in.LoginRequest;
+import com.anibalxyz.features.auth.api.out.AuthErrorResponseExamples;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
-import com.anibalxyz.server.dto.ErrorResponse;
-import com.anibalxyz.server.openapi.ErrorResponseExamples;
+import com.anibalxyz.features.common.api.out.ErrorResponse;
 import io.javalin.http.Context;
 import io.javalin.openapi.HttpMethod;
 import io.javalin.openapi.OpenApi;
@@ -45,14 +45,14 @@ public interface AuthApi {
             content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.CREATE_USER_BAD_REQUEST)),
+                    example = AuthErrorResponseExamples.INVALID_INPUT_PROVIDED)),
         @OpenApiResponse(
             status = "401",
             description = "Invalid credentials",
             content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.INVALID_CREDENTIALS))
+                    example = AuthErrorResponseExamples.INVALID_CREDENTIALS))
       })
   void login(Context ctx);
 
@@ -74,11 +74,14 @@ public interface AuthApi {
             content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.INVALID_CREDENTIALS)),
+                    example = AuthErrorResponseExamples.INVALID_CREDENTIALS)),
         @OpenApiResponse(
             status = "400",
             description = "Bad request (e.g., missing refresh token).",
-            content = @OpenApiContent(from = ErrorResponse.class))
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = AuthErrorResponseExamples.MISSING_REFRESH_TOKEN))
       })
   void refresh(Context ctx);
 }

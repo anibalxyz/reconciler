@@ -1,4 +1,4 @@
-package com.anibalxyz.server.dto;
+package com.anibalxyz.features.common.api.out;
 
 import java.util.Collections;
 import java.util.List;

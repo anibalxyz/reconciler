@@ -56,7 +56,8 @@ public class RefreshTokenService {
    * Verifies a refresh token, revokes it, and creates a new one (token rotation).
    *
    * <p>This security measure ensures that each refresh token can only be used once. If a token is
-   * compromised and used by an attacker, it becomes invalid for the legitimate user, and vice-versa.
+   * compromised and used by an attacker, it becomes invalid for the legitimate user, and
+   * vice-versa.
    *
    * @param token The refresh token string from the client.
    * @return A new, valid {@link RefreshToken} if the old one was valid.
@@ -70,7 +71,7 @@ public class RefreshTokenService {
             .orElseThrow(() -> new InvalidCredentialsException("Refresh token not found"));
 
     if (oldToken.isExpired() || oldToken.revoked()) {
-      // NOTE: Here you could add logic to invalidate all tokens for the user
+      // NOTE: Here could add logic to invalidate all tokens for the user
       // if a revoked token is used, as it could signal a token theft attempt.
       throw new InvalidCredentialsException("Refresh token is expired or revoked");
     }

@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.api;
 
-import com.anibalxyz.server.routes.RouteGroup;
-import com.anibalxyz.server.routes.RouteRegistry;
+import com.anibalxyz.features.common.api.routing.RouteGroup;
+import com.anibalxyz.features.common.api.routing.RouteRegistry;
 import com.anibalxyz.server.security.Role;
 import io.javalin.Javalin;
 

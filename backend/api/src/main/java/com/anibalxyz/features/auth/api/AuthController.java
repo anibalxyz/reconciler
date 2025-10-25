@@ -5,9 +5,7 @@ import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthResult;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.domain.RefreshToken;
-import io.javalin.http.Context;
-import io.javalin.http.Cookie;
-import io.javalin.http.SameSite;
+import io.javalin.http.*;
 import java.time.Instant;
 
 /**
@@ -49,6 +47,9 @@ public class AuthController implements AuthApi {
   @Override
   public void refresh(Context ctx) {
     String refreshTokenFromCookie = ctx.cookie("refreshToken");
+    if (refreshTokenFromCookie == null) {
+      throw new UnauthorizedResponse("Missing refresh token in cookie");
+    }
 
     AuthResult authResult = authService.refreshTokens(refreshTokenFromCookie);
 

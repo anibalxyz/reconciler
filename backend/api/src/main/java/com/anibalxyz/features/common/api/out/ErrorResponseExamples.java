@@ -1,6 +1,5 @@
-package com.anibalxyz.server.openapi;
+package com.anibalxyz.features.common.api.out;
 
-// TODO: divide it into feature-specific examples
 /**
  * Provides standardized, reusable JSON example strings for OpenAPI error responses.
  *
@@ -24,33 +23,13 @@ public final class ErrorResponseExamples {
               ]
             }""";
 
-  /** Example response for when a requested entity (like a user) is not found. */
-  public static final String USER_NOT_FOUND =
+  /** Example response for when a requested entity is not found. */
+  public static final String RESOURCE_NOT_FOUND =
       """
             {
-              "error": "Entity not found",
+              "error": "Resource not found",
               "details": [
-                "User with id 1 not found"
-              ]
-            }""";
-
-  /** Example response for a user creation request with missing or invalid data. */
-  public static final String CREATE_USER_BAD_REQUEST =
-      """
-            {
-              "error": "Invalid input provided",
-              "details": [
-                "Name is required"
-              ]
-            }""";
-
-  /** Example response for a user update request that provides no updatable fields. */
-  public static final String UPDATE_USER_BAD_REQUEST =
-      """
-            {
-              "error": "Invalid input provided",
-              "details": [
-                "At least one field (name, email, password) must be provided"
+                "Resource with id 1 not found"
               ]
             }""";
 
@@ -62,14 +41,6 @@ public final class ErrorResponseExamples {
               "details": [
                 "Authentication information is missing or invalid."
               ]
-            }""";
-
-  /** Example response for invalid authentication credentials. */
-  public static final String INVALID_CREDENTIALS =
-      """
-            {
-              "error": "Invalid credentials",
-              "details": []
             }""";
 
   /** Example response for a generic, unexpected server error. */

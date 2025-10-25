@@ -1,4 +1,4 @@
-package com.anibalxyz.server.routes;
+package com.anibalxyz.features.common.api.routing;
 
 import io.javalin.Javalin;
 

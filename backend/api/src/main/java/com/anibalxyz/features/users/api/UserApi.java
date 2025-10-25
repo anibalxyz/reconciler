@@ -1,17 +1,15 @@
 package com.anibalxyz.features.users.api;
 
-import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
-import com.anibalxyz.server.dto.ErrorResponse;
-import com.anibalxyz.server.openapi.ErrorResponseExamples;
-import io.javalin.http.BadRequestResponse;
+import com.anibalxyz.features.users.api.out.UsersErrorResponseExamples;
+import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.ErrorResponseExamples;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
 import io.javalin.openapi.OpenApiSecurity;
-import io.javalin.validation.ValidationException;
 
 /**
  * Defines the API contract for user-related operations.
@@ -93,7 +91,7 @@ public interface UserApi {
             content = 
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.USER_NOT_FOUND))
+                    example = ErrorResponseExamples.RESOURCE_NOT_FOUND))
       })
   void getUserById(Context ctx);
 
@@ -120,7 +118,7 @@ public interface UserApi {
             content = 
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.CREATE_USER_BAD_REQUEST))
+                    example = UsersErrorResponseExamples.CREATE_USER_BAD_REQUEST))
       })
   void createUser(Context ctx);
 
@@ -162,14 +160,14 @@ public interface UserApi {
             content = 
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.UPDATE_USER_BAD_REQUEST)),
+                    example = UsersErrorResponseExamples.UPDATE_USER_BAD_REQUEST)),
         @OpenApiResponse(
             status = "404",
             description = "User with the specified ID not found.",
             content = 
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.USER_NOT_FOUND))
+                    example = ErrorResponseExamples.RESOURCE_NOT_FOUND))
       })
   void updateUserById(Context ctx);
 
@@ -203,7 +201,7 @@ public interface UserApi {
             content = 
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.USER_NOT_FOUND))
+                    example = ErrorResponseExamples.RESOURCE_NOT_FOUND))
       })
   void deleteUserById(Context ctx);
 }

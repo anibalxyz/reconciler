@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.api;
 
-import com.anibalxyz.server.routes.RouteGroup;
-import com.anibalxyz.server.routes.RouteRegistry;
+import com.anibalxyz.features.common.api.routing.RouteGroup;
+import com.anibalxyz.features.common.api.routing.RouteRegistry;
 import io.javalin.Javalin;
 
 /**
@@ -30,6 +30,8 @@ public class AuthRoutes extends RouteRegistry {
   /** {@inheritDoc} */
   @Override
   public void register() {
-    new RouteGroup("/auth", server).post("/login", authApi::login).post("/refresh", authApi::refresh);
+    new RouteGroup("/auth", server)
+        .post("/login", authApi::login)
+        .post("/refresh", authApi::refresh);
   }
 }

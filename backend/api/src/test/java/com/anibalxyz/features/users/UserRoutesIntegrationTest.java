@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
@@ -23,7 +24,6 @@ import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
-import com.anibalxyz.server.dto.ErrorResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
