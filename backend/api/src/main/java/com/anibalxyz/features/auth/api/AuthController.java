@@ -67,7 +67,7 @@ public class AuthController implements AuthApi {
     long maxAgeInSeconds =
         Math.max(0, refreshToken.expiryDate().getEpochSecond() - Instant.now().getEpochSecond());
 
-    boolean isProduction = "prod".equals(ctx.attribute("APP_ENV"));
+    boolean secure = "prod".equals(ctx.attribute("APP_ENV"));
     SameSite site = SameSite.STRICT; // TODO: check
 
     Cookie cookie =
@@ -76,7 +76,7 @@ public class AuthController implements AuthApi {
             refreshToken.token(),
             "/",
             (int) maxAgeInSeconds,
-            isProduction,
+            secure,
             0,
             true, // HttpOnly
             null, // Comment

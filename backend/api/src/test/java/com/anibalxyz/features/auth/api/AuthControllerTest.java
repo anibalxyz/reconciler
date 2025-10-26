@@ -1,7 +1,6 @@
 package com.anibalxyz.features.auth.api;
 
-import static com.anibalxyz.features.Helper.capturedJsonAs;
-import static com.anibalxyz.features.Helper.stubBodyValidatorFor;
+import static com.anibalxyz.features.Helper.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
@@ -13,10 +12,17 @@ import com.anibalxyz.features.auth.application.AuthResult;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.users.domain.Email;
+import com.anibalxyz.features.users.domain.PasswordHash;
+import com.anibalxyz.features.users.domain.User;
 import io.javalin.http.Context;
+import io.javalin.http.Cookie;
+import io.javalin.http.SameSite;
+import io.javalin.http.UnauthorizedResponse;
 import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +37,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Auth Controller Tests")
 public class AuthControllerTest {
-  private static final String VALID_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
+  private static final String VALID_JWT =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
+  private static final String VALID_REFRESH_TOKEN = "e4192c47-9649-48be-9f88-523240f45b6e";
+  private static final User VALID_USER =
+      new User(
+          1,
+          "Jhon Doe",
+          new Email("validEmail@email.com"),
+          PasswordHash.generate("validPassword", 10),
+          Instant.now(),
+          Instant.now());
 
   @Mock private AuthService authService;
   @Mock private Context ctx;
@@ -62,6 +78,43 @@ public class AuthControllerTest {
       AuthResponse response = capturedJsonAs(ctx, AuthResponse.class);
       assertThat(response.accessToken()).isEqualTo(VALID_JWT);
     }
+
+    @Test
+    public void refresh_validRefreshToken_returnRefreshedTokens() {
+      Instant expiryDay = Instant.now().plus(6, ChronoUnit.DAYS);
+      RefreshToken validRefreshToken =
+          new RefreshToken(1L, VALID_REFRESH_TOKEN, VALID_USER, expiryDay, false);
+      AuthResult result = new AuthResult(VALID_JWT, validRefreshToken);
+      AuthResponse expectedResponse = new AuthResponse(result.accessToken());
+
+      long maxAgeInSeconds =
+          Math.max(
+              0, validRefreshToken.expiryDate().getEpochSecond() - Instant.now().getEpochSecond());
+      Cookie expectedCookie =
+          new Cookie(
+              "refreshToken",
+              validRefreshToken.token(),
+              "/",
+              (int) maxAgeInSeconds,
+              false, // secure only in production
+              0,
+              true, // HttpOnly
+              null, // Comment
+              null, // Domain
+              SameSite.STRICT);
+
+      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
+      when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(result);
+
+      authController.refresh(ctx);
+
+      Cookie actualCookie = capturedCookie(ctx);
+      assertThat(actualCookie).isEqualTo(expectedCookie);
+
+      verify(ctx).status(200);
+      AuthResponse actualResponse = capturedJsonAs(ctx, AuthResponse.class);
+      assertThat(actualResponse).isEqualTo(expectedResponse);
+    }
   }
 
   @Nested
@@ -88,6 +141,26 @@ public class AuthControllerTest {
           .thenThrow(new InvalidCredentialsException("Invalid credentials"));
 
       assertThatThrownBy(() -> authController.login(ctx))
+          .isInstanceOf(InvalidCredentialsException.class)
+          .hasMessage("Invalid credentials");
+    }
+
+    @Test
+    public void refresh_missingRefreshTokenCookie_throwUnauthorizedResponse() {
+      when(ctx.cookie("refreshToken")).thenReturn(null);
+
+      assertThatThrownBy(() -> authController.refresh(ctx))
+          .isInstanceOf(UnauthorizedResponse.class)
+          .hasMessage("Missing refresh token in cookie");
+    }
+
+    @Test
+    public void refresh_invalidRefreshToken_throwInvalidCredentialsException() {
+      when(ctx.cookie("refreshToken")).thenReturn("invalid-token");
+      when(authService.refreshTokens("invalid-token"))
+          .thenThrow(new InvalidCredentialsException("Invalid credentials"));
+
+      assertThatThrownBy(() -> authController.refresh(ctx))
           .isInstanceOf(InvalidCredentialsException.class)
           .hasMessage("Invalid credentials");
     }

@@ -85,6 +85,7 @@ public class JwtServiceTest {
     @DisplayName("constructor: given invalid JWT secret, then throw IllegalArgumentException")
     public void constructor_jwtSecretIsInvalid_throwIllegalArgumentException(String jwtSecret) {
       JwtEnvironment badEnv = createEnv(jwtSecret, null, null);
+
       assertThatThrownBy(() -> new JwtService(badEnv))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageStartingWith("JWT_SECRET must");

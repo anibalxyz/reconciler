@@ -56,8 +56,8 @@ public class RefreshTokenService {
    * Verifies a refresh token, revokes it, and creates a new one (token rotation).
    *
    * <p>This security measure ensures that each refresh token can only be used once. If a token is
-   * compromised and used by an attacker, it becomes invalid for the legitimate user, and
-   * vice-versa.
+   * compromised and used by an attacker, it becomes invalid for the legitimate user, and vice
+   * versa.
    *
    * @param token The refresh token string from the client.
    * @return A new, valid {@link RefreshToken} if the old one was valid.

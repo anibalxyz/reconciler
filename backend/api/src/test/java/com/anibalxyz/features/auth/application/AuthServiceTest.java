@@ -29,7 +29,17 @@ public class AuthServiceTest {
   private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
   private static final String VALID_EMAIL = "valid@email.com";
   private static final int SALT_ROUNDS = 8;
-  private static final String VALID_JWT = "some.valid.jwt";
+  private static final String VALID_JWT =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
+  private static final String VALID_REFRESH_TOKEN = "e4192c47-9649-48be-9f88-523240f45b6e";
+  private static final User VALID_USER =
+      new User(
+          1,
+          "Jhon Doe",
+          new Email("validEmail@email.com"),
+          PasswordHash.generate("validPassword", 10),
+          Instant.now(),
+          Instant.now());
 
   private AuthService authService;
   @Mock private UserService userService;
@@ -75,7 +85,8 @@ public class AuthServiceTest {
       when(userService.getUserByEmail(VALID_EMAIL)).thenReturn(user);
       when(jwtService.generateToken(anyInt())).thenReturn(VALID_JWT);
       when(refreshTokenService.createRefreshToken(any(User.class)))
-          .thenReturn(new RefreshToken(1L, "dummy-token", user, Instant.now().plusSeconds(1000), false));
+          .thenReturn(
+              new RefreshToken(1L, "dummy-token", user, Instant.now().plusSeconds(1000), false));
 
       assertDoesNotThrow(
           () -> {
@@ -84,6 +95,21 @@ public class AuthServiceTest {
             assertNotNull(authResult.refreshToken());
             assertEquals(VALID_JWT, authResult.accessToken());
           });
+    }
+
+    @Test
+    public void refreshTokens_validRefreshTokenString_returnAuthResult() {
+      RefreshToken newRefreshToken =
+          new RefreshToken(
+              1L, VALID_REFRESH_TOKEN, VALID_USER, Instant.now().plusSeconds(1000), false);
+      AuthResult expectedResult = new AuthResult(VALID_JWT, newRefreshToken);
+
+      when(refreshTokenService.verifyAndRotate(VALID_REFRESH_TOKEN)).thenReturn(newRefreshToken);
+      when(jwtService.generateToken(VALID_USER.getId())).thenReturn(VALID_JWT);
+
+      AuthResult actualResult = authService.refreshTokens(VALID_REFRESH_TOKEN);
+
+      assertEquals(expectedResult, actualResult);
     }
   }
 
@@ -122,6 +148,13 @@ public class AuthServiceTest {
       assertThatThrownBy(() -> authService.authenticateUser(payload))
           .isInstanceOf(InvalidCredentialsException.class)
           .hasMessage("Invalid credentials");
+    }
+
+    @Test
+    public void refreshTokes_invalidOrMissingRefreshTokenString_throwInvalidCredentialsException() {
+      when(refreshTokenService.verifyAndRotate(null)).thenThrow(InvalidCredentialsException.class);
+      assertThatThrownBy(() -> authService.refreshTokens(null))
+          .isInstanceOf(InvalidCredentialsException.class);
     }
   }
 }
