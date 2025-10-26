@@ -1,10 +1,13 @@
 package com.anibalxyz.features.users;
 
+import static com.anibalxyz.features.Helper.capitalize;
+import static com.anibalxyz.features.Helper.cleanDatabase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.anibalxyz.features.HttpRequest;
 import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.UserRoutes;
@@ -30,7 +33,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -40,9 +42,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -53,9 +53,7 @@ public class UserRoutesIntegrationTest {
   private static Application app;
   private static UsersEnvironment env;
   private static EntityManagerFactory emf;
-  private static OkHttpClient client;
-  private static String baseUrl;
-  private static ObjectMapper objectMapper;
+  private static HttpRequest http;
   private EntityManager em;
   private UserRepository userRepository;
 
@@ -65,13 +63,14 @@ public class UserRoutesIntegrationTest {
     env = app.config().env();
     app.start(0);
 
-    client = new OkHttpClient();
-    baseUrl = "http://localhost:" + app.javalin().port();
+    String baseUrl = "http://localhost:" + app.javalin().port();
     emf = app.persistenceManager().emf();
-    objectMapper =
+    ObjectMapper objectMapper =
         new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
   }
 
   private static Application createApplication() {
@@ -89,103 +88,17 @@ public class UserRoutesIntegrationTest {
     app.stop();
   }
 
-  private static String capitalize(String s) {
-    if (s == null || s.isEmpty()) return s;
-    return s.substring(0, 1).toUpperCase() + s.substring(1);
-  }
-
   @BeforeEach
   public void openEntityManager() {
     em = emf.createEntityManager();
     userRepository = new JpaUserRepository(() -> em);
-    cleanDatabase();
+    cleanDatabase(em);
   }
 
   @AfterEach
   public void closeEntityManager() {
     if (em.isOpen()) {
       em.close();
-    }
-  }
-
-  private void cleanDatabase() {
-    em.getTransaction().begin();
-    em.createNativeQuery(
-            "DO $$ "
-                + "DECLARE stmt text; "
-                + "BEGIN "
-                + "  SELECT 'TRUNCATE TABLE ' || string_agg(quote_ident(tablename), ', ') || ' RESTART IDENTITY CASCADE' "
-                + "  INTO stmt "
-                + "  FROM pg_tables "
-                + "  WHERE schemaname = 'public'; "
-                + "  EXECUTE stmt; "
-                + "END $$;")
-        .executeUpdate();
-    em.getTransaction().commit();
-  }
-
-  private Response get(String path) {
-    Request request = new Request.Builder().url(baseUrl + path).get().build();
-    try {
-      return client.newCall(request).execute();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private Response post(String path, Object body) {
-    try {
-      String jsonBody =
-          body.getClass().equals(String.class)
-              ? (String) body
-              : objectMapper.writeValueAsString(body);
-
-      Request request =
-          new Request.Builder()
-              .url(baseUrl + path)
-              .post(okhttp3.RequestBody.create(jsonBody, okhttp3.MediaType.get("application/json")))
-              .build();
-
-      return client.newCall(request).execute();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private Response put(String path, Object body) {
-    try {
-      String jsonBody =
-          body.getClass().equals(String.class)
-              ? (String) body
-              : objectMapper.writeValueAsString(body);
-
-      Request request =
-          new Request.Builder()
-              .url(baseUrl + path)
-              .put(okhttp3.RequestBody.create(jsonBody, okhttp3.MediaType.get("application/json")))
-              .build();
-
-      return client.newCall(request).execute();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private Response delete(String path) {
-    Request request = new Request.Builder().url(baseUrl + path).delete().build();
-    try {
-      return client.newCall(request).execute();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private <T> T parseBody(Response response, TypeReference<T> typeRef) {
-    try (ResponseBody body = response.body()) {
-      assertNotNull(body);
-      return objectMapper.readValue(body.string(), typeRef);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -224,10 +137,10 @@ public class UserRoutesIntegrationTest {
           new ErrorResponse(
               "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
-      Response response = get("/users/" + nonExistingId);
+      Response response = http.get("/users/" + nonExistingId);
       assertThat(response.code()).isEqualTo(404);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -238,10 +151,10 @@ public class UserRoutesIntegrationTest {
       ErrorResponse expectedResponse =
           new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
 
-      Response response = get("/users/" + invalidId);
+      Response response = http.get("/users/" + invalidId);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -252,10 +165,10 @@ public class UserRoutesIntegrationTest {
       UserCreateRequest requestBody =
           new UserCreateRequest("New User", "new.user@mail.com", password);
 
-      Response response = post("/users", requestBody);
+      Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(message);
 
@@ -282,10 +195,10 @@ public class UserRoutesIntegrationTest {
 
       UserCreateRequest requestBody = new UserCreateRequest(name, email, password);
 
-      Response response = post("/users", requestBody);
+      Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(capitalize(missingProp) + " is required");
 
@@ -302,10 +215,10 @@ public class UserRoutesIntegrationTest {
       UserCreateRequest requestBody =
           new UserCreateRequest("New User", existingEmail, VALID_PASSWORD);
 
-      Response response = post("/users", requestBody);
+      Response response = http.post("/users", requestBody);
 
       assertThat(response.code()).isEqualTo(409);
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Conflict");
       assertThat(responseBody.details()).contains("Email already in use. Please use another");
 
@@ -321,10 +234,10 @@ public class UserRoutesIntegrationTest {
       requestBody.put(unknownProperty, "new.user@mail.com");
       requestBody.put("password", "1234");
 
-      Response response = post("/users", requestBody);
+      Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Unknown property in request body");
       assertThat(responseBody.details()).contains("Unknown property: '" + unknownProperty + "'");
 
@@ -343,10 +256,10 @@ public class UserRoutesIntegrationTest {
 }
 """;
 
-      Response response = post("/users", malformedJson);
+      Response response = http.post("/users", malformedJson);
 
       assertThat(response.code()).isEqualTo(400);
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Malformed JSON request");
       assertThat(responseBody.details()).contains("Malformed JSON in request body");
     }
@@ -359,10 +272,10 @@ public class UserRoutesIntegrationTest {
       ErrorResponse expectedResponse =
           new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
 
-      Response response = put("/users/" + invalidId, request);
+      Response response = http.put("/users/" + invalidId, request);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -375,13 +288,13 @@ public class UserRoutesIntegrationTest {
           new ErrorResponse(
               "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
-      Response response = put("/users/" + nonExistingId, request);
+      Response response = http.put("/users/" + nonExistingId, request);
       assertThat(response.code()).isEqualTo(404);
 
       Optional<User> optionalUser = userRepository.findById(nonExistingId);
       assertThat(optionalUser).isEmpty();
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -402,13 +315,13 @@ public class UserRoutesIntegrationTest {
               "Unknown property in request body",
               List.of("Unknown property: '" + unknownProperty + "'"));
 
-      Response response = put("/users/" + existingId, requestBody);
+      Response response = http.put("/users/" + existingId, requestBody);
       assertThat(response.code()).isEqualTo(400);
 
       User optionalUser = userRepository.findById(existingId).orElseThrow();
       assertThat(optionalUser).isEqualTo(user.toDomain());
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -426,13 +339,13 @@ public class UserRoutesIntegrationTest {
               "Invalid input provided",
               List.of("At least one field (name, email, password) must be provided"));
 
-      Response response = put("/users/" + existingId, requestBody);
+      Response response = http.put("/users/" + existingId, requestBody);
       assertThat(response.code()).isEqualTo(400);
 
       User optionalUser = userRepository.findById(existingId).orElseThrow();
       assertThat(optionalUser).isEqualTo(user.toDomain());
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -447,13 +360,13 @@ public class UserRoutesIntegrationTest {
       ErrorResponse expectedResponse =
           new ErrorResponse("Conflict", List.of("Email already in use. Please use another"));
 
-      Response response = put("/users/" + userToUpdateId, requestBody);
+      Response response = http.put("/users/" + userToUpdateId, requestBody);
       assertThat(response.code()).isEqualTo(409);
 
       User userAfterAttempt = userRepository.findById(userToUpdateId).orElseThrow();
       assertThat(userAfterAttempt.getEmail().value()).isEqualTo(userToUpdate.getEmail());
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -469,10 +382,10 @@ public class UserRoutesIntegrationTest {
           new ErrorResponse(
               "Invalid input provided", List.of("Invalid email format: " + invalidEmail));
 
-      Response response = put("/users/" + existingId, requestBody);
+      Response response = http.put("/users/" + existingId, requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
 
       User userAfterAttempt = userRepository.findById(existingId).orElseThrow();
@@ -487,10 +400,10 @@ public class UserRoutesIntegrationTest {
       int existingId = originalUser.getId();
       UserUpdateRequest requestBody = new UserUpdateRequest(null, null, password);
 
-      Response response = put("/users/" + existingId, requestBody);
+      Response response = http.put("/users/" + existingId, requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(message);
 
@@ -506,10 +419,10 @@ public class UserRoutesIntegrationTest {
           new ErrorResponse(
               "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
-      Response response = delete("/users/" + nonExistingId);
+      Response response = http.delete("/users/" + nonExistingId);
       assertThat(response.code()).isEqualTo(404);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -520,10 +433,10 @@ public class UserRoutesIntegrationTest {
       ErrorResponse expectedResponse =
           new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
 
-      Response response = delete("/users/" + invalidId);
+      Response response = http.delete("/users/" + invalidId);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
   }
@@ -541,20 +454,20 @@ public class UserRoutesIntegrationTest {
               .map(userEntity -> UserMapper.toDetailResponse(userEntity.toDomain()))
               .toList();
 
-      Response response = get("/users");
+      Response response = http.get("/users");
 
       assertThat(response.code()).isEqualTo(200);
-      List<UserDetailResponse> actualData = parseBody(response, new TypeReference<>() {});
+      List<UserDetailResponse> actualData = http.parseBody(response, new TypeReference<>() {});
       assertThat(actualData).usingRecursiveFieldByFieldElementComparator().isEqualTo(expectedData);
     }
 
     @Test
     @DisplayName("GET /users: given no users exist, then return 200 and an empty list")
     public void GET_users_noUsersExist_return200AndEmptyList() {
-      Response response = get("/users");
+      Response response = http.get("/users");
 
       assertThat(response.code()).isEqualTo(200);
-      List<UserDetailResponse> actualData = parseBody(response, new TypeReference<>() {});
+      List<UserDetailResponse> actualData = http.parseBody(response, new TypeReference<>() {});
       assertThat(actualData).isEmpty();
     }
 
@@ -565,10 +478,10 @@ public class UserRoutesIntegrationTest {
       UserDetailResponse expectedResponse = UserMapper.toDetailResponse(user.toDomain());
       int existingId = user.getId();
 
-      Response response = get("/users/" + existingId);
+      Response response = http.get("/users/" + existingId);
       assertThat(response.code()).isEqualTo(200);
 
-      UserDetailResponse responseBody = parseBody(response, new TypeReference<>() {});
+      UserDetailResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -578,9 +491,9 @@ public class UserRoutesIntegrationTest {
       UserCreateRequest requestBody =
           new UserCreateRequest("New User", "new.user@mail.com", VALID_PASSWORD);
 
-      Response response = post("/users", requestBody);
+      Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(201);
-      UserCreateResponse responseBody = parseBody(response, new TypeReference<>() {});
+      UserCreateResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       UserEntity persistedUser = em.find(UserEntity.class, responseBody.id());
 
       // Assert persisted user
@@ -618,12 +531,12 @@ public class UserRoutesIntegrationTest {
               updatingProp.equals("email") ? "new.user@mail.com" : null,
               updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD) : null);
 
-      Response response = put("/users/" + existingId, request);
+      Response response = http.put("/users/" + existingId, request);
       assertThat(response.code()).isEqualTo(200);
 
       UserEntity updatedUser = em.find(UserEntity.class, existingId);
       em.refresh(updatedUser);
-      UserDetailResponse responseBody = parseBody(response, new TypeReference<>() {});
+      UserDetailResponse responseBody = http.parseBody(response, new TypeReference<>() {});
 
       switch (updatingProp) {
         case "name":
@@ -654,7 +567,7 @@ public class UserRoutesIntegrationTest {
       UserEntity user = persistUser("John Doe", "john@mail.com");
       int existingId = user.getId();
 
-      try (Response response = delete("/users/" + existingId)) {
+      try (Response response = http.delete("/users/" + existingId)) {
         assertThat(response.code()).isEqualTo(204);
       }
 
