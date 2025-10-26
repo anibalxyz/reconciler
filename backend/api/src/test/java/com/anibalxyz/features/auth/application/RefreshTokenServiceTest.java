@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,6 +64,7 @@ public class RefreshTokenServiceTest {
   @Nested
   class SuccessfulScenarios {
     @Test
+    @DisplayName("createRefreshToken: given valid user, then return refresh token")
     public void createRefreshToken_validUser_returnRefreshToken() {
       RefreshToken expectedRefreshToken =
           new RefreshToken(
@@ -75,6 +77,7 @@ public class RefreshTokenServiceTest {
     }
 
     @Test
+    @DisplayName("verifyAndRotate: given valid refresh token string, then return created refresh token")
     public void verifyAndRotate_validRefreshTokenString_returnCreatedRefreshToken() {
       RefreshToken oldRefreshToken =
           new RefreshToken(
@@ -100,6 +103,7 @@ public class RefreshTokenServiceTest {
     }
 
     @Test
+    @DisplayName("cleanupExpiredTokens: given tokens exist, then return number of deleted tokens")
     public void cleanupExpiredTokens_tokensExist_returnNumberOfDeletedTokens() {
       int expectedDeletedTokens = 5;
       when(refreshTokenRepository.deleteExpiredTokens()).thenReturn(expectedDeletedTokens);
@@ -111,6 +115,7 @@ public class RefreshTokenServiceTest {
   @Nested
   class FailureScenarios {
     @Test
+    @DisplayName("createRefreshToken: given repository fails, then propagate thrown exception")
     public void createRefreshToken_repositoryFails_propagateThrownException() {
       when(refreshTokenRepository.save(any(RefreshToken.class)))
           .thenThrow(PersistenceException.class);
@@ -120,6 +125,7 @@ public class RefreshTokenServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"null", "non-existing"})
+    @DisplayName("verifyAndRotate: given non-existing refresh token string, then throw InvalidCredentialsException")
     public void verifyAndRotate_nonExistingRefreshTokenString_throwInvalidCredentialsException(
         String cause) {
       String token = cause.equals("null") ? null : cause;
@@ -132,6 +138,7 @@ public class RefreshTokenServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"expired", "revoked"})
+    @DisplayName("verifyAndRotate: given invalid refresh token string, then throw InvalidCredentialsException")
     public void verifyAndRotate_invalidRefreshTokenString_throwInvalidCredentialsException(
         String cause) {
       RefreshToken validRefreshToken =
@@ -158,6 +165,7 @@ public class RefreshTokenServiceTest {
     }
 
     @Test
+    @DisplayName("verifyAndRotate: given repository fails, then propagate thrown exception")
     public void verifyAndRotate_repositoryFails_propagateThrownException() {
       when(refreshTokenRepository.findByToken(null)).thenThrow(PersistenceException.class);
       assertThatThrownBy(() -> refreshTokenService.verifyAndRotate(null))
@@ -165,6 +173,7 @@ public class RefreshTokenServiceTest {
     }
 
     @Test
+    @DisplayName("cleanupExpiredTokens: given repository fails, then propagate thrown exception")
     public void cleanupExpiredTokens_repositoryFails_propagateThrownException() {
       when(refreshTokenRepository.deleteExpiredTokens()).thenThrow(PersistenceException.class);
       assertThatThrownBy(() -> refreshTokenService.cleanupExpiredTokens())

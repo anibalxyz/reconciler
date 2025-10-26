@@ -80,6 +80,7 @@ public class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("refresh: given valid refresh token, then return refreshed tokens")
     public void refresh_validRefreshToken_returnRefreshedTokens() {
       Instant expiryDay = Instant.now().plus(6, ChronoUnit.DAYS);
       RefreshToken validRefreshToken =
@@ -146,6 +147,7 @@ public class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("refresh: given missing refresh token cookie, then throw UnauthorizedResponse")
     public void refresh_missingRefreshTokenCookie_throwUnauthorizedResponse() {
       when(ctx.cookie("refreshToken")).thenReturn(null);
 
@@ -155,6 +157,7 @@ public class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("refresh: given invalid refresh token, then throw InvalidCredentialsException")
     public void refresh_invalidRefreshToken_throwInvalidCredentialsException() {
       when(ctx.cookie("refreshToken")).thenReturn("invalid-token");
       when(authService.refreshTokens("invalid-token"))

@@ -98,6 +98,7 @@ public class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("refreshTokens: given valid refresh token string, then return AuthResult")
     public void refreshTokens_validRefreshTokenString_returnAuthResult() {
       RefreshToken newRefreshToken =
           new RefreshToken(
@@ -151,6 +152,7 @@ public class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("refreshTokes: given invalid or missing refresh token string, then throw InvalidCredentialsException")
     public void refreshTokes_invalidOrMissingRefreshTokenString_throwInvalidCredentialsException() {
       when(refreshTokenService.verifyAndRotate(null)).thenThrow(InvalidCredentialsException.class);
       assertThatThrownBy(() -> authService.refreshTokens(null))
