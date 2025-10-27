@@ -1,8 +1,7 @@
-package com.anibalxyz.server.config.modules;
+package com.anibalxyz.server.config.modules.runtime;
 
 import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.modules.definitions.RuntimeConfig;
 import io.javalin.Javalin;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.security.RouteRole;

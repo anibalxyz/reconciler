@@ -5,7 +5,12 @@ import com.anibalxyz.features.system.api.SystemRoutes;
 import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.*;
+import com.anibalxyz.server.config.modules.runtime.ExceptionsConfig;
+import com.anibalxyz.server.config.modules.runtime.JwtMiddlewareConfig;
+import com.anibalxyz.server.config.modules.runtime.LifecycleConfig;
+import com.anibalxyz.server.config.modules.runtime.SchedulerConfig;
+import com.anibalxyz.server.config.modules.startup.ServerConfig;
+import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
@@ -67,12 +72,12 @@ public class Application {
         };
 
     // 2. Declare specific runtime configurations for dev/prod
-    Consumer<Javalin> runtimeConfigs =
-        server -> {
+    Consumer<DependencyContainer> runtimeConfigs =
+        container -> {
           if ("dev".equals(appEnv)) {
-            server.get("/", ctx -> ctx.redirect("/swagger"));
+            container.server().get("/", ctx -> ctx.redirect("/swagger"));
           } else { // prod
-            server.get("/", ctx -> ctx.redirect("/openapi"));
+            container.server().get("/", ctx -> ctx.redirect("/openapi"));
           }
         };
 
@@ -105,7 +110,7 @@ public class Application {
   public static Application buildApplication(
       ApplicationConfiguration config,
       Consumer<JavalinConfig> customStartupConfigs,
-      Consumer<Javalin> customRuntimeConfigs,
+      Consumer<DependencyContainer> customRuntimeConfigs,
       Consumer<DependencyContainer> customRoutesRegistries) {
 
     PersistenceManager persistenceManager = new PersistenceManager(config.database());
@@ -124,7 +129,7 @@ public class Application {
     new LifecycleConfig(server, persistenceManager, config.env().APP_ENV()).apply();
     new ExceptionsConfig(server).apply();
 
-    if (customRuntimeConfigs != null) customRuntimeConfigs.accept(server);
+    if (customRuntimeConfigs != null) customRuntimeConfigs.accept(container);
     if (customRoutesRegistries != null) customRoutesRegistries.accept(container);
 
     return new Application(server, persistenceManager, config);

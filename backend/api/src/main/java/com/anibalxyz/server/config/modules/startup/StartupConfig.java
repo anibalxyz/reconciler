@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config.modules.definitions;
+package com.anibalxyz.server.config.modules.startup;
 
 import io.javalin.config.JavalinConfig;
 
@@ -24,8 +24,6 @@ public abstract class StartupConfig {
     this.javalinConfig = javalinConfig;
   }
 
-  /**
-   * Applies the startup configuration logic to the Javalin configuration.
-   */
+  /** Applies the startup configuration logic to the Javalin configuration. */
   public abstract void apply();
 }

@@ -1,11 +1,16 @@
 package com.anibalxyz.features.auth.application;
 
+import static com.anibalxyz.features.Constants.Auth.VALID_JWT;
+import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
+import static com.anibalxyz.features.Constants.Users.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
+import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.application.in.LoginPayload;
 import com.anibalxyz.features.auth.domain.RefreshToken;
@@ -15,36 +20,20 @@ import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import java.time.Instant;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Auth Service Tests")
 public class AuthServiceTest {
-  private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
-  private static final String VALID_EMAIL = "valid@email.com";
-  private static final int SALT_ROUNDS = 8;
-  private static final String VALID_JWT =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
-  private static final String VALID_REFRESH_TOKEN = "e4192c47-9649-48be-9f88-523240f45b6e";
-  private static final User VALID_USER =
-      new User(
-          1,
-          "Jhon Doe",
-          new Email("validEmail@email.com"),
-          PasswordHash.generate("validPassword", 10),
-          Instant.now(),
-          Instant.now());
-
-  private AuthService authService;
   @Mock private UserService userService;
   @Mock private JwtService jwtService;
   @Mock private RefreshTokenService refreshTokenService;
+
+  @InjectMocks private AuthService authService;
 
   private static LoginPayload createPayload(String email, String password) {
     return new LoginPayload() {
@@ -60,9 +49,9 @@ public class AuthServiceTest {
     };
   }
 
-  @BeforeEach
-  public void dependencyInjection() {
-    authService = new AuthService(userService, jwtService, refreshTokenService);
+  @BeforeAll
+  public static void setup() {
+    Constants.init();
   }
 
   @Nested
@@ -79,7 +68,7 @@ public class AuthServiceTest {
               1,
               "Name",
               new Email(payload.email()),
-              PasswordHash.generate(payload.password(), SALT_ROUNDS),
+              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS),
               now,
               now);
       when(userService.getUserByEmail(VALID_EMAIL)).thenReturn(user);
@@ -130,7 +119,7 @@ public class AuthServiceTest {
                   1,
                   "Name",
                   new Email(payload.email()),
-                  PasswordHash.generate(payload.password() + "makeItDifferent", SALT_ROUNDS),
+                  PasswordHash.generate(payload.password() + "makeItDifferent", BCRYPT_LOG_ROUNDS),
                   now,
                   now));
 
@@ -152,7 +141,8 @@ public class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("refreshTokes: given invalid or missing refresh token string, then throw InvalidCredentialsException")
+    @DisplayName(
+        "refreshTokes: given invalid or missing refresh token string, then throw InvalidCredentialsException")
     public void refreshTokes_invalidOrMissingRefreshTokenString_throwInvalidCredentialsException() {
       when(refreshTokenService.verifyAndRotate(null)).thenThrow(InvalidCredentialsException.class);
       assertThatThrownBy(() -> authService.refreshTokens(null))

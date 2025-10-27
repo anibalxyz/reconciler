@@ -1,7 +1,6 @@
-package com.anibalxyz.server.config.modules;
+package com.anibalxyz.server.config.modules.runtime;
 
 import com.anibalxyz.features.auth.application.RefreshTokenService;
-import com.anibalxyz.server.config.modules.definitions.RuntimeConfig;
 import io.javalin.Javalin;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

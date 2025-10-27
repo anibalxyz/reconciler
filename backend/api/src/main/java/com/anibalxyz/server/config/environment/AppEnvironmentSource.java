@@ -3,7 +3,7 @@ package com.anibalxyz.server.config.environment;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.auth.application.env.RefreshTokenEnvironment;
 import com.anibalxyz.features.users.application.UsersEnvironment;
-import com.anibalxyz.server.config.modules.definitions.ServerEnvironment;
+import com.anibalxyz.server.config.modules.startup.ServerEnvironment;
 import java.time.Duration;
 
 /**

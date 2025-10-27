@@ -1,10 +1,13 @@
 package com.anibalxyz.features.users.application;
 
+import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
+import static com.anibalxyz.features.Constants.Users.VALID_PASSWORD;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
+import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.common.application.exception.ConflictException;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
@@ -13,7 +16,6 @@ import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.UserRepository;
-import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -30,10 +32,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("User Service Tests")
 public class UserServiceTest {
-  private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
-
-  private static UsersEnvironment env;
-
   @Mock private UserRepository userRepository;
 
   private UserService userService;
@@ -59,12 +57,12 @@ public class UserServiceTest {
 
   @BeforeAll
   public static void setup() {
-    env = ConfigurationFactory.loadForTest().env();
+    Constants.init();
   }
 
   @BeforeEach
-  public void dependencyInjection() {
-    userService = new UserService(userRepository, env);
+  public void di() {
+    userService = new UserService(userRepository, Constants.APP_CONFIG.env());
   }
 
   @Nested
@@ -80,14 +78,14 @@ public class UserServiceTest {
                   1,
                   "User 1",
                   new Email("user1@mail.com"),
-                  PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+                  PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
                   currentDate,
                   currentDate),
               new User(
                   2,
                   "User 2",
                   new Email("user2@mail.com"),
-                  PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+                  PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
                   currentDate,
                   currentDate));
       when(userRepository.findAll()).thenReturn(expectedUsers);
@@ -117,7 +115,7 @@ public class UserServiceTest {
               1,
               "User 1",
               new Email("user1@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
       when(userRepository.findById(expectedUser.getId())).thenReturn(Optional.of(expectedUser));
@@ -136,7 +134,7 @@ public class UserServiceTest {
               1,
               "User 1",
               new Email("user1@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
       when(userRepository.findByEmail(new Email(expectedUser.getEmail().value())))
@@ -157,7 +155,7 @@ public class UserServiceTest {
           new User(
               payload.name(),
               new Email(payload.email()),
-              PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()));
+              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS));
       User expectedUser =
           creatingUser.withId(validId).withCreatedAt(currentDate).withUpdatedAt(currentDate);
 
@@ -195,7 +193,7 @@ public class UserServiceTest {
               existingId,
               "Previous",
               new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
 
@@ -221,7 +219,7 @@ public class UserServiceTest {
               existingId,
               "Previous",
               new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
 
@@ -248,13 +246,13 @@ public class UserServiceTest {
               existingId,
               "Previous",
               new Email("previous@email.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
 
       User expectedUpdatedUser =
           existingUser.withPasswordHash(
-              PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()));
+              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS));
 
       when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
       when(userRepository.save(
@@ -288,7 +286,7 @@ public class UserServiceTest {
               updatingId,
               "Previous",
               new Email(payload.email()),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               now,
               now);
 
@@ -311,7 +309,7 @@ public class UserServiceTest {
               existingId,
               "Previous",
               new Email("previous@email.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
 
@@ -380,7 +378,7 @@ public class UserServiceTest {
               1,
               payload.name(),
               new Email(payload.email()),
-              PasswordHash.generate(payload.password(), env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
       when(userRepository.findByEmail(new Email(payload.email())))
@@ -442,7 +440,7 @@ public class UserServiceTest {
               existingId,
               "Previous",
               new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
 
@@ -468,7 +466,7 @@ public class UserServiceTest {
               existingId,
               "Previous",
               new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               currentDate,
               currentDate);
 
@@ -491,7 +489,7 @@ public class UserServiceTest {
               2,
               "Previous",
               new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, env.BCRYPT_LOG_ROUNDS()),
+              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
               now,
               now);
 

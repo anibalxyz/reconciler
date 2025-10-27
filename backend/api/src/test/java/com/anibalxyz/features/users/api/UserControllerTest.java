@@ -1,11 +1,13 @@
 package com.anibalxyz.features.users.api;
 
+import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
 import static com.anibalxyz.features.Helper.capturedJsonAs;
 import static com.anibalxyz.features.Helper.stubBodyValidatorFor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
@@ -13,11 +15,9 @@ import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.application.UserService;
-import com.anibalxyz.features.users.application.UsersEnvironment;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.validation.ValidationError;
@@ -34,11 +34,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 
 @ExtendWith(MockitoExtension.class)
-@ExtendWith(MockitoExtension.class)
 @DisplayName("User Controller Tests")
 public class UserControllerTest {
-
-  private static UsersEnvironment env;
 
   @Mock private UserService userService;
 
@@ -48,7 +45,7 @@ public class UserControllerTest {
 
   @BeforeAll
   public static void setup() {
-    env = ConfigurationFactory.loadForTest().env();
+    Constants.init();
   }
 
   @SuppressWarnings("unchecked")
@@ -187,7 +184,7 @@ public class UserControllerTest {
     @DisplayName("getAllUsers: given users exist, then return 200 and users as JSON")
     public void getAllUsers_return200AndUsersJson() {
       Instant instant = Instant.now();
-      int logRounds = env.BCRYPT_LOG_ROUNDS();
+      int logRounds = BCRYPT_LOG_ROUNDS;
       // Given there are users
       List<User> fakeUsers =
           List.of(
@@ -243,7 +240,7 @@ public class UserControllerTest {
     @DisplayName("getUserById: given an existing id, then return 200 and user as JSON")
     public void getUserById_existingId_returns200AndUserJson() {
       Instant instant = Instant.now();
-      int logRounds = env.BCRYPT_LOG_ROUNDS();
+      int logRounds = BCRYPT_LOG_ROUNDS;
       int id = 1;
       User fakeUser =
           new User(
@@ -271,7 +268,7 @@ public class UserControllerTest {
     @DisplayName("createUser: given valid data, then return 201 and new user")
     public void createUser_validData_return201AndNewUser() {
       Instant instant = Instant.now();
-      int logRounds = env.BCRYPT_LOG_ROUNDS();
+      int logRounds = BCRYPT_LOG_ROUNDS;
       UserCreateRequest request =
           new UserCreateRequest("John Doe", "johndoe@gmail.com", "12345678");
       User fakeUser =
@@ -306,7 +303,7 @@ public class UserControllerTest {
       int id = 1;
 
       Instant instant = Instant.now();
-      int logRounds = env.BCRYPT_LOG_ROUNDS();
+      int logRounds = BCRYPT_LOG_ROUNDS;
       User fakeUser =
           new User(
               id,

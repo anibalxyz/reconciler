@@ -1,20 +1,21 @@
 package com.anibalxyz.features.auth.api;
 
+import static com.anibalxyz.features.Constants.Auth.VALID_JWT;
+import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.features.Constants.Users.*;
 import static com.anibalxyz.features.Helper.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthResult;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.domain.RefreshToken;
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.http.SameSite;
@@ -25,10 +26,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -37,22 +35,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Auth Controller Tests")
 public class AuthControllerTest {
-  private static final String VALID_JWT =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
-  private static final String VALID_REFRESH_TOKEN = "e4192c47-9649-48be-9f88-523240f45b6e";
-  private static final User VALID_USER =
-      new User(
-          1,
-          "Jhon Doe",
-          new Email("validEmail@email.com"),
-          PasswordHash.generate("validPassword", 10),
-          Instant.now(),
-          Instant.now());
-
   @Mock private AuthService authService;
   @Mock private Context ctx;
 
   @InjectMocks private AuthController authController;
+
+  @BeforeAll
+  public static void setup() {
+    Constants.init();
+  }
 
   @Nested
   @DisplayName("Success Scenarios")

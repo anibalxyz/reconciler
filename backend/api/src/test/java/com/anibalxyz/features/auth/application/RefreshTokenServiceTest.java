@@ -1,19 +1,17 @@
 package com.anibalxyz.features.auth.application;
 
+import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.features.Constants.Users.VALID_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.features.auth.application.env.RefreshTokenEnvironment;
+import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import jakarta.persistence.PersistenceException;
 import java.time.Duration;
 import java.time.Instant;
@@ -32,33 +30,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class RefreshTokenServiceTest {
-  private static final String VALID_REFRESH_TOKEN = "e4192c47-9649-48be-9f88-523240f45b6e";
-  private static final User VALID_USER =
-      new User(
-          1,
-          "Jhon Doe",
-          new Email("validEmail@email.com"),
-          PasswordHash.generate("validPassword", 10),
-          Instant.now(),
-          Instant.now());
-
   @Mock private static RefreshTokenRepository refreshTokenRepository;
-  private static RefreshTokenEnvironment env;
 
   @InjectMocks private RefreshTokenService refreshTokenService;
 
   @BeforeAll
   public static void setup() {
-    env = ConfigurationFactory.loadForTest().env();
+    Constants.init();
   }
 
   @BeforeEach
   public void di() {
-    refreshTokenService = new RefreshTokenService(refreshTokenRepository, env);
-  }
-
-  private RefreshTokenEnvironment createEnv(Duration jwtRefreshExpirationTime) {
-    return () -> jwtRefreshExpirationTime;
+    refreshTokenService =
+        new RefreshTokenService(refreshTokenRepository, Constants.APP_CONFIG.env());
   }
 
   @Nested
@@ -77,7 +61,8 @@ public class RefreshTokenServiceTest {
     }
 
     @Test
-    @DisplayName("verifyAndRotate: given valid refresh token string, then return created refresh token")
+    @DisplayName(
+        "verifyAndRotate: given valid refresh token string, then return created refresh token")
     public void verifyAndRotate_validRefreshTokenString_returnCreatedRefreshToken() {
       RefreshToken oldRefreshToken =
           new RefreshToken(
@@ -125,7 +110,8 @@ public class RefreshTokenServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"null", "non-existing"})
-    @DisplayName("verifyAndRotate: given non-existing refresh token string, then throw InvalidCredentialsException")
+    @DisplayName(
+        "verifyAndRotate: given non-existing refresh token string, then throw InvalidCredentialsException")
     public void verifyAndRotate_nonExistingRefreshTokenString_throwInvalidCredentialsException(
         String cause) {
       String token = cause.equals("null") ? null : cause;
@@ -138,7 +124,8 @@ public class RefreshTokenServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"expired", "revoked"})
-    @DisplayName("verifyAndRotate: given invalid refresh token string, then throw InvalidCredentialsException")
+    @DisplayName(
+        "verifyAndRotate: given invalid refresh token string, then throw InvalidCredentialsException")
     public void verifyAndRotate_invalidRefreshTokenString_throwInvalidCredentialsException(
         String cause) {
       RefreshToken validRefreshToken =

@@ -1,12 +1,13 @@
 package com.anibalxyz.features.users;
 
-import static com.anibalxyz.features.Helper.capitalize;
-import static com.anibalxyz.features.Helper.cleanDatabase;
+import static com.anibalxyz.features.Constants.Users.VALID_PASSWORD;
+import static com.anibalxyz.features.Helper.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.HttpRequest;
 import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.users.api.UserMapper;
@@ -15,18 +16,14 @@ import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
-import com.anibalxyz.features.users.application.UsersEnvironment;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.features.users.infra.UserEntity;
-import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -48,10 +45,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
 @DisplayName("User Routes Integration Tests")
-public class UserRoutesIntegrationTest {
-  private static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
+public class UsersRoutesIntegrationTest {
   private static Application app;
-  private static UsersEnvironment env;
   private static EntityManagerFactory emf;
   private static HttpRequest http;
   private EntityManager em;
@@ -59,8 +54,8 @@ public class UserRoutesIntegrationTest {
 
   @BeforeAll
   public static void setup() {
+    Constants.init();
     app = createApplication();
-    env = app.config().env();
     app.start(0);
 
     String baseUrl = "http://localhost:" + app.javalin().port();
@@ -74,13 +69,12 @@ public class UserRoutesIntegrationTest {
   }
 
   private static Application createApplication() {
-    ApplicationConfiguration appConfiguration = ConfigurationFactory.loadForTest();
     Consumer<DependencyContainer> customRoutesRegistries =
         container -> {
           new UserRoutes(container.server(), container.userController()).register();
         };
 
-    return Application.buildApplication(appConfiguration, null, null, customRoutesRegistries);
+    return Application.buildApplication(Constants.APP_CONFIG, null, null, customRoutesRegistries);
   }
 
   @AfterAll
@@ -100,23 +94,6 @@ public class UserRoutesIntegrationTest {
     if (em.isOpen()) {
       em.close();
     }
-  }
-
-  private UserEntity persistUser(String name, String email) {
-    em.getTransaction().begin();
-
-    EntityManagerProvider emp = () -> em;
-    int logRounds = env.BCRYPT_LOG_ROUNDS();
-    User saved =
-        new JpaUserRepository(emp)
-            .save(
-                new User(name, new Email(email), PasswordHash.generate(VALID_PASSWORD, logRounds)));
-
-    em.getTransaction().commit();
-
-    UserEntity entity = em.find(UserEntity.class, saved.getId());
-    em.refresh(entity);
-    return entity;
   }
 
   @Nested
@@ -211,7 +188,7 @@ public class UserRoutesIntegrationTest {
     @DisplayName("POST /users: given an existing email, then return 409 Conflict")
     public void POST_users_existingEmail_return409() {
       String existingEmail = "existing.user@mail.com";
-      persistUser("Existing User", existingEmail);
+      persistUser(em, "Existing User", existingEmail);
       UserCreateRequest requestBody =
           new UserCreateRequest("New User", existingEmail, VALID_PASSWORD);
 
@@ -301,7 +278,7 @@ public class UserRoutesIntegrationTest {
     @Test
     @DisplayName("PUT /users/{id}: given an unknown property, then return 400 Bad Request")
     public void PUT_users_id_unknownProperty_return400() {
-      UserEntity user = persistUser("John Doe", "john@mail.com");
+      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
       int existingId = user.getId();
 
       String unknownProperty = "mail";
@@ -330,7 +307,7 @@ public class UserRoutesIntegrationTest {
     @ValueSource(strings = {" "})
     @DisplayName("PUT /users/{id}: given no properties are provided, then return 400 Bad Request")
     public void PUT_users_id_noPropertiesAreProvided_return400(String value) {
-      UserEntity user = persistUser("John Doe", "john@mail.com");
+      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
       int existingId = user.getId();
 
       UserUpdateRequest requestBody = new UserUpdateRequest(value, value, value);
@@ -352,8 +329,8 @@ public class UserRoutesIntegrationTest {
     @Test
     @DisplayName("PUT /users/{id}: given a duplicate email, then return 409 Conflict")
     public void PUT_users_id_duplicateEmail_return409() {
-      UserEntity userToUpdate = persistUser("User To Update", "update.me@mail.com");
-      UserEntity existingUser = persistUser("Existing User", "existing@mail.com");
+      UserEntity userToUpdate = persistUser(em, "User To Update", "update.me@mail.com");
+      UserEntity existingUser = persistUser(em, "Existing User", "existing@mail.com");
       int userToUpdateId = userToUpdate.getId();
 
       UserUpdateRequest requestBody = new UserUpdateRequest(null, existingUser.getEmail(), null);
@@ -373,7 +350,7 @@ public class UserRoutesIntegrationTest {
     @Test
     @DisplayName("PUT /users/{id}: given an invalid email format, then return 400 Bad Request")
     public void PUT_users_id_invalidEmailFormat_return400() {
-      UserEntity originalUser = persistUser("John Doe", "john@mail.com");
+      UserEntity originalUser = persistUser(em, "John Doe", "john@mail.com");
       int existingId = originalUser.getId();
 
       String invalidEmail = "invalid-email";
@@ -396,7 +373,7 @@ public class UserRoutesIntegrationTest {
     @MethodSource("provideInvalidPasswordsAndMessages")
     @DisplayName("PUT /users/{id}: given an invalid password, then return 400 Bad Request")
     public void PUT_users_id_invalidPassword_return400(String password, String message) {
-      UserEntity originalUser = persistUser("Original Name", "original@mail.com");
+      UserEntity originalUser = persistUser(em, "Original Name", "original@mail.com");
       int existingId = originalUser.getId();
       UserUpdateRequest requestBody = new UserUpdateRequest(null, null, password);
 
@@ -448,7 +425,9 @@ public class UserRoutesIntegrationTest {
     @DisplayName("GET /users: given users exist, then return 200 and the list of users")
     public void GET_users_usersExist_return200AndListOfUsers() {
       List<UserEntity> persistedUsers =
-          List.of(persistUser("Name", "name@mail.com"), persistUser("Alfredo", "alfredo@mail.com"));
+          List.of(
+              persistUser(em, "Name", "name@mail.com"),
+              persistUser(em, "Alfredo", "alfredo@mail.com"));
       List<UserDetailResponse> expectedData =
           persistedUsers.stream()
               .map(userEntity -> UserMapper.toDetailResponse(userEntity.toDomain()))
@@ -474,7 +453,7 @@ public class UserRoutesIntegrationTest {
     @Test
     @DisplayName("GET /users/{id}: given an existing user id, then return 200 and the user data")
     public void GET_users_id_existingId_return200AndUser() {
-      UserEntity user = persistUser("John Doe", "john@mail.com");
+      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
       UserDetailResponse expectedResponse = UserMapper.toDetailResponse(user.toDomain());
       int existingId = user.getId();
 
@@ -520,7 +499,7 @@ public class UserRoutesIntegrationTest {
     @DisplayName(
         "PUT /users/{id}: given valid id and property, then return 200 and the updated user")
     public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp) {
-      UserEntity user = persistUser("John Doe", "john@mail.com");
+      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
       PasswordHash prevPasswordHash = new PasswordHash(user.getPasswordHash());
       Instant prevUpdatedAt = user.getUpdatedAt();
       int existingId = user.getId();
@@ -564,7 +543,7 @@ public class UserRoutesIntegrationTest {
     @Test
     @DisplayName("DELETE /users/{id}: given an existing id, then return 204 and delete the user")
     public void DELETE_users_id_existingId_return204() {
-      UserEntity user = persistUser("John Doe", "john@mail.com");
+      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
       int existingId = user.getId();
 
       try (Response response = http.delete("/users/" + existingId)) {

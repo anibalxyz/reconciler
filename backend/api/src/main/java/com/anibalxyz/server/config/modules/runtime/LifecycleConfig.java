@@ -1,7 +1,7 @@
-package com.anibalxyz.server.config.modules;
+package com.anibalxyz.server.config.modules.runtime;
 
 import com.anibalxyz.persistence.PersistenceManager;
-import com.anibalxyz.server.config.modules.definitions.RuntimeConfig;
+import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.anibalxyz.server.context.ContextProvider;
 import io.javalin.Javalin;
 import jakarta.persistence.EntityManager;

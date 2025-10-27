@@ -1,7 +1,5 @@
-package com.anibalxyz.server.config.modules;
+package com.anibalxyz.server.config.modules.startup;
 
-import com.anibalxyz.server.config.modules.definitions.ServerEnvironment;
-import com.anibalxyz.server.config.modules.definitions.StartupConfig;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import io.javalin.config.JavalinConfig;

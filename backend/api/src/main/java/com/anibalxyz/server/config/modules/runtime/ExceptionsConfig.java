@@ -1,11 +1,11 @@
-package com.anibalxyz.server.config.modules;
+package com.anibalxyz.server.config.modules.runtime;
 
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.common.application.exception.ConflictException;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
-import com.anibalxyz.server.config.modules.definitions.RuntimeConfig;
+import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.javalin.Javalin;

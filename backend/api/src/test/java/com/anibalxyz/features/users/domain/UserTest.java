@@ -1,5 +1,8 @@
 package com.anibalxyz.features.users.domain;
 
+import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
+import static com.anibalxyz.features.Constants.Users.VALID_EMAIL;
+import static com.anibalxyz.features.Constants.Users.VALID_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
@@ -12,11 +15,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 @DisplayName("User Domain Object Tests")
 public class UserTest {
 
-  private static final int BCRYPT_LOG_ROUNDS = 12;
-
   private static final int ID = 1;
-  private static final String NAME = "John Doe";
-  private static final Email EMAIL = new Email("email@mail.com");
+  private static final Email EMAIL = new Email(VALID_EMAIL);
   private static final PasswordHash PASSWORD_HASH =
       PasswordHash.generate("password1234", BCRYPT_LOG_ROUNDS);
   private static final Instant TIMESTAMP = Instant.now();
@@ -25,7 +25,7 @@ public class UserTest {
 
   @BeforeEach
   void setUp() {
-    baseUser = new User(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+    baseUser = new User(ID, VALID_NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
   }
 
   @Test
@@ -34,7 +34,7 @@ public class UserTest {
     String expected =
 """
 User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
-            .formatted(ID, NAME, EMAIL.value(), PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+            .formatted(ID, VALID_NAME, EMAIL.value(), PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
     String actual = baseUser.toString();
 
     assertThat(actual).isEqualTo(expected);
@@ -49,7 +49,7 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
         assertThat(baseUser.getId()).isEqualTo(ID);
         break;
       case "name":
-        assertThat(baseUser.getName()).isEqualTo(NAME);
+        assertThat(baseUser.getName()).isEqualTo(VALID_NAME);
         break;
       case "email":
         assertThat(baseUser.getEmail()).isEqualTo(EMAIL);
@@ -79,7 +79,8 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
       case "id":
         int newId = 2;
         userUsingWith = baseUser.withId(newId);
-        userUsingConstructor = new User(newId, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+        userUsingConstructor =
+            new User(newId, VALID_NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
         break;
 
       case "name":
@@ -91,25 +92,29 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
       case "email":
         Email newEmail = new Email("new@mail.com");
         userUsingWith = baseUser.withEmail(newEmail);
-        userUsingConstructor = new User(ID, NAME, newEmail, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+        userUsingConstructor =
+            new User(ID, VALID_NAME, newEmail, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
         break;
 
       case "passwordHash":
         PasswordHash newPasswordHash = PasswordHash.generate("newPassword1234", BCRYPT_LOG_ROUNDS);
         userUsingWith = baseUser.withPasswordHash(newPasswordHash);
-        userUsingConstructor = new User(ID, NAME, EMAIL, newPasswordHash, TIMESTAMP, TIMESTAMP);
+        userUsingConstructor =
+            new User(ID, VALID_NAME, EMAIL, newPasswordHash, TIMESTAMP, TIMESTAMP);
         break;
 
       case "createdAt":
         Instant newCreatedAt = TIMESTAMP.minusSeconds(60 * 60 * 24);
         userUsingWith = baseUser.withCreatedAt(newCreatedAt);
-        userUsingConstructor = new User(ID, NAME, EMAIL, PASSWORD_HASH, newCreatedAt, TIMESTAMP);
+        userUsingConstructor =
+            new User(ID, VALID_NAME, EMAIL, PASSWORD_HASH, newCreatedAt, TIMESTAMP);
         break;
 
       case "updatedAt":
         Instant newUpdatedAt = TIMESTAMP.plusSeconds(60 * 60 * 24);
         userUsingWith = baseUser.withUpdatedAt(newUpdatedAt);
-        userUsingConstructor = new User(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, newUpdatedAt);
+        userUsingConstructor =
+            new User(ID, VALID_NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, newUpdatedAt);
         break;
 
       default:
@@ -122,7 +127,7 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
   @Test
   @DisplayName("equals: given two identical User objects, then return true")
   public void equals_equalUsers_returnTrue() {
-    User user2 = new User(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+    User user2 = new User(ID, VALID_NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
     assertThat(baseUser).isEqualTo(user2);
   }
 
@@ -130,7 +135,8 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
   @DisplayName("equals: given the same User instance, then return true")
   @ValueSource(strings = {"partial", "full"})
   public void equals_sameUser_returnTrue(String constructor) {
-    User user = constructor.equals("partial") ? new User(NAME, EMAIL, PASSWORD_HASH) : baseUser;
+    User user =
+        constructor.equals("partial") ? new User(VALID_NAME, EMAIL, PASSWORD_HASH) : baseUser;
 
     assertThat(user).isEqualTo(user);
   }
@@ -149,24 +155,35 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
   public void equals_differentUsers_returnFalse(String propName) {
     User differentUser =
         switch (propName) {
-          case "id" -> new User(ID + 1, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+          case "id" -> new User(ID + 1, VALID_NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
           case "name" -> new User(ID, "Different Name", EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
           case "email" ->
-              new User(ID, NAME, new Email("diff@mail.com"), PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+              new User(
+                  ID, VALID_NAME, new Email("diff@mail.com"), PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
           case "passwordHash" ->
               new User(
                   ID,
-                  NAME,
+                  VALID_NAME,
                   EMAIL,
                   PasswordHash.generate("differentPassword", BCRYPT_LOG_ROUNDS),
                   TIMESTAMP,
                   TIMESTAMP);
           case "createdAt" ->
               new User(
-                  ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP.plusSeconds(60 * 60 * 24), TIMESTAMP);
+                  ID,
+                  VALID_NAME,
+                  EMAIL,
+                  PASSWORD_HASH,
+                  TIMESTAMP.plusSeconds(60 * 60 * 24),
+                  TIMESTAMP);
           case "updatedAt" ->
               new User(
-                  ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP.plusSeconds(60 * 60 * 24));
+                  ID,
+                  VALID_NAME,
+                  EMAIL,
+                  PASSWORD_HASH,
+                  TIMESTAMP,
+                  TIMESTAMP.plusSeconds(60 * 60 * 24));
           default -> throw new IllegalArgumentException("Invalid property name: " + propName);
         };
     assertThat(baseUser).isNotEqualTo(differentUser);
