@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("PasswordHash Value Object Tests")
+@DisplayName("Tests for PasswordHash Value Object")
 public class PasswordHashTest {
   private static final String HASH_PREFIX = "$2a$" + BCRYPT_LOG_ROUNDS + "$";
 

@@ -30,7 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("User Service Tests")
+@DisplayName("Tests for UserService")
 public class UserServiceTest {
   @Mock private UserRepository userRepository;
 
@@ -66,6 +66,7 @@ public class UserServiceTest {
   }
 
   @Nested
+  @DisplayName("Success Scenarios")
   class SuccessScenarios {
 
     @Test
@@ -332,6 +333,7 @@ public class UserServiceTest {
   }
 
   @Nested
+  @DisplayName("Failure Scenarios")
   class FailureScenarios {
 
     @Test

@@ -3,7 +3,7 @@ package com.anibalxyz.features.auth.api;
 import static com.anibalxyz.features.Constants.Auth.VALID_JWT;
 import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
 import static com.anibalxyz.features.Constants.Users.*;
-import static com.anibalxyz.features.Helper.*;
+import static com.anibalxyz.features.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
@@ -33,7 +33,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Auth Controller Tests")
+@DisplayName("Tests for AuthController")
 public class AuthControllerTest {
   @Mock private AuthService authService;
   @Mock private Context ctx;

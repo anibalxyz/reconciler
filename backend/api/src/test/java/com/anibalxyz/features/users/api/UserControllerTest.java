@@ -1,8 +1,8 @@
 package com.anibalxyz.features.users.api;
 
 import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
-import static com.anibalxyz.features.Helper.capturedJsonAs;
-import static com.anibalxyz.features.Helper.stubBodyValidatorFor;
+import static com.anibalxyz.features.Helpers.capturedJsonAs;
+import static com.anibalxyz.features.Helpers.stubBodyValidatorFor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -34,7 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("User Controller Tests")
+@DisplayName("Tests for UserController")
 public class UserControllerTest {
 
   @Mock private UserService userService;

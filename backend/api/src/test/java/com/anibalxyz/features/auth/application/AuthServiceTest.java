@@ -27,7 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Auth Service Tests")
+@DisplayName("Tests for AuthService")
 public class AuthServiceTest {
   @Mock private UserService userService;
   @Mock private JwtService jwtService;

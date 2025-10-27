@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tests for RefreshTokenService")
 public class RefreshTokenServiceTest {
   @Mock private static RefreshTokenRepository refreshTokenRepository;
 
@@ -46,6 +47,7 @@ public class RefreshTokenServiceTest {
   }
 
   @Nested
+  @DisplayName("Success Scenarios")
   class SuccessfulScenarios {
     @Test
     @DisplayName("createRefreshToken: given valid user, then return refresh token")
@@ -98,6 +100,7 @@ public class RefreshTokenServiceTest {
   }
 
   @Nested
+  @DisplayName("Failure Scenarios")
   class FailureScenarios {
     @Test
     @DisplayName("createRefreshToken: given repository fails, then propagate thrown exception")

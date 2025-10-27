@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users;
 
 import static com.anibalxyz.features.Constants.Users.VALID_PASSWORD;
-import static com.anibalxyz.features.Helper.*;
+import static com.anibalxyz.features.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -44,7 +44,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
-@DisplayName("User Routes Integration Tests")
+@DisplayName("Tests for UsersRoutes")
 public class UsersRoutesIntegrationTest {
   private static Application app;
   private static EntityManagerFactory emf;

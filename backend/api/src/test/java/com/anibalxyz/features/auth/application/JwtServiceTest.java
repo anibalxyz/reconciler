@@ -16,7 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("JWT Service Tests")
+@DisplayName("Tests for JwtService")
 public class JwtServiceTest {
 
   private JwtService jwtService;
