@@ -39,7 +39,7 @@ public final class ErrorResponseExamples {
             {
               "error": "Unauthorized",
               "details": [
-                "Authentication information is missing or invalid."
+                "Missing or invalid Authorization header"
               ]
             }""";
 

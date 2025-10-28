@@ -64,8 +64,9 @@ public class AuthService {
   /**
    * Generates a new access and refresh token pair using a valid refresh token.
    *
-   * <p>This method implements refresh token rotation. It verifies the provided refresh token, revokes
-   * it, and creates a new one. It then generates a new access token for the associated user.
+   * <p>This method implements refresh token rotation. It verifies the provided refresh token,
+   * revokes it, and creates a new one. It then generates a new access token for the associated
+   * user.
    *
    * @param refreshTokenString The refresh token string provided by the client.
    * @return A new {@link AuthResult} containing the new access and refresh tokens.

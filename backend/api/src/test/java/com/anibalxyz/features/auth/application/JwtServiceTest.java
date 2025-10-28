@@ -111,7 +111,7 @@ public class JwtServiceTest {
 
       assertThatThrownBy(() -> jwtService.validateToken(token))
           .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("JWT token has expired");
+          .hasMessage("JWT has expired");
     }
 
     @Test

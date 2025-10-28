@@ -22,7 +22,6 @@ import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
 import com.anibalxyz.server.config.modules.runtime.JwtMiddlewareConfig;
-import com.anibalxyz.server.config.modules.runtime.SchedulerConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -69,7 +68,6 @@ public class AuthRoutesIntegrationTest {
     Consumer<DependencyContainer> customRuntimeConfigs =
         container -> {
           new JwtMiddlewareConfig(container.server(), container.jwtMiddleware()).apply();
-          new SchedulerConfig(container.server(), container.refreshTokenService()).apply();
         };
     Consumer<DependencyContainer> customRoutesRegistries =
         container -> {
@@ -176,7 +174,7 @@ public class AuthRoutesIntegrationTest {
       assertThat(isValidToken(refreshToken, Token.REFRESH)).isTrue();
 
       Map<String, String> headers = Map.of("Cookie", "refreshToken=" + refreshToken);
-      Response refreshResponse = http.postWithHeaders("/auth/refresh", headers);
+      Response refreshResponse = http.post("/auth/refresh", "", headers);
       assertThat(refreshResponse.code()).isEqualTo(200);
 
       AuthResponse body = http.parseBody(refreshResponse, AuthResponse.class);
@@ -226,10 +224,17 @@ public class AuthRoutesIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"null,password", "email@example.com,null", "null,null"})
-    @DisplayName("POST /auth/login: given missing required fields, then return 400 Bad Request")
-    void POST_auth_login_missingRequiredFields_return400BadRequest(String email, String password) {
-      String actualEmail = "null".equals(email) ? null : email;
+    @CsvSource({
+      "null, strong-password-123", // null email
+      "john.doe@example.com, null", // null password
+      "null, null", // null email and password
+      "'', strong-password-123", // blank email
+      "john.doe@example.com, ''", // blank password
+      "'', ''" // blank email and password
+    })
+    @DisplayName("POST /auth/login: given missing or blank fields, then return 400 Bad Request")
+    void POST_auth_login_missingOrBlankFields_return400BadRequest(String email, String password) {
+      String actualEmail = "null".equalsIgnoreCase(email) ? null : email;
       String actualPassword = "null".equals(password) ? null : password;
       LoginRequest request = new LoginRequest(actualEmail, actualPassword);
 
@@ -266,7 +271,7 @@ public class AuthRoutesIntegrationTest {
     @DisplayName(
         "POST /auth/refresh: given missing refresh token in cookie, then return 401 Unauthorized")
     void POST_auth_refresh_missingRefreshTokenInCookie_return401Unauthorized() {
-      Response response = http.postWithHeaders("/auth/refresh", Map.of());
+      Response response = http.post("/auth/refresh", "", Map.of());
       assertThat(response.code()).isEqualTo(401);
 
       String cookie = response.header("Set-Cookie");
@@ -283,7 +288,7 @@ public class AuthRoutesIntegrationTest {
         "POST /auth/refresh: given invalid refresh token, then return 401 Invalid credentials")
     void POST_auth_refresh_invalidRefreshToken_return401InvalidCredentials() {
       Map<String, String> headers = Map.of("Cookie", "refreshToken=invalid-token");
-      Response response = http.postWithHeaders("/auth/refresh", headers);
+      Response response = http.post("/auth/refresh", "", headers);
       assertThat(response.code()).isEqualTo(401);
 
       String cookie = response.header("Set-Cookie");
@@ -320,7 +325,7 @@ public class AuthRoutesIntegrationTest {
           refreshTokenRepository.findByToken(refreshToken).orElseThrow();
 
       Map<String, String> headers = Map.of("Cookie", "refreshToken=" + refreshToken);
-      Response refreshResponse = http.postWithHeaders("/auth/refresh", headers);
+      Response refreshResponse = http.post("/auth/refresh", "", headers);
       assertThat(refreshResponse.code()).isEqualTo(401);
 
       String refreshResponseCookie = refreshResponse.header("Set-Cookie");
@@ -351,7 +356,7 @@ public class AuthRoutesIntegrationTest {
 
       // Use the refresh token, which will revoke it and issue a new one
       Map<String, String> headers = Map.of("Cookie", "refreshToken=" + oldRefreshToken);
-      try (Response refreshResponse = http.postWithHeaders("/auth/refresh", headers)) {
+      try (Response refreshResponse = http.post("/auth/refresh", "", headers)) {
         assertThat(refreshResponse.code()).isEqualTo(200);
 
         String cookie = refreshResponse.header("Set-Cookie");
@@ -366,7 +371,7 @@ public class AuthRoutesIntegrationTest {
       }
 
       // Try to use the old, revoked token again
-      Response secondRefreshResponse = http.postWithHeaders("/auth/refresh", headers);
+      Response secondRefreshResponse = http.post("/auth/refresh", "", headers);
       assertThat(secondRefreshResponse.code()).isEqualTo(401);
 
       String refreshResponseCookie = secondRefreshResponse.header("Set-Cookie");

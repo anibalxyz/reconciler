@@ -58,7 +58,20 @@ public class JwtService {
    * @return A signed JWT string.
    */
   public String generateToken(Integer userId) {
-    Instant now = Instant.now();
+    return generateToken(userId, Instant.now());
+  }
+
+  /**
+   * Generates a JSON Web Token (JWT) for the given user ID relative to a specific instant in time.
+   *
+   * <p>This method is primarily for testing purposes, allowing the creation of tokens with a
+   * predictable or controlled expiration (e.g., already expired tokens).
+   *
+   * @param userId The ID of the user for whom to generate the token.
+   * @param now The reference instant for 'now' (issuance time).
+   * @return A signed JWT string.
+   */
+  public String generateToken(Integer userId, Instant now) {
     String subject = String.valueOf(userId);
 
     return Jwts.builder()
@@ -87,7 +100,7 @@ public class JwtService {
           .parseSignedClaims(token) // Parses the token's header and payload
           .getPayload(); // Extracts a Map containing the key-value pairs (claims) from payload
     } catch (ExpiredJwtException e) {
-      throw new InvalidCredentialsException("JWT token has expired");
+      throw new InvalidCredentialsException("JWT has expired");
     } catch (MalformedJwtException | SignatureException | IllegalArgumentException e) {
       // - MalformedJwtException: The token string is not a valid JWT format
       // - SignatureException: The token's signature is invalid

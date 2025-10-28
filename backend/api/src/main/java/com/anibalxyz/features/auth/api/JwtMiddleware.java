@@ -1,7 +1,6 @@
 package com.anibalxyz.features.auth.api;
 
 import com.anibalxyz.features.auth.application.JwtService;
-import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.http.UnauthorizedResponse;
@@ -43,11 +42,8 @@ public class JwtMiddleware implements Handler {
 
     String token = authHeader.substring(BEARER_PREFIX.length());
 
-    try {
-      Integer userId = Integer.parseInt(jwtService.validateToken(token).getSubject());
-      ctx.attribute(JWT_USER_ID, userId);
-    } catch (InvalidCredentialsException e) {
-      throw new UnauthorizedResponse(e.getMessage());
-    }
+    // this is letting "InvalidCredentialsException" be thrown
+    Integer userId = Integer.parseInt(jwtService.validateToken(token).getSubject());
+    ctx.attribute(JWT_USER_ID, userId);
   }
 }

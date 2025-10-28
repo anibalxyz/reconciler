@@ -53,8 +53,18 @@ public class HttpRequest {
    * @return The HTTP {@link Response}.
    */
   public Response get(String path) {
-    Request request = new Request.Builder().url(baseUrl + path).get().build();
-    return executeRequest(request);
+    return get(path, Map.of());
+  }
+
+  /**
+   * @param path The API endpoint path.
+   * @param headers The request headers.
+   * @return The HTTP {@link Response}.
+   */
+  public Response get(String path, Map<String, String> headers) {
+    Request.Builder requestBuilder = new Request.Builder().url(baseUrl + path).get();
+    headers.forEach(requestBuilder::addHeader);
+    return executeRequest(requestBuilder.build());
   }
 
   /**
@@ -83,17 +93,6 @@ public class HttpRequest {
    */
   public Response post(String path, @NotNull Object body) {
     return post(path, body, Map.of());
-  }
-
-  /**
-   * Sends an HTTP POST request to the specified path with the given headers.
-   *
-   * @param path The API endpoint path.
-   * @param headers The request headers.
-   * @return The HTTP {@link Response}.
-   */
-  public Response postWithHeaders(String path, Map<String, String> headers) {
-    return post(path, "", headers);
   }
 
   /**
