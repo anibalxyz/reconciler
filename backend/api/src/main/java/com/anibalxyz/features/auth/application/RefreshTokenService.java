@@ -65,6 +65,13 @@ public class RefreshTokenService {
    *     revoked.
    */
   public RefreshToken verifyAndRotate(String token) {
+    RefreshToken oldToken = verifyRefreshToken(token);
+    refreshTokenRepository.save(oldToken.withRevoked(true));
+
+    return createRefreshToken(oldToken.user());
+  }
+
+  public RefreshToken verifyRefreshToken(String token) {
     RefreshToken oldToken =
         refreshTokenRepository
             .findByToken(token)
@@ -76,9 +83,7 @@ public class RefreshTokenService {
       throw new InvalidCredentialsException("Refresh token is expired or revoked");
     }
 
-    refreshTokenRepository.save(oldToken.withRevoked(true));
-
-    return createRefreshToken(oldToken.user());
+    return oldToken;
   }
 
   /**

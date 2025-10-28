@@ -44,7 +44,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
-@DisplayName("Tests for UsersRoutes")
+@DisplayName("Tests for UserRoutes")
 public class UsersRoutesIntegrationTest {
   private static Application app;
   private static EntityManagerFactory emf;

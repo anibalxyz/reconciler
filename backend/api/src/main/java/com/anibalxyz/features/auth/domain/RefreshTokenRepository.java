@@ -1,5 +1,6 @@
 package com.anibalxyz.features.auth.domain;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -14,12 +15,11 @@ import java.util.Optional;
 public interface RefreshTokenRepository {
 
   /**
-   * Saves (creates or updates) a refresh token in the data store.
+   * Retrieves all refresh tokens from the data store.
    *
-   * @param refreshToken The refresh token to save.
-   * @return The saved refresh token, which may include a generated ID if it's a new token.
+   * @return A list of all refresh tokens. The list is empty if no tokens are found.
    */
-  RefreshToken save(RefreshToken refreshToken);
+  List<RefreshToken> findAll();
 
   /**
    * Finds a refresh token by its unique token string.
@@ -28,6 +28,14 @@ public interface RefreshTokenRepository {
    * @return An {@link Optional} containing the refresh token if found, or an empty Optional if not.
    */
   Optional<RefreshToken> findByToken(String token);
+
+  /**
+   * Saves (creates or updates) a refresh token in the data store.
+   *
+   * @param refreshToken The refresh token to save.
+   * @return The saved refresh token, which may include a generated ID if it's a new token.
+   */
+  RefreshToken save(RefreshToken refreshToken);
 
   /**
    * Deletes all refresh tokens that have expired.

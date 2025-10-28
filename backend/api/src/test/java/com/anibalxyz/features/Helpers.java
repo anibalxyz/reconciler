@@ -106,12 +106,17 @@ public class Helpers {
   /**
    * Persists a new user to the database for testing purposes.
    *
+   * <p>You will probably always use {@link Constants.Users#VALID_PASSWORD}, but this version is
+   * more visual or intuitive for testing.
+   *
    * @param em The {@link EntityManager} to use for persistence.
    * @param name The name of the user.
    * @param email The email of the user.
+   * @param password The password of the user.
    * @return The persisted {@link UserEntity}.
    */
-  public static UserEntity persistUser(EntityManager em, String name, String email) {
+  public static UserEntity persistUser(
+      EntityManager em, String name, String email, String password) {
     em.getTransaction().begin();
 
     EntityManagerProvider emp = () -> em;
@@ -119,14 +124,27 @@ public class Helpers {
         new JpaUserRepository(emp)
             .save(
                 new User(
-                    name,
-                    new Email(email),
-                    PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS)));
+                    name, new Email(email), PasswordHash.generate(password, BCRYPT_LOG_ROUNDS)));
 
     em.getTransaction().commit();
 
     UserEntity entity = em.find(UserEntity.class, saved.getId());
     em.refresh(entity);
     return entity;
+  }
+
+  /**
+   * Persists a new user to the database for testing purposes.
+   *
+   * <p>Calls the base {@link #persistUser(EntityManager, String, String, String)} method using
+   * {@link Constants.Users#VALID_PASSWORD} for the password by default.
+   *
+   * @param em The {@link EntityManager} to use for persistence.
+   * @param name The name of the user.
+   * @param email The email of the user.
+   * @return The persisted {@link UserEntity}.
+   */
+  public static UserEntity persistUser(EntityManager em, String name, String email) {
+    return persistUser(em, name, email, VALID_PASSWORD);
   }
 }

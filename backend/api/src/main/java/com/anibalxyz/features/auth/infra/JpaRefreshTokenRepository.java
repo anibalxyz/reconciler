@@ -5,6 +5,7 @@ import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -30,6 +31,16 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
 
   private EntityManager em() {
     return provider.get();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  @SuppressWarnings("resource")
+  public List<RefreshToken> findAll() {
+    return em().createQuery("SELECT rt FROM RefreshTokenEntity rt", RefreshTokenEntity.class)
+        .getResultList().stream()
+        .map(RefreshTokenEntity::toDomain)
+        .toList();
   }
 
   /** {@inheritDoc} */
