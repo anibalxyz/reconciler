@@ -4,8 +4,11 @@ import com.anibalxyz.persistence.DatabaseVariables;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.Properties;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A factory for creating application configuration from various sources.
@@ -21,6 +24,7 @@ public class ConfigurationFactory {
   private static final String DEFAULT_DB_PORT = "5432";
   // Used when running locally because container is mapped to localhost
   private static final String DEFAULT_LOCAL_HOST = "localhost";
+  private static final Logger log = LoggerFactory.getLogger(ConfigurationFactory.class);
 
   /** Private constructor to prevent instantiation of this utility class. */
   private ConfigurationFactory() {}
@@ -35,8 +39,10 @@ public class ConfigurationFactory {
    */
   public static ApplicationConfiguration loadForTest() {
     if (System.getenv("APP_ENV") != null) {
+      log.info("Loading configuration from system environment variables");
       return loadFromEnv();
     }
+    log.info("Loading configuration from dotenv file");
     return loadFromEnvFile("test");
   }
 
@@ -56,9 +62,27 @@ public class ConfigurationFactory {
     String apiUrl = "http://localhost:" + getEnvVar("API_PORT", System::getenv);
     String contactEmail = getEnvVar("CONTACT_EMAIL", System::getenv);
 
+    // jwt
+    String jwtSecret = getEnvVar("JWT_SECRET", System::getenv);
+    String jwtIssuer = getEnvVar("JWT_ISSUER", System::getenv);
+    Duration jwtAccessExpirationTime =
+        Duration.ofMinutes(
+            Long.parseLong(getEnvVar("JWT_ACCESS_EXPIRATION_TIME_MINUTES", System::getenv)));
+    Duration jwtRefreshExpirationTime =
+        Duration.ofDays(
+            Long.parseLong(getEnvVar("JWT_REFRESH_EXPIRATION_TIME_DAYS", System::getenv)));
+
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", System::getenv));
     AppEnvironmentSource env =
-        new AppEnvironmentSource(appEnv, bcryptLogRounds, apiUrl, contactEmail);
+        new AppEnvironmentSource(
+            appEnv,
+            bcryptLogRounds,
+            apiUrl,
+            contactEmail,
+            jwtSecret,
+            jwtIssuer,
+            jwtAccessExpirationTime,
+            jwtRefreshExpirationTime);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(host, DEFAULT_DB_PORT, name, user, password));
@@ -86,9 +110,27 @@ public class ConfigurationFactory {
     String apiUrl = "http://localhost:" + getEnvVar("API_PORT", props::getProperty);
     String contactEmail = getEnvVar("CONTACT_EMAIL", props::getProperty);
 
+    // jwt
+    String jwtSecret = getEnvVar("JWT_SECRET", props::getProperty);
+    String jwtIssuer = getEnvVar("JWT_ISSUER", props::getProperty);
+    Duration jwtAccessExpirationTime =
+        Duration.ofMinutes(
+            Long.parseLong(getEnvVar("JWT_ACCESS_EXPIRATION_TIME_MINUTES", props::getProperty)));
+    Duration jwtRefreshExpirationTime =
+        Duration.ofDays(
+            Long.parseLong(getEnvVar("JWT_REFRESH_EXPIRATION_TIME_DAYS", props::getProperty)));
+
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", props::getProperty));
     AppEnvironmentSource env =
-        new AppEnvironmentSource(appEnv, bcryptLogRounds, apiUrl, contactEmail);
+        new AppEnvironmentSource(
+            appEnv,
+            bcryptLogRounds,
+            apiUrl,
+            contactEmail,
+            jwtSecret,
+            jwtIssuer,
+            jwtAccessExpirationTime,
+            jwtRefreshExpirationTime);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(DEFAULT_LOCAL_HOST, port, name, user, password));
