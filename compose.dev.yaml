@@ -9,7 +9,7 @@ services:
   api:
     pull_policy: never
     volumes:
-      # Mount source code and config for manual reload during development
+      # Mount source code and config for manual reload by restarting the container
       - ./backend/api/pom.xml:/app/pom.xml:cached
       - ./backend/api/src:/app/src:cached
       # Persist Maven dependencies cache to speed up builds
@@ -24,19 +24,20 @@ services:
     ports:
       - "${DASHBOARD_PORT}:5174"
     volumes:
-      # Enables hot reload by mounting dashboard source code
-      - ./frontend/dashboard:/app/dashboard:cached
-      # Shares access to the entire frontend workspace
-      - ./frontend:/app:cached
-      # Provides shared node_modules for all frontend services
-      # Prevents sync with local and avoids anonymous volumes
-      - node_modules:/app/node_modules:cached
-      # Ensures it's neither synced nor persisted
-      - type: tmpfs
-        target: /app/dashboard/node_modules
+      # Enables hot reload by mounting source code and config files
+      - ./frontend/dashboard/src:/app/dashboard/src:cached
+      - ./frontend/dashboard/index.html:/app/dashboard/index.html:cached
+      - ./frontend/dashboard/package.json:/app/dashboard/package.json:cached
+      - ./frontend/dashboard/tsconfig.json:/app/dashboard/tsconfig.json:cached
+      - ./frontend/dashboard/vite.config.ts:/app/dashboard/vite.config.ts:cached
+      # Base frontend/ files
+      - ./frontend/.env.dev:/app/.env.dev:cached
+      - ./frontend/package.json:/app/package.json:cached
+      - ./frontend/tsconfig.base.json:/app/tsconfig.base.json:cached
+      - ./frontend/vite.config.ts:/app/vite.config.ts:cached
+      # Cache subfrontend-specific node_modules
+      - dashboard-node_modules:/app/node_modules:cached
 
-    depends_on:
-      - api
     networks:
       - main
 
@@ -49,18 +50,26 @@ services:
     ports:
       - "${PUBLIC_SITE_PORT}:5173"
     volumes:
-      - ./frontend/public-site:/app/public-site:cached
-      - ./frontend:/app:cached
-      - node_modules:/app/node_modules:cached
-      - type: tmpfs
-        target: /app/public-site/node_modules
-    depends_on:
-      - api
+      # Enables hot reload by mounting source code and config files
+      - ./frontend/public-site/src:/app/public-site/src:cached
+      - ./frontend/public-site/pages:/app/public-site/pages:cached
+      - ./frontend/public-site/package.json:/app/public-site/package.json:cached
+      - ./frontend/public-site/tsconfig.json:/app/public-site/tsconfig.json:cached
+      - ./frontend/public-site/vite.config.ts:/app/public-site/vite.config.ts:cached
+      # Base frontend/ files
+      - ./frontend/.env.dev:/app/.env.dev:cached
+      - ./frontend/package.json:/app/package.json:cached
+      - ./frontend/tsconfig.base.json:/app/tsconfig.base.json:cached
+      - ./frontend/vite.config.ts:/app/vite.config.ts:cached
+      # Cache subfrontend-specific node_modules
+      - public-site-node_modules:/app/node_modules:cached
     networks:
       - main
 
 volumes:
   maven:
     name: "reconciler-dev-mvn"
-  node_modules:
-    name: "reconciler-dev-node"
+  dashboard-node_modules:
+    name: "reconciler-dev-dahsboard-node"
+  public-site-node_modules:
+    name: "reconciler-dev-public-site-node"

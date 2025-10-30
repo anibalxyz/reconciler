@@ -6,7 +6,7 @@ const envDir = path.resolve(__dirname, "..");
 const envFile = loadEnv(process.env.NODE_ENV!, envDir, "");
 
 export default mergeConfig<UserConfig, UserConfig>(baseConfig, {
-  root: __dirname,
+  root: path.resolve(__dirname, "./pages/"),
   base: "/",
   envDir: "..",
   resolve: {
@@ -18,8 +18,8 @@ export default mergeConfig<UserConfig, UserConfig>(baseConfig, {
   build: {
     rollupOptions: {
       input: {
-        index: path.resolve(__dirname, "index.html"),
-        about: path.resolve(__dirname, "about.html"),
+        index: path.resolve(__dirname, "./pages/index.html"),
+        about: path.resolve(__dirname, "./pages/about.html"),
       },
     },
   },

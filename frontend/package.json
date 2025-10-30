@@ -34,6 +34,14 @@
     "dashboard",
     "public-site"
   ],
+  "scripts": {
+    "build:dashboard": "npm run build --workspace=@anibalxyz/reconciler-dashboard",
+    "build:public": "npm run build --workspace=@anibalxyz/reconciler-public-site",
+    "dev:dashboard": "npm run dev --workspace=@anibalxyz/reconciler-dashboard",
+    "dev:public": "npm run dev --workspace=@anibalxyz/reconciler-public-site",
+    "format": "npm run format --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^5.8.3",
