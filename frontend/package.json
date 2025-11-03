@@ -43,8 +43,7 @@
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "@types/node": "24.0.0",
+    "typescript": "5.8.3"
   }
 }

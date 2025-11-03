@@ -4,10 +4,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@common/*": ["./src/common/*"]
+      "@components/*": ["./src/components/*"]
     }
   },
-
   "include": ["./src/**/*"],
   "exclude": ["node_modules/", "dist/"]
 }

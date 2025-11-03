@@ -1,0 +1,24 @@
+---
+import Header from "@components/Header.astro";
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <title>Login</title>
+  </head>
+  <body>
+    <Header></Header>
+    <h1>Login Form</h1>
+
+    <form id="login-form">
+      <label for="email">Insert your email: </label>
+      <input type="email" placeholder="email" name="email" required />
+      <label for="password">Insert your password: </label>
+      <input type="password" placeholder="********" name="password" required />
+      <button type="submit">Login</button>
+    </form>
+
+  </body>
+</html>
