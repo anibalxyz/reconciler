@@ -1,4 +1,3 @@
-import './App.css';
 import { useEffect, useState } from 'react';
 
 type ApiStatus = 'loading' | 'healthy' | 'unhealthy' | 'error';
@@ -46,16 +45,30 @@ export default function App() {
       abortController.abort();
     };
   }, []);
-
   return (
-    <main>
-      <p className="homeLink">
-        Go Home: <a href="/">"/"</a>
+    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-gray-800 font-sans p-6">
+      <p className="mb-4 text-sm">
+        Go Home:{' '}
+        <a href="/" className="text-blue-600 hover:underline">
+          /
+        </a>
       </p>
-      <h1>API Health Check</h1>
-      <div className="statusContainer">
-        <span>Status:</span>
-        <span className="apiStatus">{STATUS_MESSAGES[status]}</span>
+      <h1 className="text-2xl font-semibold mb-4">API Health Check</h1>
+      <div className="flex items-center gap-2 bg-white shadow p-4 rounded">
+        <span className="font-medium">Status:</span>
+        <span
+          className={`font-semibold ${
+            status === 'healthy'
+              ? 'text-green-600'
+              : status === 'unhealthy'
+                ? 'text-yellow-600'
+                : status === 'error'
+                  ? 'text-red-600'
+                  : 'text-gray-500'
+          }`}
+        >
+          {STATUS_MESSAGES[status]}
+        </span>
       </div>
     </main>
   );

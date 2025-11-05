@@ -22,12 +22,22 @@ services:
     networks:
       - main
 
+  # TODO: solve the following warning
+  #   WARNING: Storing migrations in 'sql' is not recommended and default
+  #   scanning of this location may be deprecated in a future release
+  #   A more recent version of Flyway is available. (...)
   flyway:
     image: flyway/flyway:11-alpine
     container_name: reconciler-${APP_ENV}-flyway
     volumes:
       - ./backend/db/migrations:/flyway/sql
-    command: -url=jdbc:postgresql://${DB_HOST}:5432/${DB_NAME} -user=${DB_USER} -password=${DB_PASSWORD} -connectRetries=20 -connectRetriesInterval=3 migrate
+    command:
+      - -url=jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}
+      - -user=${DB_USER}
+      - -password=${DB_PASSWORD}
+      - -connectRetries=20
+      - -connectRetriesInterval=3
+      - migrate
     networks:
       - main
 

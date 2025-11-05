@@ -10,3 +10,5 @@ RUN npm install --workspaces=false
 COPY ./tsconfig.base.json .
 
 COPY ./vite.config.ts .
+
+COPY ./common ./common

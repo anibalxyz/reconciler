@@ -1,27 +1,13 @@
 ---
-import Header from '@components/Header.astro';
+import Header from '@components/layout/Header.astro';
+import Head from '@components/layout/Head.astro';
 ---
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Reconciler Public Site</title>
-  </head>
+  <Head title="Home" />
   <body>
     <Header />
-
-    <h1>Welcome to the Reconciler Public Site</h1>
-    <p>
-      Open the Dashboard App:
-      <a href="/dashboard">"/dashboard"</a>
-    </p>
-    <p>
-      About page:
-
-      <a href="/about">"/about"</a>
-    </p>
-    <div id="root"></div>
+    <h1>Welcome to Reconciler</h1>
   </body>
 </html>

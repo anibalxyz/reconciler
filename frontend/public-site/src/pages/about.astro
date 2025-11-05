@@ -1,24 +1,13 @@
 ---
-import Header from '@components/Header.astro';
+import Header from '@components/layout/Header.astro';
+import Head from '@components/layout/Head.astro';
 ---
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>ABOUT</title>
-  </head>
+  <Head title="About" />
   <body>
     <Header />
     <h1>This is the about page</h1>
-    <p>
-      Open the Dashboard App:
-      <a href="/dashboard">"/dashboard"</a>
-    </p>
-    <p>
-      Home page:
-      <a href="/">"/"</a>
-    </p>
   </body>
 </html>
