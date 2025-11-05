@@ -39,11 +39,16 @@
     "build:public": "npm run build --workspace=@anibalxyz/reconciler-public-site",
     "dev:dashboard": "npm run dev --workspace=@anibalxyz/reconciler-dashboard",
     "dev:public": "npm run dev --workspace=@anibalxyz/reconciler-public-site",
-    "format": "npm run format --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "format": "npm run format --workspaces",
+    "lint": "npm run lint --workspaces"
   },
   "devDependencies": {
     "@types/node": "24.0.0",
-    "typescript": "5.8.3"
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "3.6.2",
+    "prettier-plugin-astro": "0.14.1",
+    "typescript": "5.8.3",
+    "typescript-eslint": "^8.46.3"
   }
 }

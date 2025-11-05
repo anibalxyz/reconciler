@@ -1,9 +1,9 @@
-import baseConfig from "../vite.config.js";
-import { mergeConfig, UserConfig } from "vite";
-import { defineConfig } from "astro/config";
-import { getEnv } from "../common/env.ts";
+import baseConfig from '../vite.config.ts';
+import { mergeConfig, UserConfig } from 'vite';
+import { defineConfig } from 'astro/config';
+import { getEnv } from '../common/env.ts';
 
-const env = getEnv(import.meta.url, "..");
+const env = getEnv(import.meta.url, '..');
 
 export default defineConfig({
   server: {
@@ -12,7 +12,7 @@ export default defineConfig({
   vite: mergeConfig<UserConfig, UserConfig>(baseConfig, {
     server: {
       proxy: {
-        "/dashboard": {
+        '/dashboard': {
           target: env.DASHBOARD_URL,
         },
       },

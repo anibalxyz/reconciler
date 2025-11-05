@@ -5,9 +5,15 @@
   "scripts": {
     "build": "astro build",
     "dev": "astro dev",
+    "format": "prettier --write .",
+    "lint": "eslint",
     "preview": "astro preview"
   },
   "dependencies": {
     "astro": "5.15.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "eslint-plugin-astro": "^1.4.0"
   }
 }
