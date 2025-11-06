@@ -1,13 +1,44 @@
 ---
-import Header from '@components/layout/Header.astro';
-import Head from '@components/layout/Head.astro';
+import Base from '@/components/layout/Base.astro';
 ---
 
-<!doctype html>
-<html lang="en">
-  <Head title="Home" />
-  <body>
-    <Header />
-    <h1>Welcome to Reconciler</h1>
-  </body>
-</html>
+<Base title="Home">
+  <section class="w-full bg-blue-600 text-white py-20 flex flex-col items-center text-center">
+    <h1 class="text-5xl font-bold mb-4">Welcome to Reconciler</h1>
+    <p class="text-lg max-w-2xl">
+      Streamline your financial workflows with automatic reconciliation and insightful analytics.
+    </p>
+    <button class="mt-8 bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-100 transition">
+      Get Started
+    </button>
+  </section>
+
+  <section class="w-full py-16 flex justify-center">
+    <div class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div class="bg-white p-6 rounded-lg shadow text-center">
+        <h3 class="font-bold mb-2">Automatic Reconciliation</h3>
+        <p class="text-gray-700">Match transactions from multiple sources automatically and save hours of work.</p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow text-center">
+        <h3 class="font-bold mb-2">Manual Resolution</h3>
+        <p class="text-gray-700">Easily resolve discrepancies manually when needed, with clear visibility.</p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow text-center">
+        <h3 class="font-bold mb-2">Financial Analytics</h3>
+        <p class="text-gray-700">Generate insightful charts and reports to understand your financial performance.</p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow text-center">
+        <h3 class="font-bold mb-2">User Management</h3>
+        <p class="text-gray-700">Control access with roles for admins, developers, and standard users.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="w-full bg-gray-100 py-16 flex flex-col items-center text-center">
+    <h2 class="text-3xl font-bold mb-4">Ready to start?</h2>
+    <p class="mb-6 max-w-2xl text-gray-700">Sign up today and see how Reconciler can streamline your workflow.</p>
+    <button class="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+      Sign Up
+    </button>
+  </section>
+</Base>
