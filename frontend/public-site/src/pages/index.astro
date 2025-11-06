@@ -1,16 +1,20 @@
 ---
-import Base from '@/components/layout/Base.astro';
+import Base from '@layout/Base.astro';
 ---
 
 <Base title="Home">
   <section class="w-full bg-blue-600 text-white py-20 flex flex-col items-center text-center">
     <h1 class="text-5xl font-bold mb-4">Welcome to Reconciler</h1>
+    <p class="text-md text-orange-800">NOTE: this is an example home page.</p>
     <p class="text-lg max-w-2xl">
       Streamline your financial workflows with automatic reconciliation and insightful analytics.
     </p>
-    <button class="mt-8 bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-100 transition">
+    <a
+      href="/register"
+      class="mt-8 bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-200 transition"
+    >
       Get Started
-    </button>
+    </a>
   </section>
 
   <section class="w-full py-16 flex justify-center">
@@ -37,8 +41,8 @@ import Base from '@/components/layout/Base.astro';
   <section class="w-full bg-gray-100 py-16 flex flex-col items-center text-center">
     <h2 class="text-3xl font-bold mb-4">Ready to start?</h2>
     <p class="mb-6 max-w-2xl text-gray-700">Sign up today and see how Reconciler can streamline your workflow.</p>
-    <button class="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+    <a href="/register" class="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition">
       Sign Up
-    </button>
+    </a>
   </section>
 </Base>

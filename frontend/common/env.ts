@@ -7,9 +7,9 @@ const modeMap: Record<string, string> = {
   test: 'test',
 };
 
-export function getEnv(dirname: string, baseDirUp = '.') {
+export function getEnv() {
   const mode = modeMap[process.env.NODE_ENV ?? ''] ?? '';
-  const envDir = path.resolve(dirname, baseDirUp);
+  const envDir = path.resolve(import.meta.dirname, '..');
 
   return loadEnv(mode, envDir, '');
 }

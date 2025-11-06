@@ -3,6 +3,10 @@ import Head from './Head.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 
+interface Props {
+  title: string;
+}
+
 const { title } = Astro.props;
 ---
 

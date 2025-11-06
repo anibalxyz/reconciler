@@ -13,8 +13,8 @@ interface ErrorResponse {
   details: string[];
 }
 
-type RegistrationResponse = UserCreateResponse | ErrorResponse;
-type LoginResponse = AuthResponse | ErrorResponse;
+export type RegistrationResponse = UserCreateResponse | ErrorResponse;
+export type LoginResponse = AuthResponse | ErrorResponse;
 
 export default class AuthService {
   public async registerUser(name: string, email: string, password: string): Promise<RegistrationResponse> {
@@ -32,12 +32,13 @@ export default class AuthService {
   public async loginUser(email: string, password: string): Promise<LoginResponse> {
     const payload = { email, password };
 
-    return fetch('auth/login', {
+    return fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      credentials: 'include',
     }).then((res) => res.json());
   }
 }

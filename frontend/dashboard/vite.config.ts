@@ -4,7 +4,7 @@ import baseConfig from '../vite.config.ts';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
-const env = getEnv(import.meta.dirname, '..');
+const env = getEnv();
 
 export default mergeConfig(baseConfig, {
   plugins: [react()],

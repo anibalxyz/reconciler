@@ -21,6 +21,8 @@ services:
     container_name: reconciler-dev-dashboard
     env_file:
       - ./frontend/.env.dev
+    environment:
+      - APP_ENV=${APP_ENV}
     ports:
       - "${DASHBOARD_PORT}:5174"
     volumes:
@@ -48,6 +50,8 @@ services:
     container_name: reconciler-dev-public-site
     env_file:
       - ./frontend/.env.dev
+    environment:
+      - APP_ENV=${APP_ENV}
     ports:
       - "${PUBLIC_SITE_PORT}:5173"
     volumes:

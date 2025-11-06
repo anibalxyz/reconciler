@@ -3,7 +3,7 @@ import { mergeConfig, UserConfig } from 'vite';
 import { defineConfig } from 'astro/config';
 import { getEnv } from '../common/env.ts';
 
-const env = getEnv(import.meta.dirname, '..');
+const env = getEnv();
 
 export default defineConfig({
   server: {
