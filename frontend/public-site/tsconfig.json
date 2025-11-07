@@ -6,6 +6,7 @@
       "@components/*": ["./src/components/*"],
       "@layout/*": ["./src/layout/*"],
       "@services/*": ["./src/services/*"],
+      "@validation/*": ["./src/validation/*"],
       "@common/*": ["../common/*"]
     }
   },

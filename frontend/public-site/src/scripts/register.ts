@@ -1,4 +1,5 @@
 import AuthService, { LoginResponse, RegistrationResponse } from '@services/AuthService';
+import { registerSchema } from '@validation/authSchemas';
 
 const authService: AuthService = new AuthService();
 
@@ -6,16 +7,12 @@ const registerForm = document.getElementById('registerForm') as HTMLFormElement;
 registerForm.addEventListener('submit', async (event) => {
   event.preventDefault();
 
-  const formData = new FormData(registerForm);
-  const name = formData.get('name') as string;
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const passwordConfirm = formData.get('passwordConfirm') as string;
-
-  if (password !== passwordConfirm) {
-    console.log('Passwords do not match');
+  const formData = registerSchema.safeParse(Object.fromEntries(new FormData(registerForm)));
+  if (!formData.success) {
+    console.log(formData.error.flatten().fieldErrors);
     return;
   }
+  const { name, email, password } = formData.data;
 
   const responseRegister: RegistrationResponse = await authService.registerUser(name, email, password);
   if ('error' in responseRegister) {
