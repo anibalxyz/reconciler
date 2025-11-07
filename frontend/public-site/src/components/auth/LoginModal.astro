@@ -6,11 +6,11 @@ const isDev: boolean = env.APP_ENV === 'dev';
 
 <dialog
   id="loginSuccessModal"
-  class="p-6 max-w-lg rounded-lg bg-white shadow-lg text-center backdrop:bg-black/50"
+  class="max-w-lg rounded-lg bg-white p-6 text-center shadow-lg backdrop:bg-black/50"
   style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);"
 >
   <h2 class="text-lg font-semibold text-gray-900">Login successful!</h2>
-  <p class="text-gray-600 mt-2">
+  <p class="mt-2 text-gray-600">
     {
       isDev && (
         <>
@@ -22,6 +22,6 @@ const isDev: boolean = env.APP_ENV === 'dev';
     You will be redirected to the dashboard.
   </p>
   <form method="dialog" class="mt-4">
-    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Accept</button>
+    <button class="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700">Accept</button>
   </form>
 </dialog>

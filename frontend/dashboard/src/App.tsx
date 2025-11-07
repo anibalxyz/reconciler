@@ -46,15 +46,15 @@ export default function App() {
     };
   }, []);
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-gray-800 font-sans p-6">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 font-sans text-gray-800">
       <p className="mb-4 text-sm">
         Go Home:{' '}
         <a href="/" className="text-blue-600 hover:underline">
           /
         </a>
       </p>
-      <h1 className="text-2xl font-semibold mb-4">API Health Check</h1>
-      <div className="flex items-center gap-2 bg-white shadow p-4 rounded">
+      <h1 className="mb-4 text-2xl font-semibold">API Health Check</h1>
+      <div className="flex items-center gap-2 rounded bg-white p-4 shadow">
         <span className="font-medium">Status:</span>
         <span
           className={`font-semibold ${

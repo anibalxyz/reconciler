@@ -1,14 +1,16 @@
 ---
-import LoginModal from '@components/LoginModal.astro';
-import RegisterForm from '@components/RegisterForm.astro';
+import LoginModal from '@components/auth/LoginModal.astro';
+import RegisterForm from '@components/auth/RegisterForm.astro';
+import ValidationErrorList from '@layout/auth/ValidationErrorList.astro';
 import Base from '@layout/Base.astro';
 ---
 
 <Base title="Register">
-  <div class="flex flex-col items-center justify-center min-h-full px-4">
+  <div class="flex min-h-full flex-col items-center justify-center px-4">
     <RegisterForm />
-    <LoginModal />
+    <ValidationErrorList />
   </div>
 
+  <LoginModal />
   <script src="/src/scripts/register.ts"></script>
 </Base>

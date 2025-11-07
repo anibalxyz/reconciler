@@ -1,14 +1,17 @@
 ---
 import Base from '@layout/Base.astro';
-import LoginForm from '@components/LoginForm.astro';
-import LoginModal from '@components/LoginModal.astro';
+import LoginForm from '@components/auth/LoginForm.astro';
+import LoginModal from '@components/auth/LoginModal.astro';
+import ValidationErrorList from '@layout/auth/ValidationErrorList.astro';
 ---
 
 <Base title="Login">
-  <div class="flex flex-col items-center justify-center min-h-full px-4">
+  <div class="flex min-h-full flex-col items-center justify-center px-4">
+    <!-- TODO: replace with inline errors -->
+    <ValidationErrorList />
     <LoginForm />
-    <LoginModal />
   </div>
 
+  <LoginModal />
   <script src="/src/scripts/login.ts"></script>
 </Base>
