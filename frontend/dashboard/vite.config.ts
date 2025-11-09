@@ -1,7 +1,7 @@
 import { mergeConfig } from 'vite';
 import { getEnv } from '../common/env.ts';
 import baseConfig from '../vite.config.ts';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import path from 'node:path';
 
 const env = getEnv();

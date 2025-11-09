@@ -4,6 +4,7 @@ interface UserCreateResponse {
   email: string;
 }
 
+// TODO: remove this return in API
 interface AuthResponse {
   accessToken: string;
 }
