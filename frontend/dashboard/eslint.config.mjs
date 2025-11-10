@@ -15,4 +15,10 @@ export default defineConfig(
     name: 'dashboard-react',
     files: ['**/*.tsx', '**/*.jsx'],
   },
+  {
+    rules: {
+      // Preferred for readability
+      '@eslint-react/no-use-context': 'off',
+    },
+  },
 );

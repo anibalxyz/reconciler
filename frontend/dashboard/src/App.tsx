@@ -1,75 +1,46 @@
+import Home from './pages/Home';
+import { AuthContext } from './context/AuthContext';
 import { useEffect, useState } from 'react';
+import AuthService from './services/AuthService';
 
-type ApiStatus = 'loading' | 'healthy' | 'unhealthy' | 'error';
-const STATUS_MESSAGES = {
-  loading: 'Connecting...',
-  healthy: 'API is healthy (able to access the database)',
-  unhealthy: 'API is unhealthy (unable to access the database)',
-  error: 'Unable to connect to API :(',
-};
-
-async function fetchStatus(
-  abortSignal: AbortSignal,
-  setStatus: React.Dispatch<React.SetStateAction<ApiStatus>>,
-): Promise<void> {
-  try {
-    const response = await fetch('/api/health', {
-      signal: abortSignal,
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const data: { dbIsConnected: boolean } = await response.json();
-    console.log('Health check response:', data);
-    const status: ApiStatus = data.dbIsConnected ? 'healthy' : 'unhealthy';
-
-    setStatus(status);
-  } catch (err: Error | unknown) {
-    if (!abortSignal.aborted) {
-      console.error('ERROR: ' + err);
-      setStatus('error');
-    }
-  }
-}
+const authService: AuthService = new AuthService();
 
 export default function App() {
-  const [status, setStatus] = useState<ApiStatus>('loading');
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  async function refreshToken(): Promise<string | null> {
+    const response = await authService.refreshToken();
+    // TODO: show modal with redirection | access the dashboard "Home"
+    if ('error' in response.data) {
+      console.error(response.data.error);
+      switch (response.status) {
+        case 400:
+          console.log("It looks like you're not logged in. Please sign in to continue");
+          break;
+        case 401:
+          console.log('Your session has expired. Please sign in again');
+          break;
+        default:
+          // TODO: handle unknown errors globally (shared modal)
+          console.log('Unknown error');
+          break;
+      }
+      return null;
+    } else {
+      return response.data.accessToken;
+    }
+  }
 
   useEffect(() => {
-    const abortController = new AbortController();
-    const abortSignal = abortController.signal;
-
-    fetchStatus(abortSignal, setStatus);
-
-    return () => {
-      abortController.abort();
+    const run = async () => {
+      const token = await refreshToken();
+      setAccessToken(token);
     };
+    run();
   }, []);
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 font-sans text-gray-800">
-      <p className="mb-4 text-sm">
-        Go Home:{' '}
-        <a href="/" className="text-blue-600 hover:underline">
-          /
-        </a>
-      </p>
-      <h1 className="mb-4 text-2xl font-semibold">API Health Check</h1>
-      <div className="flex items-center gap-2 rounded bg-white p-4 shadow">
-        <span className="font-medium">Status:</span>
-        <span
-          className={`font-semibold ${
-            status === 'healthy'
-              ? 'text-green-600'
-              : status === 'unhealthy'
-                ? 'text-yellow-600'
-                : status === 'error'
-                  ? 'text-red-600'
-                  : 'text-gray-500'
-          }`}
-        >
-          {STATUS_MESSAGES[status]}
-        </span>
-      </div>
-    </main>
+    <AuthContext value={{ accessToken, setAccessToken }}>
+      <Home />
+    </AuthContext>
   );
 }
