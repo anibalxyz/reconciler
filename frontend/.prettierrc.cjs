@@ -1,4 +1,4 @@
-/* eslint-disable */ 
+/* eslint-disable */
 /** @type {import('prettier').Config & import('prettier-plugin-tailwindcss').PluginOptions} */
 module.exports = {
   plugins: ['prettier-plugin-astro', 'prettier-plugin-tailwindcss'],
@@ -13,7 +13,7 @@ module.exports = {
   useTabs: false,
   semi: true,
   singleQuote: true,
-  trailingComma: 'all',   
+  trailingComma: 'all',
   bracketSpacing: true,
   arrowParens: 'always',
   jsxSingleQuote: false,
