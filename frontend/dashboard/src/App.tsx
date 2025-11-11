@@ -2,16 +2,21 @@ import Home from './pages/Home';
 import { AuthContext } from './context/AuthContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AuthService from '@common/services/AuthService';
-import UnauthorizedModal from './components/UnauthorizedModal';
+import Modal from './components/common/Modal';
+import ModalContent from './components/common/ModalContent';
 
+interface Warning {
+  title: string;
+  message: string;
+  icon: 'info' | 'warn' | 'error';
+}
+
+// TODO: review -> seems too overloaded
 export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState({
-    title: '',
-    message: '',
-  });
-  const authService = useMemo(() => new AuthService(), []); // useMemo -> do not re-create
+  const [warning, setWarning] = useState(null as Warning | null);
+  const authService = useMemo(() => new AuthService(), []); // useMemo -> do not re-create on re-render
 
   const refreshToken = useCallback(async (): Promise<number> => {
     const response = await authService.refreshToken();
@@ -27,20 +32,25 @@ export default function App() {
       if (status >= 400) {
         switch (status) {
           case 400:
-            setMessage({
+            setWarning({
               title: "It looks like you're not logged in",
               message: 'Please sign in to continue',
+              icon: 'info',
             });
             break;
           case 401:
-            setMessage({
+            setWarning({
               title: 'Your session has expired',
               message: 'Please sign in again',
+              icon: 'info',
             });
             break;
           default:
-            // TODO: handle unknown errors globally (shared modal)
-            console.log('Unknown error');
+            setWarning({
+              title: 'An unknown error occurred',
+              message: 'Please try again later',
+              icon: 'warn',
+            });
             break;
         }
       }
@@ -61,7 +71,12 @@ export default function App() {
 
   if (loading) return <div>Loading...</div>;
 
-  if (message.title.length > 0) return <UnauthorizedModal message={message} />;
+  if (warning)
+    return (
+      <Modal onClose={() => (window.location.href = '/login')}>
+        <ModalContent message={warning.message} title={warning.title} type={warning.icon}></ModalContent>
+      </Modal>
+    );
 
   return (
     <AuthContext value={{ accessToken, setAccessToken, refreshToken }}>
