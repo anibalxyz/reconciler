@@ -1,7 +1,7 @@
 import Home from './pages/Home';
 import { AuthContext } from './context/AuthContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import AuthService from './services/AuthService';
+import AuthService from '@common/services/AuthService';
 import UnauthorizedModal from './components/UnauthorizedModal';
 
 export default function App() {

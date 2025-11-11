@@ -1,4 +1,4 @@
-import AuthService, { LoginResponse, RegistrationResponse } from '@services/AuthService';
+import AuthService from '@common/services/AuthService';
 import { registerSchema } from '@validation/authSchemas';
 
 const authService: AuthService = new AuthService();
@@ -30,16 +30,15 @@ registerForm.addEventListener('submit', async (event) => {
   const { name, email, password } = formData.data;
 
   // TODO: DRY
-  const responseRegister: RegistrationResponse = await authService.registerUser(name, email, password);
-  if ('error' in responseRegister) {
-    updateValidationErrors(responseRegister.details);
-
+  const responseRegister = await authService.registerUser(name, email, password);
+  if ('error' in responseRegister.data) {
+    updateValidationErrors(responseRegister.data.details);
     return;
   }
 
-  const responseLogin: LoginResponse = await authService.loginUser(email, password);
-  if ('error' in responseLogin) {
-    updateValidationErrors(responseLogin.details);
+  const responseLogin = await authService.loginUser(email, password);
+  if ('error' in responseLogin.data) {
+    updateValidationErrors(responseLogin.data.details);
     return;
   }
 

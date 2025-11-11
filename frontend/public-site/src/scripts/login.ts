@@ -1,4 +1,4 @@
-import AuthService, { LoginResponse } from '@services/AuthService';
+import AuthService from '@common/services/AuthService';
 import { loginSchema } from '@validation/authSchemas';
 
 const authService: AuthService = new AuthService();
@@ -30,9 +30,9 @@ loginForm.addEventListener('submit', async (event) => {
 
   const { email, password } = formData.data;
 
-  const response: LoginResponse = await authService.loginUser(email, password);
-  if ('error' in response) {
-    updateValidationErrors(response.details);
+  const response = await authService.loginUser(email, password);
+  if ('error' in response.data) {
+    updateValidationErrors(response.data.details);
     return;
   }
 
