@@ -4,19 +4,29 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import AuthService from '@common/services/AuthService';
 import Modal from '@components/common/Modal';
 import ModalContent from '@components/common/ModalContent';
+import { Props as ModalProps } from '@components/common/ModalContent';
 
-interface Warning {
-  title: string;
-  message: string;
-  icon: 'info' | 'warn' | 'error';
-}
+type ModalContentProps = ModalProps & {
+  redirect: string;
+};
 
 // TODO: review -> seems too overloaded
 export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [warning, setWarning] = useState(null as Warning | null);
+  const [modal, setModal] = useState(null as ModalContentProps | null);
   const authService = useMemo(() => new AuthService(), []); // useMemo -> do not re-create on re-render
+
+  const logout = useCallback(() => {
+    setAccessToken(null);
+    // TODO: add authService.logout();
+    setModal({
+      title: 'Logged out successfully',
+      message: 'See you soon!',
+      confirm: 'Go to home',
+      type: 'info',
+      redirect: '/',
+    });
+  }, []);
 
   const refreshToken = useCallback(async (): Promise<number> => {
     const response = await authService.refreshToken();
@@ -26,61 +36,74 @@ export default function App() {
     return response.status;
   }, [authService]);
 
+  const getModalPropsByStatus = useCallback((status: number): ModalContentProps | null => {
+    if (status < 400) {
+      return null;
+    }
+    switch (status) {
+      case 400:
+        return {
+          title: "It looks like you're not logged in",
+          message: 'Please sign in to continue',
+          confirm: 'Sign in',
+          type: 'warn',
+          redirect: '/login',
+        };
+      case 401:
+        return {
+          title: 'Your session has expired',
+          message: 'Please sign in again',
+          confirm: 'Sign in',
+          type: 'info',
+          redirect: '/login',
+        };
+      default:
+        return {
+          title: 'An unknown error occurred',
+          message: 'Please try again later',
+          confirm: 'Go to home',
+          type: 'error',
+          redirect: '/',
+        };
+    }
+  }, []);
+
   useEffect(() => {
+    if (accessToken !== null) return; // just executed at startup and logout
     const run = async () => {
-      const status = await refreshToken();
-      if (status >= 400) {
-        switch (status) {
-          case 400:
-            setWarning({
-              title: "It looks like you're not logged in",
-              message: 'Please sign in to continue',
-              icon: 'info',
-            });
-            break;
-          case 401:
-            setWarning({
-              title: 'Your session has expired',
-              message: 'Please sign in again',
-              icon: 'info',
-            });
-            break;
-          default:
-            setWarning({
-              title: 'An unknown error occurred',
-              message: 'Please try again later',
-              icon: 'warn',
-            });
-            break;
-        }
+      // modal already setted = logout was executed, then execute startup stuff
+      if (modal === null) {
+        const status = await refreshToken();
+        setModal(getModalPropsByStatus(status));
       }
-      setLoading(false);
     };
 
     // This waits until the browser finishes reloading and all cookies are reattached
     // before executing refreshToken(), preventing invalid session errors on fast reloads (F5 spam)
-    if (document.readyState === 'complete') {
+    const documentIsReady = document.readyState === 'complete';
+    if (documentIsReady) {
       run();
     } else {
       window.addEventListener('load', run);
     }
     return () => {
-      window.removeEventListener('load', run);
+      if (!documentIsReady) window.removeEventListener('load', run);
     };
-  }, [refreshToken]);
+  }, [logout, getModalPropsByStatus, refreshToken, accessToken, modal]);
 
-  if (loading) return <div>Loading...</div>;
-
-  if (warning)
+  if (modal)
     return (
-      <Modal onClose={() => (window.location.href = '/login')}>
-        <ModalContent message={warning.message} title={warning.title} type={warning.icon}></ModalContent>
+      <Modal onClose={() => (window.location.href = modal.redirect)}>
+        <ModalContent {...modal}></ModalContent>
       </Modal>
     );
 
-  return (
-    <AuthContext value={{ accessToken, setAccessToken, refreshToken }}>
-      <Home />
-    </AuthContext>
-  );
+  if (accessToken)
+    return (
+      <AuthContext value={{ accessToken, refreshToken, logout }}>
+        <Home />
+      </AuthContext>
+    );
+
+  return <div>Loading...</div>;
 }

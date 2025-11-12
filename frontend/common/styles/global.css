@@ -13,4 +13,6 @@
   --color-primary-800: #4622b5;
   --color-primary-900: #32197d;
   --color-primary-950: #221065;
+
+  --breakpoint-xsm: 32rem;
 }

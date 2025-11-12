@@ -2,9 +2,10 @@ import ErrorIcon from '@icons/ErrorIcon';
 import InfoIcon from '@icons/InfoIcon';
 import WarnIcon from '@icons/WarnIcon';
 
-interface Props {
+export interface Props {
   title: string;
   message: string;
+  confirm: string;
   type: 'info' | 'warn' | 'error';
 }
 
@@ -20,13 +21,13 @@ const styles = {
   error: 'bg-red-600 hover:bg-red-700 focus:ring-red-400',
 };
 
-export default function ModalContent({ title, message, type }: Props) {
+export default function ModalContent({ title, message, confirm, type }: Props) {
   return (
-    <div className="flex max-w-md flex-col bg-white p-6">
-      <div className="flex flex-row justify-between max-md:flex-col max-md:items-center">
-        <div className="w-full max-w-1/5">{icons[type]}</div>
-        <div className="flex w-fit flex-col justify-center">
-          <h1 id="modalTitle" className="w-fit text-xl font-semibold text-nowrap text-gray-900">
+    <div className="max-xsm:max-w-full flex w-max max-w-md flex-col bg-white p-6">
+      <div className="max-xsm:flex-col max-xsm:items-center flex flex-row justify-between">
+        <div className="max-xsm:max-w-18 w-full max-w-1/5">{icons[type]}</div>
+        <div className="flex flex-col justify-center">
+          <h1 id="modalTitle" className="w-fit text-xl font-semibold text-gray-900">
             {title}
           </h1>
           <p id="modalMessage" className="w-fit">
@@ -38,7 +39,7 @@ export default function ModalContent({ title, message, type }: Props) {
         <button
           className={`rounded ${styles[type]} px-4 py-2 text-white transition focus:ring-2 focus:ring-offset-2 focus:outline-none`}
         >
-          Login
+          {confirm}
         </button>
       </form>
     </div>
