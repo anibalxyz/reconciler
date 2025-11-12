@@ -2,12 +2,12 @@ import { mergeConfig } from 'vite';
 import { getEnv } from '../common/env.ts';
 import baseConfig from '../vite.config.ts';
 import react from '@vitejs/plugin-react-swc';
-import path from 'node:path';
+import tsConfigPaths from 'vite-tsconfig-paths';
 
 const env = getEnv();
 
 export default mergeConfig(baseConfig, {
-  plugins: [react()],
+  plugins: [react(), tsConfigPaths()],
   root: __dirname,
   base: '/dashboard',
   envDir: '..',
@@ -17,12 +17,6 @@ export default mergeConfig(baseConfig, {
       '^/(?!dashboard)': {
         target: env.PUBLIC_SITE_URL,
       },
-    },
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src/'),
-      '@common': path.resolve(__dirname, '../common/'),
     },
   },
 });

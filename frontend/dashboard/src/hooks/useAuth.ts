@@ -1,4 +1,4 @@
-import { AuthContext } from '@/context/AuthContext';
+import { AuthContext } from '@context/AuthContext';
 import { useCallback, useContext } from 'react';
 
 export default function useAuth() {

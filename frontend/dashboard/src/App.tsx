@@ -1,9 +1,9 @@
-import Home from './pages/Home';
-import { AuthContext } from './context/AuthContext';
+import Home from '@pages/Home';
+import { AuthContext } from '@context/AuthContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AuthService from '@common/services/AuthService';
-import Modal from './components/common/Modal';
-import ModalContent from './components/common/ModalContent';
+import Modal from '@components/common/Modal';
+import ModalContent from '@components/common/ModalContent';
 
 interface Warning {
   title: string;

@@ -1,6 +1,6 @@
-import ErrorIcon from '../icons/ErrorIcon';
-import InfoIcon from '../icons/InfoIcon';
-import WarnIcon from '../icons/WarnIcon';
+import ErrorIcon from '@icons/ErrorIcon';
+import InfoIcon from '@icons/InfoIcon';
+import WarnIcon from '@icons/WarnIcon';
 
 interface Props {
   title: string;
