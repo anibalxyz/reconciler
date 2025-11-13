@@ -10,7 +10,6 @@ type ModalContentProps = ModalProps & {
   redirect: string;
 };
 
-// TODO: review -> seems too overloaded
 export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [modal, setModal] = useState(null as ModalContentProps | null);
@@ -69,13 +68,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (accessToken !== null) return; // just executed at startup and logout
     const run = async () => {
-      // modal already setted = logout was executed, then execute startup stuff
-      if (modal === null) {
-        const status = await refreshToken();
-        setModal(getModalPropsByStatus(status));
-      }
+      const status = await refreshToken();
+      setModal(getModalPropsByStatus(status));
     };
 
     // This waits until the browser finishes reloading and all cookies are reattached
@@ -89,7 +84,7 @@ export default function App() {
     return () => {
       if (!documentIsReady) window.removeEventListener('load', run);
     };
-  }, [logout, getModalPropsByStatus, refreshToken, accessToken, modal]);
+  }, [getModalPropsByStatus, refreshToken]);
 
   if (modal)
     return (
