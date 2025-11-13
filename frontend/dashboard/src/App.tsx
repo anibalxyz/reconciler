@@ -1,59 +1,104 @@
-import "./App.css";
-import { useEffect, useState } from "react";
+import Home from '@pages/Home';
+import { AuthContext } from '@context/AuthContext';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import AuthService from '@common/services/AuthService';
+import Modal from '@components/common/Modal';
+import ModalContent from '@components/common/ModalContent';
+import { Props as ModalProps } from '@components/common/ModalContent';
 
-type ApiStatus = "loading" | "healthy" | "unhealthy" | "error";
-const STATUS_MESSAGES = {
-  loading: "Connecting...",
-  healthy: "API is healthy (able to access the database)",
-  unhealthy: "API is unhealthy (unable to access the database)",
-  error: "Unable to connect to API :(",
+type ModalContentProps = ModalProps & {
+  redirect: string;
 };
 
 export default function App() {
-  const [status, setStatus] = useState<ApiStatus>("loading");
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [modal, setModal] = useState(null as ModalContentProps | null);
+  const authService = useMemo(() => new AuthService(), []); // useMemo -> do not re-create on re-render
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    const abortSignal = abortController.signal;
-
-    async function fetchStatus(): Promise<void> {
-      try {
-        const response = await fetch("/api/health", {
-          signal: abortSignal,
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const data: { dbIsConnected: boolean } = await response.json();
-        console.log("Health check response:", data);
-        const status: ApiStatus = data.dbIsConnected ? "healthy" : "unhealthy";
-
-        setStatus(status);
-      } catch (err: any) {
-        if (!abortSignal.aborted) {
-          console.error("ERROR: " + err);
-          setStatus("error");
-        }
-      }
-    }
-
-    fetchStatus();
-
-    return () => {
-      abortController.abort();
-    };
+  const logout = useCallback(() => {
+    setAccessToken(null);
+    // TODO: add authService.logout();
+    setModal({
+      title: 'Logged out successfully',
+      message: 'See you soon!',
+      confirm: 'Go to home',
+      type: 'info',
+      redirect: '/',
+    });
   }, []);
 
-  return (
-    <main>
-      <p className="homeLink">
-        Go Home: <a href="/">"/"</a>
-      </p>
-      <h1>API Health Check</h1>
-      <div className="statusContainer">
-        <span>Status:</span>
-        <span className="apiStatus">{STATUS_MESSAGES[status]}</span>
-      </div>
-    </main>
-  );
+  const refreshToken = useCallback(async (): Promise<number> => {
+    const response = await authService.refreshToken();
+    if ('accessToken' in response.data) {
+      setAccessToken(response.data.accessToken);
+    }
+    return response.status;
+  }, [authService]);
+
+  const getModalPropsByStatus = useCallback((status: number): ModalContentProps | null => {
+    if (status < 400) {
+      return null;
+    }
+    switch (status) {
+      case 400:
+        return {
+          title: "It looks like you're not logged in",
+          message: 'Please sign in to continue',
+          confirm: 'Sign in',
+          type: 'warn',
+          redirect: '/login',
+        };
+      case 401:
+        return {
+          title: 'Your session has expired',
+          message: 'Please sign in again',
+          confirm: 'Sign in',
+          type: 'info',
+          redirect: '/login',
+        };
+      default:
+        return {
+          title: 'An unknown error occurred',
+          message: 'Please try again later',
+          confirm: 'Go to home',
+          type: 'error',
+          redirect: '/',
+        };
+    }
+  }, []);
+
+  useEffect(() => {
+    const run = async () => {
+      const status = await refreshToken();
+      setModal(getModalPropsByStatus(status));
+    };
+
+    // This waits until the browser finishes reloading and all cookies are reattached
+    // before executing refreshToken(), preventing invalid session errors on fast reloads (F5 spam)
+    const documentIsReady = document.readyState === 'complete';
+    if (documentIsReady) {
+      run();
+    } else {
+      window.addEventListener('load', run);
+    }
+    return () => {
+      if (!documentIsReady) window.removeEventListener('load', run);
+    };
+  }, [getModalPropsByStatus, refreshToken]);
+
+  if (modal)
+    return (
+      <Modal onClose={() => (window.location.href = modal.redirect)}>
+        <ModalContent {...modal}></ModalContent>
+      </Modal>
+    );
+
+  if (accessToken)
+    return (
+      <AuthContext value={{ accessToken, refreshToken, logout }}>
+        <Home />
+      </AuthContext>
+    );
+
+  return <div>Loading...</div>;
 }

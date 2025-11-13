@@ -1,11 +1,14 @@
-FROM node:22.16-alpine AS base
+FROM node:22.21.1-alpine AS base
 
 WORKDIR /app
 
 COPY ./package*.json .
 
-RUN npm install
+# Install only the root dependencies to leverage Docker cache
+RUN npm install --workspaces=false
 
 COPY ./tsconfig.base.json .
 
 COPY ./vite.config.ts .
+
+COPY ./common ./common

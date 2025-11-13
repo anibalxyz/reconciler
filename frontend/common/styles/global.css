@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+@theme {
+  /* TODO: choose a proper primary palette */
+  --color-primary-50: #f3f3ff;
+  --color-primary-100: #eae9fe;
+  --color-primary-200: #d7d6fe;
+  --color-primary-300: #bab5fd;
+  --color-primary-400: #988cf9;
+  --color-primary-500: #755df5;
+  --color-primary-600: #633bec;
+  --color-primary-700: #5429d8;
+  --color-primary-800: #4622b5;
+  --color-primary-900: #32197d;
+  --color-primary-950: #221065;
+
+  --breakpoint-xsm: 32rem;
+}

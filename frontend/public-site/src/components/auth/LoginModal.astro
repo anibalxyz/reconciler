@@ -1,0 +1,26 @@
+---
+import { getEnv } from '@common/env';
+const env = getEnv();
+const isDev: boolean = env.APP_ENV === 'dev';
+---
+
+<dialog
+  id="loginSuccessModal"
+  class="fixed top-1/2 left-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 text-center shadow-lg backdrop:bg-black/50 max-sm:max-w-[80dvw]"
+>
+  <h2 class="text-lg font-semibold text-gray-900">Login successful!</h2>
+  <p class="mt-2 text-gray-600">
+    {
+      isDev && (
+        <>
+          The refresh token has been successfully stored in the cookie.
+          <br />
+        </>
+      )
+    }
+    You will be redirected to the dashboard.
+  </p>
+  <form method="dialog" class="mt-4">
+    <button class="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700">Accept</button>
+  </form>
+</dialog>

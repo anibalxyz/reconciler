@@ -3,11 +3,13 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@common/*": ["./src/common/*"]
+      "@components/*": ["./src/components/*"],
+      "@layout/*": ["./src/layout/*"],
+      "@services/*": ["./src/services/*"],
+      "@validation/*": ["./src/validation/*"],
+      "@common/*": ["../common/*"]
     }
   },
-
   "include": ["./src/**/*"],
   "exclude": ["node_modules/", "dist/"]
 }

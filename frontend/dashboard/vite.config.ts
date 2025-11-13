@@ -1,26 +1,21 @@
-import { mergeConfig, loadEnv } from "vite";
-import baseConfig from "../vite.config.ts";
-import react from "@vitejs/plugin-react";
-import path from "path";
+import { mergeConfig } from 'vite';
+import { getEnv } from '../common/env.ts';
+import baseConfig from '../vite.config.ts';
+import react from '@vitejs/plugin-react-swc';
+import tsConfigPaths from 'vite-tsconfig-paths';
 
-const envDir = path.resolve(__dirname, "..");
-const envFile = loadEnv(process.env.NODE_ENV!, envDir, "");
+const env = getEnv();
 
 export default mergeConfig(baseConfig, {
-  plugins: [react()],
+  plugins: [react(), tsConfigPaths()],
   root: __dirname,
-  base: "/dashboard",
-  envDir: "..",
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-    },
-  },
+  base: '/dashboard',
+  envDir: '..',
   server: {
     port: 5174,
     proxy: {
-      "^/(?!dashboard)": {
-        target: envFile.PUBLIC_SITE_URL,
+      '^/(?!dashboard)': {
+        target: env.PUBLIC_SITE_URL,
       },
     },
   },

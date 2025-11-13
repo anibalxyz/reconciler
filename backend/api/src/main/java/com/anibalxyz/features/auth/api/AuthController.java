@@ -48,7 +48,7 @@ public class AuthController implements AuthApi {
   public void refresh(Context ctx) {
     String refreshTokenFromCookie = ctx.cookie("refreshToken");
     if (refreshTokenFromCookie == null) {
-      throw new UnauthorizedResponse("Missing refresh token in cookie");
+      throw new BadRequestResponse("Missing refresh token in cookie");
     }
 
     AuthResult authResult = authService.refreshTokens(refreshTokenFromCookie);

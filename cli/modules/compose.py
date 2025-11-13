@@ -258,7 +258,8 @@ def test(
     finally:
         try:
             lifecycle = get_lifecycle_services()
-            lifecycle.remove("all")  # TODO: keep db running
+            lifecycle.remove("all")
+            lifecycle.remove("db")  # remains ready for other test runs and for local testing
             down(lifecycle)
         finally:
             set_env(env_snap)
