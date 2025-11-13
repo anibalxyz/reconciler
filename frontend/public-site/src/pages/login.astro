@@ -3,6 +3,7 @@ import Base from '@layout/Base.astro';
 import LoginForm from '@components/auth/LoginForm.astro';
 import LoginModal from '@components/auth/LoginModal.astro';
 import ValidationErrorList from '@layout/auth/ValidationErrorList.astro';
+import FormLink from '@components/auth/FormLink.astro';
 ---
 
 <Base title="Login">
@@ -10,7 +11,13 @@ import ValidationErrorList from '@layout/auth/ValidationErrorList.astro';
     <!-- TODO: replace with inline errors -->
     <ValidationErrorList />
     <LoginForm />
-    <!-- TODO: add "I don't have an account" -->
+    <div
+      class="mt-5 flex flex-row justify-between gap-20 max-[26rem]:flex-col max-[26rem]:items-center max-[26rem]:gap-4"
+    >
+      <FormLink href="/register">Don't have an account?</FormLink>
+      <!-- TODO: add forgot password page and link it here-->
+      <FormLink href="#">Forgot password?</FormLink>
+    </div>
   </div>
 
   <LoginModal />
