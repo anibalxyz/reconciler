@@ -57,6 +57,19 @@ public interface AuthApi {
   void login(Context ctx);
 
   @OpenApi(
+      summary = "Log out user",
+      operationId = "logout",
+      path = "/auth/logout",
+      methods = HttpMethod.POST,
+      tags = {"Authentication"},
+      responses = {
+        @OpenApiResponse(
+            status = "204",
+            description = "Logout successful. The refresh token cookie is cleared.")
+      })
+  void logout(Context ctx);
+
+  @OpenApi(
       summary = "Refresh access token",
       operationId = "refreshToken",
       path = "/auth/refresh",

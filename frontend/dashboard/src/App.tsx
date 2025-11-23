@@ -17,7 +17,7 @@ export default function App() {
 
   const logout = useCallback(() => {
     setAccessToken(null);
-    // TODO: add authService.logout();
+    authService.logoutUser();
     setModal({
       title: 'Logged out successfully',
       message: 'See you soon!',
@@ -25,7 +25,7 @@ export default function App() {
       type: 'info',
       redirect: '/',
     });
-  }, []);
+  }, [authService]);
 
   const refreshToken = useCallback(async (): Promise<number> => {
     const response = await authService.refreshToken();

@@ -4,7 +4,7 @@ import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthResult;
 import com.anibalxyz.features.auth.application.AuthService;
-import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.auth.application.RefreshTokenService;
 import io.javalin.http.*;
 import java.time.Instant;
 
@@ -19,14 +19,16 @@ import java.time.Instant;
  */
 public class AuthController implements AuthApi {
   private final AuthService authService;
+  private final RefreshTokenService refreshTokenService;
 
   /**
    * Constructs an AuthController with the given authentication service.
    *
    * @param authService The application service for authentication operations.
    */
-  public AuthController(AuthService authService) {
+  public AuthController(AuthService authService, RefreshTokenService refreshTokenService) {
     this.authService = authService;
+    this.refreshTokenService = refreshTokenService;
   }
 
   /** {@inheritDoc} */
@@ -38,22 +40,45 @@ public class AuthController implements AuthApi {
             .check(r -> r.password() != null && !r.password().isBlank(), "Password is required")
             .get();
     AuthResult authResult = authService.authenticateUser(request);
+    long maxAgeInSeconds =
+        Math.max(
+            0,
+            authResult.refreshToken().expiryDate().getEpochSecond()
+                - Instant.now().getEpochSecond());
 
-    setRefreshTokenCookie(ctx, authResult.refreshToken());
+    setRefreshTokenCookie(ctx, authResult.refreshToken().token(), maxAgeInSeconds);
     ctx.status(200).json(new AuthResponse(authResult.accessToken()));
   }
 
-  /** {@inheritDoc} */
+  @Override
+  public void logout(Context ctx) {
+    String refreshTokenFromCookie = ctx.cookie("refreshToken");
+
+    if (refreshTokenFromCookie != null) {
+      refreshTokenService.revokeToken(refreshTokenFromCookie);
+    }
+
+    setRefreshTokenCookie(ctx, "", 0L);
+
+    ctx.status(204);
+  }
+
   @Override
   public void refresh(Context ctx) {
     String refreshTokenFromCookie = ctx.cookie("refreshToken");
     if (refreshTokenFromCookie == null) {
-      throw new BadRequestResponse("Missing refresh token in cookie");
+      throw new UnauthorizedResponse("Missing refresh token in cookie");
     }
 
     AuthResult authResult = authService.refreshTokens(refreshTokenFromCookie);
 
-    setRefreshTokenCookie(ctx, authResult.refreshToken());
+    long maxAgeInSeconds =
+        Math.max(
+            0,
+            authResult.refreshToken().expiryDate().getEpochSecond()
+                - Instant.now().getEpochSecond());
+
+    setRefreshTokenCookie(ctx, authResult.refreshToken().token(), maxAgeInSeconds);
     ctx.status(200).json(new AuthResponse(authResult.accessToken()));
   }
 
@@ -63,17 +88,15 @@ public class AuthController implements AuthApi {
    * @param ctx The Javalin context.
    * @param refreshToken The refresh token to be set in the cookie.
    */
-  private void setRefreshTokenCookie(Context ctx, RefreshToken refreshToken) {
-    long maxAgeInSeconds =
-        Math.max(0, refreshToken.expiryDate().getEpochSecond() - Instant.now().getEpochSecond());
-
+  private void setRefreshTokenCookie(Context ctx, String refreshToken, long maxAgeInSeconds) {
+    // TODO: surely can be a static prop by getting the ENV from another site
     boolean secure = "prod".equals(ctx.attribute("APP_ENV"));
     SameSite site = SameSite.STRICT; // TODO: check
 
     Cookie cookie =
         new Cookie(
             "refreshToken",
-            refreshToken.token(),
+            refreshToken,
             "/",
             (int) maxAgeInSeconds,
             secure,

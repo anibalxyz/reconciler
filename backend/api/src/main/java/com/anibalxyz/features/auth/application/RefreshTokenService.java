@@ -87,6 +87,25 @@ public class RefreshTokenService {
   }
 
   /**
+   * Revokes a refresh token if it exists.
+   *
+   * <p>This method finds a refresh token by its value and, if found, marks it as revoked in the
+   * repository. If the token is null or not found, the method does nothing.
+   *
+   * @param token The refresh token string to revoke.
+   */
+  public void revokeToken(String token) {
+    if (token == null) return;
+
+    refreshTokenRepository
+        .findByToken(token)
+        .ifPresent(
+            (refreshToken) -> {
+              refreshTokenRepository.save(refreshToken.withRevoked(true));
+            });
+  }
+
+  /**
    * Cleans up expired refresh tokens from the data store.
    *
    * @return The number of deleted tokens.

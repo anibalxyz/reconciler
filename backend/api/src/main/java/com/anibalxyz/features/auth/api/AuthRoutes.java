@@ -32,6 +32,7 @@ public class AuthRoutes extends RouteRegistry {
   public void register() {
     new RouteGroup("/auth", server)
         .post("/login", authApi::login)
-        .post("/refresh", authApi::refresh);
+        .post("/refresh", authApi::refresh)
+        .post("/logout", authApi::logout);
   }
 }
