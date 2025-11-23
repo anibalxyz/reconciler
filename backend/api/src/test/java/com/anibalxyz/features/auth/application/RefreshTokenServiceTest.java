@@ -97,6 +97,39 @@ public class RefreshTokenServiceTest {
       int actualDeletedTokens = refreshTokenService.cleanupExpiredTokens();
       assertThat(actualDeletedTokens).isEqualTo(expectedDeletedTokens);
     }
+
+    @Test
+    @DisplayName("revokeToken: given existing token, then revoke token")
+    public void revokeToken_existingToken_revokeToken() {
+      RefreshToken token =
+          new RefreshToken(
+              1L, VALID_REFRESH_TOKEN, VALID_USER, Instant.now().plusSeconds(2), false);
+
+      when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.of(token));
+
+      refreshTokenService.revokeToken(VALID_REFRESH_TOKEN);
+
+      verify(refreshTokenRepository).save(token.withRevoked(true));
+    }
+
+    @Test
+    @DisplayName("revokeToken: given non-existing token, then do nothing")
+    public void revokeToken_nonExistingToken_doNothing() {
+      when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.empty());
+
+      refreshTokenService.revokeToken(VALID_REFRESH_TOKEN);
+
+      verify(refreshTokenRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("revokeToken: given null token, then do nothing")
+    public void revokeToken_nullToken_doNothing() {
+      refreshTokenService.revokeToken(null);
+
+      verify(refreshTokenRepository, never()).findByToken(any());
+      verify(refreshTokenRepository, never()).save(any());
+    }
   }
 
   @Nested

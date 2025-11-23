@@ -98,13 +98,16 @@ public class AuthRoutesIntegrationTest {
   }
 
   private static String getValueFromCookie(String cookie, String key) {
-    String result = null;
+    if (cookie == null) {
+      return null;
+    }
     for (String cookiePart : cookie.split(";")) {
-      if (cookiePart.contains(key)) {
-        result = cookiePart.split("=")[1];
+      String[] parts = cookiePart.trim().split("=");
+      if (parts.length > 0 && parts[0].equals(key)) {
+        return parts.length > 1 ? parts[1] : "";
       }
     }
-    return result;
+    return null;
   }
 
   @BeforeEach
@@ -180,6 +183,50 @@ public class AuthRoutesIntegrationTest {
       AuthResponse body = http.parseBody(refreshResponse, AuthResponse.class);
       assertThat(body).isNotNull();
       assertThat(isValidToken(body.accessToken(), Token.ACCESS)).isTrue();
+    }
+
+    @Test
+    @DisplayName(
+        "POST /auth/logout: given existing refresh token, then return 204 and clear cookie")
+    void POST_auth_logout_existingRefreshToken_return204AndClearCookie() {
+      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
+      LoginRequest request = new LoginRequest(user.getEmail(), VALID_PASSWORD);
+      String refreshToken;
+      try (Response loginResponse = http.post("/auth/login", request)) {
+        String cookie = loginResponse.header("Set-Cookie");
+        assertThat(cookie).isNotNull();
+        refreshToken = getValueFromCookie(cookie, "refreshToken");
+        assertThat(refreshToken).isNotNull();
+      }
+
+      Map<String, String> headers = Map.of("Cookie", "refreshToken=" + refreshToken);
+
+      try (Response logoutResponse = http.post("/auth/logout", "", headers)) {
+
+        assertThat(logoutResponse.code()).isEqualTo(204);
+        String cookie = logoutResponse.header("Set-Cookie");
+        assertThat(cookie).isNotNull();
+        assertThat(getValueFromCookie(cookie, "refreshToken")).isEmpty();
+        assertThat(cookie).contains("Max-Age=0");
+      }
+      em.clear();
+
+      RefreshToken revokedToken = refreshTokenRepository.findByToken(refreshToken).orElseThrow();
+      assertThat(revokedToken.revoked()).isTrue();
+    }
+
+    @Test
+    @DisplayName("POST /auth/logout: given no refresh token, then return 204 and clear cookie")
+    void POST_auth_logout_noRefreshToken_return204AndClearCookie() {
+      try (Response response = http.post("/auth/logout", "")) {
+
+        assertThat(response.code()).isEqualTo(204);
+        String cookie = response.header("Set-Cookie");
+        assertThat(cookie).isNotNull();
+        assertThat(getValueFromCookie(cookie, "refreshToken")).isEmpty();
+        assertThat(getValueFromCookie(cookie, "Max-Age")).isEqualTo("0");
+      }
+      assertThat(refreshTokenRepository.findAll()).isEmpty();
     }
   }
 

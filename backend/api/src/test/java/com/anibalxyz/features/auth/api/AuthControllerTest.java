@@ -14,6 +14,7 @@ import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthResult;
 import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.auth.application.RefreshTokenService;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import io.javalin.http.Context;
@@ -36,6 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("Tests for AuthController")
 public class AuthControllerTest {
   @Mock private AuthService authService;
+  @Mock private RefreshTokenService refreshTokenService;
   @Mock private Context ctx;
 
   @InjectMocks private AuthController authController;
@@ -68,6 +70,38 @@ public class AuthControllerTest {
       verify(ctx).status(200);
       AuthResponse response = capturedJsonAs(ctx, AuthResponse.class);
       assertThat(response.accessToken()).isEqualTo(VALID_JWT);
+    }
+
+    @Test
+    @DisplayName("logout: given existing refresh token, then clear cookie and revoke token")
+    void logout_existingRefreshToken_clearCookieAndRevokeToken() {
+      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
+
+      authController.logout(ctx);
+
+      verify(refreshTokenService).revokeToken(VALID_REFRESH_TOKEN);
+      verify(ctx).status(204);
+
+      Cookie cookie = capturedCookie(ctx);
+      assertThat(cookie.getName()).isEqualTo("refreshToken");
+      assertThat(cookie.getValue()).isEmpty();
+      assertThat(cookie.getMaxAge()).isZero();
+    }
+
+    @Test
+    @DisplayName("logout: given no refresh token, then clear cookie")
+    void logout_noRefreshToken_clearCookie() {
+      when(ctx.cookie("refreshToken")).thenReturn(null);
+
+      authController.logout(ctx);
+
+      verify(refreshTokenService, never()).revokeToken(anyString());
+      verify(ctx).status(204);
+
+      Cookie cookie = capturedCookie(ctx);
+      assertThat(cookie.getName()).isEqualTo("refreshToken");
+      assertThat(cookie.getValue()).isEmpty();
+      assertThat(cookie.getMaxAge()).isZero();
     }
 
     @Test
