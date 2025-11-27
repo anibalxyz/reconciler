@@ -5,7 +5,8 @@ import com.anibalxyz.features.auth.application.exception.InvalidCredentialsExcep
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.users.domain.User;
-import java.time.Instant;
+import java.time.*;
+import java.time.temporal.TemporalAdjusters;
 import java.util.UUID;
 
 /**
@@ -44,10 +45,20 @@ public class RefreshTokenService {
    * @return The newly created and persisted {@link RefreshToken}.
    */
   public RefreshToken createRefreshToken(User user) {
-    Instant expiryDate = Instant.now().plus(env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
-    String tokenValue = UUID.randomUUID().toString();
+    // TODO: Fixed ZoneId until adapted to multi-tenant
+    ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/Montevideo"));
 
-    RefreshToken refreshToken = new RefreshToken(null, tokenValue, user, expiryDate, false);
+    Instant nextFriday20hs =
+        now.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY))
+            .with(LocalTime.of(20, 0))
+            .toInstant();
+
+    Instant expiryDate = now.toInstant().plus(env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
+
+    expiryDate = expiryDate.isBefore(nextFriday20hs) ? expiryDate : nextFriday20hs;
+
+    RefreshToken refreshToken =
+        new RefreshToken(null, UUID.randomUUID().toString(), user, expiryDate, false);
 
     return refreshTokenRepository.save(refreshToken);
   }

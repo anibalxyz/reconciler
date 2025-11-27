@@ -6,6 +6,7 @@ import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.User;
+import java.time.*;
 
 /**
  * Application service for authentication-related use cases.
@@ -74,6 +75,24 @@ public class AuthService {
    *     revoked.
    */
   public AuthResult refreshTokens(String refreshTokenString) {
+    // TODO: Fixed ZoneId until adapted to multi-tenant
+    ZonedDateTime zdt = Instant.now().atZone(ZoneId.of("America/Montevideo"));
+
+    DayOfWeek day = zdt.getDayOfWeek();
+    LocalTime time = zdt.toLocalTime();
+
+    // Friday 20:00 → Monday 08:00
+    boolean isBlocked =
+        (day == DayOfWeek.FRIDAY && time.isAfter(LocalTime.of(20, 0)))
+            || (day == DayOfWeek.SATURDAY)
+            || (day == DayOfWeek.SUNDAY)
+            || (day == DayOfWeek.MONDAY && time.isBefore(LocalTime.of(8, 0)));
+
+    if (isBlocked) {
+      // TODO: then it will have a specific error code
+      throw new InvalidCredentialsException("Refresh is disabled during maintenance window");
+    }
+
     RefreshToken newRefreshToken = refreshTokenService.verifyAndRotate(refreshTokenString);
     String newAccessToken = jwtService.generateToken(newRefreshToken.user().getId());
     return new AuthResult(newAccessToken, newRefreshToken);

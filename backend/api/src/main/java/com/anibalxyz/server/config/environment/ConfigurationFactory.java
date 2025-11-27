@@ -85,7 +85,7 @@ public class ConfigurationFactory {
 
     String authCookieDomain = getEnvVar("AUTH_COOKIE_DOMAIN", System::getenv, true);
     Boolean authCookieSecure = appEnv.equals("prod");
-    String authCookiePath = apiPublicPrefix + "/auth/refresh";
+    String authCookiePath = apiPublicPrefix + "/auth";
 
     SameSite authCookieSameSite;
     try {
@@ -157,7 +157,7 @@ public class ConfigurationFactory {
 
     String authCookieDomain = getEnvVar("AUTH_COOKIE_DOMAIN", props::getProperty, true);
     Boolean authCookieSecure = appEnv.equals("prod");
-    String authCookiePath = apiPublicPrefix + "/auth/refresh";
+    String authCookiePath = apiPublicPrefix + "/auth";
 
     SameSite authCookieSameSite;
     try {

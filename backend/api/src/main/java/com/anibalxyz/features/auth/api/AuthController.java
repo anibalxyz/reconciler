@@ -105,7 +105,7 @@ public class AuthController implements AuthApi {
             true, // HttpOnly
             null, // Comment
             env.AUTH_COOKIE_DOMAIN(), // Domain
-            env.AUTH_COOKIE_SAMESITE());
+            SameSite.STRICT); // hardcoded to test
     ctx.cookie(cookie);
   }
 }
