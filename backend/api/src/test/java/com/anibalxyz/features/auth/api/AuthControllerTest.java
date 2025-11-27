@@ -2,6 +2,7 @@ package com.anibalxyz.features.auth.api;
 
 import static com.anibalxyz.features.Constants.Auth.VALID_JWT;
 import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.features.Constants.Environment.*;
 import static com.anibalxyz.features.Constants.Users.*;
 import static com.anibalxyz.features.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,7 +20,6 @@ import com.anibalxyz.features.auth.application.exception.InvalidCredentialsExcep
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
-import io.javalin.http.SameSite;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
@@ -45,6 +45,12 @@ public class AuthControllerTest {
   @BeforeAll
   public static void setup() {
     Constants.init();
+  }
+
+  @BeforeEach
+  public void di() {
+    authController =
+        new AuthController(authService, refreshTokenService, Constants.APP_CONFIG.env());
   }
 
   @Nested
@@ -120,14 +126,14 @@ public class AuthControllerTest {
           new Cookie(
               "refreshToken",
               validRefreshToken.token(),
-              "/",
+              AUTH_COOKIE_PATH, //
               (int) maxAgeInSeconds,
-              false, // secure only in production
+              AUTH_COOKIE_SECURE,
               0,
               true, // HttpOnly
               null, // Comment
-              null, // Domain
-              SameSite.STRICT);
+              AUTH_COOKIE_DOMAIN, // Domain
+              AUTH_COOKIE_SAMESITE);
 
       when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
       when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(result);

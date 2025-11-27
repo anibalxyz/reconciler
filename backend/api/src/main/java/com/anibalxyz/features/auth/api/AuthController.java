@@ -20,15 +20,20 @@ import java.time.Instant;
 public class AuthController implements AuthApi {
   private final AuthService authService;
   private final RefreshTokenService refreshTokenService;
+  private final AuthApiEnvironment env;
 
   /**
    * Constructs an AuthController with the given authentication service.
    *
    * @param authService The application service for authentication operations.
    */
-  public AuthController(AuthService authService, RefreshTokenService refreshTokenService) {
+  public AuthController(
+      AuthService authService,
+      RefreshTokenService refreshTokenService,
+      AuthApiEnvironment authApiEnvironment) {
     this.authService = authService;
     this.refreshTokenService = refreshTokenService;
+    this.env = authApiEnvironment;
   }
 
   /** {@inheritDoc} */
@@ -89,22 +94,18 @@ public class AuthController implements AuthApi {
    * @param refreshToken The refresh token to be set in the cookie.
    */
   private void setRefreshTokenCookie(Context ctx, String refreshToken, long maxAgeInSeconds) {
-    // TODO: surely can be a static prop by getting the ENV from another site
-    boolean secure = "prod".equals(ctx.attribute("APP_ENV"));
-    SameSite site = SameSite.STRICT; // TODO: check
-
     Cookie cookie =
         new Cookie(
             "refreshToken",
             refreshToken,
-            "/",
+            env.AUTH_COOKIE_PATH(), //
             (int) maxAgeInSeconds,
-            secure,
+            env.AUTH_COOKIE_SECURE(),
             0,
             true, // HttpOnly
             null, // Comment
-            null, // Domain
-            site);
+            env.AUTH_COOKIE_DOMAIN(), // Domain
+            env.AUTH_COOKIE_SAMESITE());
     ctx.cookie(cookie);
   }
 }

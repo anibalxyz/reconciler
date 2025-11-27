@@ -1,9 +1,11 @@
 package com.anibalxyz.server.config.environment;
 
+import com.anibalxyz.features.auth.api.AuthApiEnvironment;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.auth.application.env.RefreshTokenEnvironment;
 import com.anibalxyz.features.users.application.UsersEnvironment;
 import com.anibalxyz.server.config.modules.startup.ServerEnvironment;
+import io.javalin.http.SameSite;
 import java.time.Duration;
 
 /**
@@ -26,5 +28,13 @@ public record AppEnvironmentSource(
     String JWT_SECRET,
     String JWT_ISSUER,
     Duration JWT_ACCESS_EXPIRATION_TIME_MINUTES,
-    Duration JWT_REFRESH_EXPIRATION_TIME_DAYS)
-    implements UsersEnvironment, ServerEnvironment, JwtEnvironment, RefreshTokenEnvironment {}
+    Duration JWT_REFRESH_EXPIRATION_TIME_DAYS,
+    Boolean AUTH_COOKIE_SECURE,
+    String AUTH_COOKIE_DOMAIN,
+    SameSite AUTH_COOKIE_SAMESITE,
+    String AUTH_COOKIE_PATH)
+    implements UsersEnvironment,
+        ServerEnvironment,
+        JwtEnvironment,
+        RefreshTokenEnvironment,
+        AuthApiEnvironment {}

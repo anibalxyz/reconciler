@@ -126,7 +126,7 @@ public class Application {
         new DependencyContainer(
             server, config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
 
-    new LifecycleConfig(server, persistenceManager, config.env().APP_ENV()).apply();
+    new LifecycleConfig(server, persistenceManager).apply();
     new ExceptionsConfig(server).apply();
 
     if (customRuntimeConfigs != null) customRuntimeConfigs.accept(container);

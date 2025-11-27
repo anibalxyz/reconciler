@@ -1,6 +1,7 @@
 package com.anibalxyz.server.config.environment;
 
 import com.anibalxyz.persistence.DatabaseVariables;
+import io.javalin.http.SameSite;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,7 +60,15 @@ public class ConfigurationFactory {
     String name = getEnvVar("DB_NAME", System::getenv);
     String user = getEnvVar("DB_USER", System::getenv);
     String password = getEnvVar("DB_PASSWORD", System::getenv);
-    String apiUrl = "http://localhost:" + getEnvVar("API_PORT", System::getenv);
+
+    String apiHost = getEnvVar("API_HOST", System::getenv);
+    String apiPort = getEnvVar("API_PORT", System::getenv);
+    String apiPublicPrefix = getEnvVar("API_PUBLIC_PREFIX", System::getenv);
+    String apiUrl =
+        appEnv.equals("prod")
+            ? "https://" + apiHost + apiPublicPrefix // port =
+            : "http://" + apiHost + ":" + apiPort;
+
     String contactEmail = getEnvVar("CONTACT_EMAIL", System::getenv);
 
     // jwt
@@ -73,6 +82,19 @@ public class ConfigurationFactory {
             Long.parseLong(getEnvVar("JWT_REFRESH_EXPIRATION_TIME_DAYS", System::getenv)));
 
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", System::getenv));
+
+    String authCookieDomain = getEnvVar("AUTH_COOKIE_DOMAIN", System::getenv, true);
+    Boolean authCookieSecure = appEnv.equals("prod");
+    String authCookiePath = apiPublicPrefix + "/auth/refresh";
+
+    SameSite authCookieSameSite;
+    try {
+      authCookieSameSite =
+          SameSite.valueOf(getEnvVar("AUTH_COOKIE_SAMESITE", System::getenv).toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalStateException("Invalid value for AUTH_COOKIE_SAMESITE:" + e.getMessage());
+    }
+
     AppEnvironmentSource env =
         new AppEnvironmentSource(
             appEnv,
@@ -82,7 +104,11 @@ public class ConfigurationFactory {
             jwtSecret,
             jwtIssuer,
             jwtAccessExpirationTime,
-            jwtRefreshExpirationTime);
+            jwtRefreshExpirationTime,
+            authCookieSecure,
+            authCookieDomain.isBlank() ? null : authCookieDomain,
+            authCookieSameSite,
+            authCookiePath);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(host, DEFAULT_DB_PORT, name, user, password));
@@ -107,8 +133,15 @@ public class ConfigurationFactory {
     String name = getEnvVar("DB_NAME", props::getProperty);
     String user = getEnvVar("DB_USER", props::getProperty);
     String password = getEnvVar("DB_PASSWORD", props::getProperty);
-    String apiUrl = "http://localhost:" + getEnvVar("API_PORT", props::getProperty);
     String contactEmail = getEnvVar("CONTACT_EMAIL", props::getProperty);
+
+    String apiHost = getEnvVar("API_HOST", props::getProperty);
+    String apiPort = getEnvVar("API_PORT", props::getProperty);
+    String apiPublicPrefix = getEnvVar("API_PUBLIC_PREFIX", props::getProperty);
+    String apiUrl =
+        appEnv.equals("prod")
+            ? "https://" + apiHost + apiPublicPrefix // port =
+            : "http://" + apiHost + ":" + apiPort;
 
     // jwt
     String jwtSecret = getEnvVar("JWT_SECRET", props::getProperty);
@@ -121,6 +154,18 @@ public class ConfigurationFactory {
             Long.parseLong(getEnvVar("JWT_REFRESH_EXPIRATION_TIME_DAYS", props::getProperty)));
 
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", props::getProperty));
+
+    String authCookieDomain = getEnvVar("AUTH_COOKIE_DOMAIN", props::getProperty, true);
+    Boolean authCookieSecure = appEnv.equals("prod");
+    String authCookiePath = apiPublicPrefix + "/auth/refresh";
+
+    SameSite authCookieSameSite;
+    try {
+      authCookieSameSite =
+          SameSite.valueOf(getEnvVar("AUTH_COOKIE_SAMESITE", props::getProperty).toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalStateException("Invalid value for AUTH_COOKIE_SAMESITE:" + e.getMessage());
+    }
     AppEnvironmentSource env =
         new AppEnvironmentSource(
             appEnv,
@@ -130,7 +175,11 @@ public class ConfigurationFactory {
             jwtSecret,
             jwtIssuer,
             jwtAccessExpirationTime,
-            jwtRefreshExpirationTime);
+            jwtRefreshExpirationTime,
+            authCookieSecure,
+            authCookieDomain.isBlank() ? null : authCookieDomain,
+            authCookieSameSite,
+            authCookiePath);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(DEFAULT_LOCAL_HOST, port, name, user, password));
@@ -140,22 +189,43 @@ public class ConfigurationFactory {
   /**
    * Safely retrieves a configuration value from a given source.
    *
-   * <p>This helper method abstracts the process of reading a configuration property, ensuring it is
-   * not null or blank. It provides a clear, consistent error message if the property is missing,
+   * <p>This helper method abstracts the process of reading a configuration property. It can either
+   * enforce that the property is not null or blank, or allow it to be empty based on the {@code
+   * allowEmpty} flag. This provides a clear, consistent error message for required properties,
    * which helps in diagnosing configuration issues quickly.
    *
    * @param name The name of the configuration property to retrieve (e.g., "DB_HOST").
    * @param source A function that takes the property name and returns its value (e.g.,
    *     System::getenv or props::getProperty).
-   * @return The non-blank value of the configuration property.
-   * @throws IllegalStateException if the property is missing (null) or blank.
+   * @param allowEmpty If {@code true}, the method will return the value even if it is null or
+   *     blank. If {@code false}, it will throw an exception for null or blank values.
+   * @return The value of the configuration property. If {@code allowEmpty} is true, this can be
+   *     {@code null} or a blank string. If {@code allowEmpty} is false, this will be a non-blank
+   *     string.
+   * @throws IllegalStateException if {@code allowEmpty} is false and the property is missing (null)
+   *     or blank.
    */
-  private static String getEnvVar(String name, Function<String, String> source)
+  private static String getEnvVar(String name, Function<String, String> source, boolean allowEmpty)
       throws IllegalStateException {
     String value = source.apply(name);
-    if (value == null || value.isBlank()) {
+    if (!allowEmpty && (value == null || value.isBlank())) {
       throw new IllegalStateException("Missing required configuration property: " + name);
     }
     return value;
+  }
+
+  /**
+   * Safely retrieves a required configuration value from a given source, ensuring it is not blank.
+   *
+   * <p>This is a convenience overload for {@link #getEnvVar(String, Function, boolean)} that always
+   * enforces the property to exist and have a non-blank value.
+   *
+   * @param name The name of the configuration property to retrieve.
+   * @param source A function that provides the value based on the name.
+   * @return The non-blank value of the configuration property.
+   * @throws IllegalStateException if the property is missing (null) or blank.
+   */
+  private static String getEnvVar(String name, Function<String, String> source) {
+    return getEnvVar(name, source, false);
   }
 }
