@@ -1,5 +1,6 @@
 package com.anibalxyz.features.auth.application;
 
+import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.application.in.LoginPayload;
 import com.anibalxyz.features.auth.domain.RefreshToken;
@@ -21,6 +22,7 @@ public class AuthService {
   private final UserService userService;
   private final JwtService jwtService;
   private final RefreshTokenService refreshTokenService;
+  private final AuthEnvironment env;
 
   /**
    * Constructs an AuthService with its required dependencies.
@@ -30,10 +32,14 @@ public class AuthService {
    * @param refreshTokenService The service for refresh token management.
    */
   public AuthService(
-      UserService userService, JwtService jwtService, RefreshTokenService refreshTokenService) {
+      UserService userService,
+      JwtService jwtService,
+      RefreshTokenService refreshTokenService,
+      AuthEnvironment authEnvironment) {
     this.userService = userService;
     this.jwtService = jwtService;
     this.refreshTokenService = refreshTokenService;
+    this.env = authEnvironment;
   }
 
   /**
@@ -48,6 +54,9 @@ public class AuthService {
    * @throws InvalidCredentialsException if the credentials are not valid.
    */
   public AuthResult authenticateUser(LoginPayload payload) throws InvalidCredentialsException {
+    if ("prod".equals(env.APP_ENV())) {
+      enforceTimeWindow();
+    }
     try {
       User user = userService.getUserByEmail(payload.email());
       if (user.getPasswordHash().matches(payload.password())) {
@@ -75,7 +84,16 @@ public class AuthService {
    *     revoked.
    */
   public AuthResult refreshTokens(String refreshTokenString) {
-    // TODO: Fixed ZoneId until adapted to multi-tenant
+    if ("prod".equals(env.APP_ENV())) {
+      enforceTimeWindow();
+    }
+    RefreshToken newRefreshToken = refreshTokenService.verifyAndRotate(refreshTokenString);
+    String newAccessToken = jwtService.generateToken(newRefreshToken.user().getId());
+    return new AuthResult(newAccessToken, newRefreshToken);
+  }
+
+  private void enforceTimeWindow() {
+    // TODO: change the fixed ZoneId until adapted to multi-tenant
     ZonedDateTime zdt = Instant.now().atZone(ZoneId.of("America/Montevideo"));
 
     DayOfWeek day = zdt.getDayOfWeek();
@@ -92,9 +110,5 @@ public class AuthService {
       // TODO: then it will have a specific error code
       throw new InvalidCredentialsException("Refresh is disabled during maintenance window");
     }
-
-    RefreshToken newRefreshToken = refreshTokenService.verifyAndRotate(refreshTokenString);
-    String newAccessToken = jwtService.generateToken(newRefreshToken.user().getId());
-    return new AuthResult(newAccessToken, newRefreshToken);
   }
 }

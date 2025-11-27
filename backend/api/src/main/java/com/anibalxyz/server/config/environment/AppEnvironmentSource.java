@@ -1,6 +1,7 @@
 package com.anibalxyz.server.config.environment;
 
 import com.anibalxyz.features.auth.api.AuthApiEnvironment;
+import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.auth.application.env.RefreshTokenEnvironment;
 import com.anibalxyz.features.users.application.UsersEnvironment;
@@ -37,4 +38,5 @@ public record AppEnvironmentSource(
         ServerEnvironment,
         JwtEnvironment,
         RefreshTokenEnvironment,
-        AuthApiEnvironment {}
+        AuthApiEnvironment,
+        AuthEnvironment {}

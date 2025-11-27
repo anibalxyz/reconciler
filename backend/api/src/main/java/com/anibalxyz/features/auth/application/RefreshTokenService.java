@@ -45,17 +45,19 @@ public class RefreshTokenService {
    * @return The newly created and persisted {@link RefreshToken}.
    */
   public RefreshToken createRefreshToken(User user) {
-    // TODO: Fixed ZoneId until adapted to multi-tenant
+    // TODO: change the fixed ZoneId until adapted to multi-tenant
     ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/Montevideo"));
-
-    Instant nextFriday20hs =
-        now.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY))
-            .with(LocalTime.of(20, 0))
-            .toInstant();
 
     Instant expiryDate = now.toInstant().plus(env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
 
-    expiryDate = expiryDate.isBefore(nextFriday20hs) ? expiryDate : nextFriday20hs;
+    if ("prod".equals(env.APP_ENV())) {
+      Instant nextFriday20hs =
+          now.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY))
+              .with(LocalTime.of(20, 0))
+              .toInstant();
+
+      expiryDate = expiryDate.isBefore(nextFriday20hs) ? expiryDate : nextFriday20hs;
+    }
 
     RefreshToken refreshToken =
         new RefreshToken(null, UUID.randomUUID().toString(), user, expiryDate, false);

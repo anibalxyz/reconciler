@@ -19,4 +19,6 @@ public interface RefreshTokenEnvironment {
    * @return The refresh token expiration time.
    */
   Duration JWT_REFRESH_EXPIRATION_TIME_DAYS();
+
+  String APP_ENV();
 }
