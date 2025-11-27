@@ -50,7 +50,7 @@ public class RefreshTokenService {
 
     Instant expiryDate = now.toInstant().plus(env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
 
-    if ("prod".equals(env.APP_ENV())) {
+    if (env.AUTH_ENABLE_TIME_WINDOW()) {
       Instant nextFriday20hs =
           now.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY))
               .with(LocalTime.of(20, 0))

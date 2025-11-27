@@ -54,7 +54,7 @@ public class AuthService {
    * @throws InvalidCredentialsException if the credentials are not valid.
    */
   public AuthResult authenticateUser(LoginPayload payload) throws InvalidCredentialsException {
-    if ("prod".equals(env.APP_ENV())) {
+    if (env.AUTH_ENABLE_TIME_WINDOW()) {
       enforceTimeWindow();
     }
     try {
@@ -84,7 +84,7 @@ public class AuthService {
    *     revoked.
    */
   public AuthResult refreshTokens(String refreshTokenString) {
-    if ("prod".equals(env.APP_ENV())) {
+    if (env.AUTH_ENABLE_TIME_WINDOW()) {
       enforceTimeWindow();
     }
     RefreshToken newRefreshToken = refreshTokenService.verifyAndRotate(refreshTokenString);

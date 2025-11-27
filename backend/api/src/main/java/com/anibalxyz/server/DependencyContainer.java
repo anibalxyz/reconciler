@@ -60,7 +60,7 @@ public class DependencyContainer {
     refreshTokenService = new RefreshTokenService(refreshTokenRepository, env);
 
     JwtService jwtService = new JwtService(env);
-    AuthService authService = new AuthService(userService, jwtService, refreshTokenService);
+    AuthService authService = new AuthService(userService, jwtService, refreshTokenService, env);
     authController = new AuthController(authService, refreshTokenService, env);
     jwtMiddleware = new JwtMiddleware(jwtService);
 

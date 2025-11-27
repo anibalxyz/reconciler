@@ -54,6 +54,12 @@ public class AuthServiceTest {
     Constants.init();
   }
 
+  @BeforeEach
+  public void di() {
+    authService =
+        new AuthService(userService, jwtService, refreshTokenService, Constants.APP_CONFIG.env());
+  }
+
   @Nested
   @DisplayName("Success Scenarios")
   class SuccessScenarios {

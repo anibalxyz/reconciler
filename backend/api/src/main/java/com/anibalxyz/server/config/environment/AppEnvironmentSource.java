@@ -33,7 +33,8 @@ public record AppEnvironmentSource(
     Boolean AUTH_COOKIE_SECURE,
     String AUTH_COOKIE_DOMAIN,
     SameSite AUTH_COOKIE_SAMESITE,
-    String AUTH_COOKIE_PATH)
+    String AUTH_COOKIE_PATH,
+    boolean AUTH_ENABLE_TIME_WINDOW)
     implements UsersEnvironment,
         ServerEnvironment,
         JwtEnvironment,

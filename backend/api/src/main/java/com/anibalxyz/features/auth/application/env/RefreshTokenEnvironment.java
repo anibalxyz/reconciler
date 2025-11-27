@@ -20,5 +20,5 @@ public interface RefreshTokenEnvironment {
    */
   Duration JWT_REFRESH_EXPIRATION_TIME_DAYS();
 
-  String APP_ENV();
+  boolean AUTH_ENABLE_TIME_WINDOW();
 }

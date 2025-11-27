@@ -95,6 +95,8 @@ public class ConfigurationFactory {
       throw new IllegalStateException("Invalid value for AUTH_COOKIE_SAMESITE:" + e.getMessage());
     }
 
+    boolean authEnableTimeWindow = appEnv.equals("prod");
+
     AppEnvironmentSource env =
         new AppEnvironmentSource(
             appEnv,
@@ -108,7 +110,8 @@ public class ConfigurationFactory {
             authCookieSecure,
             authCookieDomain.isBlank() ? null : authCookieDomain,
             authCookieSameSite,
-            authCookiePath);
+            authCookiePath,
+            authEnableTimeWindow);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(host, DEFAULT_DB_PORT, name, user, password));
@@ -166,6 +169,9 @@ public class ConfigurationFactory {
     } catch (IllegalArgumentException e) {
       throw new IllegalStateException("Invalid value for AUTH_COOKIE_SAMESITE:" + e.getMessage());
     }
+
+    boolean authEnableTimeWindow = appEnv.equals("prod");
+
     AppEnvironmentSource env =
         new AppEnvironmentSource(
             appEnv,
@@ -179,7 +185,8 @@ public class ConfigurationFactory {
             authCookieSecure,
             authCookieDomain.isBlank() ? null : authCookieDomain,
             authCookieSameSite,
-            authCookiePath);
+            authCookiePath,
+            authEnableTimeWindow);
 
     return new ApplicationConfiguration(
         env, DatabaseVariables.generate(DEFAULT_LOCAL_HOST, port, name, user, password));
