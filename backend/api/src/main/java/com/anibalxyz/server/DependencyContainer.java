@@ -17,6 +17,9 @@ import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import io.javalin.Javalin;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.function.Supplier;
 
 /**
  * A manual dependency injection container for the application.
@@ -51,16 +54,22 @@ public class DependencyContainer {
       EntityManagerProvider emProvider,
       PersistenceManager persistenceManager) {
     this.server = server;
+    // TODO: use the 'env' at the start
 
     UserRepository userRepository = new JpaUserRepository(emProvider);
     UserService userService = new UserService(userRepository, env);
     userController = new UserController(userService);
 
+    // TODO: change the fixed ZoneId when adapted to multi-tenant it will probably be a SQL query to
+    //       a config table, so this will be changed by an internal repository call
+    Supplier<ZonedDateTime> clock = () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
+
     RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
-    refreshTokenService = new RefreshTokenService(refreshTokenRepository, env);
+    refreshTokenService = new RefreshTokenService(refreshTokenRepository, env, clock);
 
     JwtService jwtService = new JwtService(env);
-    AuthService authService = new AuthService(userService, jwtService, refreshTokenService, env);
+    AuthService authService =
+        new AuthService(userService, jwtService, refreshTokenService, env, clock);
     authController = new AuthController(authService, refreshTokenService, env);
     jwtMiddleware = new JwtMiddleware(jwtService);
 

@@ -15,7 +15,10 @@ import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import jakarta.persistence.PersistenceException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,7 +34,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for RefreshTokenService")
 public class RefreshTokenServiceTest {
+  public static Supplier<ZonedDateTime> defaultClock =
+      () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
   @Mock private static RefreshTokenRepository refreshTokenRepository;
+  @Mock private Supplier<ZonedDateTime> clock;
 
   @InjectMocks private RefreshTokenService refreshTokenService;
 
@@ -43,7 +49,7 @@ public class RefreshTokenServiceTest {
   @BeforeEach
   public void di() {
     refreshTokenService =
-        new RefreshTokenService(refreshTokenRepository, Constants.APP_CONFIG.env());
+        new RefreshTokenService(refreshTokenRepository, Constants.APP_CONFIG.env(), defaultClock);
   }
 
   @Nested

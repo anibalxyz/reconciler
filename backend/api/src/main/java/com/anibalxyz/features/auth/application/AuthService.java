@@ -37,20 +37,6 @@ public class AuthService {
       UserService userService,
       JwtService jwtService,
       RefreshTokenService refreshTokenService,
-      AuthEnvironment env) {
-    this(
-        userService,
-        jwtService,
-        refreshTokenService,
-        env,
-        // TODO: change the fixed ZoneId until adapted to multi-tenant
-        () -> ZonedDateTime.now(ZoneId.of("America/Montevideo")));
-  }
-
-  public AuthService(
-      UserService userService,
-      JwtService jwtService,
-      RefreshTokenService refreshTokenService,
       AuthEnvironment env,
       Supplier<ZonedDateTime> clock) {
     this.userService = userService;

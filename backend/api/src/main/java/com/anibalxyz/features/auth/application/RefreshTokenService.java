@@ -8,6 +8,7 @@ import com.anibalxyz.features.users.domain.User;
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Service for handling Refresh Token operations, including generation, validation, and rotation.
@@ -22,6 +23,7 @@ public class RefreshTokenService {
 
   private final RefreshTokenRepository refreshTokenRepository;
   private final RefreshTokenEnvironment env;
+  private final Supplier<ZonedDateTime> clock;
 
   /**
    * Constructs a RefreshTokenService with its required dependencies.
@@ -30,9 +32,12 @@ public class RefreshTokenService {
    * @param env The environment configuration for refresh tokens.
    */
   public RefreshTokenService(
-      RefreshTokenRepository refreshTokenRepository, RefreshTokenEnvironment env) {
+      RefreshTokenRepository refreshTokenRepository,
+      RefreshTokenEnvironment env,
+      Supplier<ZonedDateTime> clock) {
     this.refreshTokenRepository = refreshTokenRepository;
     this.env = env;
+    this.clock = clock;
   }
 
   /**
@@ -45,8 +50,7 @@ public class RefreshTokenService {
    * @return The newly created and persisted {@link RefreshToken}.
    */
   public RefreshToken createRefreshToken(User user) {
-    // TODO: change the fixed ZoneId until adapted to multi-tenant
-    ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/Montevideo"));
+    ZonedDateTime now = clock.get();
 
     Instant expiryDate = now.toInstant().plus(env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
 

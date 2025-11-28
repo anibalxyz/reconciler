@@ -4,7 +4,6 @@ import static com.anibalxyz.features.Constants.Auth.VALID_JWT;
 import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
 import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
 import static com.anibalxyz.features.Constants.Users.*;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +36,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for AuthService")
 public class AuthServiceTest {
+  public static Supplier<ZonedDateTime> defaultClock =
+      () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
   @Mock private UserService userService;
   @Mock private JwtService jwtService;
   @Mock private RefreshTokenService refreshTokenService;
@@ -136,42 +137,6 @@ public class AuthServiceTest {
       AuthResult actualResult = authService.refreshTokens(VALID_REFRESH_TOKEN);
 
       assertEquals(expectedResult, actualResult);
-    }
-
-    @Test
-    @DisplayName("authenticateUser: default clock supplier is used")
-    public void authenticateUser_withDefaultClockSupplier() {
-      Instant now = Instant.now();
-      User user =
-          new User(
-              1,
-              "Name",
-              new Email(VALID_EMAIL),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              now,
-              now);
-
-      authService = new AuthService(userService, jwtService, refreshTokenService, authEnvironment);
-
-      when(authEnvironment.AUTH_ENABLE_TIME_WINDOW())
-          .thenReturn(true); // use window so clock.get() is called
-      when(userService.getUserByEmail(VALID_EMAIL)).thenReturn(user);
-      when(jwtService.generateToken(anyInt())).thenReturn(VALID_JWT);
-      when(refreshTokenService.createRefreshToken(any(User.class)))
-          .thenReturn(
-              new RefreshToken(1L, "dummy-token", user, Instant.now().plusSeconds(1000), false));
-
-      LoginPayload payload = createPayload(VALID_EMAIL, VALID_PASSWORD);
-
-      // Failure here is also a success cause the test is for the default clock supplier
-      try {
-        AuthResult result = authService.authenticateUser(payload);
-        assertNotNull(result.accessToken());
-        assertNotNull(result.refreshToken());
-        assertEquals(VALID_JWT, result.accessToken());
-      } catch (InvalidCredentialsException e) {
-        assertThat(e.getMessage()).isEqualTo("Refresh is disabled during maintenance window");
-      }
     }
   }
 

@@ -27,9 +27,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.*;
@@ -38,12 +41,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 @DisplayName("Tests for AuthRoutes")
 public class AuthRoutesIntegrationTest {
+  public static Supplier<ZonedDateTime> defaultClock =
+      () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
   private static Application app;
   private static EntityManagerFactory emf;
   private static HttpRequest http;
   private static JwtService jwtService;
   private static RefreshTokenService refreshTokenService;
-  RefreshTokenRepository refreshTokenRepository;
+  RefreshTokenRepository refreshTokenRepository; // TODO: check
   private EntityManager em;
 
   @BeforeAll
@@ -120,7 +125,7 @@ public class AuthRoutesIntegrationTest {
   public void di() {
     refreshTokenRepository = new JpaRefreshTokenRepository(() -> em);
     refreshTokenService =
-        new RefreshTokenService(refreshTokenRepository, Constants.APP_CONFIG.env());
+        new RefreshTokenService(refreshTokenRepository, Constants.APP_CONFIG.env(), defaultClock);
   }
 
   @AfterEach
