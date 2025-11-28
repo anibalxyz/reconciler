@@ -8,6 +8,7 @@ import com.anibalxyz.features.common.application.exception.ResourceNotFoundExcep
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.User;
 import java.time.*;
+import java.util.function.Supplier;
 
 /**
  * Application service for authentication-related use cases.
@@ -23,6 +24,7 @@ public class AuthService {
   private final JwtService jwtService;
   private final RefreshTokenService refreshTokenService;
   private final AuthEnvironment env;
+  private final Supplier<ZonedDateTime> clock;
 
   /**
    * Constructs an AuthService with its required dependencies.
@@ -35,11 +37,27 @@ public class AuthService {
       UserService userService,
       JwtService jwtService,
       RefreshTokenService refreshTokenService,
-      AuthEnvironment authEnvironment) {
+      AuthEnvironment env) {
+    this(
+        userService,
+        jwtService,
+        refreshTokenService,
+        env,
+        // TODO: change the fixed ZoneId until adapted to multi-tenant
+        () -> ZonedDateTime.now(ZoneId.of("America/Montevideo")));
+  }
+
+  public AuthService(
+      UserService userService,
+      JwtService jwtService,
+      RefreshTokenService refreshTokenService,
+      AuthEnvironment env,
+      Supplier<ZonedDateTime> clock) {
     this.userService = userService;
     this.jwtService = jwtService;
     this.refreshTokenService = refreshTokenService;
-    this.env = authEnvironment;
+    this.env = env;
+    this.clock = clock;
   }
 
   /**
@@ -93,8 +111,7 @@ public class AuthService {
   }
 
   private void enforceTimeWindow() {
-    // TODO: change the fixed ZoneId until adapted to multi-tenant
-    ZonedDateTime zdt = Instant.now().atZone(ZoneId.of("America/Montevideo"));
+    ZonedDateTime zdt = clock.get();
 
     DayOfWeek day = zdt.getDayOfWeek();
     LocalTime time = zdt.toLocalTime();
