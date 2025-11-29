@@ -21,22 +21,22 @@ import java.util.function.Supplier;
  */
 public class RefreshTokenService {
 
-  private final RefreshTokenRepository refreshTokenRepository;
   private final RefreshTokenEnvironment env;
+  private final RefreshTokenRepository refreshTokenRepository;
   private final Supplier<ZonedDateTime> clock;
 
   /**
    * Constructs a RefreshTokenService with its required dependencies.
    *
-   * @param refreshTokenRepository The repository for refresh token persistence.
    * @param env The environment configuration for refresh tokens.
+   * @param refreshTokenRepository The repository for refresh token persistence.
    */
   public RefreshTokenService(
-      RefreshTokenRepository refreshTokenRepository,
       RefreshTokenEnvironment env,
+      RefreshTokenRepository refreshTokenRepository,
       Supplier<ZonedDateTime> clock) {
-    this.refreshTokenRepository = refreshTokenRepository;
     this.env = env;
+    this.refreshTokenRepository = refreshTokenRepository;
     this.clock = clock;
   }
 

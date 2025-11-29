@@ -54,10 +54,8 @@ public class DependencyContainer {
       EntityManagerProvider emProvider,
       PersistenceManager persistenceManager) {
     this.server = server;
-    // TODO: use the 'env' at the start
-
     UserRepository userRepository = new JpaUserRepository(emProvider);
-    UserService userService = new UserService(userRepository, env);
+    UserService userService = new UserService(env, userRepository);
     userController = new UserController(userService);
 
     // TODO: change the fixed ZoneId when adapted to multi-tenant it will probably be a SQL query to
@@ -65,12 +63,12 @@ public class DependencyContainer {
     Supplier<ZonedDateTime> clock = () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
 
     RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
-    refreshTokenService = new RefreshTokenService(refreshTokenRepository, env, clock);
+    refreshTokenService = new RefreshTokenService(env, refreshTokenRepository, clock);
 
     JwtService jwtService = new JwtService(env);
     AuthService authService =
-        new AuthService(userService, jwtService, refreshTokenService, env, clock);
-    authController = new AuthController(authService, refreshTokenService, env);
+        new AuthService(env, userService, jwtService, refreshTokenService, clock);
+    authController = new AuthController(env, authService, refreshTokenService);
     jwtMiddleware = new JwtMiddleware(jwtService);
 
     systemController = new SystemController(persistenceManager);

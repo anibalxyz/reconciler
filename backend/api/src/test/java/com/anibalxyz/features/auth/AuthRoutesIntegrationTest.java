@@ -125,7 +125,7 @@ public class AuthRoutesIntegrationTest {
   public void di() {
     refreshTokenRepository = new JpaRefreshTokenRepository(() -> em);
     refreshTokenService =
-        new RefreshTokenService(refreshTokenRepository, Constants.APP_CONFIG.env(), defaultClock);
+        new RefreshTokenService(Constants.APP_CONFIG.env(), refreshTokenRepository, defaultClock);
   }
 
   @AfterEach

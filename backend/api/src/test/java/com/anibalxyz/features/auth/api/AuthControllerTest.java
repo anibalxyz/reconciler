@@ -50,7 +50,7 @@ public class AuthControllerTest {
   @BeforeEach
   public void di() {
     authController =
-        new AuthController(authService, refreshTokenService, Constants.APP_CONFIG.env());
+        new AuthController(Constants.APP_CONFIG.env(), authService, refreshTokenService);
   }
 
   @Nested
