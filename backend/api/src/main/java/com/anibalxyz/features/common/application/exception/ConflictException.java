@@ -1,8 +1,8 @@
 package com.anibalxyz.features.common.application.exception;
 
 /**
- * Exception thrown when a request cannot be completed due to a conflict with the current state
- * of the target resource.
+ * Exception thrown when a request cannot be completed due to a conflict with the current state of
+ * the target resource.
  *
  * <p>This exception typically indicates a business rule violation where an operation would result
  * in an inconsistent or duplicate state (e.g., creating a user with an email that already exists).

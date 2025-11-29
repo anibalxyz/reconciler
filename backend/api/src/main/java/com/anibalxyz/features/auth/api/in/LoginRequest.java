@@ -18,10 +18,8 @@ import io.javalin.openapi.OpenApiStringValidation;
  */
 public record LoginRequest(
     @OpenApiExample("john.doe@example.com")
-    @OpenApiRequired
-    @OpenApiStringValidation(format = "email")
-    String email,
-    @OpenApiExample("strong-password-123")
-    @OpenApiRequired
-    String password)
+        @OpenApiRequired
+        @OpenApiStringValidation(format = "email")
+        String email,
+    @OpenApiExample("strong-password-123") @OpenApiRequired String password)
     implements LoginPayload {}
