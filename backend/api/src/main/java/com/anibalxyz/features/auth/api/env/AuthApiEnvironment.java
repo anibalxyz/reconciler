@@ -1,4 +1,4 @@
-package com.anibalxyz.features.auth.api;
+package com.anibalxyz.features.auth.api.env;
 
 import io.javalin.http.SameSite;
 

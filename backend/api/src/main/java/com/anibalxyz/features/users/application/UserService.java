@@ -3,6 +3,7 @@ package com.anibalxyz.features.users.application;
 import com.anibalxyz.features.common.application.exception.ConflictException;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
+import com.anibalxyz.features.users.application.env.UsersEnvironment;
 import com.anibalxyz.features.users.application.in.UserUpdatePayload;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
