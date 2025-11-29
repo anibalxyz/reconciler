@@ -36,8 +36,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for AuthService")
 public class AuthServiceTest {
-  public static Supplier<ZonedDateTime> defaultClock =
-      () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
   @Mock private UserService userService;
   @Mock private JwtService jwtService;
   @Mock private RefreshTokenService refreshTokenService;
