@@ -145,6 +145,7 @@
 
         <!-- PostgreSQL JDBC Driver-->
 
+        <!-- TODO: update because a vulnerability was found -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>

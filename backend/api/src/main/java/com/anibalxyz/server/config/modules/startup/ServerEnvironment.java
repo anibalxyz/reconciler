@@ -1,5 +1,7 @@
 package com.anibalxyz.server.config.modules.startup;
 
+import com.anibalxyz.server.config.AppEnv;
+
 /**
  * Defines the contract for providing general server-level environment configuration.
  *
@@ -12,7 +14,7 @@ public interface ServerEnvironment {
   /**
    * @return The current application environment (e.g., "development", "test").
    */
-  String APP_ENV();
+  AppEnv APP_ENV();
 
   /**
    * @return The base URL of the API.

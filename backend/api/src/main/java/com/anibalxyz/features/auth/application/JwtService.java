@@ -35,6 +35,7 @@ public class JwtService {
    * @throws IllegalArgumentException if the JWT secret is invalid or too short.
    */
   public JwtService(JwtEnvironment env) {
+    // TODO: move this validation and 'key' & 'expirationMinutes' typing to ConfigurationFactory
     if (env.JWT_SECRET() == null || env.JWT_SECRET().isBlank()) {
       throw new IllegalArgumentException("JWT_SECRET must not be null or empty");
     }

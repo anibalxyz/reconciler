@@ -4,6 +4,7 @@ import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.system.api.SystemRoutes;
 import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
+import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.modules.runtime.ExceptionsConfig;
 import com.anibalxyz.server.config.modules.runtime.JwtMiddlewareConfig;
@@ -55,13 +56,13 @@ public class Application {
    * @throws IllegalStateException if the environment in the config is unknown.
    */
   public static Application create(ApplicationConfiguration config) {
-    String appEnv = config.env().APP_ENV();
+    AppEnv appEnv = config.env().APP_ENV(); // TODO: update
 
-    if ("test".equals(appEnv)) {
+    if (appEnv == AppEnv.TEST) {
       throw new IllegalStateException(
           "For 'test' environment, directly use buildApplication() to specify feature-specific routes and configs.");
     }
-    if (!"dev".equals(appEnv) && !"prod".equals(appEnv)) {
+    if (appEnv != AppEnv.DEV && appEnv != AppEnv.PROD) {
       throw new IllegalStateException("Unknown environment: " + appEnv);
     }
 
@@ -74,7 +75,7 @@ public class Application {
     // 2. Declare specific runtime configurations for dev/prod
     Consumer<DependencyContainer> runtimeConfigs =
         container -> {
-          if ("dev".equals(appEnv)) {
+          if (appEnv == AppEnv.DEV) {
             container.server().get("/", ctx -> ctx.redirect("/swagger"));
           } else { // prod
             container.server().get("/", ctx -> ctx.redirect("/openapi"));

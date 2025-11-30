@@ -1,5 +1,6 @@
 package com.anibalxyz.server.config.modules.startup;
 
+import com.anibalxyz.server.config.AppEnv;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import io.javalin.config.JavalinConfig;
@@ -126,7 +127,7 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                       return content.toPrettyString();
                                     }))));
 
-    if (env.APP_ENV().equals("dev")) {
+    if (env.APP_ENV() == AppEnv.DEV) {
       javalinConfig.registerPlugin(
           new SwaggerPlugin(
               swaggerConfig -> {

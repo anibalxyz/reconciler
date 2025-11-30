@@ -41,14 +41,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 @DisplayName("Tests for AuthRoutes")
 public class AuthRoutesIntegrationTest {
-  public static Supplier<ZonedDateTime> defaultClock =
+  private static final Supplier<ZonedDateTime> defaultClock =
       () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
   private static Application app;
   private static EntityManagerFactory emf;
   private static HttpRequest http;
   private static JwtService jwtService;
-  private static RefreshTokenService refreshTokenService;
-  RefreshTokenRepository refreshTokenRepository; // TODO: check
+  private RefreshTokenService refreshTokenService;
+  private RefreshTokenRepository refreshTokenRepository;
   private EntityManager em;
 
   @BeforeAll
@@ -88,20 +88,6 @@ public class AuthRoutesIntegrationTest {
     app.stop();
   }
 
-  private static boolean isValidToken(String token, Token type) {
-    if (token == null || token.isBlank()) return false;
-    try {
-      switch (type) {
-        case ACCESS -> jwtService.validateToken(token);
-        case REFRESH -> refreshTokenService.verifyRefreshToken(token);
-        default -> throw new IllegalArgumentException("Invalid token type");
-      }
-      return true;
-    } catch (InvalidCredentialsException e) {
-      return false;
-    }
-  }
-
   private static String getValueFromCookie(String cookie, String key) {
     if (cookie == null) {
       return null;
@@ -113,6 +99,20 @@ public class AuthRoutesIntegrationTest {
       }
     }
     return null;
+  }
+
+  private boolean isValidToken(String token, Token type) {
+    if (token == null || token.isBlank()) return false;
+    try {
+      switch (type) {
+        case ACCESS -> jwtService.validateToken(token);
+        case REFRESH -> refreshTokenService.verifyRefreshToken(token);
+        default -> throw new IllegalArgumentException("Invalid token type");
+      }
+      return true;
+    } catch (InvalidCredentialsException e) {
+      return false;
+    }
   }
 
   @BeforeEach

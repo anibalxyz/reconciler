@@ -1,5 +1,6 @@
 package com.anibalxyz.server.config.modules.startup;
 
+import com.anibalxyz.server.config.AppEnv;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson;
@@ -35,7 +36,7 @@ public class ServerConfig extends StartupConfig {
         cors ->
             cors.addRule(
                 rule -> {
-                  if ((env.APP_ENV().equals("dev"))) {
+                  if ((env.APP_ENV() == AppEnv.DEV)) {
                     rule.anyHost();
                   } else {
                     rule.allowHost("allowed.com");

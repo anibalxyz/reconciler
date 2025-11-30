@@ -10,6 +10,7 @@
 
     <!-- NOTE: if using Docker (or manually inject env variable), it functions dynamically,
                if not then defaults 'dev'
+        TODO: Review this
     -->
     <!-- Development environment configuration -->
     <if condition='property("APP_ENV").equals("dev")'>

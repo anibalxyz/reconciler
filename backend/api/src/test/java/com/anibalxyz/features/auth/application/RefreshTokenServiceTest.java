@@ -30,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for RefreshTokenService")
 public class RefreshTokenServiceTest {
-  public static Supplier<ZonedDateTime> defaultClock =
+  private static final Supplier<ZonedDateTime> defaultClock =
       () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
   @Mock private RefreshTokenRepository refreshTokenRepository;
   @Mock private RefreshTokenEnvironment env;
