@@ -1,11 +1,4 @@
 services:
-  db:
-    ports:
-      - "${DB_PORT}:5432"
-    volumes:
-      # Persistent storage for the DB. Data isn't lost on container shutdown
-      - database:/var/lib/postgresql/data
-
   api:
     pull_policy: never
     volumes:
@@ -24,7 +17,7 @@ services:
     environment:
       - APP_ENV=${APP_ENV}
     ports:
-      - "${DASHBOARD_PORT}:5174"
+      - "${DASHBOARD_PORT}:${DASHBOARD_PORT}"
     volumes:
       # Enables hot reload by mounting source code and config files
       - ./frontend/dashboard/src:/app/dashboard/src:cached
@@ -53,7 +46,7 @@ services:
     environment:
       - APP_ENV=${APP_ENV}
     ports:
-      - "${PUBLIC_SITE_PORT}:5173"
+      - "${PUBLIC_SITE_PORT}:${PUBLIC_SITE_PORT}"
     volumes:
       # Enables hot reload by mounting source code and config files
       - ./frontend/public-site/src:/app/public-site/src:cached
@@ -75,6 +68,6 @@ volumes:
   maven:
     name: "reconciler-dev-mvn"
   dashboard-node_modules:
-    name: "reconciler-dev-dahsboard-node"
+    name: "reconciler-dev-dashboard-node"
   public-site-node_modules:
     name: "reconciler-dev-public-site-node"

@@ -1,9 +1,8 @@
 services:
   api:
     pull_policy: missing # In real production, this should be set to 'always'
-    volumes:
-      # Persistent storage for the DB. Data isn't lost on container shutdown
-      - database:/var/lib/postgresql/data
+  db:
+    ports: !reset []
   nginx:
     image: anibalxyz/reconciler-prod-nginx:latest
     container_name: reconciler-prod-nginx

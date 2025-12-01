@@ -12,7 +12,7 @@ export default mergeConfig(baseConfig, {
   base: '/dashboard',
   envDir: '..',
   server: {
-    port: 5174,
+    port: parseInt(env.DASHBOARD_PORT),
     proxy: {
       '^/(?!dashboard)': {
         target: env.PUBLIC_SITE_URL,

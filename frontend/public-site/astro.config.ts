@@ -7,7 +7,8 @@ const env = getEnv();
 
 export default defineConfig({
   server: {
-    port: 5173,
+    // use a default value because it's analyzed in prod even if it's not used.
+    port: parseInt(env.PUBLIC_SITE_PORT) || 5174,
   },
   vite: mergeConfig<UserConfig, UserConfig>(baseConfig, {
     server: {
