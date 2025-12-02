@@ -1,17 +1,17 @@
 import baseConfig from '../vite.config.ts';
 import { mergeConfig, UserConfig } from 'vite';
 import { defineConfig } from 'astro/config';
-import { getEnv } from '../common/env.ts';
+import { getEnv } from '../common/helpers/env.ts';
+import { buildUrl } from '../common/helpers/buildUrl.ts';
 
 const env = getEnv();
-let DASHBOARD_URL = undefined;
-if (env.DASHBOARD_HOST && env.DASHBOARD_PORT) {
-  DASHBOARD_URL = 'http://' + env.DASHBOARD_HOST + ':' + env.DASHBOARD_PORT;
-}
-console.log('DASHBOARD_URL: ', DASHBOARD_URL || 'http://localhost:5175');
+const DASHBOARD_URL = buildUrl(env.DASHBOARD_HOST, env.DASHBOARD_PORT) ?? 'http://localhost:5175';
+
+console.log('DASHBOARD_URL: ', DASHBOARD_URL);
+
 export default defineConfig({
   server: {
-    // use a default value because it's analyzed in prod even if it's not used.
+    // use a default value because it's evaluated in prod even if it's not used.
     port: parseInt(env.PUBLIC_SITE_PORT) || 5174,
   },
   vite: mergeConfig<UserConfig, UserConfig>(baseConfig, {
@@ -19,7 +19,7 @@ export default defineConfig({
       proxy: {
         '/dashboard': {
           // same as in server.port
-          target: DASHBOARD_URL || 'http://localhost:5175',
+          target: DASHBOARD_URL,
         },
       },
     },

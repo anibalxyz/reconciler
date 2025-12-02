@@ -1,15 +1,18 @@
 import { defineConfig } from 'vite';
-import { getEnv } from './common/env.ts';
+import { getEnv } from './common/helpers/env.ts';
 import tailwindcss from '@tailwindcss/vite';
 
 const env = getEnv();
-console.log('API_URL: ', env.API_URL || 'THERE WAS AN ERROR');
+const API_URL = env.API_URL ?? 'http://localhost:4001';
+
+console.log('API_URL: ', API_URL);
+
 export default defineConfig({
   plugins: [tailwindcss()],
   server: {
     proxy: {
       '/api': {
-        target: env.API_URL,
+        target: API_URL,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
         configure: (proxyServer) => {
@@ -21,9 +24,8 @@ export default defineConfig({
           });
         },
       },
-      // NOTE: may fail if frontend uses these paths
       '^/(swagger|webjars|openapi)': {
-        target: env.API_URL,
+        target: API_URL,
         changeOrigin: true,
       },
     },
