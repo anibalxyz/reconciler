@@ -25,9 +25,10 @@ import java.time.Duration;
  */
 public record AppEnvironmentSource(
     AppEnv APP_ENV,
-    int BCRYPT_LOG_ROUNDS,
     String API_URL,
+    int API_PORT,
     String CONTACT_EMAIL,
+    int BCRYPT_LOG_ROUNDS,
     String JWT_SECRET,
     String JWT_ISSUER,
     Duration JWT_ACCESS_EXPIRATION_TIME_MINUTES,

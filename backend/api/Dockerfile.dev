@@ -11,6 +11,4 @@ RUN mvn dependency:go-offline -B
 
 COPY src/ ./src
 
-EXPOSE 4000
-
 ENTRYPOINT ["mvn", "compile", "exec:java", "-Dexec.mainClass=com.anibalxyz.Main"]

@@ -3,7 +3,7 @@ import { getEnv } from './common/env.ts';
 import tailwindcss from '@tailwindcss/vite';
 
 const env = getEnv();
-
+console.log('API_URL: ', env.API_URL || 'THERE WAS AN ERROR');
 export default defineConfig({
   plugins: [tailwindcss()],
   server: {

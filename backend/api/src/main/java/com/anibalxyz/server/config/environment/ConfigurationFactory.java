@@ -95,7 +95,7 @@ public class ConfigurationFactory {
     String dbPort = getEnvVar("DB_PORT", callback);
     String dbHost = getEnvVar("DB_HOST", callback);
     String apiHost = getEnvVar("API_HOST", callback);
-    String apiPort = getEnvVar("API_PORT", callback);
+    int apiPort = Integer.parseInt(getEnvVar("API_PORT", callback));
     String apiPublicPrefix = getEnvVar("API_PUBLIC_PREFIX", callback);
     String apiUrl =
         appEnv == AppEnv.PROD
@@ -132,9 +132,10 @@ public class ConfigurationFactory {
     AppEnvironmentSource env =
         new AppEnvironmentSource(
             appEnv,
-            bcryptLogRounds,
             apiUrl,
+            apiPort,
             contactEmail,
+            bcryptLogRounds,
             jwtSecret,
             jwtIssuer,
             jwtAccessExpirationTime,

@@ -16,6 +16,9 @@ services:
       - ./frontend/.env.dev
     environment:
       - APP_ENV=${APP_ENV}
+      # Override when running in the same Docker network
+      - PUBLIC_SITE_HOST=public-site
+      - API_URL=http://api:${API_PORT}
     ports:
       - "${DASHBOARD_PORT}:${DASHBOARD_PORT}"
     volumes:
@@ -45,6 +48,9 @@ services:
       - ./frontend/.env.dev
     environment:
       - APP_ENV=${APP_ENV}
+      # Override when running in the same Docker network
+      - DASHBOARD_HOST=dashboard
+      - API_URL=http://api:${API_PORT}
     ports:
       - "${PUBLIC_SITE_PORT}:${PUBLIC_SITE_PORT}"
     volumes:
