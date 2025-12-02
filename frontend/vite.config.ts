@@ -15,14 +15,6 @@ export default defineConfig({
         target: API_URL,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
-        configure: (proxyServer) => {
-          proxyServer.on('proxyRes', (proxyRes) => {
-            const location = proxyRes.headers.location;
-            if (location && location.startsWith('/')) {
-              proxyRes.headers.location = '/api' + location;
-            }
-          });
-        },
       },
       '^/(swagger|webjars|openapi)': {
         target: API_URL,
