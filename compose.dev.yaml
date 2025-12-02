@@ -29,7 +29,6 @@ services:
       - ./frontend/dashboard/tsconfig.json:/app/dashboard/tsconfig.json:cached
       - ./frontend/dashboard/vite.config.ts:/app/dashboard/vite.config.ts:cached
       # Base frontend/ files
-      - ./frontend/.env.dev:/app/.env.dev:cached
       - ./frontend/package.json:/app/package.json:cached
       - ./frontend/tsconfig.base.json:/app/tsconfig.base.json:cached
       - ./frontend/vite.config.ts:/app/vite.config.ts:cached
@@ -60,7 +59,6 @@ services:
       - ./frontend/public-site/tsconfig.json:/app/public-site/tsconfig.json:cached
       - ./frontend/public-site/astro.config.ts:/app/public-site/astro.config.ts:cached
       # Base frontend/ files
-      - ./frontend/.env.dev:/app/.env.dev:cached
       - ./frontend/package.json:/app/package.json:cached
       - ./frontend/tsconfig.base.json:/app/tsconfig.base.json:cached
       - ./frontend/vite.config.ts:/app/vite.config.ts:cached
