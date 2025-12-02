@@ -7,6 +7,15 @@ services:
     image: anibalxyz/reconciler-prod-nginx:latest
     container_name: reconciler-prod-nginx
     pull_policy: missing # In real production, this should be set to 'always'
+    environment:
+      # Use a short TTL in dev to allow quick DNS updates when containers restart.
+      # In production, prefer a longer one to reduce DNS lookup overhead.
+      - NGINX_TTL=10s
+      - NGINX_PORT=80
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
+      - API_PORT=${API_PORT}
+      # Used when running in the same Docker network. Change it in real production
+      - API_HOST=api
     ports:
       - "80:80"
     networks:

@@ -56,7 +56,7 @@ public class Application {
    * @throws IllegalStateException if the environment in the config is unknown.
    */
   public static Application create(ApplicationConfiguration config) {
-    AppEnv appEnv = config.env().APP_ENV(); // TODO: update
+    AppEnv appEnv = config.env().APP_ENV();
 
     if (appEnv == AppEnv.TEST) {
       throw new IllegalStateException(
