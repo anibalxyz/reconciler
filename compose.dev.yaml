@@ -19,6 +19,7 @@ services:
       # Override when running in the same Docker network
       - PUBLIC_SITE_HOST=public-site
       - API_URL=http://api:${API_PORT}
+      - API_PREFIX=${API_PREFIX}
     ports:
       - "${DASHBOARD_PORT}:${DASHBOARD_PORT}"
     volumes:
@@ -50,6 +51,7 @@ services:
       # Override when running in the same Docker network
       - DASHBOARD_HOST=dashboard
       - API_URL=http://api:${API_PORT}
+      - API_PREFIX=${API_PREFIX}
     ports:
       - "${PUBLIC_SITE_PORT}:${PUBLIC_SITE_PORT}"
     volumes:

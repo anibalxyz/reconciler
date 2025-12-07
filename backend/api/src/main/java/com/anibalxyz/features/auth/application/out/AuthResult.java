@@ -1,4 +1,4 @@
-package com.anibalxyz.features.auth.application;
+package com.anibalxyz.features.auth.application.out;
 
 import com.anibalxyz.features.auth.domain.RefreshToken;
 

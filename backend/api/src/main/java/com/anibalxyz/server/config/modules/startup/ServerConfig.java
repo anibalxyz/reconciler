@@ -39,6 +39,7 @@ public class ServerConfig extends StartupConfig {
                   if ((env.APP_ENV() == AppEnv.DEV)) {
                     rule.anyHost();
                   } else {
+                    // TODO: check if it is really used
                     rule.allowHost("allowed.com");
                   }
                 }));

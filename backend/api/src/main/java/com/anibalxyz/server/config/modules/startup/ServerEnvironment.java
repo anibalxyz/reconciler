@@ -21,6 +21,8 @@ public interface ServerEnvironment {
    */
   String API_URL();
 
+  String API_PREFIX();
+
   /**
    * @return The contact email for the API.
    */

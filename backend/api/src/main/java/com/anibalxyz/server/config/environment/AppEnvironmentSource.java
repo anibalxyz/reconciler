@@ -27,6 +27,7 @@ public record AppEnvironmentSource(
     AppEnv APP_ENV,
     String API_URL,
     int API_PORT,
+    String API_PREFIX,
     String CONTACT_EMAIL,
     int BCRYPT_LOG_ROUNDS,
     String JWT_SECRET,

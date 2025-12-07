@@ -32,6 +32,6 @@ public class SystemRoutes extends RouteRegistry {
   /** {@inheritDoc} */
   @Override
   public void register() {
-    new RouteGroup("/health", server).get(systemApi::healthCheck, Role.GUEST);
+    new RouteGroup("/api/health", server).get(systemApi::healthCheck, Role.GUEST);
   }
 }

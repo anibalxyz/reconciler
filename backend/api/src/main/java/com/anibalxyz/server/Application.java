@@ -73,13 +73,12 @@ public class Application {
         };
 
     // 2. Declare specific runtime configurations for dev/prod
+    // TODO: move to a separate file, e.g. RedirectRoutes within features.common
     Consumer<DependencyContainer> runtimeConfigs =
         container -> {
-          if (appEnv == AppEnv.DEV) {
-            container.server().get("/", ctx -> ctx.redirect("/swagger"));
-          } else { // prod
-            container.server().get("/", ctx -> ctx.redirect("/openapi"));
-          }
+          String openapiRedirect = appEnv == AppEnv.PROD ? "/openapi" : "/swagger";
+          container.server().get("/", ctx -> ctx.redirect(openapiRedirect));
+          container.server().get("/api", ctx -> ctx.redirect(openapiRedirect));
         };
 
     // 3. Declare specific route registries for dev/prod

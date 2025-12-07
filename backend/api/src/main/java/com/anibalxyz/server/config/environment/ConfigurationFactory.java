@@ -94,14 +94,12 @@ public class ConfigurationFactory {
     String dbPassword = getEnvVar("DB_PASSWORD", callback);
     String dbPort = getEnvVar("DB_PORT", callback);
     String dbHost = getEnvVar("DB_HOST", callback);
+    // TODO: check, it may provoke an error somewhere as Javalin is always being served using http
+    String apiProtocol = getEnvVar("API_PROTOCOL", callback);
     String apiHost = getEnvVar("API_HOST", callback);
     int apiPort = Integer.parseInt(getEnvVar("API_PORT", callback));
-    String apiPublicPrefix = getEnvVar("API_PUBLIC_PREFIX", callback);
-    String apiUrl =
-        appEnv == AppEnv.PROD
-            ? "https://" + apiHost + apiPublicPrefix
-            : "http://" + apiHost + ":" + apiPort;
-
+    String apiPrefix = getEnvVar("API_PREFIX", callback);
+    String apiUrl = apiProtocol + "://" + apiHost + ":" + apiPort + apiPrefix;
     String contactEmail = getEnvVar("CONTACT_EMAIL", callback);
 
     // JWT configuration
@@ -117,7 +115,7 @@ public class ConfigurationFactory {
 
     String authCookieDomain = getEnvVar("AUTH_COOKIE_DOMAIN", callback, true);
     Boolean authCookieSecure = appEnv == AppEnv.PROD;
-    String authCookiePath = apiPublicPrefix + "/auth";
+    String authCookiePath = getEnvVar("AUTH_COOKIE_PATH", callback);
 
     SameSite authCookieSameSite;
     try {
@@ -134,6 +132,7 @@ public class ConfigurationFactory {
             appEnv,
             apiUrl,
             apiPort,
+            apiPrefix,
             contactEmail,
             bcryptLogRounds,
             jwtSecret,

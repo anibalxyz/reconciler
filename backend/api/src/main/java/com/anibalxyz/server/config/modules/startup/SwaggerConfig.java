@@ -71,7 +71,10 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                     server ->
                                         server
                                             .description(env.APP_ENV() + " server")
-                                            .url(env.API_URL()))
+                                            .url(
+                                                env.APP_ENV() == AppEnv.PROD
+                                                    ? env.API_PREFIX()
+                                                    : env.API_URL()))
                                 .withSecurity(
                                     openApiSecurity -> openApiSecurity.withBearerAuth("bearerAuth"))
                                 .withDefinitionProcessor(
@@ -127,6 +130,7 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                       return content.toPrettyString();
                                     }))));
 
+    // TODO: Maybe allow in production but with authorization
     if (env.APP_ENV() == AppEnv.DEV) {
       javalinConfig.registerPlugin(
           new SwaggerPlugin(

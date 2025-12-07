@@ -3,6 +3,7 @@ package com.anibalxyz.features.auth.application;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.application.in.LoginPayload;
+import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.application.UserService;

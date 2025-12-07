@@ -3,9 +3,9 @@ package com.anibalxyz.features.auth.api;
 import com.anibalxyz.features.auth.api.env.AuthApiEnvironment;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
-import com.anibalxyz.features.auth.application.AuthResult;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.RefreshTokenService;
+import com.anibalxyz.features.auth.application.out.AuthResult;
 import io.javalin.http.*;
 import java.time.Instant;
 
@@ -106,7 +106,7 @@ public class AuthController implements AuthApi {
             true, // HttpOnly
             null, // Comment
             env.AUTH_COOKIE_DOMAIN(), // Domain
-            SameSite.STRICT); // hardcoded to test
+            env.AUTH_COOKIE_SAMESITE());
     ctx.cookie(cookie);
   }
 }

@@ -57,7 +57,7 @@ public class AuthRoutesIntegrationTest {
     app = createApplication();
     app.start(0);
 
-    String baseUrl = "http://localhost:" + app.javalin().port();
+    String baseUrl = "http://localhost:" + app.javalin().port() + "/api";
     emf = app.persistenceManager().emf();
     ObjectMapper objectMapper =
         new ObjectMapper()
