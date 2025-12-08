@@ -7,6 +7,8 @@ services:
       - ./backend/api/src:/app/src:cached
       # Persist Maven dependencies cache to speed up builds
       - maven:/root/.m2
+    environment:
+      - CORS_ALLOWED_ORIGINS=${DASHBOARD_HOST}:${DASHBOARD_PORT},${PUBLIC_SITE_HOST}:${PUBLIC_SITE_PORT}
 
   dashboard:
     image: anibalxyz/reconciler-dev-dashboard:latest

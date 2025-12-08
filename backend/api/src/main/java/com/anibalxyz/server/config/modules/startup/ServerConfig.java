@@ -1,9 +1,10 @@
 package com.anibalxyz.server.config.modules.startup;
 
-import com.anibalxyz.server.config.AppEnv;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link ServerConfig} module for applying initial, one-time configurations to the Javalin
@@ -17,6 +18,7 @@ import io.javalin.json.JavalinJackson;
  */
 public class ServerConfig extends StartupConfig {
 
+  private static final Logger log = LoggerFactory.getLogger(ServerConfig.class);
   private final ServerEnvironment env;
 
   public ServerConfig(JavalinConfig javalinConfig, ServerEnvironment env) {
@@ -32,17 +34,20 @@ public class ServerConfig extends StartupConfig {
     javalinConfig.jetty.modifyServer(server -> server.setStopTimeout(5_000)); // graceful shutdown
     javalinConfig.http.defaultContentType = "application/json; charset=utf-8";
     // TODO: make allowed host injected by env variable
-    javalinConfig.bundledPlugins.enableCors(
-        cors ->
-            cors.addRule(
-                rule -> {
-                  if ((env.APP_ENV() == AppEnv.DEV)) {
-                    rule.anyHost();
-                  } else {
-                    // TODO: check if it is really used
-                    rule.allowHost("allowed.com");
-                  }
-                }));
+    String[] hosts = env.CORS_ALLOWED_ORIGINS();
+    if (hosts != null && hosts.length > 0) {
+      javalinConfig.bundledPlugins.enableCors(
+          cors ->
+              cors.addRule(
+                  rule -> {
+                    for (String h : hosts) {
+                      rule.allowHost(h);
+                    }
+                    rule.allowCredentials = true;
+                  }));
+    } else {
+      log.warn("CORS_ALLOWED_ORIGINS not set. CORS will reject all origins");
+    }
     javalinConfig.jsonMapper(
         new JavalinJackson()
             .updateMapper(

@@ -28,6 +28,7 @@ public record AppEnvironmentSource(
     String API_URL,
     int API_PORT,
     String API_PREFIX,
+    String[] CORS_ALLOWED_ORIGINS,
     String CONTACT_EMAIL,
     int BCRYPT_LOG_ROUNDS,
     String JWT_SECRET,

@@ -7,6 +7,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -94,12 +96,32 @@ public class ConfigurationFactory {
     String dbPassword = getEnvVar("DB_PASSWORD", callback);
     String dbPort = getEnvVar("DB_PORT", callback);
     String dbHost = getEnvVar("DB_HOST", callback);
-    // TODO: check, it may provoke an error somewhere as Javalin is always being served using http
-    String apiProtocol = getEnvVar("API_PROTOCOL", callback);
+    String apiProtocol = getEnvVar("API_PROTOCOL", callback, true);
+    if (apiProtocol == null || apiProtocol.isBlank()) {
+      apiProtocol = appEnv == AppEnv.PROD ? "https" : "http";
+    }
     String apiHost = getEnvVar("API_HOST", callback);
     int apiPort = Integer.parseInt(getEnvVar("API_PORT", callback));
     String apiPrefix = getEnvVar("API_PREFIX", callback);
     String apiUrl = apiProtocol + "://" + apiHost + ":" + apiPort + apiPrefix;
+    String frontendProtocol =
+        Optional.ofNullable(getEnvVar("FRONTEND_PROTOCOL", callback, true))
+            .filter(s -> !s.isBlank())
+            .orElse(appEnv == AppEnv.PROD ? "https" : "http");
+
+    String corsOriginsRaw = getEnvVar("CORS_ALLOWED_ORIGINS", callback, true);
+    String[] corsAllowedOrigins;
+    if (corsOriginsRaw == null || corsOriginsRaw.isBlank()) {
+      corsAllowedOrigins = new String[0];
+    } else {
+      corsAllowedOrigins =
+          Arrays.stream(corsOriginsRaw.split(","))
+              .map(String::trim)
+              .filter(s -> !s.isEmpty())
+              .map(origin -> frontendProtocol + "://" + origin)
+              .toArray(String[]::new);
+    }
+
     String contactEmail = getEnvVar("CONTACT_EMAIL", callback);
 
     // JWT configuration
@@ -115,7 +137,7 @@ public class ConfigurationFactory {
 
     String authCookieDomain = getEnvVar("AUTH_COOKIE_DOMAIN", callback, true);
     Boolean authCookieSecure = appEnv == AppEnv.PROD;
-    String authCookiePath = getEnvVar("AUTH_COOKIE_PATH", callback);
+    String authCookiePath = apiPrefix + getEnvVar("AUTH_COOKIE_PATH", callback);
 
     SameSite authCookieSameSite;
     try {
@@ -133,6 +155,7 @@ public class ConfigurationFactory {
             apiUrl,
             apiPort,
             apiPrefix,
+            corsAllowedOrigins,
             contactEmail,
             bcryptLogRounds,
             jwtSecret,
@@ -149,6 +172,7 @@ public class ConfigurationFactory {
         new ApplicationConfiguration(
             env, DatabaseVariables.generate(dbHost, dbPort, dbName, dbUser, dbPassword));
     if (appEnv != AppEnv.PROD) {
+      // Some values will no be correctly shown. e.g. CORS_ALLOWED_ORIGINS
       log.debug("Loaded Configuration: {}", result);
     }
     return result;

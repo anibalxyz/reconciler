@@ -23,6 +23,8 @@ public interface ServerEnvironment {
 
   String API_PREFIX();
 
+  String[] CORS_ALLOWED_ORIGINS();
+
   /**
    * @return The contact email for the API.
    */

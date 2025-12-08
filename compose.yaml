@@ -6,6 +6,7 @@ services:
       - ./backend/.env.${APP_ENV}
     environment:
       - APP_ENV=${APP_ENV}
+      - FRONTEND_PROTOCOL=${FRONTEND_PROTOCOL}
       # Override DB connection when running in the same Docker network
       # If using an external DB host, change to ${DB_HOST} or comment out
       - DB_HOST=db
