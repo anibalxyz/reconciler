@@ -82,6 +82,7 @@ public class Application {
         };
 
     // 3. Declare specific route registries for dev/prod
+    // TODO: migrate endpoint declarations to uso apiBuilder()
     Consumer<DependencyContainer> routeRegistries =
         container -> {
           new SystemRoutes(container.server(), container.systemController()).register();

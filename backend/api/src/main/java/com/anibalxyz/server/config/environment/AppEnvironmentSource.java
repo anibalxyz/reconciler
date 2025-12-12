@@ -9,6 +9,7 @@ import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.modules.startup.ServerEnvironment;
 import io.javalin.http.SameSite;
 import java.time.Duration;
+import javax.crypto.SecretKey;
 
 // TODO: check if can add used properties in javadocs of each interface
 /**
@@ -32,8 +33,9 @@ public record AppEnvironmentSource(
     String CONTACT_EMAIL,
     int BCRYPT_LOG_ROUNDS,
     String JWT_SECRET,
+    SecretKey JWT_KEY,
     String JWT_ISSUER,
-    Duration JWT_ACCESS_EXPIRATION_TIME_MINUTES,
+    long JWT_ACCESS_EXPIRATION_TIME_MINUTES,
     Duration JWT_REFRESH_EXPIRATION_TIME_DAYS,
     Boolean AUTH_COOKIE_SECURE,
     String AUTH_COOKIE_DOMAIN,

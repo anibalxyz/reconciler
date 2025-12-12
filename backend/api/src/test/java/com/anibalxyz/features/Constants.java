@@ -9,6 +9,7 @@ import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import io.javalin.http.SameSite;
 import java.time.Duration;
 import java.time.Instant;
+import javax.crypto.SecretKey;
 
 /**
  * Provides centralized constants for testing, including environment configuration and mock data.
@@ -42,8 +43,9 @@ public class Constants {
   public static final class Environment {
     public static int BCRYPT_LOG_ROUNDS;
     public static String JWT_SECRET;
+    public static SecretKey JWT_KEY;
     public static String JWT_ISSUER;
-    public static Duration JWT_ACCESS_EXPIRATION_TIME_MINUTES;
+    public static long JWT_ACCESS_EXPIRATION_TIME_MINUTES;
     public static Duration JWT_REFRESH_EXPIRATION_TIME_DAYS;
 
     public static String AUTH_COOKIE_PATH;
@@ -54,6 +56,7 @@ public class Constants {
     static void init(AppEnvironmentSource env) {
       BCRYPT_LOG_ROUNDS = env.BCRYPT_LOG_ROUNDS();
       JWT_SECRET = env.JWT_SECRET();
+      JWT_KEY = env.JWT_KEY();
       JWT_ISSUER = env.JWT_ISSUER();
       JWT_ACCESS_EXPIRATION_TIME_MINUTES = env.JWT_ACCESS_EXPIRATION_TIME_MINUTES();
       JWT_REFRESH_EXPIRATION_TIME_DAYS = env.JWT_REFRESH_EXPIRATION_TIME_DAYS();

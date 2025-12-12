@@ -3,14 +3,17 @@ package com.anibalxyz.server.config.environment;
 import com.anibalxyz.persistence.DatabaseVariables;
 import com.anibalxyz.server.config.AppEnv;
 import io.javalin.http.SameSite;
+import io.jsonwebtoken.security.Keys;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
+import javax.crypto.SecretKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,12 +127,36 @@ public class ConfigurationFactory {
 
     String contactEmail = getEnvVar("CONTACT_EMAIL", callback);
 
+    /*
+      *   public JwtService(JwtEnvironment env) {
+      // TODO: move this validation and 'key' & 'expirationMinutes' typing to ConfigurationFactory
+
+      byte[] secretBytes = env.JWT_SECRET().getBytes(StandardCharsets.UTF_8);
+      if (secretBytes.length < 32) {
+        throw new IllegalArgumentException("JWT_SECRET must be at least 256 bits (32 bytes)");
+      }
+
+      this.key = Keys.hmacShaKeyFor(secretBytes);
+      this.issuer = env.JWT_ISSUER();
+      this.expirationMinutes = env.JWT_ACCESS_EXPIRATION_TIME_MINUTES().toMinutes();
+    }
+      * */
+
     // JWT configuration
     String jwtSecret = getEnvVar("JWT_SECRET", callback);
+    if (jwtSecret == null || jwtSecret.isBlank()) {
+      throw new IllegalArgumentException("JWT_SECRET must not be null or empty");
+    }
+    byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+    if (secretBytes.length < 32) {
+      throw new IllegalArgumentException("JWT_SECRET must be at least 256 bits (32 bytes)");
+    }
+    SecretKey jwtKey = Keys.hmacShaKeyFor(secretBytes);
     String jwtIssuer = getEnvVar("JWT_ISSUER", callback);
-    Duration jwtAccessExpirationTime =
+    long jwtAccessExpirationTimeMinutes =
         Duration.ofMinutes(
-            Long.parseLong(getEnvVar("JWT_ACCESS_EXPIRATION_TIME_MINUTES", callback)));
+                Long.parseLong(getEnvVar("JWT_ACCESS_EXPIRATION_TIME_MINUTES", callback)))
+            .toMinutes();
     Duration jwtRefreshExpirationTime =
         Duration.ofDays(Long.parseLong(getEnvVar("JWT_REFRESH_EXPIRATION_TIME_DAYS", callback)));
 
@@ -159,8 +186,9 @@ public class ConfigurationFactory {
             contactEmail,
             bcryptLogRounds,
             jwtSecret,
+            jwtKey,
             jwtIssuer,
-            jwtAccessExpirationTime,
+            jwtAccessExpirationTimeMinutes,
             jwtRefreshExpirationTime,
             authCookieSecure,
             authCookieDomain.isBlank() ? null : authCookieDomain,

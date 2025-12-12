@@ -2,6 +2,7 @@ services:
   api:
     pull_policy: missing # In real production, this should be set to 'always'
     environment:
+      # Not used yet
       - CORS_ALLOWED_ORIGINS=${NGINX_SERVER_NAME}
   db:
     ports: !reset []
@@ -10,8 +11,6 @@ services:
     container_name: reconciler-prod-nginx
     pull_policy: missing # In real production, this should be set to 'always'
     environment:
-      # Use a short TTL in dev to allow quick DNS updates when containers restart.
-      # In production, prefer a longer one to reduce DNS lookup overhead.
       - NGINX_TTL=${NGINX_TTL}
       - NGINX_PORT=${NGINX_PORT}
       - NGINX_SERVER_NAME=${NGINX_SERVER_NAME}

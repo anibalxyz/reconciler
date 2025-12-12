@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.application.env;
 
 import com.anibalxyz.features.auth.application.JwtService;
-import java.time.Duration;
+import javax.crypto.SecretKey;
 
 /**
  * Defines the contract for providing JWT-related environment configuration.
@@ -20,6 +20,8 @@ public interface JwtEnvironment {
    */
   String JWT_SECRET();
 
+  SecretKey JWT_KEY();
+
   /**
    * Returns the issuer name to be included in the JWT access tokens.
    *
@@ -32,5 +34,5 @@ public interface JwtEnvironment {
    *
    * @return The access token expiration time.
    */
-  Duration JWT_ACCESS_EXPIRATION_TIME_MINUTES();
+  long JWT_ACCESS_EXPIRATION_TIME_MINUTES();
 }
