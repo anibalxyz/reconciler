@@ -28,15 +28,56 @@ const redirectApiDocsPlugin = (): Plugin => ({
   },
 });
 
+// Note: this aims to be just a temporal patch, until the use of npm swagger-ui
+//       Generated with Claude
+const swaggerPatchPlugin = (): Plugin => ({
+  name: 'swagger-credentials-patch',
+  configureServer(server) {
+    server.middlewares.use(async (req, res, next) => {
+      if (req.url === '/swagger') {
+        try {
+          const backendUrl = `${API_URL}/swagger`;
+          const response = await fetch(backendUrl);
+          let html = await response.text();
+
+          html = html.replace(
+            '</body>',
+            `<script>
+              (function() {
+                const originalFetch = window.fetch;
+                window.fetch = function(...args) {
+                  const options = args[1] || {};
+                  options.credentials = 'include';
+                  args[1] = options;
+                  return originalFetch.apply(this, args);
+                };
+                console.log('✅ Swagger patched via Vite');
+              })();
+            </script>
+            </body>`,
+          );
+
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.end(html);
+          return;
+        } catch (error) {
+          console.error('Error proxying /swagger:', error);
+        }
+      }
+      next();
+    });
+  },
+});
+
 export default defineConfig({
-  plugins: [tailwindcss(), redirectApiDocsPlugin()],
+  plugins: [tailwindcss(), redirectApiDocsPlugin(), swaggerPatchPlugin()],
   server: {
     proxy: {
       '^/api($|/.*)': {
         target: API_URL,
         changeOrigin: true,
       },
-      '^/(swagger|openapi)$': {
+      '^/openapi$': {
         target: API_URL,
         changeOrigin: true,
       },

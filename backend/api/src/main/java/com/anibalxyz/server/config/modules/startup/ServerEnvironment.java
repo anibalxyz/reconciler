@@ -21,6 +21,8 @@ public interface ServerEnvironment {
    */
   String API_URL();
 
+  String SERVER_URL();
+
   String API_PREFIX();
 
   String[] CORS_ALLOWED_ORIGINS();

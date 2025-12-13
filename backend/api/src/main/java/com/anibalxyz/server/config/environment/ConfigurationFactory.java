@@ -106,7 +106,8 @@ public class ConfigurationFactory {
     String apiHost = getEnvVar("API_HOST", callback);
     int apiPort = Integer.parseInt(getEnvVar("API_PORT", callback));
     String apiPrefix = getEnvVar("API_PREFIX", callback);
-    String apiUrl = apiProtocol + "://" + apiHost + ":" + apiPort + apiPrefix;
+    String serverUrl = apiProtocol + "://" + apiHost + ":" + apiPort;
+    String apiUrl = serverUrl + apiPrefix;
     String frontendProtocol =
         Optional.ofNullable(getEnvVar("FRONTEND_PROTOCOL", callback, true))
             .filter(s -> !s.isBlank())
@@ -126,21 +127,6 @@ public class ConfigurationFactory {
     }
 
     String contactEmail = getEnvVar("CONTACT_EMAIL", callback);
-
-    /*
-      *   public JwtService(JwtEnvironment env) {
-      // TODO: move this validation and 'key' & 'expirationMinutes' typing to ConfigurationFactory
-
-      byte[] secretBytes = env.JWT_SECRET().getBytes(StandardCharsets.UTF_8);
-      if (secretBytes.length < 32) {
-        throw new IllegalArgumentException("JWT_SECRET must be at least 256 bits (32 bytes)");
-      }
-
-      this.key = Keys.hmacShaKeyFor(secretBytes);
-      this.issuer = env.JWT_ISSUER();
-      this.expirationMinutes = env.JWT_ACCESS_EXPIRATION_TIME_MINUTES().toMinutes();
-    }
-      * */
 
     // JWT configuration
     String jwtSecret = getEnvVar("JWT_SECRET", callback);
@@ -179,6 +165,7 @@ public class ConfigurationFactory {
     AppEnvironmentSource env =
         new AppEnvironmentSource(
             appEnv,
+            serverUrl,
             apiUrl,
             apiPort,
             apiPrefix,
@@ -200,7 +187,7 @@ public class ConfigurationFactory {
         new ApplicationConfiguration(
             env, DatabaseVariables.generate(dbHost, dbPort, dbName, dbUser, dbPassword));
     if (appEnv != AppEnv.PROD) {
-      // Some values will no be correctly shown. e.g. CORS_ALLOWED_ORIGINS
+      // Some values will not be correctly shown. e.g. CORS_ALLOWED_ORIGINS
       log.debug("Loaded Configuration: {}", result);
     }
     return result;

@@ -70,11 +70,11 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                 .withServer(
                                     server ->
                                         server
-                                            .description(env.APP_ENV() + " server")
-                                            .url(
-                                                env.APP_ENV() == AppEnv.PROD
-                                                    ? env.API_PREFIX()
-                                                    : env.API_URL()))
+                                            .description(
+                                                "API URL: add '" + env.API_PREFIX() + "' prefix")
+                                            .url(env.API_URL()))
+                                .withServer(
+                                    server -> server.description("Root URL").url(env.SERVER_URL()))
                                 .withSecurity(
                                     openApiSecurity -> openApiSecurity.withBearerAuth("bearerAuth"))
                                 .withDefinitionProcessor(

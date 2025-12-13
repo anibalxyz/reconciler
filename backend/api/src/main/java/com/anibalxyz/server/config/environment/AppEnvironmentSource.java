@@ -26,6 +26,7 @@ import javax.crypto.SecretKey;
  */
 public record AppEnvironmentSource(
     AppEnv APP_ENV,
+    String SERVER_URL,
     String API_URL,
     int API_PORT,
     String API_PREFIX,

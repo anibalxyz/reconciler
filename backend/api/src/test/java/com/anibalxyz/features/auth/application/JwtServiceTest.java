@@ -22,14 +22,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @DisplayName("Tests for JwtService")
 @ExtendWith(MockitoExtension.class)
 public class JwtServiceTest {
 
-  private static final Logger log = LoggerFactory.getLogger(JwtServiceTest.class);
   @Mock private JwtEnvironment env;
   @InjectMocks private JwtService jwtService;
 
@@ -48,7 +45,7 @@ public class JwtServiceTest {
 
       @Override
       public SecretKey JWT_KEY() {
-        return jwtKey; // TODO: this is temporal and should be removed before commit
+        return jwtKey; // TODO: this is temporal and should be removed soon
       }
 
       @Override
@@ -143,6 +140,8 @@ public class JwtServiceTest {
               "another_secret_greather_than_32_bytes_for_testing",
               JWT_ISSUER,
               JWT_ACCESS_EXPIRATION_TIME_MINUTES,
+              // TODO: JWT_KEY value is the same in both services since it is generated at startup,
+              //       not in constructor as before
               JWT_KEY);
 
       JwtService jwtServiceWithDifferentSecret = new JwtService(differentSecretEnv);
@@ -155,11 +154,12 @@ public class JwtServiceTest {
     }
 
     @ParameterizedTest
-    @NullAndEmptySource 
+    @NullAndEmptySource
     @ValueSource(strings = {" "})
     @DisplayName(
         "validateToken: given a null or empty token, then throw InvalidCredentialsException")
-    public void validateToken_nullOrEmptyToken_throwInvalidCredentialsException(String invalidToken) {
+    public void validateToken_nullOrEmptyToken_throwInvalidCredentialsException(
+        String invalidToken) {
       assertThatThrownBy(() -> jwtService.validateToken(invalidToken))
           .isInstanceOf(InvalidCredentialsException.class)
           .hasMessage("Invalid JWT token");

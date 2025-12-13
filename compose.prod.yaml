@@ -3,7 +3,7 @@ services:
     pull_policy: missing # In real production, this should be set to 'always'
     environment:
       # Not used yet
-      - CORS_ALLOWED_ORIGINS=${NGINX_SERVER_NAME}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS},${NGINX_SERVER_NAME}
   db:
     ports: !reset []
   nginx:
