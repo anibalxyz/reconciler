@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <jetbrains.annotations.version>26.0.2</jetbrains.annotations.version>
-        <postgresql.version>42.7.5</postgresql.version>
+        <postgresql.version>42.7.8</postgresql.version>
         <jackson.version>2.18.3</jackson.version>
         <javalin.version>6.7.0</javalin.version>
         <jakarta-persistence.version>3.2.0</jakarta-persistence.version>
@@ -145,7 +145,6 @@
 
         <!-- PostgreSQL JDBC Driver-->
 
-        <!-- TODO: update because a vulnerability was found -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
