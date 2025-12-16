@@ -10,7 +10,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "5.15.3"
+    "astro": "5.16.5"
   },
   "devDependencies": {
     "eslint": "9.39.1",
