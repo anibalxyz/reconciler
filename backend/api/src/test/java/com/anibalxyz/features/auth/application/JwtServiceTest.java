@@ -12,8 +12,11 @@ import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import javax.crypto.SecretKey;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,6 +36,7 @@ public class JwtServiceTest {
   @BeforeAll
   public static void init() {
     Constants.init();
+    Assertions.setMaxStackTraceElementsDisplayed(120);
   }
 
   private static JwtEnvironment createEnv(
@@ -135,20 +139,23 @@ public class JwtServiceTest {
     @DisplayName(
         "validateToken: given a token with invalid signature, then throw InvalidCredentialsException")
     public void validateToken_invalidSignatureToken_throwInvalidCredentialsException() {
-      JwtEnvironment differentSecretEnv =
-          createEnv(
-              "another_secret_greather_than_32_bytes_for_testing",
-              JWT_ISSUER,
-              JWT_ACCESS_EXPIRATION_TIME_MINUTES,
-              // TODO: JWT_KEY value is the same in both services since it is generated at startup,
-              //       not in constructor as before
-              JWT_KEY);
+      // NOTE: the hand-made service uses default environment-injected values while the mocked one
+      //       changes the signature
+      JwtService jwtServiceWithDifferentSignature = new JwtService(Constants.APP_CONFIG.env());
 
-      JwtService jwtServiceWithDifferentSecret = new JwtService(differentSecretEnv);
+      byte[] differentSecretBytes =
+          Constants.APP_CONFIG
+              .env()
+              .JWT_SECRET()
+              .concat("makeItDifferent")
+              .getBytes(StandardCharsets.UTF_8);
+      SecretKey differentKey = Keys.hmacShaKeyFor(differentSecretBytes);
+      when(env.JWT_KEY()).thenReturn(differentKey);
+
       Integer userId = 123;
-      String token = jwtService.generateToken(userId); // Signed with original secret
+      String token = jwtServiceWithDifferentSignature.generateToken(userId);
 
-      assertThatThrownBy(() -> jwtServiceWithDifferentSecret.validateToken(token))
+      assertThatThrownBy(() -> jwtService.validateToken(token))
           .isInstanceOf(InvalidCredentialsException.class)
           .hasMessage("Invalid JWT token");
     }
