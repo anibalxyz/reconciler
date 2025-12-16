@@ -1,22 +1,23 @@
 import os
+import shlex
 import subprocess
 from typing import Annotated, List, Dict
 
 import typer
 
-from cli.modules.config import get_current_env, set_env, validate_env
-from cli.modules.constants import SERVICES, ENV_FILES
-from cli.modules.image import build, get_buildable_services
+from modules.config import get_current_env, set_env, validate_env, validate_env_callback
+from modules.constants import SERVICES, ENV_FILES
+from modules.image import build, get_buildable_services
 
 core_lifecycle_services = [SERVICES["DB"], SERVICES["FLYWAY"]]
 
 LIFECYCLE_SERVICES: Dict[str, List[str]] = {
     "dev": core_lifecycle_services
-           + [
-               SERVICES["API"],
-               SERVICES["PUBLIC_SITE"],
-               SERVICES["DASHBOARD"],
-           ],
+    + [
+        SERVICES["API"],
+        SERVICES["PUBLIC_SITE"],
+        SERVICES["DASHBOARD"],
+    ],
     "prod": core_lifecycle_services + [SERVICES["NGINX"], SERVICES["API"]],
     "test": core_lifecycle_services + [SERVICES["API"]],
 }
@@ -86,23 +87,23 @@ def run_lifecycle_command(command: List[str], services: List[str]):
 app = typer.Typer(
     help="Manage Docker Compose lifecycle",
     no_args_is_help=True,
-    callback=validate_env,
+    callback=validate_env_callback,
 )
 
 
 @app.command()
 def up(
-        services: Annotated[
-            List[str],
-            typer.Argument(
-                help="Service(s) to bring up. Accepts multiple values.",
-                autocompletion=get_lifecycle_services,
-            ),
-        ] = None,
-        detach: Annotated[
-            bool,
-            typer.Option(help="Enables the use of detach mode."),
-        ] = True,
+    services: Annotated[
+        List[str],
+        typer.Argument(
+            help="Service(s) to bring up. Accepts multiple values.",
+            autocompletion=get_lifecycle_services,
+        ),
+    ] = None,
+    detach: Annotated[
+        bool,
+        typer.Option(help="Enables the use of detach mode."),
+    ] = True,
 ):
     """Brings up containers, networks, and volumes."""
     cmd = ["up"]
@@ -113,13 +114,13 @@ def up(
 
 @app.command()
 def down(
-        services: Annotated[
-            List[str],
-            typer.Argument(
-                help="Service(s) to take down. Accepts multiple values.",
-                autocompletion=get_lifecycle_services,
-            ),
-        ] = None,
+    services: Annotated[
+        List[str],
+        typer.Argument(
+            help="Service(s) to take down. Accepts multiple values.",
+            autocompletion=get_lifecycle_services,
+        ),
+    ] = None,
 ):
     """Stops and removes containers and networks."""
     run_lifecycle_command(["down", "--remove-orphans"], services)
@@ -128,13 +129,13 @@ def down(
 # TODO: make start/stop/restart/down work over running services only
 @app.command()
 def start(
-        services: Annotated[
-            List[str],
-            typer.Argument(
-                help="Service(s) to start. Accepts multiple values.",
-                autocompletion=get_lifecycle_services,
-            ),
-        ] = None,
+    services: Annotated[
+        List[str],
+        typer.Argument(
+            help="Service(s) to start. Accepts multiple values.",
+            autocompletion=get_lifecycle_services,
+        ),
+    ] = None,
 ):
     """Starts existing, stopped containers."""
     run_lifecycle_command(["start"], services)
@@ -142,13 +143,13 @@ def start(
 
 @app.command()
 def stop(
-        services: Annotated[
-            List[str],
-            typer.Argument(
-                help="Service(s) to stop. Accepts multiple values.",
-                autocompletion=get_lifecycle_services,
-            ),
-        ] = None,
+    services: Annotated[
+        List[str],
+        typer.Argument(
+            help="Service(s) to stop. Accepts multiple values.",
+            autocompletion=get_lifecycle_services,
+        ),
+    ] = None,
 ):
     """Stops running containers without removing them."""
     run_lifecycle_command(["stop"], services)
@@ -156,13 +157,13 @@ def stop(
 
 @app.command()
 def restart(
-        services: Annotated[
-            List[str],
-            typer.Argument(
-                help="Service(s) to restart. Accepts multiple values.",
-                autocompletion=get_lifecycle_services,
-            ),
-        ] = None,
+    services: Annotated[
+        List[str],
+        typer.Argument(
+            help="Service(s) to restart. Accepts multiple values.",
+            autocompletion=get_lifecycle_services,
+        ),
+    ] = None,
 ):
     """Restarts running containers."""
     run_lifecycle_command(["restart"], services)
@@ -170,13 +171,13 @@ def restart(
 
 @app.command()
 def logs(
-        services: Annotated[
-            List[str],
-            typer.Argument(
-                help="Service(s) to show logs for. Accepts multiple values.",
-                autocompletion=get_lifecycle_services,
-            ),
-        ] = None,
+    services: Annotated[
+        List[str],
+        typer.Argument(
+            help="Service(s) to show logs for. Accepts multiple values.",
+            autocompletion=get_lifecycle_services,
+        ),
+    ] = None,
 ):
     """Follows log output for services."""
     run_lifecycle_command(["logs", "--follow", "--tail=50"], services)
@@ -184,17 +185,17 @@ def logs(
 
 @app.command()
 def rebuild(
-        services: Annotated[
-            List[str],
-            typer.Argument(
-                help="Service(s) to rebuild. Accepts multiple values.",
-                autocompletion=get_buildable_services,
-            ),
-        ],
-        cache: Annotated[
-            bool,
-            typer.Option(help="Enables the use of cache during build."),
-        ] = True,
+    services: Annotated[
+        List[str],
+        typer.Argument(
+            help="Service(s) to rebuild. Accepts multiple values.",
+            autocompletion=get_buildable_services,
+        ),
+    ],
+    cache: Annotated[
+        bool,
+        typer.Option(help="Enables the use of cache during build."),
+    ] = True,
 ):
     """
     Rebuilds and restarts the specified services.
@@ -229,10 +230,10 @@ def rebuild(
 # TODO: add global config for "secure" execution (enabled for pipelines)
 @app.command()
 def test(
-        cache: Annotated[
-            bool,
-            typer.Option(help="Enables the use of cache during build."),
-        ] = True,
+    cache: Annotated[
+        bool,
+        typer.Option(help="Enables the use of cache during build."),
+    ] = True,
 ):
     """
     Runs the test suite.
@@ -248,6 +249,10 @@ def test(
     env_snap = get_current_env()
     try:
         set_env("test")
+        # NOTE: as it runs after "validate_env" app's callback, it is validating current env first,
+        #       failing if .env.test does not exist.
+        #       Calling validate_env() here + ignoring the callback solves that issue
+        validate_env()
 
         buildable = get_buildable_services()
         buildable.remove("all")
@@ -259,7 +264,12 @@ def test(
         try:
             lifecycle = get_lifecycle_services()
             lifecycle.remove("all")
-            lifecycle.remove("db")  # remains ready for other test runs and for local testing
+            lifecycle.remove(
+                "db"
+            )  # remains ready for other test runs and for local testing
             down(lifecycle)
         finally:
             set_env(env_snap)
+
+
+# TODO: add "config" command to see the final yaml

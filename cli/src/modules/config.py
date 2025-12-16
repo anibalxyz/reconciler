@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import List, Annotated
 
 import typer
+from typer import Context
 
-from cli.modules.constants import AVAILABLE_ENVS, DEFAULT_ENV, ENV_FILES
+from modules.constants import AVAILABLE_ENVS, DEFAULT_ENV, ENV_FILES
 
 CONFIG_FILE_PATH = Path("cli.cfg")
 
@@ -127,6 +128,16 @@ def validate_env():
                     "Execution aborted. Please complete the file manually and run again."
                 )
                 raise typer.Exit(1)
+
+
+def validate_env_callback(ctx: Context):
+    """
+    [!TEMPORAL] Typer callback to validate environment before running a compose command.
+    Skips validation for the 'test' command, as it handles its own validation.
+    """
+    if ctx.invoked_subcommand == "test":
+        return
+    validate_env()
 
 
 set_app = typer.Typer(

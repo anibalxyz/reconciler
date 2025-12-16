@@ -4,10 +4,10 @@ version = "0.1.0"
 dependencies = ["typer"]
 
 [project.scripts]
-cli = "cli.main:app"
+cli = "main:app"
 
 [project.optional-dependencies]
 dev = ["black==25.9.0"]
 
-[tool.setuptools]
-packages = ["cli"]
+[tool.setuptools.packages.find]
+where = ["src"]
