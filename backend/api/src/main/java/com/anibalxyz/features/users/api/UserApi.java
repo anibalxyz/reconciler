@@ -22,6 +22,11 @@ import io.javalin.openapi.OpenApiSecurity;
  */
 public interface UserApi {
 
+  /**
+   * Handles the request to retrieve all users.
+   *
+   * @param ctx The Javalin context.
+   */
   @OpenApi(
       summary = "Get all users",
       operationId = "getAllUsers",
@@ -51,6 +56,11 @@ public interface UserApi {
       })
   void getAllUsers(Context ctx);
 
+  /**
+   * Handles the request to retrieve a user by their ID.
+   *
+   * @param ctx The Javalin context, which includes the user ID as a path parameter.
+   */
   @OpenApi(
       summary = "Get a user by ID",
       operationId = "getUserById",
@@ -95,6 +105,11 @@ public interface UserApi {
       })
   void getUserById(Context ctx);
 
+  /**
+   * Handles the request to create a new user.
+   *
+   * @param ctx The Javalin context, which contains the user creation data in the request body.
+   */
   @OpenApi(
       summary = "Create a new user",
       operationId = "createUser",
@@ -122,6 +137,12 @@ public interface UserApi {
       })
   void createUser(Context ctx);
 
+  /**
+   * Handles the request to update an existing user by their ID.
+   *
+   * @param ctx The Javalin context, which includes the user ID as a path parameter and the update
+   *     data in the request body.
+   */
   @OpenApi(
       summary = "Update an existing user",
       operationId = "updateUserById",
@@ -171,6 +192,11 @@ public interface UserApi {
       })
   void updateUserById(Context ctx);
 
+  /**
+   * Handles the request to delete a user by their ID.
+   *
+   * @param ctx The Javalin context, which includes the user ID as a path parameter.
+   */
   @OpenApi(
       summary = "Delete a user by ID",
       operationId = "deleteUserById",

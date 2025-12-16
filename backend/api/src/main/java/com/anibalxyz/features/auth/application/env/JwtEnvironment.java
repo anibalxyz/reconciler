@@ -20,6 +20,12 @@ public interface JwtEnvironment {
    */
   String JWT_SECRET();
 
+  /**
+   * Returns the {@link SecretKey} object used for signing and verifying JWT access tokens. This is
+   * derived from the {@link #JWT_SECRET()}.
+   *
+   * @return The JWT secret key object.
+   */
   SecretKey JWT_KEY();
 
   /**

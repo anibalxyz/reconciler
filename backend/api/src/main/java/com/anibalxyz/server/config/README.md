@@ -38,8 +38,12 @@ The `config` module is organized into the following packages:
 
 - **ApplicationConfiguration:** An immutable record that acts as a central container for all application configuration
   objects, including environment-specific settings and database connection details.
-- **ConfigurationFactory:** A utility class responsible for creating `ApplicationConfiguration` instances by loading
-  settings from various sources, such as system environment variables or `.env` files.
+- **ConfigurationFactory:** A factory for creating `ApplicationConfiguration` instances by loading settings from various
+  sources, such as system environment variables or a `.env` file. It centralizes all logic for loading, parsing, and
+  validating environment variables.
+- **AppEnvironmentSource:** A record that provides a type-safe representation of all loaded environment variables,
+  acting as the single source of truth for configuration. It implements various `...Environment` interfaces to provide
+  decoupled, feature-specific configurations to different parts of the application.
 - **StartupConfig and RuntimeConfig:** Abstract base classes that define the contract for configuration modules applied
   during server startup and runtime, respectively. Concrete configuration classes extend these to implement specific
   settings.

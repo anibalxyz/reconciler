@@ -18,6 +18,11 @@ import io.javalin.openapi.OpenApiResponse;
  */
 public interface SystemApi {
 
+  /**
+   * Performs a health check on the system.
+   *
+   * @param ctx The Javalin context.
+   */
   @OpenApi(
       summary = "Health check",
       operationId = "healthCheck",

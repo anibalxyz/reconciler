@@ -82,7 +82,7 @@ public class Application {
         };
 
     // 3. Declare specific route registries for dev/prod
-    // TODO: migrate endpoint declarations to uso apiBuilder()
+    // TODO: migrate endpoint declarations to use apiBuilder()
     Consumer<DependencyContainer> routeRegistries =
         container -> {
           new SystemRoutes(container.server(), container.systemController()).register();
@@ -137,6 +137,8 @@ public class Application {
   }
 
   /**
+   * Returns the underlying Javalin server instance.
+   *
    * @return The underlying Javalin server instance.
    */
   public Javalin javalin() {

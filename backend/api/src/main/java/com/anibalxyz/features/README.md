@@ -40,7 +40,8 @@ Each feature package adheres to a layered architecture, typically comprising:
 
 ## Features
 
-- [**auth**](./auth/README.md): Handles user authentication, including JWT generation and validation, and refresh token
+- [**auth**](./auth/README.md): Handles user authentication, including login, logout, JWT generation and validation, and
+  refresh token
   management with token rotation. It secures API endpoints based on user roles.
 - [**common**](./common/README.md): Provides common classes and utilities shared across features, such as routing
   helpers, standardized exception handling, and role definitions for access control.

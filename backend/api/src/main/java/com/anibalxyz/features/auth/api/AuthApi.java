@@ -56,6 +56,11 @@ public interface AuthApi {
       })
   void login(Context ctx);
 
+  /**
+   * Logs out the user by revoking the refresh token and clearing the associated cookie.
+   *
+   * @param ctx The Javalin context.
+   */
   @OpenApi(
       summary = "Log out user",
       operationId = "logout",

@@ -43,9 +43,9 @@ The `server` module is organized into the following packages:
   ** approach. It is responsible for instantiating and wiring together all application components (services,
   controllers, repositories) with their respective dependencies. This explicit dependency management makes the
   application's object graph clear and highly testable.
-- **Main:** The standard Java `main` class, which initializes and starts the `Application` instance. It handles the
-  loading of the application configuration from environment variables or `.env` files and registers a shutdown hook for
-  graceful termination.
+- **Main:** The standard Java `main` class, which initializes and starts the `Application` instance. It uses the
+  `ConfigurationFactory` to load the application configuration from environment variables or `.env` files and registers
+  a shutdown hook for graceful termination.
 
 ## Interactions
 
@@ -54,8 +54,10 @@ The `server` module is organized into the following packages:
   these features.
 - **`persistence` module:** It initializes the `PersistenceManager` and integrates it into the application's lifecycle,
   enabling database access for all other modules.
-- **Configuration Management:** It leverages the `config` sub-module to load environment variables, apply server-wide
-  settings (e.g., CORS, JSON mapping), and set up plugins (e.g., OpenAPI/Swagger).
+- **Configuration Management:** It leverages the `config` sub-module, which is responsible for loading and providing all
+  external configurations. The `ConfigurationFactory` loads variables from either system environment variables or `.env`
+  files into the `AppEnvironmentSource`, which then provides them to the rest of the application in a type-safe manner.
+  This includes server-wide settings (e.g., CORS, JSON mapping) and plugins (e.g., OpenAPI/Swagger).
 - **Request Lifecycle:** Through its `config.modules.runtime` classes (like `LifecycleConfig`), it manages per-request
   resources such as JPA `EntityManager` instances and associates them with the current HTTP request context.
 

@@ -67,12 +67,12 @@ public class ExceptionsConfig extends RuntimeConfig {
     handleGenericException(InvalidCredentialsException.class, 401, "Invalid credentials");
     handleGenericException(ConflictException.class, 409, "Conflict");
     handleGenericException(InvalidInputException.class, 400, "Invalid input provided");
-    // It seems useless, remains to be checked
     /*
+     TODO: It seems useless, remains to be checked
      handleGenericException(JsonMappingException.class, 400, "Malformed JSON request");
      handleGenericException(JsonParseException.class, 400, "Invalid JSON syntax");
     */
-    // TODO: review if this is necessary
+    // TODO: review if these handlers are being used
     handleGenericException(IllegalArgumentException.class, 400, "Invalid argument provided");
     handleGenericException(UnauthorizedResponse.class, 401, "Unauthorized");
 

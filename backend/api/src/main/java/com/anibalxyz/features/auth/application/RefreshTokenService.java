@@ -43,8 +43,9 @@ public class RefreshTokenService {
   /**
    * Creates and persists a new refresh token for a given user.
    *
-   * <p>This method generates a unique token value, sets its expiration date based on the
-   * environment configuration, and then persists it using the repository.
+   * <p>This method generates a unique token value and sets its expiration date based on the
+   * environment configuration. If the time-window feature is enabled, the expiration date may be
+   * capped to the end of the current window.
    *
    * @param user The user for whom the token is being created.
    * @return The newly created and persisted {@link RefreshToken}.
@@ -88,6 +89,13 @@ public class RefreshTokenService {
     return createRefreshToken(oldToken.user());
   }
 
+  /**
+   * Verifies that a refresh token is valid.
+   *
+   * @param token The token string to verify.
+   * @return The {@link RefreshToken} if it is valid.
+   * @throws InvalidCredentialsException if the token is not found, is expired, or has been revoked.
+   */
   public RefreshToken verifyRefreshToken(String token) {
     RefreshToken oldToken =
         refreshTokenRepository

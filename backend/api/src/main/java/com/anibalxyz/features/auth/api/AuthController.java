@@ -56,6 +56,7 @@ public class AuthController implements AuthApi {
     ctx.status(200).json(new AuthResponse(authResult.accessToken()));
   }
 
+  /** {@inheritDoc} */
   @Override
   public void logout(Context ctx) {
     String refreshTokenFromCookie = ctx.cookie("refreshToken");

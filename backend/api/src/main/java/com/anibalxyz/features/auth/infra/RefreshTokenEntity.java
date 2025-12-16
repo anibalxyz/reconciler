@@ -71,23 +71,47 @@ public class RefreshTokenEntity {
   }
 
   /**
-   * @return The unique identifier of the refresh token.
+   * Returns the unique identifier of the refresh token.
+   *
+   * @return The ID of the refresh token.
    */
   public Long getId() {
     return id;
   }
 
   /**
-   * @return The unique, randomly generated token string.
+   * Returns the unique, randomly generated token string.
+   *
+   * @return The token string.
    */
   public String getToken() {
     return token;
   }
 
   /**
-   * @return The user entity to whom this token belongs.
+   * Returns the user entity to whom this token belongs.
+   *
+   * @return The associated {@link UserEntity}.
    */
   public UserEntity getUser() {
     return user;
+  }
+
+  /**
+   * Returns the expiry date of the refresh token.
+   *
+   * @return The expiry date.
+   */
+  public Instant getExpiryDate() {
+    return expiryDate;
+  }
+
+  /**
+   * Returns whether the token has been revoked.
+   *
+   * @return {@code true} if revoked, {@code false} otherwise.
+   */
+  public boolean isRevoked() {
+    return revoked;
   }
 }

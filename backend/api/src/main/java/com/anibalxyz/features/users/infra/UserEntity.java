@@ -21,24 +21,30 @@ import org.hibernate.generator.EventType;
 @Table(name = "users")
 public class UserEntity {
 
+  /** The unique identifier of the user. */
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id")
   private Integer id;
 
+  /** The name of the user. */
   @Column(name = "name", nullable = false, length = 100)
   private String name;
 
+  /** The email address of the user. Must be unique. */
   @Column(name = "email", nullable = false, unique = true, length = 255)
   private String email;
 
+  /** The hashed password of the user. */
   @Column(name = "password_hash", nullable = false, length = 255)
   private String passwordHash;
 
+  /** The timestamp when the user was created. */
   @CurrentTimestamp(event = EventType.INSERT)
   @Column(name = "created_at")
   private Instant createdAt;
 
+  /** The timestamp when the user was last updated. */
   @CurrentTimestamp
   @Column(name = "updated_at")
   private Instant updatedAt;

@@ -33,7 +33,6 @@ public class ServerConfig extends StartupConfig {
     javalinConfig.router.ignoreTrailingSlashes = true;
     javalinConfig.jetty.modifyServer(server -> server.setStopTimeout(5_000)); // graceful shutdown
     javalinConfig.http.defaultContentType = "application/json; charset=utf-8";
-    // TODO: make allowed host injected by env variable
     String[] hosts = env.CORS_ALLOWED_ORIGINS();
     if (hosts != null && hosts.length > 0) {
       javalinConfig.bundledPlugins.enableCors(

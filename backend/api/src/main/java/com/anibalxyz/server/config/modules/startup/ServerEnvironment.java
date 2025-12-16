@@ -12,23 +12,44 @@ import com.anibalxyz.server.config.AppEnv;
  */
 public interface ServerEnvironment {
   /**
-   * @return The current application environment (e.g., "development", "test").
+   * Returns the current application environment (e.g., "development", "test").
+   *
+   * @return The current application environment.
    */
   AppEnv APP_ENV();
 
   /**
+   * Returns the base URL of the API.
+   *
    * @return The base URL of the API.
    */
   String API_URL();
 
+  /**
+   * Returns the root URL of the server.
+   *
+   * @return The root URL of the server.
+   */
   String SERVER_URL();
 
+  /**
+   * Returns the API prefix for all routes.
+   *
+   * @return The API prefix.
+   */
   String API_PREFIX();
 
+  /**
+   * Returns an array of allowed origins for Cross-Origin Resource Sharing (CORS).
+   *
+   * @return An array of allowed CORS origins.
+   */
   String[] CORS_ALLOWED_ORIGINS();
 
   /**
-   * @return The contact email for the API.
+   * Returns the contact email for the API.
+   *
+   * @return The contact email.
    */
   String CONTACT_EMAIL();
 }
