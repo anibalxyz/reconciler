@@ -1,7 +1,7 @@
 import baseConfig from '../vite.config.ts';
 import { mergeConfig, UserConfig } from 'vite';
 import { defineConfig } from 'astro/config';
-import { getEnv } from '../common/helpers/env.ts';
+import { getEnv } from '../common/helpers/getEnv.ts';
 import { buildUrl } from '../common/helpers/buildUrl.ts';
 
 const env = getEnv();

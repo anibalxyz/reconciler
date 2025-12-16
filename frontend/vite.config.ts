@@ -1,5 +1,5 @@
 import { defineConfig, Plugin } from 'vite';
-import { getEnv } from './common/helpers/env.ts';
+import { getEnv } from './common/helpers/getEnv.ts';
 import tailwindcss from '@tailwindcss/vite';
 
 const env = getEnv();
