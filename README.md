@@ -73,7 +73,7 @@ A brief overview of the most important files and directories in the project:
 ## Prerequisites
 
 - **Git** (to clone the repository).
-- **Docker v20.10+** and Docker Compose v2+ (to run the application).
+- **Docker v20.10+** and Docker Compose v2+ (to run the application). **Do NOT use v5.x**.
 - **Python 3.8+** and **pip** (to use the CLI tool).
 
 > [!WARNING]
@@ -109,12 +109,12 @@ python3 -m venv ./cli/.venv
 source ./cli/.venv/bin/activate
 
 # Install the CLI in editable mode
-pip install -e .[dev]
+pip install -e ./cli[dev]
 ```
 
 ```bash
 # If dont want to use editable mode
-pip install .
+pip install ./cli
 ```
 
 Thanks to [Typer](https://typer.tiangolo.com/), the CLI is fully self-documented, so you can get help for any command or

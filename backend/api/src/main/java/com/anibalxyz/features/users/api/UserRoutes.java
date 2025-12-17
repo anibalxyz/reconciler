@@ -30,7 +30,7 @@ public class UserRoutes extends RouteRegistry {
 
   /** {@inheritDoc} */
   public void register() {
-    new RouteGroup("/users", server)
+    new RouteGroup("/api/users", server)
         .get(userApi::getAllUsers, Role.AUTHENTICATED)
         .post(userApi::createUser, Role.GUEST)
         .get("/{id}", userApi::getUserById, Role.AUTHENTICATED)

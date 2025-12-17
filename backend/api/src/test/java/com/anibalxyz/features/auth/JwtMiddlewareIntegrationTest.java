@@ -56,7 +56,7 @@ public class JwtMiddlewareIntegrationTest {
     app = createApplication();
     app.start(0);
 
-    String baseUrl = "http://localhost:" + app.javalin().port();
+    String baseUrl = "http://localhost:" + app.javalin().port() + "/api";
     emf = app.persistenceManager().emf();
     ObjectMapper objectMapper =
         new ObjectMapper()
@@ -115,8 +115,8 @@ public class JwtMiddlewareIntegrationTest {
   class SuccessScenarios {
 
     @Test
-    @DisplayName("accessProtectedResource: given valid JWT, then return 200 OK")
-    void accessProtectedResource_validJwt_return200Ok() {
+    @DisplayName("GET /users: given valid JWT, then return 200 OK")
+    void GET_users_validJwt_return200Ok() {
       UserEntity userEntity = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
       String validJwt = loginUser(userEntity.getEmail(), VALID_PASSWORD);
       List<UserDetailResponse> expectedResponse =
@@ -140,8 +140,8 @@ public class JwtMiddlewareIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"missingHeader", "invalidHeader", "missingJwt"})
-    @DisplayName("accessProtectedResource: given missing JWT, then return 401 Unauthorized")
-    void accessProtectedResource_missingJwt_return401Unauthorized(String cause) {
+    @DisplayName("GET /users: given missing JWT, then return 401 Unauthorized")
+    void GET_users_missingJwt_return401Unauthorized(String cause) {
       ErrorResponse expectedResponseBody =
           new ErrorResponse("Unauthorized", List.of("Missing or invalid Authorization header"));
 
@@ -161,8 +161,8 @@ public class JwtMiddlewareIntegrationTest {
     }
 
     @Test
-    @DisplayName("accessProtectedResource: given invalid JWT, then return 401 Unauthorized")
-    void accessProtectedResource_invalidJwt_return401Unauthorized() {
+    @DisplayName("GET /users: given invalid JWT, then return 401 Unauthorized")
+    void GET_users_invalidJwt_return401Unauthorized() {
       ErrorResponse expectedResponseBody =
           new ErrorResponse("Invalid credentials", List.of("Invalid JWT token"));
 
@@ -175,8 +175,8 @@ public class JwtMiddlewareIntegrationTest {
     }
 
     @Test
-    @DisplayName("accessProtectedResource: given expired JWT, then return 401 Unauthorized")
-    void accessProtectedResource_expiredJwt_return401Unauthorized() {
+    @DisplayName("GET /users: given expired JWT, then return 401 Unauthorized")
+    void GET_users_expiredJwt_return401Unauthorized() {
       UserEntity userEntity = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
       Instant expiredInstant = Instant.now().minus(1, ChronoUnit.DAYS);
       String expiredJwt = jwtService.generateToken(userEntity.getId(), expiredInstant);

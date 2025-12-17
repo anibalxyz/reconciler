@@ -57,7 +57,7 @@ public class PersistenceManager {
    * @return A {@link HibernatePersistenceConfiguration} object with all settings applied.
    */
   private HibernatePersistenceConfiguration getProperties() {
-    // TODO: set values dynamically (from env or configuration file)
+    // TODO: set these values dynamically using env variables
     return new HibernatePersistenceConfiguration("reconcilerPU")
         .jdbcUrl(dbConfig.url())
         .jdbcCredentials(dbConfig.user(), dbConfig.password())

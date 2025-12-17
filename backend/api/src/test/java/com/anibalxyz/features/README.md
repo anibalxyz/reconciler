@@ -40,7 +40,7 @@ a specific feature.
     - **Integration Tests:** For the `UserRoutes`, confirming the correct operation of user CRUD (Create, Read, Update,
       Delete) API endpoints. These tests interact with the actual HTTP layer and database.
 
-## Main Components
+## Main Classes
 
 This module centralizes common testing utilities to promote reusability and maintain consistency across all test suites.
 

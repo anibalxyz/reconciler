@@ -1,5 +1,6 @@
 package com.anibalxyz.server.config.modules.startup;
 
+import com.anibalxyz.server.config.AppEnv;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import io.javalin.config.JavalinConfig;
@@ -69,8 +70,11 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                 .withServer(
                                     server ->
                                         server
-                                            .description(env.APP_ENV() + " server")
+                                            .description(
+                                                "API URL: add '" + env.API_PREFIX() + "' prefix")
                                             .url(env.API_URL()))
+                                .withServer(
+                                    server -> server.description("Root URL").url(env.SERVER_URL()))
                                 .withSecurity(
                                     openApiSecurity -> openApiSecurity.withBearerAuth("bearerAuth"))
                                 .withDefinitionProcessor(
@@ -126,7 +130,8 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                       return content.toPrettyString();
                                     }))));
 
-    if (env.APP_ENV().equals("dev")) {
+    // TODO: Maybe allow in production but with authorization
+    if (env.APP_ENV() == AppEnv.DEV) {
       javalinConfig.registerPlugin(
           new SwaggerPlugin(
               swaggerConfig -> {

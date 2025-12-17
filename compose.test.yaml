@@ -1,7 +1,7 @@
 services:
   api:
     pull_policy: never
-    ports: []
+    ports: !reset []
     volumes:
       # Persist Maven dependencies cache to speed up builds
       - maven:/root/.m2
@@ -15,7 +15,7 @@ services:
   db:
     ports:
       - "${DB_PORT}:5432"
-    volumes: []
+    volumes: !reset []
 
 volumes:
   maven:

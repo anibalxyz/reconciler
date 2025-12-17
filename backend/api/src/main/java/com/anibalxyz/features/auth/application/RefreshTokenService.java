@@ -5,8 +5,10 @@ import com.anibalxyz.features.auth.application.exception.InvalidCredentialsExcep
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.users.domain.User;
-import java.time.Instant;
+import java.time.*;
+import java.time.temporal.TemporalAdjusters;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Service for handling Refresh Token operations, including generation, validation, and rotation.
@@ -19,35 +21,51 @@ import java.util.UUID;
  */
 public class RefreshTokenService {
 
-  private final RefreshTokenRepository refreshTokenRepository;
   private final RefreshTokenEnvironment env;
+  private final RefreshTokenRepository refreshTokenRepository;
+  private final Supplier<ZonedDateTime> clock;
 
   /**
    * Constructs a RefreshTokenService with its required dependencies.
    *
-   * @param refreshTokenRepository The repository for refresh token persistence.
    * @param env The environment configuration for refresh tokens.
+   * @param refreshTokenRepository The repository for refresh token persistence.
    */
   public RefreshTokenService(
-      RefreshTokenRepository refreshTokenRepository, RefreshTokenEnvironment env) {
-    this.refreshTokenRepository = refreshTokenRepository;
+      RefreshTokenEnvironment env,
+      RefreshTokenRepository refreshTokenRepository,
+      Supplier<ZonedDateTime> clock) {
     this.env = env;
+    this.refreshTokenRepository = refreshTokenRepository;
+    this.clock = clock;
   }
 
   /**
    * Creates and persists a new refresh token for a given user.
    *
-   * <p>This method generates a unique token value, sets its expiration date based on the
-   * environment configuration, and then persists it using the repository.
+   * <p>This method generates a unique token value and sets its expiration date based on the
+   * environment configuration. If the time-window feature is enabled, the expiration date may be
+   * capped to the end of the current window.
    *
    * @param user The user for whom the token is being created.
    * @return The newly created and persisted {@link RefreshToken}.
    */
   public RefreshToken createRefreshToken(User user) {
-    Instant expiryDate = Instant.now().plus(env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
-    String tokenValue = UUID.randomUUID().toString();
+    ZonedDateTime now = clock.get();
 
-    RefreshToken refreshToken = new RefreshToken(null, tokenValue, user, expiryDate, false);
+    Instant expiryDate = now.toInstant().plus(env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
+
+    if (env.AUTH_ENABLE_TIME_WINDOW()) {
+      Instant nextFriday20hs =
+          now.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY))
+              .with(LocalTime.of(20, 0))
+              .toInstant();
+
+      expiryDate = expiryDate.isBefore(nextFriday20hs) ? expiryDate : nextFriday20hs;
+    }
+
+    RefreshToken refreshToken =
+        new RefreshToken(null, UUID.randomUUID().toString(), user, expiryDate, false);
 
     return refreshTokenRepository.save(refreshToken);
   }
@@ -71,6 +89,13 @@ public class RefreshTokenService {
     return createRefreshToken(oldToken.user());
   }
 
+  /**
+   * Verifies that a refresh token is valid.
+   *
+   * @param token The token string to verify.
+   * @return The {@link RefreshToken} if it is valid.
+   * @throws InvalidCredentialsException if the token is not found, is expired, or has been revoked.
+   */
   public RefreshToken verifyRefreshToken(String token) {
     RefreshToken oldToken =
         refreshTokenRepository
@@ -84,6 +109,25 @@ public class RefreshTokenService {
     }
 
     return oldToken;
+  }
+
+  /**
+   * Revokes a refresh token if it exists.
+   *
+   * <p>This method finds a refresh token by its value and, if found, marks it as revoked in the
+   * repository. If the token is null or not found, the method does nothing.
+   *
+   * @param token The refresh token string to revoke.
+   */
+  public void revokeToken(String token) {
+    if (token == null) return;
+
+    refreshTokenRepository
+        .findByToken(token)
+        .ifPresent(
+            (refreshToken) -> {
+              refreshTokenRepository.save(refreshToken.withRevoked(true));
+            });
   }
 
   /**

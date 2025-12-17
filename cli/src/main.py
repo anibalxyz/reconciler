@@ -11,11 +11,11 @@ from pathlib import Path
 
 import typer
 
-from cli.modules import compose, image, resource, config
+from modules import compose, image, resource, config
 
 # Change the current working directory to the project root.
 # This is necessary so that all file paths can be resolved relative to the project root.
-os.chdir(Path(__file__).resolve().parent.parent)
+os.chdir(Path(__file__).resolve().parent.parent.parent)
 
 
 def check_docker_is_installed():

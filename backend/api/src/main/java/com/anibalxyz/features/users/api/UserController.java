@@ -4,7 +4,6 @@ import com.anibalxyz.features.common.application.exception.ConflictException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
-import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.User;

@@ -1,5 +1,6 @@
 ---
-import { getEnv } from '@common/env';
+// TODO: check if using *this* function is correct
+import { getEnv } from '@common/helpers/getEnv.ts';
 const env = getEnv();
 const isDev: boolean = env.APP_ENV === 'dev';
 ---

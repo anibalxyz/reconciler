@@ -19,12 +19,10 @@ import jakarta.persistence.EntityManager;
 public class LifecycleConfig extends RuntimeConfig {
 
   private final PersistenceManager persistenceManager;
-  private final String APP_ENV;
 
-  public LifecycleConfig(Javalin server, PersistenceManager persistenceManager, String APP_ENV) {
+  public LifecycleConfig(Javalin server, PersistenceManager persistenceManager) {
     super(server);
     this.persistenceManager = persistenceManager;
-    this.APP_ENV = APP_ENV;
   }
 
   /**
@@ -65,9 +63,5 @@ public class LifecycleConfig extends RuntimeConfig {
   @Override
   public void apply() {
     setEntityManagerLifecycle();
-    server.before(
-        ctx -> {
-          ctx.attribute("APP_ENV", APP_ENV);
-        });
   }
 }

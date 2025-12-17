@@ -13,9 +13,10 @@ export interface UserCreateResponse {
   email: string;
 }
 
-export type RefreshResponse = AuthResponse | ErrorResponse;
-export type LoginResponse = AuthResponse | ErrorResponse;
 export type RegistrationResponse = UserCreateResponse | ErrorResponse;
+export type LoginResponse = AuthResponse | ErrorResponse;
+export type LogoutResponse = void | ErrorResponse;
+export type RefreshResponse = AuthResponse | ErrorResponse;
 
 export type ApiResponse<T> = {
   status: number;
@@ -30,7 +31,14 @@ const serverUnreachableError: ErrorResponse = {
 async function performRequest<T>(request: Request): Promise<ApiResponse<T | ErrorResponse>> {
   try {
     const res = await fetch(request);
-    const data = await res.json();
+
+    let data: T | ErrorResponse;
+    if (res.status === 204) {
+      data = undefined as T;
+    } else {
+      data = await res.json();
+    }
+
     return { status: res.status, data };
   } catch {
     return {
@@ -69,6 +77,14 @@ export default class AuthService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      credentials: 'include',
+    });
+    return performRequest(request);
+  }
+
+  public async logoutUser(): Promise<ApiResponse<LogoutResponse>> {
+    const request = new Request('/api/auth/logout', {
+      method: 'POST',
       credentials: 'include',
     });
     return performRequest(request);

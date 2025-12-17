@@ -1,12 +1,12 @@
 package com.anibalxyz.features.users.api;
 
+import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.ErrorResponseExamples;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.api.out.UsersErrorResponseExamples;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
-import com.anibalxyz.features.common.api.out.ErrorResponseExamples;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
 import io.javalin.openapi.OpenApiSecurity;
@@ -22,6 +22,11 @@ import io.javalin.openapi.OpenApiSecurity;
  */
 public interface UserApi {
 
+  /**
+   * Handles the request to retrieve all users.
+   *
+   * @param ctx The Javalin context.
+   */
   @OpenApi(
       summary = "Get all users",
       operationId = "getAllUsers",
@@ -37,20 +42,25 @@ public interface UserApi {
         @OpenApiResponse(
             status = "401",
             description = "Authentication information is missing or invalid.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "500",
             description = "Internal server error.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = ErrorResponseExamples.INTERNAL_SERVER_ERROR))
       })
   void getAllUsers(Context ctx);
 
+  /**
+   * Handles the request to retrieve a user by their ID.
+   *
+   * @param ctx The Javalin context, which includes the user ID as a path parameter.
+   */
   @OpenApi(
       summary = "Get a user by ID",
       operationId = "getUserById",
@@ -74,34 +84,39 @@ public interface UserApi {
         @OpenApiResponse(
             status = "401",
             description = "Authentication information is missing or invalid.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "400",
             description = "Invalid ID format supplied.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = ErrorResponseExamples.INVALID_ID)),
         @OpenApiResponse(
             status = "404",
             description = "User with the specified ID not found.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = ErrorResponseExamples.RESOURCE_NOT_FOUND))
       })
   void getUserById(Context ctx);
 
+  /**
+   * Handles the request to create a new user.
+   *
+   * @param ctx The Javalin context, which contains the user creation data in the request body.
+   */
   @OpenApi(
       summary = "Create a new user",
       operationId = "createUser",
       path = "/users",
       methods = HttpMethod.POST,
       tags = {"Users"},
-      requestBody = 
+      requestBody =
           @OpenApiRequestBody(
               description = "The user to create.",
               required = true,
@@ -113,15 +128,28 @@ public interface UserApi {
             content = @OpenApiContent(from = UserCreateResponse.class)),
         @OpenApiResponse(
             status = "400",
-            description = 
-                "Invalid input data, such as a duplicate email, missing fields, or invalid password format.",
-            content = 
+            description =
+                "Invalid input provided, such as a duplicate email, missing fields, or invalid password format.",
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = UsersErrorResponseExamples.CREATE_USER_BAD_REQUEST))
+                    example = UsersErrorResponseExamples.CREATE_USER_BAD_REQUEST)),
+        @OpenApiResponse(
+            status = "409",
+            description = "Conflict: email already in use.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = UsersErrorResponseExamples.EMAIL_ALREADY_IN_USE))
       })
   void createUser(Context ctx);
 
+  /**
+   * Handles the request to update an existing user by their ID.
+   *
+   * @param ctx The Javalin context, which includes the user ID as a path parameter and the update
+   *     data in the request body.
+   */
   @OpenApi(
       summary = "Update an existing user",
       operationId = "updateUserById",
@@ -137,7 +165,7 @@ public interface UserApi {
             required = true,
             example = "1")
       },
-      requestBody = 
+      requestBody =
           @OpenApiRequestBody(
               description = "The user data to update. At least one field must be provided.",
               required = true,
@@ -150,27 +178,39 @@ public interface UserApi {
         @OpenApiResponse(
             status = "401",
             description = "Authentication information is missing or invalid.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "400",
-            description = "Invalid input data, empty payload, or duplicate email.",
-            content = 
+            description = "Invalid input provided, such as empty payload, or duplicate email.",
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = UsersErrorResponseExamples.UPDATE_USER_BAD_REQUEST)),
         @OpenApiResponse(
             status = "404",
             description = "User with the specified ID not found.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
-                    example = ErrorResponseExamples.RESOURCE_NOT_FOUND))
+                    example = ErrorResponseExamples.RESOURCE_NOT_FOUND)),
+        @OpenApiResponse(
+            status = "409",
+            description = "Conflict: email already in use.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = UsersErrorResponseExamples.EMAIL_ALREADY_IN_USE))
       })
   void updateUserById(Context ctx);
 
+  /**
+   * Handles the request to delete a user by their ID.
+   *
+   * @param ctx The Javalin context, which includes the user ID as a path parameter.
+   */
   @OpenApi(
       summary = "Delete a user by ID",
       operationId = "deleteUserById",
@@ -191,14 +231,21 @@ public interface UserApi {
         @OpenApiResponse(
             status = "401",
             description = "Authentication information is missing or invalid.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
+            status = "400",
+            description = "Invalid ID format supplied.",
+            content =
+                @OpenApiContent(
+                    from = ErrorResponse.class,
+                    example = ErrorResponseExamples.INVALID_ID)),
+        @OpenApiResponse(
             status = "404",
             description = "User with the specified ID not found.",
-            content = 
+            content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
                     example = ErrorResponseExamples.RESOURCE_NOT_FOUND))

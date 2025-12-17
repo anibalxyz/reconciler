@@ -4,6 +4,7 @@ import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.system.api.SystemRoutes;
 import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
+import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.modules.runtime.ExceptionsConfig;
 import com.anibalxyz.server.config.modules.runtime.JwtMiddlewareConfig;
@@ -55,13 +56,13 @@ public class Application {
    * @throws IllegalStateException if the environment in the config is unknown.
    */
   public static Application create(ApplicationConfiguration config) {
-    String appEnv = config.env().APP_ENV();
+    AppEnv appEnv = config.env().APP_ENV();
 
-    if ("test".equals(appEnv)) {
+    if (appEnv == AppEnv.TEST) {
       throw new IllegalStateException(
           "For 'test' environment, directly use buildApplication() to specify feature-specific routes and configs.");
     }
-    if (!"dev".equals(appEnv) && !"prod".equals(appEnv)) {
+    if (appEnv != AppEnv.DEV && appEnv != AppEnv.PROD) {
       throw new IllegalStateException("Unknown environment: " + appEnv);
     }
 
@@ -72,16 +73,16 @@ public class Application {
         };
 
     // 2. Declare specific runtime configurations for dev/prod
+    // TODO: move to a separate file, e.g. RedirectRoutes within features.common
     Consumer<DependencyContainer> runtimeConfigs =
         container -> {
-          if ("dev".equals(appEnv)) {
-            container.server().get("/", ctx -> ctx.redirect("/swagger"));
-          } else { // prod
-            container.server().get("/", ctx -> ctx.redirect("/openapi"));
-          }
+          String openapiRedirect = appEnv == AppEnv.PROD ? "/openapi" : "/swagger";
+          container.server().get("/", ctx -> ctx.redirect(openapiRedirect));
+          container.server().get("/api", ctx -> ctx.redirect(openapiRedirect));
         };
 
     // 3. Declare specific route registries for dev/prod
+    // TODO: migrate endpoint declarations to use apiBuilder()
     Consumer<DependencyContainer> routeRegistries =
         container -> {
           new SystemRoutes(container.server(), container.systemController()).register();
@@ -126,7 +127,7 @@ public class Application {
         new DependencyContainer(
             server, config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
 
-    new LifecycleConfig(server, persistenceManager, config.env().APP_ENV()).apply();
+    new LifecycleConfig(server, persistenceManager).apply();
     new ExceptionsConfig(server).apply();
 
     if (customRuntimeConfigs != null) customRuntimeConfigs.accept(container);
@@ -136,6 +137,8 @@ public class Application {
   }
 
   /**
+   * Returns the underlying Javalin server instance.
+   *
    * @return The underlying Javalin server instance.
    */
   public Javalin javalin() {

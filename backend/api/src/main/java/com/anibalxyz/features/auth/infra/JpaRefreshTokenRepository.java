@@ -37,8 +37,10 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
   @Override
   @SuppressWarnings("resource")
   public List<RefreshToken> findAll() {
-    return em().createQuery("SELECT rt FROM RefreshTokenEntity rt", RefreshTokenEntity.class)
-        .getResultList().stream()
+    return em()
+        .createQuery("SELECT rt FROM RefreshTokenEntity rt", RefreshTokenEntity.class)
+        .getResultList()
+        .stream()
         .map(RefreshTokenEntity::toDomain)
         .toList();
   }
@@ -58,8 +60,9 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
   public Optional<RefreshToken> findByToken(String token) {
     try {
       RefreshTokenEntity entity =
-          em()
-              .createQuery("SELECT rt FROM RefreshTokenEntity rt WHERE rt.token = :token", RefreshTokenEntity.class)
+          em().createQuery(
+                  "SELECT rt FROM RefreshTokenEntity rt WHERE rt.token = :token",
+                  RefreshTokenEntity.class)
               .setParameter("token", token)
               .getSingleResult();
       return Optional.of(entity.toDomain());
@@ -72,8 +75,8 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
   @Override
   @SuppressWarnings("resource")
   public int deleteExpiredTokens() {
-    return em()
-        .createQuery("DELETE FROM RefreshTokenEntity rt WHERE rt.expiryDate < CURRENT_TIMESTAMP")
+    return em().createQuery(
+            "DELETE FROM RefreshTokenEntity rt WHERE rt.expiryDate < CURRENT_TIMESTAMP")
         .executeUpdate();
   }
 }

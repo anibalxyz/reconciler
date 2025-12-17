@@ -2,6 +2,7 @@ package com.anibalxyz.features.auth.api;
 
 import static com.anibalxyz.features.Constants.Auth.VALID_JWT;
 import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.features.Constants.Environment.*;
 import static com.anibalxyz.features.Constants.Users.*;
 import static com.anibalxyz.features.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,13 +13,13 @@ import static org.mockito.Mockito.*;
 import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
-import com.anibalxyz.features.auth.application.AuthResult;
 import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.auth.application.RefreshTokenService;
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
+import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
-import io.javalin.http.SameSite;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
@@ -36,6 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("Tests for AuthController")
 public class AuthControllerTest {
   @Mock private AuthService authService;
+  @Mock private RefreshTokenService refreshTokenService;
   @Mock private Context ctx;
 
   @InjectMocks private AuthController authController;
@@ -43,6 +45,12 @@ public class AuthControllerTest {
   @BeforeAll
   public static void setup() {
     Constants.init();
+  }
+
+  @BeforeEach
+  public void di() {
+    authController =
+        new AuthController(Constants.APP_CONFIG.env(), authService, refreshTokenService);
   }
 
   @Nested
@@ -71,6 +79,38 @@ public class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("logout: given existing refresh token, then clear cookie and revoke token")
+    void logout_existingRefreshToken_clearCookieAndRevokeToken() {
+      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
+
+      authController.logout(ctx);
+
+      verify(refreshTokenService).revokeToken(VALID_REFRESH_TOKEN);
+      verify(ctx).status(204);
+
+      Cookie cookie = capturedCookie(ctx);
+      assertThat(cookie.getName()).isEqualTo("refreshToken");
+      assertThat(cookie.getValue()).isEmpty();
+      assertThat(cookie.getMaxAge()).isZero();
+    }
+
+    @Test
+    @DisplayName("logout: given no refresh token, then clear cookie")
+    void logout_noRefreshToken_clearCookie() {
+      when(ctx.cookie("refreshToken")).thenReturn(null);
+
+      authController.logout(ctx);
+
+      verify(refreshTokenService, never()).revokeToken(anyString());
+      verify(ctx).status(204);
+
+      Cookie cookie = capturedCookie(ctx);
+      assertThat(cookie.getName()).isEqualTo("refreshToken");
+      assertThat(cookie.getValue()).isEmpty();
+      assertThat(cookie.getMaxAge()).isZero();
+    }
+
+    @Test
     @DisplayName("refresh: given valid refresh token, then return refreshed tokens")
     public void refresh_validRefreshToken_returnRefreshedTokens() {
       Instant expiryDay = Instant.now().plus(6, ChronoUnit.DAYS);
@@ -86,14 +126,14 @@ public class AuthControllerTest {
           new Cookie(
               "refreshToken",
               validRefreshToken.token(),
-              "/",
+              AUTH_COOKIE_PATH, //
               (int) maxAgeInSeconds,
-              false, // secure only in production
+              AUTH_COOKIE_SECURE,
               0,
               true, // HttpOnly
               null, // Comment
-              null, // Domain
-              SameSite.STRICT);
+              AUTH_COOKIE_DOMAIN, // Domain
+              AUTH_COOKIE_SAMESITE);
 
       when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
       when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(result);

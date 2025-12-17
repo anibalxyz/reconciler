@@ -1,4 +1,6 @@
-package com.anibalxyz.features.users.application;
+package com.anibalxyz.features.users.application.env;
+
+import com.anibalxyz.features.users.application.UserService;
 
 /**
  * Defines a port for providing environment configuration to the Users features.

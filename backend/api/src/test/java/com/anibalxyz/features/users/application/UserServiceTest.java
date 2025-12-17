@@ -62,7 +62,7 @@ public class UserServiceTest {
 
   @BeforeEach
   public void di() {
-    userService = new UserService(userRepository, Constants.APP_CONFIG.env());
+    userService = new UserService(Constants.APP_CONFIG.env(), userRepository);
   }
 
   @Nested

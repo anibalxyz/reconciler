@@ -19,4 +19,11 @@ public interface RefreshTokenEnvironment {
    * @return The refresh token expiration time.
    */
   Duration JWT_REFRESH_EXPIRATION_TIME_DAYS();
+
+  /**
+   * Returns whether the authentication time-window feature is enabled.
+   *
+   * @return {@code true} if the time-window is enabled, {@code false} otherwise.
+   */
+  boolean AUTH_ENABLE_TIME_WINDOW();
 }

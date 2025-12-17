@@ -56,6 +56,24 @@ public interface AuthApi {
       })
   void login(Context ctx);
 
+  /**
+   * Logs out the user by revoking the refresh token and clearing the associated cookie.
+   *
+   * @param ctx The Javalin context.
+   */
+  @OpenApi(
+      summary = "Log out user",
+      operationId = "logout",
+      path = "/auth/logout",
+      methods = HttpMethod.POST,
+      tags = {"Authentication"},
+      responses = {
+        @OpenApiResponse(
+            status = "204",
+            description = "Logout successful. The refresh token cookie is cleared.")
+      })
+  void logout(Context ctx);
+
   @OpenApi(
       summary = "Refresh access token",
       operationId = "refreshToken",
@@ -76,8 +94,8 @@ public interface AuthApi {
                     from = ErrorResponse.class,
                     example = AuthErrorResponseExamples.INVALID_CREDENTIALS)),
         @OpenApiResponse(
-            status = "400",
-            description = "Bad request (e.g., missing refresh token).",
+            status = "401",
+            description = "Missing refresh token in cookie.",
             content =
                 @OpenApiContent(
                     from = ErrorResponse.class,

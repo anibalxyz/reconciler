@@ -17,7 +17,7 @@ export default function App() {
 
   const logout = useCallback(() => {
     setAccessToken(null);
-    // TODO: add authService.logout();
+    authService.logoutUser();
     setModal({
       title: 'Logged out successfully',
       message: 'See you soon!',
@@ -25,7 +25,7 @@ export default function App() {
       type: 'info',
       redirect: '/',
     });
-  }, []);
+  }, [authService]);
 
   const refreshToken = useCallback(async (): Promise<number> => {
     const response = await authService.refreshToken();
@@ -39,6 +39,8 @@ export default function App() {
     if (status < 400) {
       return null;
     }
+    // TODO: Frontend currently treats all 401 from refresh endpoint as session expired.
+    //       This will be refined once error codes are standardized.
     switch (status) {
       case 400:
         return {

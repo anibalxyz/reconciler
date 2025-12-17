@@ -34,6 +34,16 @@ public final class UsersErrorResponseExamples {
               ]
             }""";
 
+  /** Example response for when an email is already in use during user creation or update. */
+  public static final String EMAIL_ALREADY_IN_USE =
+      """
+            {
+              "error": "Conflict",
+              "details": [
+                "Email already in use. Please use another"
+              ]
+            }""";
+
   /** Private constructor to prevent instantiation. */
   private UsersErrorResponseExamples() {}
 }
