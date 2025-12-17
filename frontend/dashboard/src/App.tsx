@@ -39,6 +39,8 @@ export default function App() {
     if (status < 400) {
       return null;
     }
+    // TODO: Frontend currently treats all 401 from refresh endpoint as session expired.
+    //       This will be refined once error codes are standardized.
     switch (status) {
       case 400:
         return {

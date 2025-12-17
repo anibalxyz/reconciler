@@ -94,8 +94,8 @@ public interface AuthApi {
                     from = ErrorResponse.class,
                     example = AuthErrorResponseExamples.INVALID_CREDENTIALS)),
         @OpenApiResponse(
-            status = "400",
-            description = "Bad request (e.g., missing refresh token).",
+            status = "401",
+            description = "Missing refresh token in cookie.",
             content =
                 @OpenApiContent(
                     from = ErrorResponse.class,
