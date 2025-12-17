@@ -22,4 +22,4 @@ WORKDIR /app
 
 COPY --from=build /app/target/app-jar-with-dependencies.jar app.jar
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "echo 'Waiting for DB to be ready...' && sleep 3 && exec java -jar app.jar"]
