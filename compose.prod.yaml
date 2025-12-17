@@ -1,13 +1,24 @@
 services:
   api:
     pull_policy: missing # In real production, this should be set to 'always'
-    volumes:
-      # Persistent storage for the DB. Data isn't lost on container shutdown
-      - database:/var/lib/postgresql/data
+    environment:
+      # Not used yet
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS},${NGINX_SERVER_NAME}
+  db:
+    ports: !reset []
   nginx:
     image: anibalxyz/reconciler-prod-nginx:latest
     container_name: reconciler-prod-nginx
     pull_policy: missing # In real production, this should be set to 'always'
+    environment:
+      - NGINX_TTL=${NGINX_TTL}
+      - NGINX_PORT=${NGINX_PORT}
+      - NGINX_SERVER_NAME=${NGINX_SERVER_NAME}
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
+      - API_PORT=${API_PORT}
+      - API_PREFIX=${API_PREFIX}
+      # Used when running in the same Docker network. Change it in real production
+      - API_HOST=api
     ports:
       - "80:80"
     networks:

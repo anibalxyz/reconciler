@@ -1,15 +1,20 @@
 package com.anibalxyz.server;
 
+import com.anibalxyz.features.auth.api.AuthRoutes;
+import com.anibalxyz.features.system.api.SystemRoutes;
+import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
+import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.*;
+import com.anibalxyz.server.config.modules.runtime.ExceptionsConfig;
+import com.anibalxyz.server.config.modules.runtime.JwtMiddlewareConfig;
+import com.anibalxyz.server.config.modules.runtime.LifecycleConfig;
+import com.anibalxyz.server.config.modules.runtime.SchedulerConfig;
+import com.anibalxyz.server.config.modules.startup.ServerConfig;
+import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
-import com.anibalxyz.server.routes.RouteRegistry;
-import com.anibalxyz.system.api.SystemRoutes;
-import com.anibalxyz.users.api.UserRoutes;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -43,84 +48,6 @@ public class Application {
   }
 
   /**
-   * Creates and configures an {@link Application} instance for the 'test' environment.
-   *
-   * <p>This factory method sets up the entire application stack, including the persistence layer,
-   * dependency container, server configurations, and route registries, all tailored for automated
-   * testing.
-   *
-   * @param config The application configuration, loaded for the test environment.
-   * @return A fully configured {@code Application} instance ready for testing.
-   */
-  public static Application createForTest(ApplicationConfiguration config) {
-    PersistenceManager persistenceManager = new PersistenceManager(config.database());
-
-    Javalin server =
-        Javalin.create(javalinConfig -> new InitConfig(javalinConfig, config.env()).apply());
-
-    DependencyContainer container =
-        new DependencyContainer(
-            config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
-
-    List<RouteRegistry> routeRegistries =
-        List.of(
-            new UserRoutes(server, container.getUserController()),
-            new SystemRoutes(server, container.getSystemController()));
-    List<ServerConfig> serverConfigs =
-        List.of(new LifeCycleConfig(server, persistenceManager), new ExceptionsConfig(server));
-
-    routeRegistries.forEach(RouteRegistry::register);
-    serverConfigs.forEach(ServerConfig::apply);
-
-    return new Application(server, persistenceManager, config);
-  }
-
-  /**
-   * Creates and configures an {@link Application} instance for the 'development' environment.
-   *
-   * <p>This factory method sets up the entire application stack, including the persistence layer,
-   * dependency container, server configurations, and route registries, all tailored for local
-   * development.
-   *
-   * @param config The application configuration, loaded for the development environment.
-   * @return A fully configured {@code Application} instance ready for development.
-   */
-  public static Application createForDev(ApplicationConfiguration config) {
-    PersistenceManager persistenceManager = new PersistenceManager(config.database());
-
-    Consumer<JavalinConfig> initConfig =
-        javalinConfig -> {
-          new InitConfig(javalinConfig, config.env()).apply();
-          new SwaggerConfig(javalinConfig, config.env()).apply();
-        };
-
-    Javalin server = Javalin.create(initConfig);
-
-    // TODO: separate environments logic
-    if (config.env().APP_ENV().equals("dev")) {
-      server.get("/", ctx -> ctx.redirect("/swagger"));
-    } else {
-      server.get("/", ctx -> ctx.redirect("/openapi"));
-    }
-
-    DependencyContainer container =
-        new DependencyContainer(
-            config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
-
-    List<RouteRegistry> routeRegistries =
-        List.of(
-            new UserRoutes(server, container.getUserController()),
-            new SystemRoutes(server, container.getSystemController()));
-    List<ServerConfig> serverConfigs =
-        List.of(new LifeCycleConfig(server, persistenceManager), new ExceptionsConfig(server));
-
-    routeRegistries.forEach(RouteRegistry::register);
-    serverConfigs.forEach(ServerConfig::apply);
-
-    return new Application(server, persistenceManager, config);
-  }
-
-  /**
    * A general factory method that creates an {@link Application} instance based on the environment
    * specified in the configuration.
    *
@@ -129,18 +56,89 @@ public class Application {
    * @throws IllegalStateException if the environment in the config is unknown.
    */
   public static Application create(ApplicationConfiguration config) {
-    String appEnv = config.env().APP_ENV();
-    if (appEnv.equals("dev") || appEnv.equals("prod")) {
-      // TODO: also used in "production", for the moment both are the same
-      return createForDev(config);
+    AppEnv appEnv = config.env().APP_ENV();
+
+    if (appEnv == AppEnv.TEST) {
+      throw new IllegalStateException(
+          "For 'test' environment, directly use buildApplication() to specify feature-specific routes and configs.");
     }
-    if (appEnv.equals("test")) {
-      return createForTest(config);
+    if (appEnv != AppEnv.DEV && appEnv != AppEnv.PROD) {
+      throw new IllegalStateException("Unknown environment: " + appEnv);
     }
-    throw new IllegalStateException("Unknown environment: " + appEnv);
+
+    // 1. Declare specific startup configurations for dev/prod
+    Consumer<JavalinConfig> startupConfig =
+        javalinConfig -> {
+          new SwaggerConfig(javalinConfig, config.env()).apply();
+        };
+
+    // 2. Declare specific runtime configurations for dev/prod
+    // TODO: move to a separate file, e.g. RedirectRoutes within features.common
+    Consumer<DependencyContainer> runtimeConfigs =
+        container -> {
+          String openapiRedirect = appEnv == AppEnv.PROD ? "/openapi" : "/swagger";
+          container.server().get("/", ctx -> ctx.redirect(openapiRedirect));
+          container.server().get("/api", ctx -> ctx.redirect(openapiRedirect));
+        };
+
+    // 3. Declare specific route registries for dev/prod
+    // TODO: migrate endpoint declarations to use apiBuilder()
+    Consumer<DependencyContainer> routeRegistries =
+        container -> {
+          new SystemRoutes(container.server(), container.systemController()).register();
+          new UserRoutes(container.server(), container.userController()).register();
+          new AuthRoutes(container.server(), container.authController()).register();
+          new JwtMiddlewareConfig(container.server(), container.jwtMiddleware()).apply();
+          new SchedulerConfig(container.server(), container.refreshTokenService()).apply();
+        };
+
+    return buildApplication(config, startupConfig, runtimeConfigs, routeRegistries);
   }
 
   /**
+   * The private, environment-agnostic "assembler" for the application.
+   *
+   * <p>This method is responsible for the core assembly logic: initializing common components and
+   * then applying the specific configurations and routes provided to it. It does not make decisions
+   * based on the application environment.
+   *
+   * @param config The application configuration.
+   * @param customStartupConfigs A consumer for specific startup configurations (e.g., Swagger).
+   * @param customRuntimeConfigs A consumer for specific runtime configurations.
+   * @param customRoutesRegistries A consumer for registering specific routes.
+   * @return A fully assembled {@code Application} instance.
+   */
+  public static Application buildApplication(
+      ApplicationConfiguration config,
+      Consumer<JavalinConfig> customStartupConfigs,
+      Consumer<DependencyContainer> customRuntimeConfigs,
+      Consumer<DependencyContainer> customRoutesRegistries) {
+
+    PersistenceManager persistenceManager = new PersistenceManager(config.database());
+
+    Consumer<JavalinConfig> finalStartupConfig =
+        javalinConfig -> {
+          new ServerConfig(javalinConfig, config.env()).apply();
+          if (customStartupConfigs != null) customStartupConfigs.accept(javalinConfig);
+        };
+    Javalin server = Javalin.create(finalStartupConfig);
+
+    DependencyContainer container =
+        new DependencyContainer(
+            server, config.env(), new JavalinContextEntityManagerProvider(), persistenceManager);
+
+    new LifecycleConfig(server, persistenceManager).apply();
+    new ExceptionsConfig(server).apply();
+
+    if (customRuntimeConfigs != null) customRuntimeConfigs.accept(container);
+    if (customRoutesRegistries != null) customRoutesRegistries.accept(container);
+
+    return new Application(server, persistenceManager, config);
+  }
+
+  /**
+   * Returns the underlying Javalin server instance.
+   *
    * @return The underlying Javalin server instance.
    */
   public Javalin javalin() {

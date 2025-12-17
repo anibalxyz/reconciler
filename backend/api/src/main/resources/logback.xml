@@ -10,8 +10,10 @@
 
     <!-- NOTE: if using Docker (or manually inject env variable), it functions dynamically,
                if not then defaults 'dev'
+        TODO: Review this
     -->
     <!-- Development environment configuration -->
+    <!-- TODO: use LOG_LEVEL envar instead -->
     <if condition='property("APP_ENV").equals("dev")'>
         <then>
             <root level="DEBUG">
@@ -23,10 +25,10 @@
         </then>
         <!-- Production environment configuration -->
         <else>
-            <root level="INFO">
+            <root level="DEBUG">
                 <appender-ref ref="STDOUT"/>
             </root>
-            <logger name="io.javalin" level="WARN"/>
+            <logger name="io.javalin" level="INFO"/>
             <logger name="org.eclipse.jetty" level="WARN"/>
             <logger name="org.hibernate" level="WARN"/>
         </else>

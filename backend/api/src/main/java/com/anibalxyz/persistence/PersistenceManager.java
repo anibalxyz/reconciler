@@ -1,6 +1,7 @@
 package com.anibalxyz.persistence;
 
-import com.anibalxyz.users.infra.UserEntity;
+import com.anibalxyz.features.auth.infra.RefreshTokenEntity;
+import com.anibalxyz.features.users.infra.UserEntity;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
@@ -56,7 +57,7 @@ public class PersistenceManager {
    * @return A {@link HibernatePersistenceConfiguration} object with all settings applied.
    */
   private HibernatePersistenceConfiguration getProperties() {
-    // TODO: set values dynamically (from env or configuration file)
+    // TODO: set these values dynamically using env variables
     return new HibernatePersistenceConfiguration("reconcilerPU")
         .jdbcUrl(dbConfig.url())
         .jdbcCredentials(dbConfig.user(), dbConfig.password())
@@ -68,6 +69,6 @@ public class PersistenceManager {
         .property(HikariCPSettings.HIKARI_INITIALIZATION_TIMEOUT, "60000")
         .property(HikariCPSettings.HIKARI_IDLE_TIMEOUT, "300000")
         .schemaToolingAction(Action.VALIDATE)
-        .managedClasses(UserEntity.class);
+        .managedClasses(UserEntity.class, RefreshTokenEntity.class);
   }
 }

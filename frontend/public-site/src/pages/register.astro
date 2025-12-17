@@ -1,0 +1,20 @@
+---
+import FormLink from '@components/auth/FormLink.astro';
+import LoginModal from '@components/auth/LoginModal.astro';
+import RegisterForm from '@components/auth/RegisterForm.astro';
+import ValidationErrorList from '@layout/auth/ValidationErrorList.astro';
+import Base from '@layout/Base.astro';
+---
+
+<Base title="Register">
+  <div class="flex min-h-full flex-col items-center justify-center px-4">
+    <ValidationErrorList />
+    <RegisterForm />
+    <div class="mt-5 flex flex-row justify-center">
+      <FormLink href="/login">Already have an account?</FormLink>
+    </div>
+  </div>
+
+  <LoginModal />
+  <script src="/src/scripts/register.ts"></script>
+</Base>

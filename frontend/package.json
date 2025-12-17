@@ -34,9 +34,27 @@
     "dashboard",
     "public-site"
   ],
+  "scripts": {
+    "build:dashboard": "npm run build --workspace=@anibalxyz/reconciler-dashboard",
+    "build:public": "npm run build --workspace=@anibalxyz/reconciler-public-site",
+    "dev:dashboard": "npm run dev --workspace=@anibalxyz/reconciler-dashboard",
+    "dev:public": "npm run dev --workspace=@anibalxyz/reconciler-public-site",
+    "format": "npm run format --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "4.1.16",
+    "tailwindcss": "4.1.18",
+    "zod": "3.25.76"
+  },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "@types/node": "24.0.0",
+    "eslint": "9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.6.2",
+    "prettier-plugin-astro": "0.14.1",
+    "prettier-plugin-tailwindcss": "0.7.1",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.46.3"
   }
 }

@@ -11,6 +11,6 @@ RUN mvn dependency:go-offline -B
 
 COPY src/ ./src
 
-EXPOSE 4000
-
-ENTRYPOINT ["mvn", "compile", "exec:java", "-Dexec.mainClass=com.anibalxyz.Main"]
+# TODO: there is an scenario when the api starts at the same time that db is up but migrations did not executed yet.
+#       This 3-seconds sleep **temporary** solves that. NOTE: used in dev, prod & test dockerfiles.
+ENTRYPOINT ["sh", "-c", "echo 'Waiting for DB to be ready...' && sleep 3 && exec mvn compile exec:java -Dexec.mainClass=com.anibalxyz.Main"]

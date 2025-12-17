@@ -1,15 +1,4 @@
 services:
-  db:
-    container_name: reconciler-${APP_ENV}-db
-    image: postgres:17
-    pull_policy: missing
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    networks:
-      - main
-
   api:
     image: anibalxyz/reconciler-${APP_ENV}-api:latest
     container_name: reconciler-${APP_ENV}-api
@@ -17,17 +6,48 @@ services:
       - ./backend/.env.${APP_ENV}
     environment:
       - APP_ENV=${APP_ENV}
+      - FRONTEND_PROTOCOL=${FRONTEND_PROTOCOL}
+      # Override DB connection when running in the same Docker network
+      # If using an external DB host, change to ${DB_HOST} or comment out
+      - DB_HOST=db
+      - DB_PORT=5432
     ports:
-      - "${API_PORT}:4000"
+      - "${API_PORT}:${API_PORT}"
+    networks:
+      - main
+  db:
+    container_name: reconciler-${APP_ENV}-db
+    image: postgres:17
+    pull_policy: missing
+    ports:
+      - "${DB_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      # Persistent storage for the DB. Data isn't lost on container shutdown
+      - database:/var/lib/postgresql/data
     networks:
       - main
 
+  # TODO: solve the following warning
+  #   WARNING: Storing migrations in 'sql' is not recommended and default
+  #   scanning of this location may be deprecated in a future release
+  #   A more recent version of Flyway is available. (...)
   flyway:
     image: flyway/flyway:11-alpine
     container_name: reconciler-${APP_ENV}-flyway
     volumes:
       - ./backend/db/migrations:/flyway/sql
-    command: -url=jdbc:postgresql://${DB_HOST}:5432/${DB_NAME} -user=${DB_USER} -password=${DB_PASSWORD} -connectRetries=20 -connectRetriesInterval=3 migrate
+    command:
+      # Hardcoded for Docker network only. Change this URL if using an external database.
+      - -url=jdbc:postgresql://db:5432/${DB_NAME}
+      - -user=${DB_USER}
+      - -password=${DB_PASSWORD}
+      - -connectRetries=20
+      - -connectRetriesInterval=3
+      - migrate
     networks:
       - main
 
