@@ -39,31 +39,6 @@ public class JwtServiceTest {
     Assertions.setMaxStackTraceElementsDisplayed(120);
   }
 
-  private static JwtEnvironment createEnv(
-      String jwtSecret, String jwtIssuer, long jwtExpirationTime, SecretKey jwtKey) {
-    return new JwtEnvironment() {
-      @Override
-      public String JWT_SECRET() {
-        return jwtSecret;
-      }
-
-      @Override
-      public SecretKey JWT_KEY() {
-        return jwtKey; // TODO: this is temporal and should be removed soon
-      }
-
-      @Override
-      public String JWT_ISSUER() {
-        return jwtIssuer;
-      }
-
-      @Override
-      public long JWT_ACCESS_EXPIRATION_TIME_MINUTES() {
-        return jwtExpirationTime;
-      }
-    };
-  }
-
   @BeforeEach
   public void setup() {
     lenient().when(env.JWT_SECRET()).thenReturn(JWT_SECRET);

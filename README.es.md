@@ -1,6 +1,6 @@
-[English Version](README.md)
-
 # Reconciler
+
+[🇬🇧 English Version](README.md)
 
 Reconciler es una aplicación ligera y modular diseñada para ayudar a los equipos a conciliar transacciones financieras
 entre extractos bancarios y sistemas internos. Construida con las mejores prácticas de la industria, tiene como objetivo
@@ -10,66 +10,78 @@ para entornos colaborativos.
 <details>
 <summary>Tabla de Contenidos</summary>
 
-- [Características Planificadas](#características-planificadas)
+- [Características](#características)
 - [Stack Tecnológico](#stack-tecnológico)
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Prerrequisitos](#prerrequisitos)
 - [Primeros Pasos](#primeros-pasos)
-- [Uso de la CLI](#uso-de-la-cli)
 - [Acceso a la Aplicación](#acceso-a-la-aplicación)
 - [Licencia](#licencia)
 
 </details>
 
-## Características Planificadas
+## Características
 
-- **Configuración Inicial**: Configurar parámetros centrales como fuentes de transacciones, categorías y acciones de
-  registro disponibles. Este paso solo se requiere una vez después de la implementación.
-- **Autenticación de Usuario**: Sistema de inicio de sesión básico utilizando credenciales predefinidas. Los usuarios
-  pueden actualizar su contraseña más tarde, pero solo los administradores pueden crear o administrar cuentas.
-- **Panel de Control**: Centro principal para navegar por las características de la aplicación.
-- **Carga de Transacciones**: Cargar datos tanto del banco como de los sistemas internos en formatos compatibles.
-- **Conciliación Automatizada**: Identifica automáticamente coincidencias y discrepancias entre las transacciones
-  cargadas.
-- **Resolución Manual de Discrepancias**: Interfaz para resolver registros no coincidentes o ambiguos.
-- **Panel de Administración**: Sección solo para administradores para agregar usuarios y definir nuevos parámetros del
-  sistema (por ejemplo, categorías, fuentes, tipos de acción).
-- **Informes y Exportaciones**: Exportar datos en formatos PDF, Excel u otros formatos convencionales.
-- **Análisis y Gráficos**: Visualizar la actividad financiera, las tasas de conciliación y las tendencias.
-- **Sitio Público**: Sitio de acceso general con información del producto y portal de inicio de sesión/registro.
+**Leyenda**:
+
+- ✅ **Done** - Característica implementada y funcional
+- 🔨 **Done+** - Característica implementada con oportunidades de mejora conocidas
+- 🚧 **Doing** - Actualmente en desarrollo
+- 📋 **Todo** - Planificada para implementación futura
+
+---
+
+- 🚧 **Sitio Público**: Sitio de acceso general con portal de inicio de sesión/registro usando Astro para SSR optimizado para SEO
+  - *Estado actual*: Infraestructura técnica completa, contenido placeholder temporal y navbar
+- 🔨 **Autenticación de Usuario**: Autenticación basada en JWT con rotación de refresh tokens, control de acceso por ventana de tiempo (Lun-Vie 08:00-20:00), y funcionalidad de cierre de sesión
+  - *Mejoras conocidas*: Reglas adicionales de ventana de tiempo, mecanismos de bloqueo de cookies revocadas
+- 🚧 **Panel de Control**: Centro principal basado en React para navegar por las características de la aplicación
+  - *Estado actual*: Flujo de autenticación completo, enlace temporal a Swagger UI como placeholder
+- 🔨 **Gestión de Usuarios**: Operaciones CRUD para cuentas de usuario con control de acceso basado en roles
+  - *Mejoras conocidas*: Paginación, restringir creación solo a administradores
+- ✅ **Documentación de API**: Swagger UI interactivo con especificaciones OpenAPI para todos los endpoints
+- 📋 **Configuración Inicial**: Configurar parámetros centrales como fuentes de transacciones, categorías y acciones de registro disponibles (requerido una vez después de la implementación)
+- 📋 **Carga de Transacciones**: Cargar datos tanto del banco como de los sistemas internos en formatos compatibles
+- 📋 **Conciliación Automatizada**: Identifica automáticamente coincidencias y discrepancias entre las transacciones cargadas
+- 📋 **Resolución Manual de Discrepancias**: Interfaz para resolver registros no coincidentes o ambiguos
+- 📋 **Panel de Administración**: Sección solo para administradores para definir nuevos parámetros del sistema (por ejemplo, categorías, fuentes, tipos de acción)
+- 📋 **Informes y Exportaciones**: Exportar datos en formatos PDF, Excel u otros formatos convencionales
+- 📋 **Análisis y Gráficos**: Visualizar la actividad financiera, las tasas de conciliación y las tendencias
 
 ## Stack Tecnológico
 
 - **Backend**: Java 21 con Javalin
-- **Frontend**: TypeScript con Vite
-    - **Panel de Control**: React
-    - **Sitio Público**: TypeScript y HTML puro
+- **Frontend**: TypeScript + TailwindCSS
+  - **Panel de Control**: Vite + React
+  - **Sitio Público**: Astro
 - **Base de Datos**: PostgreSQL con Flyway para migraciones
 - **Servidor Web**: Nginx (para producción)
 - **CLI**: Python 3 con Typer
-- **Contenerización**: Docker y Docker Compose
+- **Contenedorización**: Docker y Docker Compose
 
 ## Estructura del Proyecto
 
 Una breve descripción de los archivos y directorios más importantes del proyecto:
 
-```
+```text
 .
-├── cli/                 # Código fuente de la herramienta CLI de Python
-│   └── main.py          # Punto de entrada para la CLI
+├── cli/                 # Herramienta CLI de Python
+│   ├── src/             # Código fuente
+│   │   └── modules/     # Módulos de comandos de la CLI
+│   └── pyproject.toml   # Definición del proyecto y dependencias
 ├── backend/
 │   ├── api/             # Código fuente de la API de Java (Javalin)
 │   │   └── pom.xml      # Dependencias del Backend (Maven)
 │   └── db/
 │       └── migrations/  # Migraciones de la base de datos (Flyway)
 ├── frontend/
+│   ├── common/          # Utilidades y servicios compartidos
 │   ├── dashboard/       # Aplicación React para el panel de control
-│   └── public-site/     # Aplicación TypeScript para el sitio público
+│   └── public-site/     # Aplicación Astro para el sitio público
 ├── nginx/               # Configuración de Nginx para el entorno de producción
 ├── compose.yaml         # Configuración base de Docker Compose para todos los servicios
 ├── compose.<env>.yaml   # Sobrescrituras de Docker Compose para el entorno <env>
-├── pyproject.toml       # Definición del proyecto y dependencias para la herramienta CLI
-└── README.md            # Este archivo
+└── README.es.md         # Este archivo
 ```
 
 ## Prerrequisitos
@@ -79,15 +91,20 @@ Una breve descripción de los archivos y directorios más importantes del proyec
 - **Python 3.8+** y **pip** (para usar la herramienta CLI).
 
 > [!WARNING]
-> Este proyecto está diseñado para ejecutarse con Docker, que es el enfoque recomendado. Ejecutar los servicios
-> localmente en su máquina host no es oficialmente compatible y puede provocar errores inesperados o requerir
-> configuración manual adicional. Si desea ejecutar los servicios localmente, deberá instalar y configurar lo siguiente:
+> Este proyecto está diseñado para ejecutarse con Docker, que es el enfoque recomendado y oficialmente compatible. Ejecutar los servicios localmente en su máquina host es parcialmente compatible para **API y frontend** (principalmente para desarrollo), pero puede requerir configuración manual adicional.
 >
-> - **Java 21** y **Maven**: Para construir y ejecutar la API de backend.
-> - **Node.js 22+** y un administrador de paquetes (e.g. `npm`): Para construir y ejecutar las aplicaciones frontend.
-> - **Servidor PostgreSQL**: Una instancia en ejecución para que la aplicación se conecte.
-> - **CLI de Flyway**: Para ejecutar migraciones de base de datos en su instancia local de PostgreSQL.
-> - **Nginx**: Para replicar la configuración del proxy inverso del entorno de producción.
+> **Para desarrollo local** (servicios de API y frontend):
+>
+> - **Java 21** y **Maven**: Para construir y ejecutar la API de backend
+> - **Node.js 22+** y un administrador de paquetes (`npm`, `pnpm`, o `yarn`): Para construir y ejecutar las aplicaciones frontend
+> - **Servidor PostgreSQL**: Una instancia en ejecución para que la aplicación se conecte
+>
+> **No compatible para ejecución local** (servicios solo Docker):
+>
+> - **Flyway**: Las migraciones de base de datos deben ejecutarse vía Docker
+> - **Nginx**: La configuración del proxy inverso de producción es solo Docker
+>
+> El soporte de ejecución local para todos los servicios no está planificado hasta que el proyecto alcance un estado maduro.
 
 ## Primeros Pasos
 
@@ -120,7 +137,7 @@ pip install -e ./cli[dev]
 pip install ./cli
 ```
 
-Gracias a [Typer](https://typer.tiangolo.com/), la CLI está completamente autodocumentada, por lo que puede obtener
+Gracias a [Typer](https://typer.tiangolo.com/), la CLI está completamente auto-documentada, por lo que puede obtener
 ayuda para cualquier comando o subcomando simplemente agregando `--help`.
 
 ```bash
@@ -170,22 +187,19 @@ cli compose down all
 
 Después de ejecutar `compose up`, puede acceder a los servicios en las siguientes URL.
 
-> [!TIP]
-> La única interfaz "bonita" disponible de forma predeterminada es la **Swagger UI** para la API, que proporciona una
-> documentación completa e interactiva para todos los endpoints de la API. Las aplicaciones frontend (Panel de Control y
-> Sitio Público) aún no están completamente inicializadas, pero se puede acceder a ellas si desea ver su estado actual.
-
 > [!NOTE]
-> Los puertos que se enumeran a continuación son los valores predeterminados definidos en los archivos `.env`. Si los
-> cambia, deberá ajustar las URL en consecuencia.
+> Los puertos que se enumeran a continuación son los valores predeterminados definidos en los archivos `.env`. Si los cambia, deberá ajustar las URL en consecuencia.
 
-| Entorno | Servicio                   | URL                    |
-|:--------|:---------------------------|:-----------------------|
-| `dev`   | API                        | http://localhost:4001/ |
-| `dev`   | Sitio Público              | http://localhost:5173/ |
-| `dev`   | Panel de Control           | http://localhost:5174/ |
-| `prod`  | Frontend a través de Nginx | http://localhost/      |
-| `prod`  | API a través de Nginx      | http://localhost/api/  |
+| Entorno | Servicio                   | URL                      | Descripción                                     |
+|:--------|:---------------------------|:-------------------------|:------------------------------------------------|
+| `dev`   | API                        | <http://localhost:4001/> | Swagger UI para documentación de la API         |
+| `dev`   | Sitio Público              | <http://localhost:5174/> | Páginas de inicio de sesión y registro          |
+| `dev`   | Panel de Control           | <http://localhost:5175/> | Panel de control autenticado (requiere login)   |
+| `prod`  | Frontend a través de Nginx | <http://localhost/>      | Sitio público y panel de control                |
+| `prod`  | API a través de Nginx      | <http://localhost/api/>  | API y Swagger UI                                |
+
+> [!TIP]
+> Para acceder al Panel de Control, primero deberá iniciar sesión a través del Sitio Público. Hay un enlace temporal a Swagger UI disponible en el Panel de Control para la exploración de la API.
 
 ## Licencia
 
