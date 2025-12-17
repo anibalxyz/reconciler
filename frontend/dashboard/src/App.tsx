@@ -29,18 +29,28 @@ export default function App() {
 
   const refreshToken = useCallback(async (): Promise<number> => {
     const response = await authService.refreshToken();
+    let responseCode = response.status;
     if ('accessToken' in response.data) {
       setAccessToken(response.data.accessToken);
+    } else {
+      const noSessionMessages = ['Missing refresh token in cookie', 'Refresh token not found'];
+      const expiredSessionMessages = ['Refresh token is expired or revoked'];
+
+      if (noSessionMessages.includes(response.data.details[0])) {
+        responseCode = 400;
+      } else if (expiredSessionMessages.includes(response.data.details[0])) {
+        responseCode = 401;
+      }
     }
-    return response.status;
+    return responseCode;
   }, [authService]);
 
   const getModalPropsByStatus = useCallback((status: number): ModalContentProps | null => {
     if (status < 400) {
       return null;
     }
-    // TODO: Frontend currently treats all 401 from refresh endpoint as session expired.
-    //       This will be refined once error codes are standardized.
+    // TODO: Frontend currently would treats all 401 from /api/auth/refresh endpoint as session expired.
+    //       It will be refined once error codes are standardized. For a while, cases will be differentiated using response details.
     switch (status) {
       case 400:
         return {
