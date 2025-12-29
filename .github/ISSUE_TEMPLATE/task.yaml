@@ -1,0 +1,53 @@
+name: Task / Chore
+description: Maintenance tasks, refactors, or technical improvements
+labels: ["chore", "needs-triage"]
+body:
+  - type: dropdown
+    id: task-type
+    validations:
+      required: true
+    attributes:
+      label: Task Type
+      description: What kind of task is this?
+      options:
+        - Refactoring
+        - Documentation
+        - Testing
+        - Dependencies
+        - Performance
+        - Security
+        - Infrastructure
+        - Code cleanup
+        - Other
+  - type: textarea
+    id: description
+    validations:
+      required: true
+    attributes:
+      label: Description
+      description: What needs to be done?
+      placeholder: |
+        I need to...
+
+  - type: textarea
+    id: motivation
+    validations:
+      required: true
+    attributes:
+      label: Motivation
+      description: Why is this necessary? What problem does it solve or what improvement does it bring?
+      placeholder: |
+        This is needed because...
+
+  - type: textarea
+    id: context
+    validations:
+      required: false
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful
+      placeholder: |
+        - Related issues: #123, #456
+        - Area affected: backend/frontend/infra
+        - Estimated effort: small/medium/large
+        - Technical considerations or blockers
