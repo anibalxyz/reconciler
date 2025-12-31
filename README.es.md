@@ -85,7 +85,7 @@ Resumen de los archivos y directorios más importantes:
 
 - **Git** (para clonar el repositorio)
 - **Docker v20.10+** y Docker Compose v2+ (para ejecutar la aplicación). **No usar v5.x**
-- **Python 3.8+** y **pip** (para usar la CLI)
+- **Python 3.10+** y **pip** (para usar la CLI)
 
 > [!WARNING]
 > Este proyecto está diseñado para ejecutarse con Docker; es el enfoque recomendado y oficialmente soportado. Ejecutar servicios localmente en la máquina host es parcialmente soportado para **API y frontend** (principalmente para desarrollo), pero puede requerir configuración manual adicional.
