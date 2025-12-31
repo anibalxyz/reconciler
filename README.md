@@ -12,9 +12,7 @@ platform with powerful utilities for both individual users and collaborative env
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
-- [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-- [Accessing the Application](#accessing-the-application)
 - [License](#license)
 
 </details>
@@ -83,11 +81,13 @@ A brief overview of the most important files and directories in the project:
 └── README.md            # This file
 ```
 
-## Prerequisites
+## Getting Started
 
-- **Git** (to clone the repository).
-- **Docker v20.10+** and Docker Compose v2+ (to run the application). **Do NOT use v5.x**.
-- **Python 3.8+** and **pip** (to use the CLI tool).
+### Prerequisites
+
+- **Git** (to clone the repository)
+- **Docker v20.10+** and Docker Compose v2+ (to run the application). **Do NOT use v5.x**
+- **Python 3.10+** and **pip** (to use the CLI tool)
 
 > [!WARNING]
 > This project is designed to be run with Docker, which is the recommended and officially supported approach. Running services locally on your host machine is partially supported for **API and frontend** (mainly for development), but may require additional manual configuration.
@@ -103,27 +103,25 @@ A brief overview of the most important files and directories in the project:
 > - **Flyway**: Database migrations must be run via Docker
 > - **Nginx**: Production reverse proxy setup is Docker-only
 >
-> Local execution support for all services is not planned until the project reaches a mature state.
-
-## Getting Started
+> Local execution support for all services is not currently planned.
 
 ### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/anibalxyz/reconciler.git
+
+# All the following commands will assume you are in the project root
 cd reconciler
 ```
 
 ### 2. Install the CLI
 
-This project is managed by a powerful, custom-built command-line interface. The CLI provides a unified and intuitive way
-to manage the application's environments and lifecycle. It has various characteristics, but we will see it in action
-below!
+This project is managed by a powerful, custom-built command-line interface. The CLI provides a unified and intuitive way to manage the application's environments and lifecycle.
 
 The CLI is a Python application. It is recommended to install it in a virtual environment.
 
 ```bash
-# Create and activate a virtual environment (optional but recommended)
+# Create and activate a virtual environment
 python3 -m venv ./cli/.venv
 source ./cli/.venv/bin/activate
 
@@ -132,12 +130,11 @@ pip install -e ./cli[dev]
 ```
 
 ```bash
-# If don't want to use editable mode
+# If you don't want to use editable mode
 pip install ./cli
 ```
 
-Thanks to [Typer](https://typer.tiangolo.com/), the CLI is fully self-documented, so you can get help for any command or
-subcommand by simply adding `--help` to it.
+Thanks to [Typer](https://typer.tiangolo.com/), the CLI is fully self-documented, so you can get help for any command or subcommand by simply adding `--help` to it.
 
 ```bash
 # Try it out!
@@ -146,8 +143,7 @@ cli --help
 
 ### 3. Set Up The Environment
 
-The CLI can manage different environments (e.g., `dev`, `prod`, `test`). Set your desired environment and initialize the
-configuration files in one go using the `--init` flag. This is the recommended way to get started.
+The CLI can manage different environments (e.g., `dev`, `prod`, `test`). Set your desired environment and initialize the configuration files in one go using the `--init` flag. This is the recommended way to get started.
 
 ```bash
 # Syntax: cli set env <environment> --init
@@ -181,20 +177,20 @@ To stop and remove all running containers and networks, use `compose down`.
 cli compose down all
 ```
 
-## Accessing the Application
+### Accessing the Application
 
 After running `compose up`, you can access the services at the following URLs.
 
 > [!NOTE]
 > The ports listed below are the default values defined in the `.env` files. If you change them, you will need to adjust the URLs accordingly.
 
-| Environment | Service            | URL                    | Description                           |
-|:------------|:-------------------|:-----------------------|:--------------------------------------|
-| `dev`       | API                | <http://localhost:4001/> | Swagger UI for API documentation      |
-| `dev`       | Public Site        | <http://localhost:5174/> | Login and registration pages          |
-| `dev`       | Dashboard          | <http://localhost:5175/> | Authenticated dashboard (requires login) |
-| `prod`      | Frontend via Nginx | <http://localhost/>      | Public site and dashboard             |
-| `prod`      | API via Nginx      | <http://localhost/api/>  | API and Swagger UI                    |
+| Environment | Service            | URL                      | Description                                      |
+| :-----------| :------------------| :------------------------| :------------------------------------------------|
+| `dev`       | API                | <http://localhost:4001/> | Swagger UI for API documentation                 |
+| `dev`       | Public Site        | <http://localhost:5174/> | Login and registration pages                     |
+| `dev`       | Dashboard          | <http://localhost:5175/> | Authenticated dashboard (requires login)         |
+| `prod`      | Frontend via Nginx | <http://localhost/>      | Public site and dashboard                        |
+| `prod`      | API via Nginx      | <http://localhost/api/>  | API and Swagger UI                               |
 
 > [!TIP]
 > To access the Dashboard, you'll need to log in through the Public Site first. A temporary Swagger UI link is available in the Dashboard for API exploration.

@@ -5,9 +5,14 @@ from typing import Annotated, List, Dict
 
 import typer
 
-from modules.config import get_current_env, set_env, validate_env, validate_env_callback
-from modules.constants import SERVICES, ENV_FILES
-from modules.image import build, get_buildable_services
+from reconciler_cli.modules.config import (
+    get_current_env,
+    set_env,
+    validate_env,
+    validate_env_callback,
+)
+from reconciler_cli.modules.constants import SERVICES, ENV_FILES
+from reconciler_cli.modules.image import build, get_buildable_services
 
 core_lifecycle_services = [SERVICES["DB"], SERVICES["FLYWAY"]]
 

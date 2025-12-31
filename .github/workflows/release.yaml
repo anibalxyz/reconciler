@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Enables advanced features like multi-platform builds and GitHub Actions cache
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Generates Docker metadata (tags and labels) for the API image
+      # Extracts version from git tag (v0.1.0 -> 0.1.0) and adds 'latest' tag
+      - name: Docker metadata for API
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: anibalxyz/reconciler-prod-api
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      # Builds and pushes the API production image to DockerHub
+      # Uses GitHub Actions cache to speed up subsequent builds
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend/api
+          file: backend/api/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Docker metadata for Nginx
+        id: meta-nginx
+        uses: docker/metadata-action@v5
+        with:
+          images: anibalxyz/reconciler-prod-nginx
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Build and push Nginx image
+        uses: docker/build-push-action@v6
+        with:
+          context: nginx
+          file: nginx/Dockerfile
+          push: true
+          tags: ${{ steps.meta-nginx.outputs.tags }}
+          labels: ${{ steps.meta-nginx.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Creates a GitHub Release with auto-generated changelog from commits/PRs
+      # Release is created using the tag name (e.g., v0.1.0)
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

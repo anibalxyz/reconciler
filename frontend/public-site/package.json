@@ -6,6 +6,7 @@
     "build": "astro build",
     "dev": "astro dev",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "eslint",
     "preview": "astro preview"
   },
