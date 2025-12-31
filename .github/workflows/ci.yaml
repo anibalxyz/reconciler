@@ -46,6 +46,11 @@ jobs:
         with:
           python-version: "3.9"
 
+      - name: Prepare test environment
+        run: |
+          cp backend/.env.test.example backend/.env.test
+          cp frontend/.env.test.example frontend/.env.test
+
       - name: Install CLI
         run: pip install ./cli
 
