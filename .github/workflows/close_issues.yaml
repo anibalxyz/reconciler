@@ -1,0 +1,32 @@
+name: Close Related Issues
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+jobs:
+  close-issues:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Close issues from PR body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          # Extract issue numbers from PR body (Closes #X, Fixes #X, Resolves #X)
+          ISSUES=$(echo "$PR_BODY" | grep -oiE '(closes|fixes|resolves) #[0-9]+' | grep -oE '[0-9]+' | sort -u)
+
+          if [ -z "$ISSUES" ]; then
+            echo "No issues to close"
+            exit 0
+          fi
+
+          for ISSUE in $ISSUES; do
+            echo "Closing issue #$ISSUE"
+            gh issue close $ISSUE --comment "Automatically closed by PR #${{ github.event.pull_request.number }}"
+          done
