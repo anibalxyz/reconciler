@@ -1,6 +1,6 @@
 # Reconciler
 
-[🇬🇧 English Version](README.md)
+[🇬🇧 English Version](/README.md)
 
 Reconciler es una aplicación ligera y modular diseñada para ayudar a equipos a conciliar transacciones financieras entre extractos bancarios y sistemas internos. Construida siguiendo buenas prácticas de la industria, ofrece una plataforma intuitiva y personalizable con utilidades potentes tanto para usuarios individuales como para entornos colaborativos.
 
@@ -194,4 +194,4 @@ Después de ejecutar `compose up`, puede acceder a los servicios en las siguient
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulte el archivo [LICENSE](LICENSE) para más detalles.
+Este proyecto está bajo la Licencia MIT. Consulte el archivo [LICENSE](/LICENSE) para más detalles.

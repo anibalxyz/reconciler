@@ -1,6 +1,6 @@
 # Reconciler
 
-[🇪🇸 Versión en español](README.es.md)
+[🇪🇸 Versión en español](/README.es.md)
 
 Reconciler is a lightweight and modular application designed to help teams reconcile financial transactions between bank
 statements and internal systems. Built with industry best practices, it aims to provide an intuitive and customizable
@@ -197,4 +197,4 @@ After running `compose up`, you can access the services at the following URLs.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+This project is licensed under the MIT License. See the [LICENSE](/LICENSE) file for more details.
