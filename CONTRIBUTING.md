@@ -16,7 +16,7 @@ Welcome! This guide covers everything you need to know to contribute to Reconcil
 
 ## Getting Started
 
-Before contributing, make sure you can run the project by following the [Getting Started](README.md#getting-started) section in the README.
+Before contributing, make sure you can run the project by following the [Getting Started](/README.md#getting-started) section in the README.
 
 Once the project is running, you're ready to start contributing. Continue with the sections below to understand our contribution workflow.
 
@@ -147,7 +147,7 @@ git commit -m "docs: update setup instructions"
 git push origin <your-branch-name>
 ```
 
-Go to GitHub and open a Pull Request to `develop`. Fill out the [PR template](.github/pull_request_template.md), ensuring you:
+Go to GitHub and open a Pull Request to `develop`. Fill out the [PR template](/.github/pull_request_template.md), ensuring you:
 
 - Explain **what** changed and **why**
 - Describe **how** it was implemented (if complex)
@@ -233,6 +233,11 @@ cli compose test
 - Clean commits are ideal, but it's acceptable if a commit touches multiple related things
 - Before opening a PR, ensure the overall history is clean and follows conventions
 
+**Merge commits:**
+
+- When merging a PR, use GitHub's default merge commit message; no modification needed.
+- The 50-character limit does not apply to merge commits.
+
 ## Versioning
 
 Reconciler versioning is based on [SemVer](https://semver.org/).
@@ -248,12 +253,56 @@ Reconciler versioning is based on [SemVer](https://semver.org/).
 
 ### Creating a Release
 
-1. Update the `VERSION` file with the new version
-2. Commit: `chore: bump version to X.Y.Z`
-3. Merge to `main`
-4. Create a git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
-5. Push tag: `git push origin vX.Y.Z`
-6. Build and push Docker images with version tag and `latest`
+#### 1. Create a release branch from `develop`
+
+```bash
+git switch develop
+git pull origin develop
+git switch -c release/vX.Y.Z
+```
+
+#### 2. Bump the version
+
+```bash
+echo "X.Y.Z" > VERSION
+git add VERSION
+git commit -m "chore(release): bump version to X.Y.Z"
+git push origin release/vX.Y.Z
+```
+
+#### 3. Open a Pull Request to `main`
+
+- **Base:** `main`
+- **Compare:** `release/vX.Y.Z`
+- **Title:** `Release vX.Y.Z`
+
+This PR includes:
+
+- All changes accumulated in `develop`
+- The version bump commit
+
+Wait for CI to pass and then merge the PR via the GitHub UI.
+
+#### 4. Create and push the release tag
+
+After the PR is merged, tag the release from `main`:
+
+```bash
+git switch main
+git pull origin main
+
+VERSION=$(cat VERSION)
+
+git tag -a "v$VERSION" -m "Release v$VERSION"
+git push origin "v$VERSION"
+```
+
+#### 5. Automated release
+
+GitHub Actions automatically:
+
+- Builds and pushes Docker images to Docker Hub
+- Creates a GitHub Release with auto-generated changelog
 
 > [!NOTE]
-> This process (and GitHub Releases) will be automated in the future with GitHub Actions and CLI commands.
+> The Release workflow is triggered automatically when a tag matching `v*` is pushed to the repository.
