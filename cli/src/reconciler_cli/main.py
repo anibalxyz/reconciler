@@ -11,11 +11,25 @@ from pathlib import Path
 
 import typer
 
-from modules import compose, image, resource, config
+from reconciler_cli.modules import compose, image, resource, config
+
+def find_project_root():
+    """Find project root by searching up to MAX_SEARCH_DEPTH parent directories."""
+    MAX_SEARCH_DEPTH = 20
+    current = Path.cwd()
+    
+    for _ in range(MAX_SEARCH_DEPTH):
+        if (current / "compose.yaml").exists():
+            return current
+        if current.parent == current:
+            break
+        current = current.parent
+    
+    raise RuntimeError("Not inside reconciler project")
 
 # Change the current working directory to the project root.
 # This is necessary so that all file paths can be resolved relative to the project root.
-os.chdir(Path(__file__).resolve().parent.parent.parent)
+os.chdir(find_project_root())
 
 
 def check_docker_is_installed():

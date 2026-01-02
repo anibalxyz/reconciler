@@ -1,0 +1,48 @@
+name: Bug Report
+description: Report something isn't working as expected
+labels: ["bug", "needs-triage"]
+body:
+  - type: textarea
+    id: expected
+    validations:
+      required: true
+    attributes:
+      label: Expected Behavior
+      description: What should happen?
+      placeholder: |
+        It is supposed to...
+
+  - type: textarea
+    id: actual
+    validations:
+      required: true
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: |
+        Instead, I got...
+
+  - type: textarea
+    id: steps
+    validations:
+      required: true
+    attributes:
+      label: Steps to Reproduce
+      description: How can this bug be reproduced? Be as specific as possible.
+      placeholder: |
+        1. Go to...
+        2. Click on...
+        3. See error
+
+  - type: textarea
+    id: context
+    validations:
+      required: false
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful
+      placeholder: |
+        - Screenshots or logs
+        - Environment: dev/prod/test
+        - Browser/OS (if UI bug)
+        - Related issues: #123, #456

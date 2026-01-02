@@ -1,11 +1,12 @@
 {
   "name": "@anibalxyz/reconciler-public-site",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "build": "astro build",
     "dev": "astro dev",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "eslint",
     "preview": "astro preview"
   },

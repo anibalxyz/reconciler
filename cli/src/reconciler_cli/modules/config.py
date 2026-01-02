@@ -6,7 +6,7 @@ from typing import List, Annotated
 import typer
 from typer import Context
 
-from modules.constants import AVAILABLE_ENVS, DEFAULT_ENV, ENV_FILES
+from reconciler_cli.modules.constants import AVAILABLE_ENVS, DEFAULT_ENV, ENV_FILES
 
 CONFIG_FILE_PATH = Path("cli.cfg")
 

@@ -1,13 +1,14 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "reconciler-cli"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = ["typer"]
 
 [project.scripts]
-cli = "main:app"
+cli = "reconciler_cli.main:app"
 
 [project.optional-dependencies]
 dev = ["black==25.9.0"]
-
-[tool.setuptools.packages.find]
-where = ["src"]

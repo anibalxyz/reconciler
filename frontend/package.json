@@ -40,6 +40,7 @@
     "dev:dashboard": "npm run dev --workspace=@anibalxyz/reconciler-dashboard",
     "dev:public": "npm run dev --workspace=@anibalxyz/reconciler-public-site",
     "format": "npm run format --workspaces",
+    "format:check": "npm run format:check --workspaces",
     "lint": "npm run lint --workspaces"
   },
   "dependencies": {

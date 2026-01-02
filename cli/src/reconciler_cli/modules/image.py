@@ -4,8 +4,8 @@ from typing import List, Dict, Annotated
 
 import typer
 
-from modules.config import get_current_env
-from modules.constants import SERVICES
+from reconciler_cli.modules.config import get_current_env
+from reconciler_cli.modules.constants import SERVICES
 
 app = typer.Typer(help="Manage docker images", no_args_is_help=True)
 

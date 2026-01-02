@@ -1,0 +1,52 @@
+name: Feature Request
+description: Suggest a new feature for the project
+labels: ["feature", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    validations:
+      required: true
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What need does it address?
+      placeholder: |
+        I have an issue when...
+        or
+        I'd like to...
+  - type: textarea
+    id: solution
+    validations:
+      required: true
+    attributes:
+      label: Proposed Solution
+      description: How do you envision this feature working? Describe your ideal implementation.
+      placeholder: |
+        I propose...
+  - type: textarea
+    id: alternatives
+    validations:
+      required: false
+    attributes:
+      label: Alternatives Considered
+      description: What other approaches did you think about? Why is this solution better?
+      placeholder: |
+        Considered:
+        - Solution 1: too manual, error-prone
+        - Solution 2: too slow
+        - ...
+        
+        This approach is better because...
+  - type: textarea
+    id: context
+    validations:
+      required: false
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful
+      placeholder: |
+        - Links to related issues or discussions
+        - Screenshots or mockups
+        - Examples from other applications
+        - Specific use cases or workflows
+        - Related issues: #123, #456
+    
