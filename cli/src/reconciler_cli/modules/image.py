@@ -23,7 +23,13 @@ BUILDABLE_SERVICES: Dict[str, List[str]] = {
 }
 
 # Services allowed to be pushed to or pulled from a registry
-REGISTRY_SERVICES = [SERVICES["API"], SERVICES["NGINX"]]
+# TODO: check if, due to the addition of dashboard and public_site here, this can be refactored
+REGISTRY_SERVICES = [
+    SERVICES["API"],
+    SERVICES["NGINX"],
+    SERVICES["DASHBOARD"],
+    SERVICES["PUBLIC_SITE"],
+]
 
 
 def get_buildable_services():

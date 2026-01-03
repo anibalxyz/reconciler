@@ -46,6 +46,48 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Docker metadata for Dashboard
+        id: meta-dashboard
+        uses: docker/metadata-action@v5
+        with:
+          images: anibalxyz/reconciler-prod-dashboard
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Build and push Dashboard image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend/dashboard
+          file: frontend/dashboard/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta-dashboard.outputs.tags }}
+          labels: ${{ steps.meta-dashboard.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Docker metadata for Public Site
+        id: meta-public-site
+        uses: docker/metadata-action@v5
+        with:
+          images: anibalxyz/reconciler-prod-public-site
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Build and push Public Site image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend/public-site
+          file: frontend/public-site/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta-public-site.outputs.tags }}
+          labels: ${{ steps.meta-public-site.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Docker metadata for Nginx
         id: meta-nginx
         uses: docker/metadata-action@v5
