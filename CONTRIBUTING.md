@@ -54,18 +54,18 @@ Issues help track bugs, features, and tasks. For substantial changes, creating a
 ### Workflow Overview
 
 1. Create or identify an issue to work on (optional for small changes)
-2. Create a branch from develop
+2. Create a branch from main
 3. Make your changes following our conventions
 4. Commit using conventional commit format
 5. Push your branch and open a pull request
-6. Merge the PR to develop
+6. Merge the PR to main
 
 ### 1. Create a Branch
 
-Branch from `develop`:
+Branch from `main`:
 
 ```bash
-git switch develop
+git switch main
 git pull
 git switch -c <type>/<description>
 ```
@@ -147,7 +147,7 @@ git commit -m "docs: update setup instructions"
 git push origin <your-branch-name>
 ```
 
-Go to GitHub and open a Pull Request to `develop`. Fill out the [PR template](/.github/pull_request_template.md), ensuring you:
+Go to GitHub and open a Pull Request to `main`. Fill out the [PR template](/.github/pull_request_template.md), ensuring you:
 
 - Explain **what** changed and **why**
 - Describe **how** it was implemented (if complex)
@@ -248,56 +248,35 @@ Reconciler versioning is based on [SemVer](https://semver.org/).
   - **PATCH:** Bug fixes, refactors, optimizations
 
 - **Source of truth:** `VERSION` file in project root
-- **When to release:** Only when merging `develop` → `main`
+- **When to release:** When pushing a version tag (e.g., `v0.2.0`)
 - **Docker images:** Tagged with version (`0.1.0`) and `latest` (stable releases only)
 
 ### Creating a Release
 
-#### 1. Create a release branch from `develop`
-
-```bash
-git switch develop
-git pull origin develop
-git switch -c release/vX.Y.Z
-```
-
-#### 2. Bump the version
-
-```bash
-echo "X.Y.Z" > VERSION
-git add VERSION
-git commit -m "chore(release): bump version to X.Y.Z"
-git push origin release/vX.Y.Z
-```
-
-#### 3. Open a Pull Request to `main`
-
-- **Base:** `main`
-- **Compare:** `release/vX.Y.Z`
-- **Title:** `Release vX.Y.Z`
-
-This PR includes:
-
-- All changes accumulated in `develop`
-- The version bump commit
-
-Wait for CI to pass and then merge the PR via the GitHub UI.
-
-#### 4. Create and push the release tag
-
-After the PR is merged, tag the release from `main`:
+#### 1. Ensure `main` is up to date
 
 ```bash
 git switch main
 git pull origin main
+```
 
-VERSION=$(cat VERSION)
+#### 2. Bump the version and create tag
+
+Copy this block exactly, replacing `X.Y.Z` with the actual version number (e.g., `0.2.0`):
+
+```bash
+VERSION="X.Y.Z"
+
+echo "$VERSION" > VERSION
+git add VERSION
+git commit -m "chore(release): bump version to $VERSION"
+git push origin main
 
 git tag -a "v$VERSION" -m "Release v$VERSION"
 git push origin "v$VERSION"
 ```
 
-#### 5. Automated release
+#### 3. Automated release
 
 GitHub Actions automatically:
 
