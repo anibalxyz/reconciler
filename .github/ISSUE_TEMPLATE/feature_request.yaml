@@ -19,9 +19,9 @@ body:
       required: true
     attributes:
       label: Proposed Solution
-      description: How do you envision this feature working? Describe your ideal implementation.
+      description: How should this feature work? Describe the ideal implementation.
       placeholder: |
-        I propose...
+        The proposed approach is...
   - type: textarea
     id: alternatives
     validations:

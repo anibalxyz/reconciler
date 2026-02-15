@@ -10,6 +10,7 @@ body:
       label: Task Type
       description: What kind of task is this?
       options:
+        - Database
         - Refactoring
         - Documentation
         - Testing
@@ -17,6 +18,7 @@ body:
         - Performance
         - Security
         - Infrastructure
+        - CI/CD
         - Code cleanup
         - Other
   - type: textarea
