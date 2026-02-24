@@ -1,6 +1,6 @@
 package com.anibalxyz.features.users.api;
 
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.ErrorResponseDeprecated;
 import com.anibalxyz.features.common.api.out.ErrorResponseExamples;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
@@ -44,14 +44,14 @@ public interface UserApi {
             description = "Authentication information is missing or invalid.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "500",
             description = "Internal server error.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.INTERNAL_SERVER_ERROR))
       })
   void getAllUsers(Context ctx);
@@ -86,21 +86,21 @@ public interface UserApi {
             description = "Authentication information is missing or invalid.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "400",
             description = "Invalid ID format supplied.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.INVALID_ID)),
         @OpenApiResponse(
             status = "404",
             description = "User with the specified ID not found.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.RESOURCE_NOT_FOUND))
       })
   void getUserById(Context ctx);
@@ -132,14 +132,14 @@ public interface UserApi {
                 "Invalid input provided, such as a duplicate email, missing fields, or invalid password format.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = UsersErrorResponseExamples.CREATE_USER_BAD_REQUEST)),
         @OpenApiResponse(
             status = "409",
             description = "Conflict: email already in use.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = UsersErrorResponseExamples.EMAIL_ALREADY_IN_USE))
       })
   void createUser(Context ctx);
@@ -180,28 +180,28 @@ public interface UserApi {
             description = "Authentication information is missing or invalid.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "400",
             description = "Invalid input provided, such as empty payload, or duplicate email.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = UsersErrorResponseExamples.UPDATE_USER_BAD_REQUEST)),
         @OpenApiResponse(
             status = "404",
             description = "User with the specified ID not found.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.RESOURCE_NOT_FOUND)),
         @OpenApiResponse(
             status = "409",
             description = "Conflict: email already in use.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = UsersErrorResponseExamples.EMAIL_ALREADY_IN_USE))
       })
   void updateUserById(Context ctx);
@@ -233,21 +233,21 @@ public interface UserApi {
             description = "Authentication information is missing or invalid.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.UNAUTHORIZED)),
         @OpenApiResponse(
             status = "400",
             description = "Invalid ID format supplied.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.INVALID_ID)),
         @OpenApiResponse(
             status = "404",
             description = "User with the specified ID not found.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = ErrorResponseExamples.RESOURCE_NOT_FOUND))
       })
   void deleteUserById(Context ctx);

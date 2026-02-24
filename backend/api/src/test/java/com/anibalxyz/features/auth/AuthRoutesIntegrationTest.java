@@ -17,7 +17,7 @@ import com.anibalxyz.features.auth.application.exception.InvalidCredentialsExcep
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.ErrorResponseDeprecated;
 import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
@@ -252,7 +252,7 @@ public class AuthRoutesIntegrationTest {
       String cookie = response.header("Set-Cookie");
       assertThat(cookie).isNull();
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated body = http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(body.error()).isEqualTo("Invalid credentials");
 
       assertThat(refreshTokenRepository.findAll()).isEmpty();
@@ -269,7 +269,7 @@ public class AuthRoutesIntegrationTest {
       String cookie = response.header("Set-Cookie");
       assertThat(cookie).isNull();
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated body = http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(body.error()).isEqualTo("Invalid credentials");
 
       assertThat(refreshTokenRepository.findAll()).isEmpty();
@@ -296,7 +296,7 @@ public class AuthRoutesIntegrationTest {
       String cookie = response.header("Set-Cookie");
       assertThat(cookie).isNull();
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated body = http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(body.error()).isEqualTo("Invalid input provided");
 
       assertThat(refreshTokenRepository.findAll()).isEmpty();
@@ -313,7 +313,7 @@ public class AuthRoutesIntegrationTest {
       String cookie = response.header("Set-Cookie");
       assertThat(cookie).isNull();
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated body = http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(body.error()).isEqualTo("Invalid input provided");
 
       assertThat(refreshTokenRepository.findAll()).isEmpty();
@@ -329,7 +329,7 @@ public class AuthRoutesIntegrationTest {
       String cookie = response.header("Set-Cookie");
       assertThat(cookie).isNull();
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated body = http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(body.error()).isEqualTo("Unauthorized");
 
       assertThat(refreshTokenRepository.findAll()).isEmpty();
@@ -346,7 +346,7 @@ public class AuthRoutesIntegrationTest {
       String cookie = response.header("Set-Cookie");
       assertThat(cookie).isNull();
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated body = http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(body.error()).isEqualTo("Invalid credentials");
 
       assertThat(refreshTokenRepository.findAll()).isEmpty();
@@ -383,7 +383,7 @@ public class AuthRoutesIntegrationTest {
       String refreshResponseCookie = refreshResponse.header("Set-Cookie");
       assertThat(refreshResponseCookie).isNull();
 
-      ErrorResponse body = http.parseBody(refreshResponse, ErrorResponse.class);
+      ErrorResponseDeprecated body = http.parseBody(refreshResponse, ErrorResponseDeprecated.class);
       assertThat(body.error()).isEqualTo("Invalid credentials");
 
       List<RefreshToken> foundRefreshTokenList = refreshTokenRepository.findAll();
@@ -429,7 +429,8 @@ public class AuthRoutesIntegrationTest {
       String refreshResponseCookie = secondRefreshResponse.header("Set-Cookie");
       assertThat(refreshResponseCookie).isNull();
 
-      ErrorResponse body = http.parseBody(secondRefreshResponse, ErrorResponse.class);
+      ErrorResponseDeprecated body =
+          http.parseBody(secondRefreshResponse, ErrorResponseDeprecated.class);
       assertThat(body.error()).isEqualTo("Invalid credentials");
 
       int tokensThatShouldBeInDatabase = 2;

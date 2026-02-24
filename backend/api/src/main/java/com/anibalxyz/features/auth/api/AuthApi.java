@@ -3,7 +3,7 @@ package com.anibalxyz.features.auth.api;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthErrorResponseExamples;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.ErrorResponseDeprecated;
 import io.javalin.http.Context;
 import io.javalin.openapi.HttpMethod;
 import io.javalin.openapi.OpenApi;
@@ -44,14 +44,14 @@ public interface AuthApi {
             description = "Invalid input (e.g., missing email/password)",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = AuthErrorResponseExamples.INVALID_INPUT_PROVIDED)),
         @OpenApiResponse(
             status = "401",
             description = "Invalid credentials",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = AuthErrorResponseExamples.INVALID_CREDENTIALS))
       })
   void login(Context ctx);
@@ -91,14 +91,14 @@ public interface AuthApi {
             description = "Invalid or expired refresh token.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = AuthErrorResponseExamples.INVALID_CREDENTIALS)),
         @OpenApiResponse(
             status = "401",
             description = "Missing refresh token in cookie.",
             content =
                 @OpenApiContent(
-                    from = ErrorResponse.class,
+                    from = ErrorResponseDeprecated.class,
                     example = AuthErrorResponseExamples.MISSING_REFRESH_TOKEN))
       })
   void refresh(Context ctx);

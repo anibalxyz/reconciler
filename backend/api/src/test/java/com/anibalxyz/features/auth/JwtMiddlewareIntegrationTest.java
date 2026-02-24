@@ -11,7 +11,7 @@ import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.ErrorResponseDeprecated;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
@@ -142,8 +142,9 @@ public class JwtMiddlewareIntegrationTest {
     @ValueSource(strings = {"missingHeader", "invalidHeader", "missingJwt"})
     @DisplayName("GET /users: given missing JWT, then return 401 Unauthorized")
     void GET_users_missingJwt_return401Unauthorized(String cause) {
-      ErrorResponse expectedResponseBody =
-          new ErrorResponse("Unauthorized", List.of("Missing or invalid Authorization header"));
+      ErrorResponseDeprecated expectedResponseBody =
+          new ErrorResponseDeprecated(
+              "Unauthorized", List.of("Missing or invalid Authorization header"));
 
       Map<String, String> headers =
           switch (cause) {
@@ -156,21 +157,23 @@ public class JwtMiddlewareIntegrationTest {
       Response response = http.get("/users/", headers);
       assertThat(response.code()).isEqualTo(401);
 
-      ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated actualResponseBody =
+          http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(actualResponseBody).isEqualTo(expectedResponseBody);
     }
 
     @Test
     @DisplayName("GET /users: given invalid JWT, then return 401 Unauthorized")
     void GET_users_invalidJwt_return401Unauthorized() {
-      ErrorResponse expectedResponseBody =
-          new ErrorResponse("Invalid credentials", List.of("Invalid JWT token"));
+      ErrorResponseDeprecated expectedResponseBody =
+          new ErrorResponseDeprecated("Invalid credentials", List.of("Invalid JWT token"));
 
       Map<String, String> headers = Map.of("Authorization", "Bearer " + "invalid-token");
       Response response = http.get("/users/", headers);
       assertThat(response.code()).isEqualTo(401);
 
-      ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated actualResponseBody =
+          http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(actualResponseBody).isEqualTo(expectedResponseBody);
     }
 
@@ -181,14 +184,15 @@ public class JwtMiddlewareIntegrationTest {
       Instant expiredInstant = Instant.now().minus(1, ChronoUnit.DAYS);
       String expiredJwt = jwtService.generateToken(userEntity.getId(), expiredInstant);
 
-      ErrorResponse expectedResponseBody =
-          new ErrorResponse("Invalid credentials", List.of("JWT has expired"));
+      ErrorResponseDeprecated expectedResponseBody =
+          new ErrorResponseDeprecated("Invalid credentials", List.of("JWT has expired"));
 
       Map<String, String> headers = Map.of("Authorization", "Bearer " + expiredJwt);
       Response response = http.get("/users/", headers);
       assertThat(response.code()).isEqualTo(401);
 
-      ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
+      ErrorResponseDeprecated actualResponseBody =
+          http.parseBody(response, ErrorResponseDeprecated.class);
       assertThat(actualResponseBody).isEqualTo(expectedResponseBody);
     }
   }

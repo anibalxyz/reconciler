@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.HttpRequest;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.ErrorResponseDeprecated;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
@@ -110,14 +110,14 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("GET /users/{id}: given a non-existing id, then return 404 Not Found")
     public void GET_users_id_nonExistingId_return404() {
       int nonExistingId = 999;
-      ErrorResponse expectedResponse =
-          new ErrorResponse(
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
               "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
       Response response = http.get("/users/" + nonExistingId);
       assertThat(response.code()).isEqualTo(404);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -125,13 +125,14 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("GET /users/{id}: given an invalid id format, then return 400 Bad Request")
     public void GET_users_id_invalidIdFormat_return400() {
       String invalidId = "abc";
-      ErrorResponse expectedResponse =
-          new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
+              "Bad Request", List.of("Invalid ID format. Must be a number."));
 
       Response response = http.get("/users/" + invalidId);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -145,7 +146,7 @@ public class UsersRoutesIntegrationTest {
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(message);
 
@@ -175,7 +176,7 @@ public class UsersRoutesIntegrationTest {
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(capitalize(missingProp) + " is required");
 
@@ -195,7 +196,7 @@ public class UsersRoutesIntegrationTest {
       Response response = http.post("/users", requestBody);
 
       assertThat(response.code()).isEqualTo(409);
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Conflict");
       assertThat(responseBody.details()).contains("Email already in use. Please use another");
 
@@ -214,7 +215,7 @@ public class UsersRoutesIntegrationTest {
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Unknown property in request body");
       assertThat(responseBody.details()).contains("Unknown property: '" + unknownProperty + "'");
 
@@ -236,7 +237,7 @@ public class UsersRoutesIntegrationTest {
       Response response = http.post("/users", malformedJson);
 
       assertThat(response.code()).isEqualTo(400);
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Malformed JSON request");
       assertThat(responseBody.details()).contains("Malformed JSON in request body");
     }
@@ -246,13 +247,14 @@ public class UsersRoutesIntegrationTest {
     public void PUT_users_id_invalidIdFormat_return400() {
       String invalidId = "abc";
       UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
-      ErrorResponse expectedResponse =
-          new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
+              "Bad Request", List.of("Invalid ID format. Must be a number."));
 
       Response response = http.put("/users/" + invalidId, request);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -261,8 +263,8 @@ public class UsersRoutesIntegrationTest {
     public void PUT_users_id_nonExistingId_return404() {
       int nonExistingId = 999;
       UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
-      ErrorResponse expectedResponse =
-          new ErrorResponse(
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
               "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
       Response response = http.put("/users/" + nonExistingId, request);
@@ -271,7 +273,7 @@ public class UsersRoutesIntegrationTest {
       Optional<User> optionalUser = userRepository.findById(nonExistingId);
       assertThat(optionalUser).isEmpty();
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -287,8 +289,8 @@ public class UsersRoutesIntegrationTest {
       requestBody.put(unknownProperty, "new.user@mail.com");
       requestBody.put("password", "1234");
 
-      ErrorResponse expectedResponse =
-          new ErrorResponse(
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
               "Unknown property in request body",
               List.of("Unknown property: '" + unknownProperty + "'"));
 
@@ -298,7 +300,7 @@ public class UsersRoutesIntegrationTest {
       User optionalUser = userRepository.findById(existingId).orElseThrow();
       assertThat(optionalUser).isEqualTo(user.toDomain());
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -311,8 +313,8 @@ public class UsersRoutesIntegrationTest {
       int existingId = user.getId();
 
       UserUpdateRequest requestBody = new UserUpdateRequest(value, value, value);
-      ErrorResponse expectedResponse =
-          new ErrorResponse(
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
               "Invalid input provided",
               List.of("At least one field (name, email, password) must be provided"));
 
@@ -322,7 +324,7 @@ public class UsersRoutesIntegrationTest {
       User optionalUser = userRepository.findById(existingId).orElseThrow();
       assertThat(optionalUser).isEqualTo(user.toDomain());
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -334,8 +336,9 @@ public class UsersRoutesIntegrationTest {
       int userToUpdateId = userToUpdate.getId();
 
       UserUpdateRequest requestBody = new UserUpdateRequest(null, existingUser.getEmail(), null);
-      ErrorResponse expectedResponse =
-          new ErrorResponse("Conflict", List.of("Email already in use. Please use another"));
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
+              "Conflict", List.of("Email already in use. Please use another"));
 
       Response response = http.put("/users/" + userToUpdateId, requestBody);
       assertThat(response.code()).isEqualTo(409);
@@ -343,7 +346,7 @@ public class UsersRoutesIntegrationTest {
       User userAfterAttempt = userRepository.findById(userToUpdateId).orElseThrow();
       assertThat(userAfterAttempt.getEmail().value()).isEqualTo(userToUpdate.getEmail());
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -355,14 +358,14 @@ public class UsersRoutesIntegrationTest {
 
       String invalidEmail = "invalid-email";
       UserUpdateRequest requestBody = new UserUpdateRequest("New User", invalidEmail, "12345678");
-      ErrorResponse expectedResponse =
-          new ErrorResponse(
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
               "Invalid input provided", List.of("Invalid email format: " + invalidEmail));
 
       Response response = http.put("/users/" + existingId, requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
 
       User userAfterAttempt = userRepository.findById(existingId).orElseThrow();
@@ -380,7 +383,7 @@ public class UsersRoutesIntegrationTest {
       Response response = http.put("/users/" + existingId, requestBody);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(message);
 
@@ -392,14 +395,14 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("DELETE /users/{id}: given a non-existing id, then return 404")
     public void DELETE_users_id_nonExistingId_return404() {
       int nonExistingId = 999;
-      ErrorResponse expectedResponse =
-          new ErrorResponse(
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
               "Resource not found", List.of("User with id " + nonExistingId + " not found"));
 
       Response response = http.delete("/users/" + nonExistingId);
       assertThat(response.code()).isEqualTo(404);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -407,13 +410,14 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("DELETE /users/{id}: given an invalid id format, then return 400")
     public void DELETE_users_id_invalidIdFormat_return400() {
       String invalidId = "abc";
-      ErrorResponse expectedResponse =
-          new ErrorResponse("Bad Request", List.of("Invalid ID format. Must be a number."));
+      ErrorResponseDeprecated expectedResponse =
+          new ErrorResponseDeprecated(
+              "Bad Request", List.of("Invalid ID format. Must be a number."));
 
       Response response = http.delete("/users/" + invalidId);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
   }
