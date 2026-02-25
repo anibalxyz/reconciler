@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.HttpRequest;
+import com.anibalxyz.features.common.api.out.CommonErrorCode;
+import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.common.api.out.ErrorResponseDeprecated;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.UserRoutes;
@@ -110,14 +112,15 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("GET /users/{id}: given a non-existing id, then return 404 Not Found")
     public void GET_users_id_nonExistingId_return404() {
       int nonExistingId = 999;
-      ErrorResponseDeprecated expectedResponse =
-          new ErrorResponseDeprecated(
-              "Resource not found", List.of("User with id " + nonExistingId + " not found"));
+
+      ErrorResponse expectedResponse =
+          new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND)
+              .detail("User with id " + nonExistingId + " not found");
 
       Response response = http.get("/users/" + nonExistingId);
       assertThat(response.code()).isEqualTo(404);
 
-      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -263,9 +266,10 @@ public class UsersRoutesIntegrationTest {
     public void PUT_users_id_nonExistingId_return404() {
       int nonExistingId = 999;
       UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
-      ErrorResponseDeprecated expectedResponse =
-          new ErrorResponseDeprecated(
-              "Resource not found", List.of("User with id " + nonExistingId + " not found"));
+
+      ErrorResponse expectedResponse =
+          new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND)
+              .detail("User with id " + nonExistingId + " not found");
 
       Response response = http.put("/users/" + nonExistingId, request);
       assertThat(response.code()).isEqualTo(404);
@@ -273,7 +277,7 @@ public class UsersRoutesIntegrationTest {
       Optional<User> optionalUser = userRepository.findById(nonExistingId);
       assertThat(optionalUser).isEmpty();
 
-      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -395,14 +399,14 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("DELETE /users/{id}: given a non-existing id, then return 404")
     public void DELETE_users_id_nonExistingId_return404() {
       int nonExistingId = 999;
-      ErrorResponseDeprecated expectedResponse =
-          new ErrorResponseDeprecated(
-              "Resource not found", List.of("User with id " + nonExistingId + " not found"));
+      ErrorResponse expectedResponse =
+          new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND)
+              .detail("User with id " + nonExistingId + " not found");
 
       Response response = http.delete("/users/" + nonExistingId);
       assertThat(response.code()).isEqualTo(404);
 
-      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 

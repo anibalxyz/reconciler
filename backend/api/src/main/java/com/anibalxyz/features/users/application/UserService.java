@@ -4,6 +4,7 @@ import com.anibalxyz.features.common.application.exception.ConflictException;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.application.env.UsersEnvironment;
+import com.anibalxyz.features.users.application.exception.UserNotFoundException;
 import com.anibalxyz.features.users.application.in.UserUpdatePayload;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
@@ -52,9 +53,7 @@ public class UserService {
    * @throws ResourceNotFoundException if no user with the given ID is found.
    */
   public User getUserById(int id) throws ResourceNotFoundException {
-    return userRepository
-        .findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+    return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
   }
 
   /**
@@ -69,8 +68,7 @@ public class UserService {
     try {
       return userRepository
           .findByEmail(new Email(email))
-          .orElseThrow(
-              () -> new ResourceNotFoundException("User with email " + email + " not found"));
+          .orElseThrow(() -> new UserNotFoundException(email));
     } catch (IllegalArgumentException e) {
       throw new InvalidInputException(e.getMessage());
     }
@@ -117,10 +115,7 @@ public class UserService {
    */
   public User updateUserById(Integer id, UserUpdatePayload payload)
       throws ConflictException, ResourceNotFoundException, InvalidInputException {
-    User user =
-        userRepository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+    User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
     try {
       if (payload.name() != null) {
         user = user.withName(payload.name());
@@ -160,7 +155,7 @@ public class UserService {
   public void deleteUserById(int id) throws ResourceNotFoundException {
     boolean wasDeleted = userRepository.deleteById(id);
     if (!wasDeleted) {
-      throw new ResourceNotFoundException("User with id " + id + " not found");
+      throw new UserNotFoundException(id);
     }
   }
 }

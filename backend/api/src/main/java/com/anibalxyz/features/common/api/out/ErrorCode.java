@@ -28,4 +28,14 @@ public interface ErrorCode {
    */
   @JsonValue
   String name();
+
+  /**
+   * Returns the human-readable summary associated with this error code.
+   *
+   * <p>This value is intended to be used as the {@code title} field in an {@link ErrorResponse},
+   * keeping the description stable and consistent across all occurrences of the same error.
+   *
+   * @return a descriptive, human-readable title in English
+   */
+  String title();
 }

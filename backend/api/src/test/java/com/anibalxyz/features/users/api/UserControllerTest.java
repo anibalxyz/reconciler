@@ -9,12 +9,12 @@ import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
-import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.exception.UserNotFoundException;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
@@ -64,10 +64,12 @@ public class UserControllerTest {
     public void getUserById_nonExistingId_throwsResourceNotFoundException() {
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
-      when(userService.getUserById(nonExistingId)).thenThrow(new ResourceNotFoundException(""));
+      when(userService.getUserById(nonExistingId))
+          .thenThrow(new UserNotFoundException(nonExistingId));
 
       assertThatThrownBy(() -> userController.getUserById(ctx))
-          .isInstanceOf(ResourceNotFoundException.class);
+          .isInstanceOf(UserNotFoundException.class)
+          .hasMessage("User with id %s not found", nonExistingId);
     }
 
     @Test
@@ -147,10 +149,11 @@ public class UserControllerTest {
       stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
 
       when(userService.updateUserById(nonExistingId, request))
-          .thenThrow(new ResourceNotFoundException(""));
+          .thenThrow(new UserNotFoundException(nonExistingId));
 
       assertThatThrownBy(() -> userController.updateUserById(ctx))
-          .isInstanceOf(ResourceNotFoundException.class);
+          .isInstanceOf(UserNotFoundException.class)
+          .hasMessage("User with id %s not found", nonExistingId);
     }
 
     @Test
@@ -166,9 +169,10 @@ public class UserControllerTest {
     public void deleteUserById_nonExistingId_throwsResourceNotFoundException() {
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
-      doThrow(new ResourceNotFoundException("")).when(userService).deleteUserById(nonExistingId);
+      doThrow(new UserNotFoundException(nonExistingId)).when(userService).deleteUserById(nonExistingId);
       assertThatThrownBy(() -> userController.deleteUserById(ctx))
-          .isInstanceOf(ResourceNotFoundException.class);
+              .isInstanceOf(UserNotFoundException.class)
+              .hasMessage("User with id %s not found", nonExistingId);
     }
   }
 

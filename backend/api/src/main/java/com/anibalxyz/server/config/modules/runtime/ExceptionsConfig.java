@@ -1,6 +1,8 @@
 package com.anibalxyz.server.config.modules.runtime;
 
 import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
+import com.anibalxyz.features.common.api.out.CommonErrorCode;
+import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.common.api.out.ErrorResponseDeprecated;
 import com.anibalxyz.features.common.application.exception.ConflictException;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
@@ -63,7 +65,14 @@ public class ExceptionsConfig extends RuntimeConfig {
   @Override
   public void apply() {
     handleGenericException(BadRequestResponse.class, 400, "Bad Request");
-    handleGenericException(ResourceNotFoundException.class, 404, "Resource not found");
+    server.exception(
+        ResourceNotFoundException.class,
+        (e, context) -> {
+          context.status(404);
+          ErrorResponse res =
+              new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND).detail(e.getMessage());
+          context.json(res);
+        });
     handleGenericException(InvalidCredentialsException.class, 401, "Invalid credentials");
     handleGenericException(ConflictException.class, 409, "Conflict");
     handleGenericException(InvalidInputException.class, 400, "Invalid input provided");
