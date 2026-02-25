@@ -24,7 +24,7 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorDetail {
 
-  private final String code;
+  private final ErrorCode code;
   private final Map<String, Object> extensions;
 
   /**
@@ -32,12 +32,12 @@ public class ErrorDetail {
    *
    * @param code machine-readable error identifier in UPPER_SNAKE_CASE
    */
-  public ErrorDetail(String code) {
+  public ErrorDetail(ErrorCode code) {
     this.code = code;
     this.extensions = new LinkedHashMap<>();
   }
 
-  private ErrorDetail(String code, Map<String, Object> extensions) {
+  private ErrorDetail(ErrorCode code, Map<String, Object> extensions) {
     this.code = code;
     this.extensions = extensions;
   }
@@ -60,7 +60,7 @@ public class ErrorDetail {
   /**
    * @return the machine-readable error code
    */
-  public String getCode() {
+  public ErrorCode getCode() {
     return code;
   }
 

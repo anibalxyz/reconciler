@@ -58,7 +58,7 @@ public class ErrorResponse {
   private final String type;
   private final String title;
   private final String detail;
-  private final String code;
+  private final ErrorCode code;
   private final String instance;
   private final List<ErrorDetail> errors;
   private final Map<String, Object> extensions;
@@ -69,7 +69,7 @@ public class ErrorResponse {
    * @param code machine-readable error identifier in UPPER_SNAKE_CASE
    * @param title human-readable summary of the problem type
    */
-  public ErrorResponse(String code, String title) {
+  public ErrorResponse(ErrorCode code, String title) {
     this.title = title;
     this.code = code;
     this.type = null;
@@ -83,7 +83,7 @@ public class ErrorResponse {
       String type,
       String title,
       String detail,
-      String code,
+      ErrorCode code,
       String instance,
       List<ErrorDetail> errors,
       Map<String, Object> extensions) {
@@ -176,7 +176,7 @@ public class ErrorResponse {
   /**
    * @return the machine-readable error code
    */
-  public String getCode() {
+  public ErrorCode getCode() {
     return code;
   }
 
