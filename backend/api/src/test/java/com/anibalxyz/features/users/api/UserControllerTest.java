@@ -169,10 +169,12 @@ public class UserControllerTest {
     public void deleteUserById_nonExistingId_throwsResourceNotFoundException() {
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
-      doThrow(new UserNotFoundException(nonExistingId)).when(userService).deleteUserById(nonExistingId);
+      doThrow(new UserNotFoundException(nonExistingId))
+          .when(userService)
+          .deleteUserById(nonExistingId);
       assertThatThrownBy(() -> userController.deleteUserById(ctx))
-              .isInstanceOf(UserNotFoundException.class)
-              .hasMessage("User with id %s not found", nonExistingId);
+          .isInstanceOf(UserNotFoundException.class)
+          .hasMessage("User with id %s not found", nonExistingId);
     }
   }
 

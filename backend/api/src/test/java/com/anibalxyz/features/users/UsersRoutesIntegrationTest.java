@@ -128,14 +128,14 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("GET /users/{id}: given an invalid id format, then return 400 Bad Request")
     public void GET_users_id_invalidIdFormat_return400() {
       String invalidId = "abc";
-      ErrorResponseDeprecated expectedResponse =
-          new ErrorResponseDeprecated(
-              "Bad Request", List.of("Invalid ID format. Must be a number."));
+      ErrorResponse expectedResponse =
+          new ErrorResponse(CommonErrorCode.BAD_REQUEST)
+              .detail("Invalid ID format. Must be a number.");
 
       Response response = http.get("/users/" + invalidId);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -250,14 +250,14 @@ public class UsersRoutesIntegrationTest {
     public void PUT_users_id_invalidIdFormat_return400() {
       String invalidId = "abc";
       UserUpdateRequest request = new UserUpdateRequest("New Name", "new@mail.com", "12345678");
-      ErrorResponseDeprecated expectedResponse =
-          new ErrorResponseDeprecated(
-              "Bad Request", List.of("Invalid ID format. Must be a number."));
+      ErrorResponse expectedResponse =
+          new ErrorResponse(CommonErrorCode.BAD_REQUEST)
+              .detail("Invalid ID format. Must be a number.");
 
       Response response = http.put("/users/" + invalidId, request);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
 
@@ -414,14 +414,14 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("DELETE /users/{id}: given an invalid id format, then return 400")
     public void DELETE_users_id_invalidIdFormat_return400() {
       String invalidId = "abc";
-      ErrorResponseDeprecated expectedResponse =
-          new ErrorResponseDeprecated(
-              "Bad Request", List.of("Invalid ID format. Must be a number."));
+      ErrorResponse expectedResponse =
+          new ErrorResponse(CommonErrorCode.BAD_REQUEST)
+              .detail("Invalid ID format. Must be a number.");
 
       Response response = http.delete("/users/" + invalidId);
       assertThat(response.code()).isEqualTo(400);
 
-      ErrorResponseDeprecated responseBody = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponse responseBody = http.parseBody(response, new TypeReference<>() {});
       assertThat(responseBody).isEqualTo(expectedResponse);
     }
   }

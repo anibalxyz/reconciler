@@ -64,14 +64,18 @@ public class ExceptionsConfig extends RuntimeConfig {
   /** {@inheritDoc} */
   @Override
   public void apply() {
-    handleGenericException(BadRequestResponse.class, 400, "Bad Request");
+    server.exception(
+        BadRequestResponse.class,
+        (e, context) -> {
+          context.status(400);
+          context.json(new ErrorResponse(CommonErrorCode.BAD_REQUEST).detail(e.getMessage()));
+        });
     server.exception(
         ResourceNotFoundException.class,
         (e, context) -> {
           context.status(404);
-          ErrorResponse res =
-              new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND).detail(e.getMessage());
-          context.json(res);
+          context.json(
+              new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND).detail(e.getMessage()));
         });
     handleGenericException(InvalidCredentialsException.class, 401, "Invalid credentials");
     handleGenericException(ConflictException.class, 409, "Conflict");
