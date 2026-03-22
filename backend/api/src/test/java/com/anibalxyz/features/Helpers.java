@@ -45,6 +45,13 @@ public class Helpers {
     return when(mockValidator.get());
   }
 
+  public static <T> OngoingStubbing<T> stubBodyAsClassFor(Context ctx, Class<T> clazz) {
+    BodyValidator<T> mockValidator = (BodyValidator<T>) mock(BodyValidator.class);
+    when(ctx.bodyValidator(clazz)).thenReturn(mockValidator);
+    when(mockValidator.check(any(), anyString())).thenReturn(mockValidator);
+    return when(mockValidator.get());
+  }
+
   /**
    * Captures the JSON argument passed to {@link Context#json(Object)} for verification.
    *
@@ -124,7 +131,9 @@ public class Helpers {
         new JpaUserRepository(emp)
             .save(
                 new User(
-                    name, new Email(email), PasswordHash.generate(password, BCRYPT_LOG_ROUNDS)));
+                    name,
+                    Email.of(email).getValue(),
+                    PasswordHash.generate(password, BCRYPT_LOG_ROUNDS).getValue()));
 
     em.getTransaction().commit();
 

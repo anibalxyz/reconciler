@@ -1,10 +1,12 @@
 package com.anibalxyz.features.users.api.in;
 
+import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.application.in.UserUpdatePayload;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import io.javalin.openapi.OpenApiExample;
+import io.javalin.openapi.OpenApiIgnore;
 import io.javalin.openapi.OpenApiRequired;
 import io.javalin.openapi.OpenApiStringValidation;
 
@@ -37,5 +39,11 @@ public record UserCreateRequest(
         @OpenApiStringValidation(
             minLength = "" + PasswordHash.MIN_LENGTH,
             maxLength = "" + PasswordHash.MAX_LENGTH)
-        String password)
-    implements UserUpdatePayload {}
+        String password) {
+
+  // NOTE: utility method. May be from a common interface (e.g. Request)
+  @OpenApiIgnore
+  public CreateUserCommand toCommand() {
+    return new CreateUserCommand(name, email, password);
+  }
+}

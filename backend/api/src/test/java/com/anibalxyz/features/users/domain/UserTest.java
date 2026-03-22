@@ -16,9 +16,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 public class UserTest {
 
   private static final int ID = 1;
-  private static final Email EMAIL = new Email(VALID_EMAIL);
+  private static final Email EMAIL = Email.of(VALID_EMAIL).getValue();
   private static final PasswordHash PASSWORD_HASH =
-      PasswordHash.generate("password1234", BCRYPT_LOG_ROUNDS);
+      PasswordHash.generate("password1234", BCRYPT_LOG_ROUNDS).getValue();
   private static final Instant TIMESTAMP = Instant.now();
 
   private User baseUser;
@@ -90,14 +90,15 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
         break;
 
       case "email":
-        Email newEmail = new Email("new@mail.com");
+        Email newEmail = Email.of("new@mail.com").getValue();
         userUsingWith = baseUser.withEmail(newEmail);
         userUsingConstructor =
             new User(ID, VALID_NAME, newEmail, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
         break;
 
       case "passwordHash":
-        PasswordHash newPasswordHash = PasswordHash.generate("newPassword1234", BCRYPT_LOG_ROUNDS);
+        PasswordHash newPasswordHash =
+            PasswordHash.generate("newPassword1234", BCRYPT_LOG_ROUNDS).getValue();
         userUsingWith = baseUser.withPasswordHash(newPasswordHash);
         userUsingConstructor =
             new User(ID, VALID_NAME, EMAIL, newPasswordHash, TIMESTAMP, TIMESTAMP);
@@ -159,13 +160,18 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
           case "name" -> new User(ID, "Different Name", EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
           case "email" ->
               new User(
-                  ID, VALID_NAME, new Email("diff@mail.com"), PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+                  ID,
+                  VALID_NAME,
+                  Email.of("diff@mail.com").getValue(),
+                  PASSWORD_HASH,
+                  TIMESTAMP,
+                  TIMESTAMP);
           case "passwordHash" ->
               new User(
                   ID,
                   VALID_NAME,
                   EMAIL,
-                  PasswordHash.generate("differentPassword", BCRYPT_LOG_ROUNDS),
+                  PasswordHash.generate("differentPassword", BCRYPT_LOG_ROUNDS).getValue(),
                   TIMESTAMP,
                   TIMESTAMP);
           case "createdAt" ->

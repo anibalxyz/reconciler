@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.api.in;
 
+import com.anibalxyz.features.users.application.in.UpdateUserCommand;
 import com.anibalxyz.features.users.application.in.UserUpdatePayload;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
@@ -43,9 +44,7 @@ public record UserUpdateRequest(
    * @return {@code true} if at least one field has a value, {@code false} otherwise.
    */
   @OpenApiIgnore
-  public boolean hasAtLeastOneField() {
-    return (name != null && !name.isBlank())
-        || (email != null && !email.isBlank())
-        || (password != null && !password.isBlank());
+  public UpdateUserCommand toCommand() {
+    return new UpdateUserCommand(name, email, password);
   }
 }

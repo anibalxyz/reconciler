@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.infra;
 
+import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
@@ -92,8 +93,10 @@ public class UserEntity {
    * @return A new {@link User} domain object instance.
    */
   public User toDomain() {
+    Result<Email, ?> emailResult = Email.of(email);
+    if (emailResult.isFailure()) throw new RuntimeException("TODO: handle error");
     return new User(
-        id, name, new Email(email), new PasswordHash(passwordHash), createdAt, updatedAt);
+        id, name, emailResult.getValue(), new PasswordHash(passwordHash), createdAt, updatedAt);
   }
 
   /**

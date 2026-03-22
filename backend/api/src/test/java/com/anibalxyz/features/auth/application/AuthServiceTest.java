@@ -16,6 +16,7 @@ import com.anibalxyz.features.auth.application.exception.InvalidCredentialsExcep
 import com.anibalxyz.features.auth.application.in.LoginPayload;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.Email;
@@ -95,14 +96,14 @@ public class AuthServiceTest {
           new User(
               1,
               "Name",
-              new Email(payload.email()),
-              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS),
+              Email.of(payload.email()).getValue(),
+              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS).getValue(),
               now,
               now);
 
       when(authEnvironment.AUTH_ENABLE_TIME_WINDOW()).thenReturn(useWindow);
       if (useWindow) when(clock.get()).thenReturn(next(day, hour, minute));
-      when(userService.getUserByEmail(VALID_EMAIL)).thenReturn(user);
+      when(userService.getUserByEmail(VALID_EMAIL)).thenReturn(Result.success(user));
       when(jwtService.generateToken(anyInt())).thenReturn(VALID_JWT);
       when(refreshTokenService.createRefreshToken(any(User.class)))
           .thenReturn(
@@ -171,13 +172,16 @@ public class AuthServiceTest {
 
       when(userService.getUserByEmail(VALID_EMAIL))
           .thenReturn(
-              new User(
-                  1,
-                  "Name",
-                  new Email(payload.email()),
-                  PasswordHash.generate(payload.password() + "makeItDifferent", BCRYPT_LOG_ROUNDS),
-                  now,
-                  now));
+              Result.success(
+                  new User(
+                      1,
+                      "Name",
+                      Email.of(payload.email()).getValue(),
+                      PasswordHash.generate(
+                              payload.password() + "makeItDifferent", BCRYPT_LOG_ROUNDS)
+                          .getValue(),
+                      now,
+                      now)));
 
       assertThatThrownBy(() -> authService.authenticateUser(payload))
           .isInstanceOf(InvalidCredentialsException.class)

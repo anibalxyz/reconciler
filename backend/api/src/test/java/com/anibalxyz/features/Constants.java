@@ -82,8 +82,8 @@ public class Constants {
         new User(
             1,
             VALID_NAME,
-            new Email(VALID_EMAIL),
-            PasswordHash.generate(VALID_PASSWORD, Environment.BCRYPT_LOG_ROUNDS),
+            Email.of(VALID_EMAIL).getValue(),
+            PasswordHash.generate(VALID_PASSWORD, Environment.BCRYPT_LOG_ROUNDS).getValue(),
             Instant.now(),
             Instant.now());
   }

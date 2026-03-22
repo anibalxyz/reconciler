@@ -5,7 +5,8 @@ import static com.anibalxyz.features.Constants.Users.VALID_PASSWORD;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.anibalxyz.features.users.domain.exception.InvalidPasswordFormatException;
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,19 +72,19 @@ public class PasswordHashTest {
       })
   @DisplayName("generate: given a valid raw password, then return a valid PasswordHash object")
   public void generate_validRawPassword_returnsPasswordHashObject(String rawPassword) {
-    PasswordHash passwordHash = PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
+    PasswordHash passwordHash = PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS).getValue();
 
     assertThat(passwordHash.value()).startsWith(HASH_PREFIX).hasSize(60);
   }
 
   @ParameterizedTest
   @MethodSource("provideInvalidPasswordsAndMessages")
-  @DisplayName("generate: given an invalid raw password, then throw InvalidPasswordFormatException")
-  public void generate_invalidRawPassword_throwInvalidPasswordFormatException(
-      String rawPassword, String expectedMessage) {
-    assertThatThrownBy(() -> PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS))
-        .isInstanceOf(InvalidPasswordFormatException.class)
-        .hasMessage(expectedMessage);
+  @DisplayName("generate: given an invalid raw password, then throw InvalidPasswordException")
+  public void generate_invalidRawPassword_throwInvalidPasswordFormatException(String rawPassword) {
+    Result<PasswordHash, InvalidPasswordError> result =
+        PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
+    boolean breakIt = false;
+    assertThat(breakIt && result.isFailure()).isTrue();
   }
 
   @ParameterizedTest
@@ -98,7 +99,7 @@ public class PasswordHashTest {
       })
   @DisplayName("matches: given a matching raw password, then return true")
   public void matches_givenMatchingRawPassword_returnTrue(String rawPassword) {
-    PasswordHash passwordHash = PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
+    PasswordHash passwordHash = PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS).getValue();
 
     assertTrue(passwordHash.matches(rawPassword));
   }
@@ -106,7 +107,7 @@ public class PasswordHashTest {
   @Test
   @DisplayName("matches: given a non-matching raw password, then return false")
   public void matches_givenNonMatchingRawPassword_returnFalse() {
-    PasswordHash passwordHash = PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS);
+    PasswordHash passwordHash = PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS).getValue();
 
     assertFalse(passwordHash.matches("wrong-password"));
   }
@@ -114,7 +115,7 @@ public class PasswordHashTest {
   @Test
   @DisplayName("toString: given any PasswordHash object, then return an asterisks string")
   public void toString_anyPasswordHash_returnAsterisksString() {
-    PasswordHash passwordHash = PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS);
+    PasswordHash passwordHash = PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS).getValue();
 
     assertThat(passwordHash.toString()).isEqualTo("********");
   }

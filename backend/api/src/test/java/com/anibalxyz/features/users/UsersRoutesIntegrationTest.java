@@ -153,7 +153,7 @@ public class UsersRoutesIntegrationTest {
       assertThat(responseBody.error()).isEqualTo("Invalid input provided");
       assertThat(responseBody.details()).contains(message);
 
-      Optional<User> user = userRepository.findByEmail(new Email(requestBody.email()));
+      Optional<User> user = userRepository.findByEmail(Email.of(requestBody.email()).getValue());
       assertThat(user).isEmpty();
     }
 

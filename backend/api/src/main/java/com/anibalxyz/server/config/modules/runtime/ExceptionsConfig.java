@@ -4,11 +4,15 @@ import com.anibalxyz.features.auth.application.exception.InvalidCredentialsExcep
 import com.anibalxyz.features.common.api.out.CommonErrorCode;
 import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.common.api.out.ErrorResponseDeprecated;
+import com.anibalxyz.features.common.application.exception.AppException;
 import com.anibalxyz.features.common.application.exception.ConflictException;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
+import com.anibalxyz.server.api.ErrorMapper;
+import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
@@ -61,9 +65,20 @@ public class ExceptionsConfig extends RuntimeConfig {
         });
   }
 
+  public void migrating() {
+    server.exception(
+        AppException.class,
+        (e, ctx) -> {
+          ErrorResult result = ErrorMapper.map(e.getError());
+          ctx.status(result.status()).json(result.response());
+        });
+  }
+
   /** {@inheritDoc} */
   @Override
   public void apply() {
+    migrating();
+
     server.exception(
         BadRequestResponse.class,
         (e, context) -> {
@@ -89,6 +104,34 @@ public class ExceptionsConfig extends RuntimeConfig {
     handleGenericException(IllegalArgumentException.class, 400, "Invalid argument provided");
     handleGenericException(UnauthorizedResponse.class, 401, "Unauthorized");
 
+    server.exception(
+        JsonParseException.class,
+        (e, ctx) -> {
+          ctx.status(400)
+              .json(
+                  new ErrorResponse(CommonErrorCode.BAD_REQUEST)
+                      .detail("Malformed JSON in request body"));
+        });
+
+    server.exception(
+        MismatchedInputException.class,
+        (e, ctx) -> {
+          ctx.status(400)
+              .json(
+                  new ErrorResponse(CommonErrorCode.BAD_REQUEST)
+                      .detail("Missing or empty request body"));
+        });
+
+    server.exception(
+        UnrecognizedPropertyException.class,
+        (e, ctx) -> {
+          ctx.status(400)
+              .json(
+                  new ErrorResponse(CommonErrorCode.BAD_REQUEST)
+                      .detail("Unknown property: '" + e.getPropertyName() + "'"));
+        });
+
+    // TODO: remove after the use of ctx.bodyValidator() is removed
     server.exception(
         ValidationException.class,
         (e, ctx) -> {

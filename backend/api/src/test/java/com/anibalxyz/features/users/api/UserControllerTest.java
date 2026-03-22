@@ -8,6 +8,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.Constants;
+import com.anibalxyz.features.Helpers;
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.common.api.out.CommonErrorCode;
+import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.common.application.exception.InvalidInputException;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
@@ -15,9 +20,11 @@ import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.application.exception.UserNotFoundException;
+import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.validation.ValidationError;
@@ -55,6 +62,11 @@ public class UserControllerTest {
     return when(mockValidator.getOrThrow(any()));
   }
 
+  @BeforeEach
+  void setUp() {
+    when(ctx.status(anyInt())).thenReturn(ctx);
+  }
+
   @Nested
   @DisplayName("Failure Scenarios")
   class FailureScenarios {
@@ -65,11 +77,17 @@ public class UserControllerTest {
       int nonExistingId = 999;
       stubPathParamId().thenReturn(nonExistingId);
       when(userService.getUserById(nonExistingId))
-          .thenThrow(new UserNotFoundException(nonExistingId));
+          .thenReturn(Result.failure(UserNotFoundError.byId(nonExistingId)));
 
-      assertThatThrownBy(() -> userController.getUserById(ctx))
-          .isInstanceOf(UserNotFoundException.class)
-          .hasMessage("User with id %s not found", nonExistingId);
+      userController.getUserById(ctx);
+      verify(ctx).status(404);
+
+      ErrorResponse expectedResponse =
+          new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND)
+              .detail("User with id " + nonExistingId + " not found");
+      ErrorResponse actualResponse = Helpers.capturedJsonAs(ctx, ErrorResponse.class);
+
+      assertThat(actualResponse).isEqualTo(expectedResponse);
     }
 
     @Test
@@ -85,9 +103,17 @@ public class UserControllerTest {
     @DisplayName("createUser: given an invalid property, then throw InvalidInputException")
     public void createUser_invalidProperty_throwsInvalidInputException() {
       UserCreateRequest request = new UserCreateRequest("John Doe", "mail.com", "abc");
-      stubBodyValidatorFor(ctx, UserCreateRequest.class).thenReturn(request);
+      CreateUserCommand command = request.toCommand();
+      when(ctx.bodyAsClass(UserCreateRequest.class)).thenReturn(request);
 
-      when(userService.createUser(request)).thenThrow(new InvalidInputException(""));
+      when(userService.createUser(command))
+          // o bien retorno esto y no valido nada mas, o bien retorno lo que retornaria realmente el
+          // service
+          .thenReturn(Result.failure(new ValidationNotification()));
+
+      userController.createUser(ctx);
+      verify(ctx).status(400);
+      // a partir de aca es donde se vienen cositas...
 
       assertThatThrownBy(() -> userController.createUser(ctx))
           .isInstanceOf(InvalidInputException.class);
@@ -134,7 +160,8 @@ public class UserControllerTest {
       stubPathParamId().thenReturn(validId);
       stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
 
-      when(userService.updateUserById(validId, request)).thenThrow(new InvalidInputException(""));
+      when(userService.updateUserById(validId, request.toCommand()))
+          .thenThrow(new InvalidInputException(""));
 
       assertThatThrownBy(() -> userController.updateUserById(ctx))
           .isInstanceOf(InvalidInputException.class);
@@ -148,7 +175,7 @@ public class UserControllerTest {
       stubPathParamId().thenReturn(nonExistingId);
       stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
 
-      when(userService.updateUserById(nonExistingId, request))
+      when(userService.updateUserById(nonExistingId, request.toCommand()))
           .thenThrow(new UserNotFoundException(nonExistingId));
 
       assertThatThrownBy(() -> userController.updateUserById(ctx))
@@ -181,10 +208,6 @@ public class UserControllerTest {
   @Nested
   @DisplayName("Success Scenarios")
   class SuccessScenarios {
-    @BeforeEach
-    void setUp() {
-      when(ctx.status(anyInt())).thenReturn(ctx);
-    }
 
     @Test
     @DisplayName("getAllUsers: given users exist, then return 200 and users as JSON")
@@ -197,15 +220,15 @@ public class UserControllerTest {
               new User(
                   1,
                   "John Doe",
-                  new Email("john.doe@example.com"),
-                  PasswordHash.generate("12345678", logRounds),
+                  Email.of("john.doe@example.com").getValue(),
+                  PasswordHash.generate("12345678", logRounds).getValue(),
                   instant,
                   instant),
               new User(
                   2,
                   "Jane Smith",
-                  new Email("jane.smith@example.com"),
-                  PasswordHash.generate("87654321", logRounds),
+                  Email.of("jane.smith@example.com").getValue(),
+                  PasswordHash.generate("87654321", logRounds).getValue(),
                   instant,
                   instant));
 
@@ -252,13 +275,13 @@ public class UserControllerTest {
           new User(
               id,
               "John Doe",
-              new Email("johndoe@gmail.com"),
-              PasswordHash.generate("12345678", logRounds),
+              Email.of("johndoe@gmail.com").getValue(),
+              PasswordHash.generate("12345678", logRounds).getValue(),
               instant,
               instant);
 
       stubPathParamId().thenReturn(id);
-      when(userService.getUserById(id)).thenReturn(fakeUser);
+      when(userService.getUserById(id)).thenReturn(Result.success(fakeUser));
 
       userController.getUserById(ctx);
 
@@ -281,14 +304,14 @@ public class UserControllerTest {
           new User(
               1,
               request.name(),
-              new Email(request.email()),
-              PasswordHash.generate(request.password(), logRounds),
+              Email.of(request.email()).getValue(),
+              PasswordHash.generate(request.password(), logRounds).getValue(),
               instant,
               instant);
 
       stubBodyValidatorFor(ctx, UserCreateRequest.class).thenReturn(request);
 
-      when(userService.createUser(request)).thenReturn(fakeUser);
+      when(userService.createUser(request.toCommand())).thenReturn(Result.success(fakeUser));
 
       userController.createUser(ctx);
 
@@ -314,14 +337,15 @@ public class UserControllerTest {
           new User(
               id,
               request.name(),
-              new Email(request.email()),
-              PasswordHash.generate(request.password(), logRounds),
+              Email.of(request.email()).getValue(),
+              PasswordHash.generate(request.password(), logRounds).getValue(),
               instant,
               instant);
 
       stubPathParamId().thenReturn(id);
       stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
-      when(userService.updateUserById(id, request)).thenReturn(fakeUser);
+      when(userService.updateUserById(id, request.toCommand()))
+          .thenReturn(Result.success(fakeUser));
 
       userController.updateUserById(ctx);
 

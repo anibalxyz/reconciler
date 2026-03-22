@@ -5,9 +5,14 @@ import com.anibalxyz.features.auth.application.exception.InvalidCredentialsExcep
 import com.anibalxyz.features.auth.application.in.LoginPayload;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.common.UnreachableException;
 import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
+import com.anibalxyz.features.common.domain.error.DomainError;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.error.InvalidEmailError;
+import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import java.time.*;
 import java.util.function.Supplier;
 
@@ -66,7 +71,19 @@ public class AuthService {
       enforceTimeWindow();
     }
     try {
-      User user = userService.getUserByEmail(payload.email());
+      Result<User, DomainError> userResult = userService.getUserByEmail(payload.email());
+      if (userResult.isFailure()) {
+        switch (userResult.getError()) {
+          case InvalidEmailError ignored ->
+              throw new InvalidCredentialsException(
+                  "Invalid Email (this should not function like this, this is temporary)");
+          case UserNotFoundError ignored ->
+              throw new InvalidCredentialsException("Invalid credentials");
+          default -> throw UnreachableException.of(userResult.getError());
+        }
+      }
+      User user = userResult.getValue();
+
       if (user.getPasswordHash().matches(payload.password())) {
         String accessToken = jwtService.generateToken(user.getId());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);

@@ -1,9 +1,8 @@
 package com.anibalxyz.features.users.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,12 +14,9 @@ public class EmailTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"valid@mail.com", "a@mail.uy", "vAl1d.e-mail@domain.ar"})
-  @DisplayName("constructor: given a valid email, then create an Email object")
-  public void constructor_validEmail_returnEmailObject(String validEmailString) {
-    assertDoesNotThrow(
-        () -> {
-          Email email = new Email(validEmailString);
-        });
+  @DisplayName("of: given a valid email, then return a successful Result")
+  public void of_validEmail_returnsSuccess(String validEmailString) {
+    assertThat(Email.of(validEmailString).isSuccess()).isTrue();
   }
 
   @ParameterizedTest
@@ -36,19 +32,20 @@ public class EmailTest {
         "email@example@com",
         "lengthGT255qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqw@mail.com"
       })
-  @DisplayName("constructor: given an invalid email format, then throw IllegalArgumentException")
-  public void constructor_invalidEmail_throwsIllegalArgumentException(String invalidEmailString) {
-    assertThatThrownBy(() -> new Email(invalidEmailString))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Invalid email format");
+  @DisplayName("of: given an invalid email, then return a failed Result with InvalidFormat reason")
+  public void of_invalidEmail_returnsFailureWithInvalidFormat(String invalidEmailString) {
+    var result = Email.of(invalidEmailString);
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError().getReason())
+        .isInstanceOf(InvalidEmailError.Reason.InvalidFormat.class);
   }
 
   @Test
   @DisplayName(
-      "constructor: given an email with uppercase letters, then return the email normalized to lowercase")
-  public void constructor_uppercaseEmail_returnNormalizedToLowerCaseEmail() {
+      "of: given an email with uppercase letters, then return the email normalized to lowercase")
+  public void of_uppercaseEmail_returnsNormalizedToLowerCase() {
     String uppercaseEmail = "ExampleEMAIL@Domain.COM";
-    Email email = new Email(uppercaseEmail);
+    Email email = Email.of(uppercaseEmail).getValue();
     assertThat(email.value()).isEqualTo(uppercaseEmail.toLowerCase());
   }
 }
