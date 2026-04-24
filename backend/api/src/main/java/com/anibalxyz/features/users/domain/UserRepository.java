@@ -42,10 +42,8 @@ public interface UserRepository {
    *
    * @param user The user to save.
    * @return The saved user, which will include a generated ID and timestamps.
-   * @throws IllegalArgumentException if the user object is invalid for saving (e.g., constraint
-   *     violation).
    */
-  User save(User user) throws IllegalArgumentException;
+  User save(User user);
 
   /**
    * Deletes a user by their unique ID.

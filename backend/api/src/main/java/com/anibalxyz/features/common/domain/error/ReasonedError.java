@@ -6,7 +6,7 @@ package com.anibalxyz.features.common.domain.error;
  * <p>Subclasses represent specific value violations (e.g., invalid email, invalid password) and
  * expose a typed {@code getReason()} method that describes why the value is invalid.
  */
-public abstract class ReasonedError<R extends DomainErrorReason> extends DomainError {
+public abstract class ReasonedError<R extends DomainErrorReason> implements DomainError {
   public R reason;
 
   protected ReasonedError(R reason) {

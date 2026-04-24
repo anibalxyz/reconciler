@@ -15,13 +15,29 @@ import com.anibalxyz.features.common.domain.error.ReasonedError;
  * }</pre>
  */
 public final class InvalidEmailError extends ReasonedError<InvalidEmailError.Reason>
-    implements UserDomainError {
+    implements UserDomainError.InvalidValueError {
 
   public sealed interface Reason extends DomainErrorReason {
     record InvalidFormat() implements Reason {}
+
+    record Blank() implements Reason {}
+
+    record Absent() implements Reason {}
   }
 
-  public InvalidEmailError(Reason reason) {
+  private InvalidEmailError(Reason reason) {
     super(reason);
+  }
+
+  public static InvalidEmailError invalidFormat() {
+    return new InvalidEmailError(new Reason.InvalidFormat());
+  }
+
+  public static InvalidEmailError blank() {
+    return new InvalidEmailError(new Reason.Blank());
+  }
+
+  public static InvalidEmailError absent() {
+    return new InvalidEmailError(new Reason.Absent());
   }
 }

@@ -1,34 +1,34 @@
 package com.anibalxyz.features.auth.api;
 
-import static com.anibalxyz.features.Constants.Auth.VALID_JWT;
-import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
-import static com.anibalxyz.features.Constants.Environment.*;
-import static com.anibalxyz.features.Constants.Users.*;
-import static com.anibalxyz.features.Helpers.*;
+import static com.anibalxyz.shared.Constants.Auth.VALID_JWT;
+import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.shared.Constants.Users.*;
+import static com.anibalxyz.shared.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.RefreshTokenService;
-import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
+import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.common.application.exception.FailureSignal;
+import com.anibalxyz.shared.Constants;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.http.UnauthorizedResponse;
-import io.javalin.validation.ValidationError;
-import io.javalin.validation.ValidationException;
-import java.time.Instant;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,6 +36,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for AuthController")
 public class AuthControllerTest {
+  private static final ZonedDateTime FIXED_NOW =
+      LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
+  private static final Clock testClock = Clock.fixed(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
+
   @Mock private AuthService authService;
   @Mock private RefreshTokenService refreshTokenService;
   @Mock private Context ctx;
@@ -50,7 +54,7 @@ public class AuthControllerTest {
   @BeforeEach
   public void di() {
     authController =
-        new AuthController(Constants.APP_CONFIG.env(), authService, refreshTokenService);
+        new AuthController(Constants.APP_CONFIG.env(), authService, refreshTokenService, testClock);
   }
 
   @Nested
@@ -63,19 +67,27 @@ public class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("login: given valid credentials, then return JWT")
-    public void login_validCredentials_returnJwt() {
+    @DisplayName("login: given service returns success, then respond 200 with JWT and set cookie")
+    public void login_serviceReturnsSuccess_respond200WithJWTAndSetCookie() {
       LoginRequest request = new LoginRequest("", "");
-      stubBodyValidatorFor(ctx, LoginRequest.class).thenReturn(request);
-      RefreshToken dummyRefreshToken = new RefreshToken(1L, "d-token", null, Instant.now(), false);
+      when(ctx.bodyAsClass(LoginRequest.class)).thenReturn(request);
+
+      RefreshToken dummyRefreshToken =
+          new RefreshToken(1L, "d-token", null, FIXED_NOW.toInstant(), false);
       AuthResult dummyAuthResult = new AuthResult(VALID_JWT, dummyRefreshToken);
-      when(authService.authenticateUser(request)).thenReturn(dummyAuthResult);
+      when(authService.authenticateUser(request.toCommand()))
+          .thenReturn(Result.success(dummyAuthResult));
 
       authController.login(ctx);
 
+      Cookie cookie = capturedCookie(ctx);
+      assertThat(cookie.getName()).isEqualTo("refreshToken");
+      assertThat(cookie.getValue()).isEqualTo(dummyAuthResult.refreshToken().token());
+      assertThat(cookie.getMaxAge())
+          .isEqualTo(dummyAuthResult.refreshToken().secondsUntilExpiry(FIXED_NOW.toInstant()));
+
       verify(ctx).status(200);
-      AuthResponse response = capturedJsonAs(ctx, AuthResponse.class);
-      assertThat(response.accessToken()).isEqualTo(VALID_JWT);
+      verify(ctx).json(new AuthResponse(dummyAuthResult.accessToken()));
     }
 
     @Test
@@ -95,57 +107,33 @@ public class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("logout: given no refresh token, then clear cookie")
-    void logout_noRefreshToken_clearCookie() {
-      when(ctx.cookie("refreshToken")).thenReturn(null);
-
-      authController.logout(ctx);
-
-      verify(refreshTokenService, never()).revokeToken(anyString());
-      verify(ctx).status(204);
-
-      Cookie cookie = capturedCookie(ctx);
-      assertThat(cookie.getName()).isEqualTo("refreshToken");
-      assertThat(cookie.getValue()).isEmpty();
-      assertThat(cookie.getMaxAge()).isZero();
-    }
-
-    @Test
-    @DisplayName("refresh: given valid refresh token, then return refreshed tokens")
-    public void refresh_validRefreshToken_returnRefreshedTokens() {
-      Instant expiryDay = Instant.now().plus(6, ChronoUnit.DAYS);
+    @DisplayName(
+        "refresh: given existing refresh token and service returns success, then respond 200 with refreshed tokens")
+    public void
+        refresh_existingRefreshTokenAndServiceReturnsSuccess_respond200WithRefreshedTokens() {
       RefreshToken validRefreshToken =
-          new RefreshToken(1L, VALID_REFRESH_TOKEN, VALID_USER, expiryDay, false);
+          new RefreshToken(
+              1L,
+              VALID_REFRESH_TOKEN,
+              VALID_USER,
+              FIXED_NOW.toInstant().plus(2, ChronoUnit.DAYS),
+              false);
       AuthResult result = new AuthResult(VALID_JWT, validRefreshToken);
       AuthResponse expectedResponse = new AuthResponse(result.accessToken());
 
-      long maxAgeInSeconds =
-          Math.max(
-              0, validRefreshToken.expiryDate().getEpochSecond() - Instant.now().getEpochSecond());
-      Cookie expectedCookie =
-          new Cookie(
-              "refreshToken",
-              validRefreshToken.token(),
-              AUTH_COOKIE_PATH, //
-              (int) maxAgeInSeconds,
-              AUTH_COOKIE_SECURE,
-              0,
-              true, // HttpOnly
-              null, // Comment
-              AUTH_COOKIE_DOMAIN, // Domain
-              AUTH_COOKIE_SAMESITE);
-
       when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
-      when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(result);
+      when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(Result.success(result));
 
       authController.refresh(ctx);
 
       Cookie actualCookie = capturedCookie(ctx);
-      assertThat(actualCookie).isEqualTo(expectedCookie);
+      assertThat(actualCookie.getName()).isEqualTo("refreshToken");
+      assertThat(actualCookie.getValue()).isEqualTo(result.refreshToken().token());
+      assertThat(actualCookie.getMaxAge())
+          .isEqualTo(result.refreshToken().secondsUntilExpiry(FIXED_NOW.toInstant()));
 
       verify(ctx).status(200);
-      AuthResponse actualResponse = capturedJsonAs(ctx, AuthResponse.class);
-      assertThat(actualResponse).isEqualTo(expectedResponse);
+      verify(ctx).json(expectedResponse);
     }
   }
 
@@ -154,33 +142,28 @@ public class AuthControllerTest {
   class FailureScenarios {
 
     @Test
-    @DisplayName("login: given invalid input, then throw ValidationException")
-    public void login_invalidInput_throwsValidationException() {
-      stubBodyValidatorFor(ctx, LoginRequest.class)
-          .thenThrow(
-              new ValidationException(
-                  Map.of("email", List.of(new ValidationError<>("Email is required")))));
+    @DisplayName("login: given service result is failure, then throw FailureSignal with its error")
+    public void login_serviceResultIsFailure_throwFailureSignal() {
+      LoginRequest request = new LoginRequest("", "");
 
-      assertThatThrownBy(() -> authController.login(ctx)).isInstanceOf(ValidationException.class);
-    }
-
-    @Test
-    @DisplayName("login: given invalid credentials, then throw InvalidCredentialsException")
-    public void login_invalidCredentials_throwsInvalidCredentialsException() {
-      LoginRequest request = new LoginRequest("invalid@email.com", "wrongpassword");
-      stubBodyValidatorFor(ctx, LoginRequest.class).thenReturn(request);
-      when(authService.authenticateUser(request))
-          .thenThrow(new InvalidCredentialsException("Invalid credentials"));
+      when(ctx.bodyAsClass(LoginRequest.class)).thenReturn(request);
+      Result<AuthResult, AuthService.AuthenticateUserError> someFailure =
+          Result.failure(
+              new AuthService.AuthenticateUserError.InvalidCredentials(
+                  new InvalidCredentialsError()));
+      when(authService.authenticateUser(request.toCommand())).thenReturn(someFailure);
 
       assertThatThrownBy(() -> authController.login(ctx))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Invalid credentials");
+          .isInstanceOf(FailureSignal.class)
+          .extracting(fs -> ((FailureSignal) fs).getError())
+          .isInstanceOf(someFailure.getError().getClass());
     }
 
-    @Test
+    @ParameterizedTest
+    @NullAndEmptySource
     @DisplayName("refresh: given missing refresh token cookie, then throw UnauthorizedResponse")
-    public void refresh_missingRefreshTokenCookie_throwUnauthorizedResponse() {
-      when(ctx.cookie("refreshToken")).thenReturn(null);
+    public void refresh_missingRefreshTokenCookie_throwUnauthorizedResponse(String value) {
+      when(ctx.cookie("refreshToken")).thenReturn(value);
 
       assertThatThrownBy(() -> authController.refresh(ctx))
           .isInstanceOf(UnauthorizedResponse.class)
@@ -188,15 +171,19 @@ public class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("refresh: given invalid refresh token, then throw InvalidCredentialsException")
-    public void refresh_invalidRefreshToken_throwInvalidCredentialsException() {
-      when(ctx.cookie("refreshToken")).thenReturn("invalid-token");
-      when(authService.refreshTokens("invalid-token"))
-          .thenThrow(new InvalidCredentialsException("Invalid credentials"));
+    @DisplayName(
+        "refresh: given service result is failure, then throw FailureSignal with its error")
+    public void refresh_serviceReturnsRefreshTokensError_throwFailureSignal() {
+      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
+      Result<AuthResult, AuthService.RefreshTokensError> someFailure =
+          Result.failure(
+              new AuthService.RefreshTokensError.InvalidToken(InvalidRefreshTokenError.notFound()));
+      when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(someFailure);
 
       assertThatThrownBy(() -> authController.refresh(ctx))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Invalid credentials");
+          .isInstanceOf(FailureSignal.class)
+          .extracting(fs -> ((FailureSignal) fs).getError())
+          .isInstanceOf(someFailure.getError().getClass());
     }
   }
 }

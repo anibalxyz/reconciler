@@ -1,4 +1,4 @@
-package com.anibalxyz.features;
+package com.anibalxyz.shared;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 

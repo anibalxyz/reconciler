@@ -1,7 +1,10 @@
 package com.anibalxyz.features.users.domain;
 
+import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
+import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.mindrot.jbcrypt.BCrypt;
@@ -16,25 +19,27 @@ import org.mindrot.jbcrypt.BCrypt;
  * <p>Plain-text passwords are validated and hashed via {@link #generate(String, int)}, which
  * returns a {@link Result} to allow callers to handle validation failures without catching
  * exceptions, enabling accumulation of multiple field errors.
- *
- * @param value The BCrypt hashed password string.
  */
-public record PasswordHash(String value) {
+public class PasswordHash {
+  // TODO: check if they are correct being public
   public static final int MIN_LENGTH = 8;
   public static final int MAX_LENGTH = 72;
+  // Could this vary in the future?
   private static final Pattern BCRYPT_PATTERN =
       Pattern.compile("\\A\\$2a\\$\\d\\d\\$[./0-9A-Za-z]{53}");
 
-  /**
-   * Compact constructor for the {@code PasswordHash} record. Validates that the provided value is a
-   * valid BCrypt hash, ensuring no invalid hash can exist.
-   *
-   * @throws IllegalArgumentException if the hash format is invalid
-   */
-  public PasswordHash {
-    if (!isValidHash(value)) {
-      throw new IllegalArgumentException("Invalid password hash format");
-    }
+  private final String value;
+
+  private PasswordHash(String value) {
+    this.value = value;
+  }
+
+  // Semantically this is an exceptional case (data should always be valid coming from DB),
+  // but returns Result to keep a consistent API with other value objects.
+  public static Result<PasswordHash, InvalidPasswordHashError> of(String hash) {
+    return isValidHash(hash)
+        ? Result.success(new PasswordHash(hash))
+        : Result.failure(new InvalidPasswordHashError());
   }
 
   /**
@@ -50,11 +55,19 @@ public record PasswordHash(String value) {
    *     an {@link InvalidPasswordError} if validation fails
    */
   public static Result<PasswordHash, InvalidPasswordError> generate(String raw, int saltRounds) {
-    if (raw == null || raw.isBlank()) return Result.failure(InvalidPasswordError.empty());
+    Result<Void, InvalidPasswordError> validationResult = validate(raw);
+    if (validationResult.isFailure()) return Result.failure(validationResult.getError());
+
+    return Result.success(new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(saltRounds))));
+  }
+
+  public static Result<Void, InvalidPasswordError> validate(String raw) {
+    if (raw == null) return Result.failure(InvalidPasswordError.absent());
+    if (raw.isBlank()) return Result.failure(InvalidPasswordError.blank());
     if (raw.length() < MIN_LENGTH) return Result.failure(InvalidPasswordError.tooShort(MIN_LENGTH));
     if (raw.length() > MAX_LENGTH) return Result.failure(InvalidPasswordError.tooLong(MAX_LENGTH));
 
-    return Result.success(new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(saltRounds))));
+    return Result.success(null);
   }
 
   /**
@@ -75,6 +88,24 @@ public record PasswordHash(String value) {
    */
   public boolean matches(String raw) {
     return BCrypt.checkpw(raw, value);
+  }
+
+  public String value() {
+    return value;
+  }
+
+  @Override
+  @ExcludeFromJacocoGenerated
+  public int hashCode() {
+    return Objects.hashCode(value);
+  }
+
+  @Override
+  @ExcludeFromJacocoGenerated
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof PasswordHash other)) return false;
+    return Objects.equals(value, other.value());
   }
 
   /**

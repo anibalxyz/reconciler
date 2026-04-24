@@ -1,6 +1,7 @@
 package com.anibalxyz.features.auth.application.env;
 
 import com.anibalxyz.features.auth.application.AuthService;
+import java.time.Duration;
 
 /**
  * Defines the contract for providing authentication-related environment configuration.
@@ -11,9 +12,9 @@ import com.anibalxyz.features.auth.application.AuthService;
  */
 public interface AuthEnvironment {
   /**
-   * Returns whether the authentication time-window feature is enabled.
+   * Returns the expiration time for refresh tokens.
    *
-   * @return {@code true} if the time-window is enabled, {@code false} otherwise.
+   * @return The refresh token expiration time.
    */
-  boolean AUTH_ENABLE_TIME_WINDOW();
+  Duration JWT_REFRESH_EXPIRATION_TIME_DAYS();
 }

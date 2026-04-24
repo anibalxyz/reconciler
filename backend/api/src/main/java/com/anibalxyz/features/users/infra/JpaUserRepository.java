@@ -93,7 +93,7 @@ public class JpaUserRepository implements UserRepository {
    */
   @Override
   @SuppressWarnings("resource")
-  public User save(User user) throws IllegalArgumentException {
+  public User save(User user) {
     UserEntity userEntity = em().merge(UserEntity.fromDomain(user));
     em().flush();
     return userEntity.toDomain();

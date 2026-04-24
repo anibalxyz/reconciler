@@ -1,12 +1,12 @@
-package com.anibalxyz.features;
+package com.anibalxyz.shared;
 
-import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
-import static com.anibalxyz.features.Constants.Users.VALID_PASSWORD;
+import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.users.domain.Email;
+import com.anibalxyz.features.users.domain.Name;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
@@ -39,13 +39,6 @@ public class Helpers {
    */
   @SuppressWarnings("unchecked")
   public static <T> OngoingStubbing<T> stubBodyValidatorFor(Context ctx, Class<T> clazz) {
-    BodyValidator<T> mockValidator = (BodyValidator<T>) mock(BodyValidator.class);
-    when(ctx.bodyValidator(clazz)).thenReturn(mockValidator);
-    when(mockValidator.check(any(), anyString())).thenReturn(mockValidator);
-    return when(mockValidator.get());
-  }
-
-  public static <T> OngoingStubbing<T> stubBodyAsClassFor(Context ctx, Class<T> clazz) {
     BodyValidator<T> mockValidator = (BodyValidator<T>) mock(BodyValidator.class);
     when(ctx.bodyValidator(clazz)).thenReturn(mockValidator);
     when(mockValidator.check(any(), anyString())).thenReturn(mockValidator);
@@ -131,13 +124,14 @@ public class Helpers {
         new JpaUserRepository(emp)
             .save(
                 new User(
-                    name,
+                    Name.of(name).getValue(),
                     Email.of(email).getValue(),
-                    PasswordHash.generate(password, BCRYPT_LOG_ROUNDS).getValue()));
+                    PasswordHash.generate(password, Constants.APP_ENV.BCRYPT_LOG_ROUNDS())
+                        .getValue()));
 
     em.getTransaction().commit();
 
-    UserEntity entity = em.find(UserEntity.class, saved.getId());
+    UserEntity entity = em.find(UserEntity.class, saved.id());
     em.refresh(entity);
     return entity;
   }

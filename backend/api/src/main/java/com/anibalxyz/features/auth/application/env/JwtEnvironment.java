@@ -14,15 +14,7 @@ import javax.crypto.SecretKey;
  */
 public interface JwtEnvironment {
   /**
-   * Returns the secret key used for signing and verifying JWT access tokens.
-   *
-   * @return The JWT secret key.
-   */
-  String JWT_SECRET();
-
-  /**
-   * Returns the {@link SecretKey} object used for signing and verifying JWT access tokens. This is
-   * derived from the {@link #JWT_SECRET()}.
+   * Returns the {@link SecretKey} object used for signing and verifying JWT access tokens.
    *
    * @return The JWT secret key object.
    */

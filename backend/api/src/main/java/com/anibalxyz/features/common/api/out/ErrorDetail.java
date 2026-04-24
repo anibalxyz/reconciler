@@ -84,6 +84,7 @@ public record ErrorDetail(String code, @JsonAnySetter Map<String, Object> extens
     return Collections.unmodifiableMap(extensions);
   }
 
+  // TODO: add common 'with' methods, e.g. withTitle()
   /**
    * Returns a new instance with the given key-value pair added to the extension fields.
    *

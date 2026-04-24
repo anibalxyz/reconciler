@@ -12,27 +12,33 @@ import com.anibalxyz.features.common.domain.error.ReasonedError;
  * switch (error.getReason()) {
  *     case TooShort r -> "Must be at least " + r.minLength() + " characters";
  *     case TooLong r  -> "Must be at most " + r.maxLength() + " characters";
- *     case Empty r    -> "Cannot be empty";
+ *     case Blank r    -> "Cannot be empty";
  * }
  * }</pre>
  */
 public final class InvalidPasswordError extends ReasonedError<InvalidPasswordError.Reason>
-    implements UserDomainError {
+    implements UserDomainError.InvalidValueError {
 
   public sealed interface Reason extends DomainErrorReason {
-    record Empty() implements Reason {}
+    record Blank() implements Reason {}
+
+    record Absent() implements Reason {}
 
     record TooShort(int minLength) implements Reason {}
 
     record TooLong(int maxLength) implements Reason {}
   }
 
-  public InvalidPasswordError(Reason reason) {
+  private InvalidPasswordError(Reason reason) {
     super(reason);
   }
 
-  public static InvalidPasswordError empty() {
-    return new InvalidPasswordError(new Reason.Empty());
+  public static InvalidPasswordError blank() {
+    return new InvalidPasswordError(new Reason.Blank());
+  }
+
+  public static InvalidPasswordError absent() {
+    return new InvalidPasswordError(new Reason.Absent());
   }
 
   public static InvalidPasswordError tooShort(int minLength) {

@@ -15,6 +15,7 @@ import io.javalin.Javalin;
  */
 public class AuthRoutes extends RouteRegistry {
   private final AuthApi authApi;
+  private final JwtMiddleware jwtMiddleware;
 
   /**
    * Constructs a new AuthRoutes instance.
@@ -22,9 +23,10 @@ public class AuthRoutes extends RouteRegistry {
    * @param server The Javalin server instance to which routes will be attached.
    * @param authApi The API implementation that will handle the requests.
    */
-  public AuthRoutes(Javalin server, AuthApi authApi) {
+  public AuthRoutes(Javalin server, AuthApi authApi, JwtMiddleware jwtMiddleware) {
     super(server);
     this.authApi = authApi;
+    this.jwtMiddleware = jwtMiddleware;
   }
 
   /** {@inheritDoc} */
@@ -34,5 +36,7 @@ public class AuthRoutes extends RouteRegistry {
         .post("/login", authApi::login)
         .post("/refresh", authApi::refresh)
         .post("/logout", authApi::logout);
+
+    jwtMiddleware.register();
   }
 }

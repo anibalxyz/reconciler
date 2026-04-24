@@ -1,227 +1,355 @@
 package com.anibalxyz.features.auth.application;
 
-import static com.anibalxyz.features.Constants.Auth.VALID_JWT;
-import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
-import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
-import static com.anibalxyz.features.Constants.Users.*;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static com.anibalxyz.shared.Constants.Auth.VALID_JWT;
+import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.shared.Constants.Users.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
-import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
-import com.anibalxyz.features.auth.application.in.LoginPayload;
+import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
+import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.common.Result;
-import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
+import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.users.application.UserService;
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.error.UserNotFoundError;
+import com.anibalxyz.shared.Constants;
 import java.time.*;
-import java.time.temporal.TemporalAdjusters;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
+import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for AuthService")
-public class AuthServiceTest {
+class AuthServiceTest {
+  private static final Instant FIXED_INSTANT = Instant.parse("2025-01-01T12:00:00Z");
+  private static final ZoneId ZONE = ZoneId.of("America/Montevideo");
+  private static final ZonedDateTime SATURDAY_MORNING =
+      LocalDateTime.of(2025, 12, 6, 8, 0).atZone(ZONE);
+  private static final Duration DURATION = Duration.ofDays(7);
+  private static final AuthEnvironmentStub env = new AuthEnvironmentStub(DURATION);
+  private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZONE);
+
   @Mock private UserService userService;
   @Mock private JwtService jwtService;
   @Mock private RefreshTokenService refreshTokenService;
-  @Mock private AuthEnvironment authEnvironment;
-  @Mock private Supplier<ZonedDateTime> clock;
-
-  @InjectMocks private AuthService authService;
-
-  private static LoginPayload createPayload(String email, String password) {
-    return new LoginPayload() {
-      @Override
-      public String email() {
-        return email;
-      }
-
-      @Override
-      public String password() {
-        return password;
-      }
-    };
-  }
+  private AuthService authService;
 
   @BeforeAll
-  public static void init() {
+  static void init() {
     Constants.init();
   }
 
-  private ZonedDateTime next(DayOfWeek day, int hour, int minute) {
-    return ZonedDateTime.now(ZoneId.of("America/Montevideo"))
-        .with(TemporalAdjusters.nextOrSame(day))
-        .with(LocalTime.of(hour, minute));
+  @BeforeEach
+  void di() {
+    authService = new AuthService(env, clock, userService, jwtService, refreshTokenService);
   }
 
-  @Nested
-  @DisplayName("Success Scenarios")
-  class SuccessScenarios {
-    static Stream<Arguments> authSuccessScenarios() {
-      return Stream.of(
-          Arguments.of(
-              false, DayOfWeek.THURSDAY, 20, 45), // disabled window -> time does not matter
-          Arguments.of(true, DayOfWeek.THURSDAY, 20, 45), // enabled window -> normal day
-          Arguments.of(true, DayOfWeek.FRIDAY, 19, 59), // edge case -> just before window ending
-          Arguments.of(true, DayOfWeek.MONDAY, 8, 0) // edge case -> just after window starting
-          );
-    }
-
-    @ParameterizedTest
-    @MethodSource("authSuccessScenarios")
-    @DisplayName("authenticateUser: given valid credentials, then return AuthResult")
-    public void authenticateUser_validCredentials_returnAuthResult(
-        boolean useWindow, DayOfWeek day, int hour, int minute) {
-
-      LoginPayload payload = createPayload(VALID_EMAIL, VALID_PASSWORD);
-      Instant now = Instant.now();
-      User user =
-          new User(
-              1,
-              "Name",
-              Email.of(payload.email()).getValue(),
-              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS).getValue(),
-              now,
-              now);
-
-      when(authEnvironment.AUTH_ENABLE_TIME_WINDOW()).thenReturn(useWindow);
-      if (useWindow) when(clock.get()).thenReturn(next(day, hour, minute));
-      when(userService.getUserByEmail(VALID_EMAIL)).thenReturn(Result.success(user));
-      when(jwtService.generateToken(anyInt())).thenReturn(VALID_JWT);
-      when(refreshTokenService.createRefreshToken(any(User.class)))
-          .thenReturn(
-              new RefreshToken(1L, "dummy-token", user, Instant.now().plusSeconds(1000), false));
-
-      assertDoesNotThrow(
-          () -> {
-            AuthResult authResult = authService.authenticateUser(payload);
-            assertNotNull(authResult.accessToken());
-            assertNotNull(authResult.refreshToken());
-            assertEquals(VALID_JWT, authResult.accessToken());
-          });
-    }
-
-    @ParameterizedTest
-    @MethodSource("authSuccessScenarios")
-    @DisplayName("refreshTokens: given valid refresh token string, then return AuthResult")
-    public void refreshTokens_validRefreshTokenString_returnAuthResult(
-        boolean useWindow, DayOfWeek day, int hour, int minute) {
-
-      RefreshToken newRefreshToken =
-          new RefreshToken(
-              1L, VALID_REFRESH_TOKEN, VALID_USER, Instant.now().plusSeconds(1000), false);
-      AuthResult expectedResult = new AuthResult(VALID_JWT, newRefreshToken);
-
-      when(authEnvironment.AUTH_ENABLE_TIME_WINDOW()).thenReturn(useWindow);
-      if (useWindow) when(clock.get()).thenReturn(next(day, hour, minute));
-      when(refreshTokenService.verifyAndRotate(VALID_REFRESH_TOKEN)).thenReturn(newRefreshToken);
-      when(jwtService.generateToken(VALID_USER.getId())).thenReturn(VALID_JWT);
-
-      AuthResult actualResult = authService.refreshTokens(VALID_REFRESH_TOKEN);
-
-      assertEquals(expectedResult, actualResult);
-    }
+  private RefreshToken buildRefreshToken(Instant expiryDate, boolean revoked) {
+    return new RefreshToken(1L, VALID_REFRESH_TOKEN, VALID_USER, expiryDate, revoked);
   }
 
+  private record AuthEnvironmentStub(Duration JWT_REFRESH_EXPIRATION_TIME_DAYS)
+      implements AuthEnvironment {}
+
   @Nested
-  @DisplayName("Failure Scenarios")
-  class FailureScenarios {
+  @DisplayName("Tests for Expiry Policy logic")
+  class TokenExpiryPolicy {
+    @Test
+    @DisplayName("calculateExpiryDate: given expiry before Friday 20:00, then return normal expiry")
+    void calculateExpiryDate_expiryBeforeFriday_returnNormal() {
+      // Monday, April 20, 10:00 AM
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 20, 10, 0, 0, 0, ZONE);
+      Duration exp = Duration.ofDays(2);
 
-    static Stream<Arguments> blockedTimeScenarios() {
-      return Stream.of(
-          Arguments.of(DayOfWeek.FRIDAY, 20, 1), // just after window starting
-          Arguments.of(DayOfWeek.FRIDAY, 23, 59),
-          Arguments.of(DayOfWeek.SATURDAY, 0, 0),
-          Arguments.of(DayOfWeek.SATURDAY, 12, 0),
-          Arguments.of(DayOfWeek.SUNDAY, 0, 0),
-          Arguments.of(DayOfWeek.SUNDAY, 23, 59),
-          Arguments.of(DayOfWeek.MONDAY, 0, 0),
-          Arguments.of(DayOfWeek.MONDAY, 7, 59) // just before window ending
-          );
-    }
+      Instant result = AuthService.calculateExpiryDate(now, exp);
 
-    @BeforeEach
-    public void setup() {
-      when(authEnvironment.AUTH_ENABLE_TIME_WINDOW()).thenReturn(true);
-      // by default, assume it is within a valid time window, so can test specific cases separately
-      when(clock.get()).thenReturn(next(DayOfWeek.THURSDAY, 20, 45));
+      assertThat(result).isEqualTo(now.plus(exp).toInstant());
     }
 
     @Test
-    @DisplayName("authenticateUser: given invalid password, then throw InvalidCredentialsException")
-    public void authenticateUser_invalidPassword_throwAuthenticationException() {
-      LoginPayload payload = createPayload(VALID_EMAIL, VALID_PASSWORD);
-      Instant now = Instant.now();
+    @DisplayName("calculateExpiryDate: given expiry after Friday 20:00, then cap at Friday 20:00")
+    void calculateExpiryDate_expiryAfterFriday_capAtFriday() {
+      // Monday, April 20, 10:00 AM
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 20, 10, 0, 0, 0, ZONE);
+      Duration exp = Duration.ofDays(8); // Would expire next week (after next Friday)
 
-      when(userService.getUserByEmail(VALID_EMAIL))
-          .thenReturn(
-              Result.success(
-                  new User(
-                      1,
-                      "Name",
-                      Email.of(payload.email()).getValue(),
-                      PasswordHash.generate(
-                              payload.password() + "makeItDifferent", BCRYPT_LOG_ROUNDS)
-                          .getValue(),
-                      now,
-                      now)));
+      Instant expected = ZonedDateTime.of(2026, 4, 24, 20, 0, 0, 0, ZONE).toInstant();
 
-      assertThatThrownBy(() -> authService.authenticateUser(payload))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Invalid credentials");
-    }
+      Instant result = AuthService.calculateExpiryDate(now, exp);
 
-    @Test
-    @DisplayName("authenticateUser: given invalid email, then throw InvalidCredentialsException")
-    public void authenticateUser_invalidEmail_throwAuthenticationException() {
-      LoginPayload payload = createPayload(VALID_EMAIL, VALID_PASSWORD);
-
-      when(userService.getUserByEmail(payload.email())).thenThrow(ResourceNotFoundException.class);
-
-      assertThatThrownBy(() -> authService.authenticateUser(payload))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Invalid credentials");
+      assertThat(result).isEqualTo(expected);
     }
 
     @Test
     @DisplayName(
-        "refreshTokes: given invalid or missing refresh token string, then throw InvalidCredentialsException")
-    public void refreshTokes_invalidOrMissingRefreshTokenString_throwInvalidCredentialsException() {
-      when(refreshTokenService.verifyAndRotate(null)).thenThrow(InvalidCredentialsException.class);
-      assertThatThrownBy(() -> authService.refreshTokens(null))
-          .isInstanceOf(InvalidCredentialsException.class);
+        "calculateExpiryDate: given now is Friday after 20:00, then return Friday 20:00 (past)")
+    void calculateExpiryDate_nowIsLateFriday_returnPastLimit() {
+      // Friday, April 24, 20:00 (The deadline has passed)
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 24, 22, 0, 0, 0, ZONE);
+      Duration exp = Duration.ofHours(5);
+
+      // nextOrSame(FRIDAY) returns TODAY. By setting it to 20:00, the result is the past.
+      Instant expected = ZonedDateTime.of(2026, 4, 24, 20, 0, 0, 0, ZONE).toInstant();
+
+      Instant result = AuthService.calculateExpiryDate(now, exp);
+
+      assertThat(result).isEqualTo(expected);
+      assertThat(result).isBefore(now.toInstant());
     }
 
+    @Test
+    @DisplayName(
+        "calculateExpiryDate: given now is exactly Friday 20:00, then return that same instant")
+    void calculateExpiryDate_exactlyAtLimit_returnSameInstant() {
+      ZonedDateTime limit = ZonedDateTime.of(2026, 4, 24, 20, 0, 0, 0, ZONE);
+      Duration exp = Duration.ofDays(1);
+
+      Instant result = AuthService.calculateExpiryDate(limit, exp);
+
+      assertThat(result).isEqualTo(limit.toInstant());
+    }
+  }
+
+  @Nested
+  @DisplayName("Tests for System Access Policy logic")
+  class SystemAccessPolicy {
+
+    @Test
+    @DisplayName("blockedUntil: given now is a valid weekday, then return empty")
+    void blockedUntil_weekday_returnEmpty() {
+      // Tuesday 10:00
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 21, 10, 0, 0, 0, ZONE);
+
+      assertThat(AuthService.blockedUntil(now)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("blockedUntil: exactly Friday 20:00 should still be open (empty)")
+    void blockedUntil_exactlyFriday20pm_returnEmpty() {
+      // Friday 20:00
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 24, 20, 0, 0, 0, ZONE);
+      assertThat(AuthService.blockedUntil(now)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("blockedUntil: given now is Friday 20:01, then return next Monday 08:00")
+    void blockedUntil_fridayAfter20pm_returnNextMonday() {
+      // Friday 20:01
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 24, 20, 1, 0, 0, ZONE);
+      Instant expected = ZonedDateTime.of(2026, 4, 27, 8, 0, 0, 0, ZONE).toInstant();
+
+      assertThat(AuthService.blockedUntil(now)).contains(expected);
+    }
+
+    @Test
+    @DisplayName("blockedUntil: given now is a Sunday, then return next Monday 08:00")
+    void blockedUntil_sunday_returnNextMonday() {
+      // Sunday 15:00
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 26, 15, 0, 0, 0, ZONE);
+      Instant expected = ZonedDateTime.of(2026, 4, 27, 8, 0, 0, 0, ZONE).toInstant();
+
+      assertThat(AuthService.blockedUntil(now)).contains(expected);
+    }
+
+    @Test
+    @DisplayName("blockedUntil: given now is a Saturday, then return next Monday 08:00")
+    void blockedUntil_saturday_returnNextMonday() {
+      // Saturday 15:00
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 25, 15, 0, 0, 0, ZONE);
+      Instant expected = ZonedDateTime.of(2026, 4, 27, 8, 0, 0, 0, ZONE).toInstant();
+
+      assertThat(AuthService.blockedUntil(now)).contains(expected);
+    }
+
+    @Test
+    @DisplayName("blockedUntil: given now is Monday before 08:00, then return next Monday 08:00")
+    void blockedUntil_mondayBefore8am_returnNextMonday() {
+      // Monday 07:59
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 27, 7, 59, 0, 0, ZONE);
+      Instant expected = ZonedDateTime.of(2026, 4, 27, 8, 0, 0, 0, ZONE).toInstant();
+
+      assertThat(AuthService.blockedUntil(now)).contains(expected);
+    }
+
+    @Test
+    @DisplayName("blockedUntil: exactly Monday 08:00 should be open (empty)")
+    void blockedUntil_exactlyMonday08am_returnEmpty() {
+      // Monday 08:00
+      ZonedDateTime now = ZonedDateTime.of(2026, 4, 27, 8, 0, 0, 0, ZONE);
+      assertThat(AuthService.blockedUntil(now)).isEmpty();
+    }
+  }
+
+  @Nested
+  @DisplayName("Tests for authenticateUsers()")
+  class authenticateUser {
     @ParameterizedTest
-    @MethodSource("blockedTimeScenarios")
-    @DisplayName("authenticateUser: outside time window, then throw InvalidCredentialsException")
-    public void authenticateUser_outsideWindow_throwInvalidCredentialsException(
-        DayOfWeek day, int hour, int minute) {
-      when(authEnvironment.AUTH_ENABLE_TIME_WINDOW()).thenReturn(true);
-      when(clock.get()).thenReturn(next(day, hour, minute));
+    @ValueSource(strings = {"password", "email"})
+    @DisplayName("given there is a field error, then return ValidationFailed error")
+    void fieldError_returnValidationFailed(String field) {
+      String email = field.equals("email") ? " " : VALID_EMAIL;
+      String password = field.equals("password") ? " " : VALID_PASSWORD;
+      LoginCommand command = new LoginCommand(email, password);
 
-      LoginPayload payload = createPayload(VALID_EMAIL, VALID_PASSWORD);
+      var result = authService.authenticateUser(command);
 
-      assertThatThrownBy(() -> authService.authenticateUser(payload))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Refresh is disabled during maintenance window");
+      var validationFailedClass = AuthService.AuthenticateUserError.ValidationFailed.class;
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError()).isInstanceOf(validationFailedClass);
+
+      var errors = validationFailedClass.cast(result.getError()).notification().getErrors();
+      assertThat(errors.size()).isEqualTo(1);
+      assertThat(errors.getFirst().field()).isEqualTo(field);
+    }
+
+    @Test
+    @DisplayName("given there are field errors, then return ValidationFailed error")
+    void fieldErrors_returnValidationFailed() {
+      LoginCommand command = new LoginCommand(" ", " ");
+
+      var result = authService.authenticateUser(command);
+
+      var validationFailedClass = AuthService.AuthenticateUserError.ValidationFailed.class;
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError()).isInstanceOf(validationFailedClass);
+
+      var errors = validationFailedClass.cast(result.getError()).notification().getErrors();
+      assertThat(errors.size()).isEqualTo(2);
+      assertThat(errors)
+          .extracting(ValidationNotification.ErrorEntry::field)
+          .containsExactlyInAnyOrder("email", "password");
+    }
+
+    @Test
+    @DisplayName("given valid command but outside time window, then return MaintenanceWindow error")
+    void validCommandOutsideWindow_returnMaintenanceWindow() {
+      LoginCommand command = new LoginCommand(VALID_EMAIL, VALID_PASSWORD);
+
+      Clock clockOutsideWindow =
+          Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
+      var serviceOutsideWindow =
+          new AuthService(env, clockOutsideWindow, userService, jwtService, refreshTokenService);
+
+      var result = serviceOutsideWindow.authenticateUser(command);
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(AuthService.AuthenticateUserError.MaintenanceWindow.class);
+    }
+
+    @Test
+    @DisplayName("given user not found, then return InvalidCredentials error")
+    void userByEmailNotFound_returnInvalidCredentials() {
+      LoginCommand command = new LoginCommand(VALID_EMAIL, VALID_PASSWORD);
+      var expectedError =
+          new AuthService.AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError());
+
+      when(userService.getUserByEmail(command.email()))
+          .thenReturn(Result.failure(UserNotFoundError.byEmail(VALID_EMAIL)));
+
+      var result = authService.authenticateUser(command);
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError()).isEqualTo(expectedError);
+    }
+
+    @Test
+    @DisplayName("given password is incorrect, then return InvalidCredentials error")
+    void passwordIsIncorrect_returnInvalidCredentials() {
+      User user = VALID_USER; // its password equals VALID_PASSWORD
+      String differentPassword = VALID_PASSWORD + "makeItDifferent";
+      LoginCommand command = new LoginCommand(user.email().value(), differentPassword);
+      var expectedError =
+          new AuthService.AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError());
+
+      when(userService.getUserByEmail(command.email())).thenReturn(Result.success(user));
+
+      var result = authService.authenticateUser(command);
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError()).isEqualTo(expectedError);
+    }
+
+    @Test
+    @DisplayName("given valid command, then return AuthResult")
+    void validCommand_returnAuthResult() {
+      User user = VALID_USER; // its password equals VALID_PASSWORD
+      LoginCommand command = new LoginCommand(VALID_EMAIL, VALID_PASSWORD);
+      Instant expiryDate = AuthService.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
+      RefreshToken refreshToken = buildRefreshToken(expiryDate, false);
+      AuthResult expectedResult = new AuthResult(VALID_JWT, refreshToken);
+
+      when(userService.getUserByEmail(command.email())).thenReturn(Result.success(user));
+      when(jwtService.generateToken(user.id())).thenReturn(expectedResult.accessToken());
+      when(refreshTokenService.createRefreshToken(user, expiryDate))
+          .thenReturn(expectedResult.refreshToken());
+
+      var result = authService.authenticateUser(command);
+      assertThat(result.isSuccess()).isTrue();
+      assertThat(result.getValue()).isEqualTo(expectedResult);
+    }
+  }
+
+  @Nested
+  @DisplayName("Tests for refreshTokens()")
+  class refreshTokens {
+
+    @Test
+    @DisplayName("given valid command but outside time window, then return MaintenanceWindow error")
+    void validCommandOutsideWindow_returnMaintenanceWindow() {
+      Clock clockOutsideWindow =
+          Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
+      var serviceOutsideWindow =
+          new AuthService(env, clockOutsideWindow, userService, jwtService, refreshTokenService);
+
+      var result = serviceOutsideWindow.refreshTokens(VALID_REFRESH_TOKEN);
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(AuthService.RefreshTokensError.MaintenanceWindow.class);
+    }
+
+    @Test
+    @DisplayName("given refresh token rotation failed, then return InvalidToken error")
+    void refreshTokenRotationFailed_returnInvalidToken() {
+      var expiryDate = AuthService.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
+      var error = InvalidRefreshTokenError.notFound();
+      when(refreshTokenService.verifyAndRotate(VALID_REFRESH_TOKEN, clock.instant(), expiryDate))
+          .thenReturn(Result.failure(error));
+
+      var result = authService.refreshTokens(VALID_REFRESH_TOKEN);
+      var invalidTokenClass = AuthService.RefreshTokensError.InvalidToken.class;
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(invalidTokenClass)
+          .extracting(e -> invalidTokenClass.cast(e).error())
+          .isEqualTo(error);
+    }
+
+    @Test
+    @DisplayName("given refresh token rotation failed, then return InvalidToken error")
+    void validRefreshToken_returnAuthResult() {
+      var expiryDate = AuthService.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
+      RefreshToken currentRefreshToken =
+          buildRefreshToken(clock.instant().plus(1, ChronoUnit.DAYS), false);
+      RefreshToken expectedRefreshToken = buildRefreshToken(expiryDate, false);
+
+      when(refreshTokenService.verifyAndRotate(
+              currentRefreshToken.token(), clock.instant(), expiryDate))
+          .thenReturn(Result.success(expectedRefreshToken));
+      when(jwtService.generateToken(expectedRefreshToken.user().id())).thenReturn(VALID_JWT);
+
+      var result = authService.refreshTokens(currentRefreshToken.token());
+      assertThat(result.isSuccess()).isTrue();
+
+      AuthResult authResult = result.getValue();
+      assertThat(authResult.accessToken()).isEqualTo(VALID_JWT);
+      assertThat(authResult.refreshToken()).isEqualTo(expectedRefreshToken);
     }
   }
 }

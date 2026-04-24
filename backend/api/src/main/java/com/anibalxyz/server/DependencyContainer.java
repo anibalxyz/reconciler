@@ -17,9 +17,7 @@ import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import io.javalin.Javalin;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.function.Supplier;
+import java.time.Clock;
 
 /**
  * A manual dependency injection container for the application.
@@ -52,24 +50,21 @@ public class DependencyContainer {
       Javalin server,
       AppEnvironmentSource env,
       EntityManagerProvider emProvider,
-      PersistenceManager persistenceManager) {
+      PersistenceManager persistenceManager,
+      Clock clock) {
     this.server = server;
     UserRepository userRepository = new JpaUserRepository(emProvider);
     UserService userService = new UserService(env, userRepository);
     userController = new UserController(userService);
 
-    // TODO: change the fixed ZoneId when adapted to multi-tenant it will probably be a SQL query to
-    //       a config table, so this will be changed by an internal repository call
-    Supplier<ZonedDateTime> clock = () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
-
     RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
-    refreshTokenService = new RefreshTokenService(env, refreshTokenRepository, clock);
+    refreshTokenService = new RefreshTokenService(refreshTokenRepository);
 
-    JwtService jwtService = new JwtService(env);
+    JwtService jwtService = new JwtService(env, clock);
     AuthService authService =
-        new AuthService(env, userService, jwtService, refreshTokenService, clock);
-    authController = new AuthController(env, authService, refreshTokenService);
-    jwtMiddleware = new JwtMiddleware(jwtService);
+        new AuthService(env, clock, userService, jwtService, refreshTokenService);
+    authController = new AuthController(env, authService, refreshTokenService, clock);
+    jwtMiddleware = new JwtMiddleware(server, jwtService);
 
     systemController = new SystemController(persistenceManager);
   }

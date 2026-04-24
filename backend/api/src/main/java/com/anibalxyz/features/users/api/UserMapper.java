@@ -27,11 +27,7 @@ public class UserMapper {
    */
   public static UserDetailResponse toDetailResponse(User user) {
     return new UserDetailResponse(
-        user.getId(),
-        user.getName(),
-        user.getEmail().value(),
-        user.getCreatedAt(),
-        user.getUpdatedAt());
+        user.id(), user.name().value(), user.email().value(), user.createdAt(), user.updatedAt());
   }
 
   /**
@@ -42,6 +38,6 @@ public class UserMapper {
    * @return A {@link UserCreateResponse} containing essential details of the new user.
    */
   public static UserCreateResponse toCreateResponse(User user) {
-    return new UserCreateResponse(user.getId(), user.getName(), user.getEmail().value());
+    return new UserCreateResponse(user.id(), user.name().value(), user.email().value());
   }
 }

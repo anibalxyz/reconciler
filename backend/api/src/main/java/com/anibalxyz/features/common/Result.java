@@ -3,7 +3,7 @@ package com.anibalxyz.features.common;
 /**
  * Represents the result of an operation that can either succeed or fail.
  *
- * <p>A {@code Result} holds either a value (on success) or an error (on failure), but never both.
+ * <p>A {@code Result} holds either a value (on success) or an error (on error), but never both.
  * This avoids using exceptions for flow control, allowing callers to handle multiple potential
  * failures without short-circuiting on the first one.
  *
@@ -24,6 +24,8 @@ package com.anibalxyz.features.common;
  */
 public final class Result<V, E> {
 
+  // TODO: migrate to Success and Error|Failure subclasses API
+  // TODO: implement unfold method
   private final V value;
   private final E error;
 
@@ -37,7 +39,7 @@ public final class Result<V, E> {
    *
    * @param value the success value
    * @param <V> the type of the success value
-   * @param <E> the type of the failure error
+   * @param <E> the type of the error error
    * @return a successful {@code Result}
    */
   public static <V, E> Result<V, E> success(V value) {
@@ -47,9 +49,9 @@ public final class Result<V, E> {
   /**
    * Creates a failed {@code Result} with the given error.
    *
-   * @param error the failure error
+   * @param error the error error
    * @param <V> the type of the success value
-   * @param <E> the type of the failure error
+   * @param <E> the type of the error error
    * @return a failed {@code Result}
    */
   public static <V, E> Result<V, E> failure(E error) {
@@ -66,7 +68,7 @@ public final class Result<V, E> {
   }
 
   /**
-   * Returns {@code true} if this result represents a failure.
+   * Returns {@code true} if this result represents a error.
    *
    * @return {@code true} if failed
    */
@@ -75,7 +77,7 @@ public final class Result<V, E> {
   }
 
   /**
-   * Returns the success value, or {@code null} if this result is a failure.
+   * Returns the success value, or {@code null} if this result is a error.
    *
    * <p>Always check {@link #isSuccess()} before calling this method.
    *
@@ -86,11 +88,11 @@ public final class Result<V, E> {
   }
 
   /**
-   * Returns the failure error, or {@code null} if this result is a success.
+   * Returns the error error, or {@code null} if this result is a success.
    *
    * <p>Always check {@link #isFailure()} before calling this method.
    *
-   * @return the failure error, or {@code null}
+   * @return the error error, or {@code null}
    */
   public E getError() {
     return error;

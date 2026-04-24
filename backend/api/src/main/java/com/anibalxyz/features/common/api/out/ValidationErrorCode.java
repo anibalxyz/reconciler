@@ -9,14 +9,14 @@ package com.anibalxyz.features.common.api.out;
  * <p>Frontends must use the {@code code} value for localized user-facing messages.
  */
 public enum ValidationErrorCode implements ErrorCode {
+  // TODO: check hierarchy management
   VALIDATION_ERROR("There was one or more validation errors"),
   REQUIRED_FIELD("This field is required"),
   BLANK_FIELD("This field cannot be blank"),
   CONFLICT_FIELD("This value is already in use"),
-  INVALID_EMAIL_FORMAT("Invalid email format"),
-  INVALID_PASSWORD_EMPTY("Password cannot be empty"),
-  INVALID_PASSWORD_TOO_SHORT("Password too short"),
-  INVALID_PASSWORD_TOO_LONG("Password too long");
+  INVALID_FIELD_FORMAT("Invalid field format"),
+  TOO_SHORT("This field is too short"),
+  TOO_LONG("This field is too long");
 
   private final String title;
 

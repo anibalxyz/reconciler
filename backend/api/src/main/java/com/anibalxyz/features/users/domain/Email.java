@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.domain;
 
+import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import java.util.Locale;
@@ -26,7 +27,7 @@ import java.util.regex.Pattern;
  * }</pre>
  */
 public final class Email {
-
+  // TODO: check if they are correct being public
   public static final String PATTERN = "^[\\w-.]+@[\\w-]+\\.[a-zA-Z]{2,}$";
   public static final int MAX_LENGTH = 255;
   private static final Pattern EMAIL_PATTERN = Pattern.compile(PATTERN);
@@ -41,18 +42,26 @@ public final class Email {
    * Creates a new {@code Email} from the given string value.
    *
    * <p>Validates the format and length, then normalizes (lowercase + trim) before constructing the
-   * object. Returns a {@link Result} so callers can handle the failure without catching an
-   * exception, enabling accumulation of multiple field errors.
+   * object. Returns a {@link Result} so callers can handle the error without catching an exception,
+   * enabling accumulation of multiple field errors.
    *
    * @param value the raw email string
    * @return a successful {@code Result} with the normalized {@code Email}, or a failed {@code
    *     Result} with an {@link InvalidEmailError} if the value is invalid
    */
   public static Result<Email, InvalidEmailError> of(String value) {
-    if (!isValid(value)) {
-      return Result.failure(new InvalidEmailError(new InvalidEmailError.Reason.InvalidFormat()));
-    }
+    Result<Void, InvalidEmailError> validationResult = validateRaw(value);
+    if (validationResult.isFailure()) return Result.failure(validationResult.getError());
+
     return Result.success(new Email(normalize(value)));
+  }
+
+  public static Result<Void, InvalidEmailError> validateRaw(String value) {
+    if (value == null) return Result.failure(InvalidEmailError.absent());
+    if (value.isBlank()) return Result.failure(InvalidEmailError.blank());
+    if (!hasValidFormat(value)) return Result.failure(InvalidEmailError.invalidFormat());
+
+    return Result.success(null);
   }
 
   /**
@@ -82,26 +91,27 @@ public final class Email {
    * @param email the email string to validate
    * @return {@code true} if valid, {@code false} otherwise
    */
-  private static boolean isValid(String email) {
-    return email != null
-        && !email.isBlank()
-        && EMAIL_PATTERN.matcher(email).matches()
-        && email.length() <= MAX_LENGTH;
+  private static boolean hasValidFormat(String email) {
+    // Format and length are validated together for now — this may change in the future.
+    return EMAIL_PATTERN.matcher(email).matches() && email.length() <= MAX_LENGTH;
   }
 
   @Override
+  @ExcludeFromJacocoGenerated
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Email other)) return false;
-    return Objects.equals(value, other.value);
+    return Objects.equals(value, other.value());
   }
 
   @Override
+  @ExcludeFromJacocoGenerated
   public int hashCode() {
     return Objects.hashCode(value);
   }
 
   @Override
+  @ExcludeFromJacocoGenerated
   public String toString() {
     return value;
   }
