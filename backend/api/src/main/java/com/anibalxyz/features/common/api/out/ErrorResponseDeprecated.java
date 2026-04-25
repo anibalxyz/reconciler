@@ -15,5 +15,4 @@ import java.util.List;
  */
 @ExcludeFromJacocoGenerated(
     reason = "Deprecated: will be deleted once OpenAPI docs are updated as they still use this")
-public record ErrorResponseDeprecated(String error, List<String> details) {
-}
+public record ErrorResponseDeprecated(String error, List<String> details) {}

@@ -19,16 +19,6 @@ import com.anibalxyz.features.common.domain.error.ReasonedError;
 public final class InvalidPasswordError extends ReasonedError<InvalidPasswordError.Reason>
     implements UserDomainError.InvalidValueError {
 
-  public sealed interface Reason extends DomainErrorReason {
-    record Blank() implements Reason {}
-
-    record Absent() implements Reason {}
-
-    record TooShort(int minLength) implements Reason {}
-
-    record TooLong(int maxLength) implements Reason {}
-  }
-
   private InvalidPasswordError(Reason reason) {
     super(reason);
   }
@@ -47,5 +37,15 @@ public final class InvalidPasswordError extends ReasonedError<InvalidPasswordErr
 
   public static InvalidPasswordError tooLong(int maxLength) {
     return new InvalidPasswordError(new Reason.TooLong(maxLength));
+  }
+
+  public sealed interface Reason extends DomainErrorReason {
+    record Blank() implements Reason {}
+
+    record Absent() implements Reason {}
+
+    record TooShort(int minLength) implements Reason {}
+
+    record TooLong(int maxLength) implements Reason {}
   }
 }

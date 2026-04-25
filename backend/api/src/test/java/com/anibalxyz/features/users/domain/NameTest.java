@@ -22,7 +22,7 @@ public class NameTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {""," "})
+  @ValueSource(strings = {"", " "})
   @DisplayName("of: given a blank name, then return a failed Result with Blank reason")
   public void of_blankName_returnFailureWithBlank(String blank) {
     Result<Name, InvalidNameError> result = Name.of(blank);

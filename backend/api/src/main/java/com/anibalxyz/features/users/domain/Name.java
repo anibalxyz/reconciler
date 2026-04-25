@@ -32,16 +32,16 @@ public final class Name {
 
   @Override
   @ExcludeFromJacocoGenerated
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof Name other)) return false;
-    return Objects.equals(value, other.value);
+  public int hashCode() {
+    return Objects.hashCode(value);
   }
 
   @Override
   @ExcludeFromJacocoGenerated
-  public int hashCode() {
-    return Objects.hashCode(value);
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Name other)) return false;
+    return Objects.equals(value, other.value);
   }
 
   @Override
