@@ -3,9 +3,10 @@ package com.anibalxyz.features.common.domain.error;
 import com.anibalxyz.features.common.Result;
 
 /**
- * Base class for all domain errors.
+ * Marker interface for all domain-specific errors.
  *
- * <p>Domain errors represent rule violations or invalid states detected within the domain layer.
- * They are not exceptions and should not be thrown — use {@link Result} to propagate them.
+ * <p>Domain errors represent business rule violations or invalid states detected within the domain
+ * layer. They are treated as pure data, not exceptions; <b>never throw them</b>. Use {@link Result}
+ * or similar approach to propagate them.
  */
 public interface DomainError {}

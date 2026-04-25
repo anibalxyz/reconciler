@@ -32,16 +32,9 @@ import java.util.Map;
  *       #extensions()}
  * </ul>
  *
- * <p>This class is a record, ensuring structural immutability. Each fluent method returns a new
- * instance with the change applied, preserving immutability across the construction chain.
- *
- * <p>The {@code code} field is stored internally as a {@code String} to enable native Jackson
+ * <p>The {@link #code} is stored internally as a {@code String} to enable native Jackson
  * deserialization without custom deserializers. The public API accepts {@link ErrorCode} instances
  * only, ensuring type safety at construction time while remaining transparent to callers.
- *
- * <p>The {@code extensions} map is mutable during Jackson deserialization (unknown fields are
- * collected into it via {@code @JsonAnySetter}), but exposed as an unmodifiable view via {@link
- * #extensions()} to prevent external mutation.
  *
  * <p>Usage examples:
  *
@@ -80,43 +73,6 @@ public record ErrorResponse(
     @JsonAnySetter Map<String, Object> extensions) {
 
   /**
-   * Factory method used exclusively by Jackson for deserialization.
-   *
-   * <p>Accepts {@code code} as a {@code String} to enable native Jackson deserialization without
-   * custom deserializers. Unknown JSON fields are collected into {@code extensions} via
-   * {@code @JsonAnySetter}.
-   *
-   * <p>Not intended for direct use — use {@link #ErrorResponse(ErrorCode, String)} instead.
-   *
-   * @param type URI identifying the error category
-   * @param title human-readable summary of the problem type
-   * @param detail occurrence-specific explanation
-   * @param code machine-readable error identifier as a plain string
-   * @param instance unique request identifier
-   * @param errors list of sub-errors
-   * @param extensions map of additional fields collected during deserialization
-   * @return a new {@code ErrorResponse} instance
-   */
-  @JsonCreator
-  public static ErrorResponse create(
-      @JsonProperty("type") String type,
-      @JsonProperty("title") String title,
-      @JsonProperty("detail") String detail,
-      @JsonProperty("code") String code,
-      @JsonProperty("instance") String instance,
-      @JsonProperty("errors") List<ErrorDetail> errors,
-      @JsonAnySetter Map<String, Object> extensions) {
-    return new ErrorResponse(
-        type,
-        title,
-        detail,
-        code,
-        instance,
-        errors,
-        extensions != null ? extensions : new LinkedHashMap<>());
-  }
-
-  /**
    * Creates a new {@code ErrorResponse} with the required fields and no optional data.
    *
    * @param code machine-readable error identifier — must be a registered {@link ErrorCode}
@@ -133,10 +89,38 @@ public record ErrorResponse(
    * <p>Prefer this constructor when the error code's title is sufficient as the response summary,
    * avoiding redundant repetition of the same string at the call site.
    *
-   * @param code machine-readable error identifier — must be a registered {@link ErrorCode}
+   * @param code machine-readable error identifier; must be a registered {@link ErrorCode}
    */
   public ErrorResponse(ErrorCode code) {
-    this(null, code.title(), null, code.name(), null, null, new LinkedHashMap<>());
+    this(code, code.title());
+  }
+
+  /**
+   * Factory method used exclusively by Jackson for deserialization.
+   *
+   * <p>Accepts {@code code} as a {@code String} to enable native Jackson deserialization without
+   * custom deserializers. Unknown JSON fields are collected into {@code extensions} via
+   * {@code @JsonAnySetter}.
+   *
+   * <p>Not intended for direct use; use {@link #ErrorResponse(ErrorCode, String)} instead.
+   */
+  @JsonCreator
+  private static ErrorResponse create(
+      @JsonProperty("type") String type,
+      @JsonProperty("title") String title,
+      @JsonProperty("detail") String detail,
+      @JsonProperty("code") String code,
+      @JsonProperty("instance") String instance,
+      @JsonProperty("errors") List<ErrorDetail> errors,
+      @JsonAnySetter Map<String, Object> extensions) {
+    return new ErrorResponse(
+        type,
+        title,
+        detail,
+        code,
+        instance,
+        errors,
+        extensions != null ? extensions : new LinkedHashMap<>());
   }
 
   /**
@@ -159,10 +143,8 @@ public record ErrorResponse(
   }
 
   /**
-   * Returns a new instance with the given {@code type} URI.
-   *
-   * @param type URI identifying the error category (e.g. {@code /api/errors/validation-error})
-   * @return a new {@code ErrorResponse} with the type set
+   * @param type URI identifying the error category (e.g., /errors/auth-failure).
+   * @return a new {@code ErrorResponse} for method chaining
    */
   public ErrorResponse type(String type) {
     return new ErrorResponse(
@@ -170,10 +152,8 @@ public record ErrorResponse(
   }
 
   /**
-   * Returns a new instance with the given occurrence-specific {@code detail} message.
-   *
    * @param detail human-readable explanation specific to this occurrence
-   * @return a new {@code ErrorResponse} with the detail set
+   * @return a new {@code ErrorResponse} for method chaining
    */
   public ErrorResponse detail(String detail) {
     return new ErrorResponse(
@@ -181,10 +161,8 @@ public record ErrorResponse(
   }
 
   /**
-   * Returns a new instance with the given {@code instance} request identifier.
-   *
    * @param instance unique request identifier (e.g. {@code req-<UUID>})
-   * @return a new {@code ErrorResponse} with the instance set
+   * @return a new {@code ErrorResponse} for method chaining
    */
   public ErrorResponse instance(String instance) {
     return new ErrorResponse(
@@ -192,10 +170,8 @@ public record ErrorResponse(
   }
 
   /**
-   * Returns a new instance with the given list of sub-errors.
-   *
    * @param errors list of {@link ErrorDetail} objects describing each sub-error
-   * @return a new {@code ErrorResponse} with the errors set
+   * @return a new {@code ErrorResponse} for method chaining
    */
   public ErrorResponse errors(List<ErrorDetail> errors) {
     return new ErrorResponse(
@@ -203,14 +179,9 @@ public record ErrorResponse(
   }
 
   /**
-   * Returns a new instance with the given key-value pair added to the extension fields.
-   *
-   * <p>Extension fields are serialized as top-level JSON properties (e.g. {@code requiredRole},
-   * {@code retryAfter}).
-   *
-   * @param key the field name to include in the JSON output
+   * @param key the extension field name to include in the JSON output
    * @param value the field value
-   * @return a new {@code ErrorResponse} with the extension added
+   * @return a new {@code ErrorResponse} for method chaining
    */
   public ErrorResponse with(String key, Object value) {
     Map<String, Object> updated = new LinkedHashMap<>(extensions);

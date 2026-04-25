@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.anibalxyz.features.common.application.ValidationNotification;
+import com.anibalxyz.features.common.domain.error.DomainError;
 import com.anibalxyz.features.common.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
@@ -33,7 +34,7 @@ public class ErrorMapperTest {
   @DisplayName(
       "map: given a ValidationNotification with a registered InvalidValueError, then return a mapped result")
   public void map_validationNotificationWithRegisteredInvalidValueError_returnMappedResult() {
-    ValidationNotification notification = new ValidationNotification();
+    ValidationNotification<DomainError> notification = new ValidationNotification<>();
     notification.add("email", InvalidEmailError.blank());
 
     ErrorResult result = ErrorMapper.map(notification);
@@ -45,7 +46,7 @@ public class ErrorMapperTest {
       "map: given a ValidationNotification with an unregistered InvalidValueError, then throw UnregisteredMapperException")
   public void
       map_validationNotificationWithUnregisteredInvalidValueError_throwUnregisteredMapperException() {
-    ValidationNotification notification = new ValidationNotification();
+    ValidationNotification<DomainError> notification = new ValidationNotification<>();
     notification.add("field", new InvalidValueError() {});
 
     assertThatThrownBy(() -> ErrorMapper.map(notification))

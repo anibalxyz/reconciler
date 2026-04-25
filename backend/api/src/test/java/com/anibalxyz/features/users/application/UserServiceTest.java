@@ -69,7 +69,6 @@ public class UserServiceTest {
 
   @BeforeEach
   public void di() {
-    // TODO: env vars should be mocked
     userService = new UserService(Constants.APP_CONFIG.env(), userRepository);
   }
 

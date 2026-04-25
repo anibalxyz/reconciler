@@ -34,8 +34,11 @@ public class PasswordHash {
     this.value = value;
   }
 
-  // Semantically this is an exceptional case (data should always be valid coming from DB),
-  // but returns Result to keep a consistent API with other value objects.
+  /**
+   * Factory method for existing hashes (e.g., from database).
+   *
+   * @return success with {@link PasswordHash}, or failure if format is invalid.
+   */
   public static Result<PasswordHash, InvalidPasswordHashError> of(String hash) {
     return isValidHash(hash)
         ? Result.success(new PasswordHash(hash))
@@ -46,8 +49,7 @@ public class PasswordHash {
    * Creates a new {@code PasswordHash} from a plain-text password.
    *
    * <p>Validates the password against complexity requirements, then salts and hashes it using
-   * BCrypt. Returns a {@link Result} so callers can handle validation failures without catching
-   * exceptions.
+   * BCrypt.
    *
    * @param raw the plain-text password to hash
    * @param saltRounds the log2 of the number of BCrypt hashing rounds
@@ -70,22 +72,12 @@ public class PasswordHash {
     return Result.success(null);
   }
 
-  /**
-   * Validates if a string conforms to the BCrypt hash format.
-   *
-   * @param hash the hash string to validate
-   * @return {@code true} if the hash is valid, {@code false} otherwise
-   */
+  /** Validates if a string conforms to the BCrypt hash format. */
   public static boolean isValidHash(String hash) {
     return hash != null && BCRYPT_PATTERN.matcher(hash).matches();
   }
 
-  /**
-   * Verifies a plain-text password against the stored hash.
-   *
-   * @param raw the plain-text password to check
-   * @return {@code true} if the password matches the hash, {@code false} otherwise
-   */
+  /** Verifies a plain-text password against the stored hash. */
   public boolean matches(String raw) {
     return BCrypt.checkpw(raw, value);
   }
@@ -109,9 +101,7 @@ public class PasswordHash {
   }
 
   /**
-   * Overrides toString to prevent leaking the hash value in logs.
-   *
-   * @return a fixed-string mask
+   * @return a masked string to prevent accidental leaks in logs.
    */
   @NotNull
   @Override

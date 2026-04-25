@@ -3,13 +3,9 @@ package com.anibalxyz.server.config;
 import java.util.Arrays;
 
 // TODO: add a toString() override or similar that converts to a lowercase string
-/** Defines the different application environments. */
 public enum AppEnv {
-  /** Test environment. */
   TEST,
-  /** Development environment. */
   DEV,
-  /** Production environment. */
   PROD;
 
   /**
@@ -20,7 +16,7 @@ public enum AppEnv {
    * @throws IllegalStateException if the value is null, blank, or does not match any valid
    *     environment.
    */
-  public static AppEnv parseFromString(String value) {
+  public static AppEnv parseFromString(String value) throws IllegalStateException {
     if (value == null || value.isBlank()) {
       throw new IllegalStateException("APP_ENV cannot be null or blank");
     }

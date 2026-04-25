@@ -1,13 +1,15 @@
 package com.anibalxyz.features.common.domain.error;
 
 /**
- * Base class for domain errors caused by an invalid value.
+ * Specialized domain error that encapsulates a specific failure reason.
  *
- * <p>Subclasses represent specific value violations (e.g., invalid email, invalid password) and
- * expose a typed {@code getReason()} method that describes why the value is invalid.
+ * <p>Use this base class when an error needs to expose a machine-readable reason (e.g.,
+ * distinguishing between 'TOO_SHORT' and 'INVALID_FORMAT' for a password error).
+ *
+ * @param <R> The type of reason, which must implement {@link DomainErrorReason}.
  */
 public abstract class ReasonedError<R extends DomainErrorReason> implements DomainError {
-  public R reason;
+  private final R reason;
 
   protected ReasonedError(R reason) {
     this.reason = reason;

@@ -13,12 +13,10 @@ import java.time.ZoneId;
 import javax.crypto.SecretKey;
 
 /**
- * A concrete implementation that holds all application-level environment variables.
+ * Single source of truth for application configuration.
  *
- * <p>This record provides a type-safe, immutable representation of settings loaded from the
- * environment (e.g., .env files or system variables), acting as the single source of truth for
- * configuration. It implements various {@code ...Environment} interfaces to provide decoupled,
- * feature-specific configurations to different parts of the application.
+ * <p>Implements multiple feature-specific interfaces to provide decoupled settings to different
+ * modules without exposing the entire environment.
  */
 public record AppEnvironmentSource(
     AppEnv APP_ENV,

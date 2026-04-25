@@ -5,8 +5,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Marker interface for error code enums.
  *
- * <p>Enables polymorphic typing of error codes across features (e.g. {@code AuthErrorCode}, {@code
- * UserErrorCode}) while keeping each enum scoped to its own domain.
+ * <p>Enables polymorphic typing of error codes across features while keeping each enum scoped to
+ * its own domain.
+ *
+ * <p>Frontends should use {@link #name()} as a stable key for internationalization (i18n), while
+ * {@link #title()} provides a fallback English description for technical diagnostic.
  *
  * <p>Implementors are expected to be enums. The {@link #name()} method is declared explicitly so
  * that non-enum implementors are also required to provide a string identifier, keeping the contract
@@ -15,27 +18,16 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public interface ErrorCode {
 
   /**
-   * Returns the string identifier for this error code.
-   *
-   * <p>For enums, this is provided automatically by {@link Enum#name()} and returns the constant
-   * name as declared (e.g. {@code "SESSION_EXPIRED"}).
-   *
-   * <p>{@code @JsonValue} ensures Jackson always serializes this as a plain string, regardless of
-   * whether the implementor is an enum or a regular class. Without it, Jackson might serialize the
-   * object structure instead of the string identifier if the implementor is not an enum.
-   *
-   * @return the error code identifier in UPPER_SNAKE_CASE
+   * @return the unique identifier in UPPER_SNAKE_CASE (e.g., "NOT_FOUND").
    */
   @JsonValue
   String name();
 
   /**
-   * Returns the human-readable summary associated with this error code.
+   * This value provides a stable, high-level description suitable for presentation in API error
+   * contracts or logging systems.
    *
-   * <p>This value is intended to be used as the {@code title} field in an {@link ErrorResponse},
-   * keeping the description stable and consistent across all occurrences of the same error.
-   *
-   * @return a descriptive, human-readable title in English
+   * @return a concise, human-readable summary of the error in English.
    */
   String title();
 }

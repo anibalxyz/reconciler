@@ -23,7 +23,6 @@ package com.anibalxyz.features.common;
  * @param <E> the type of the failure error
  */
 public final class Result<V, E> {
-
   // TODO: migrate to Success and Error|Failure subclasses API
   // TODO: implement unfold method
   private final V value;
@@ -34,65 +33,33 @@ public final class Result<V, E> {
     this.error = error;
   }
 
-  /**
-   * Creates a successful {@code Result} with the given value.
-   *
-   * @param value the success value
-   * @param <V> the type of the success value
-   * @param <E> the type of the error error
-   * @return a successful {@code Result}
-   */
+  /** Creates a successful {@code Result} with the given value. */
   public static <V, E> Result<V, E> success(V value) {
     return new Result<>(value, null);
   }
 
-  /**
-   * Creates a failed {@code Result} with the given error.
-   *
-   * @param error the error error
-   * @param <V> the type of the success value
-   * @param <E> the type of the error error
-   * @return a failed {@code Result}
-   */
+  /** Creates a failed {@code Result} with the given error. */
   public static <V, E> Result<V, E> failure(E error) {
     return new Result<>(null, error);
   }
 
-  /**
-   * Returns {@code true} if this result represents a success.
-   *
-   * @return {@code true} if successful
-   */
   public boolean isSuccess() {
     return error == null;
   }
 
-  /**
-   * Returns {@code true} if this result represents a error.
-   *
-   * @return {@code true} if failed
-   */
   public boolean isFailure() {
     return error != null;
   }
 
   /**
-   * Returns the success value, or {@code null} if this result is a error.
-   *
-   * <p>Always check {@link #isSuccess()} before calling this method.
-   *
-   * @return the success value, or {@code null}
+   * @return the success value. Ensure the operation was successful before access.
    */
   public V getValue() {
     return value;
   }
 
   /**
-   * Returns the error error, or {@code null} if this result is a success.
-   *
-   * <p>Always check {@link #isFailure()} before calling this method.
-   *
-   * @return the error error, or {@code null}
+   * @return the failure error. Ensure the operation failed before access.
    */
   public E getError() {
     return error;
