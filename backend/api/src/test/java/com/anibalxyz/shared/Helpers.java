@@ -1,8 +1,6 @@
 package com.anibalxyz.shared;
 
 import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.users.domain.Email;
@@ -14,32 +12,14 @@ import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
-import io.javalin.validation.BodyValidator;
 import jakarta.persistence.EntityManager;
 import org.mockito.ArgumentCaptor;
-import org.mockito.stubbing.OngoingStubbing;
 
 /**
  * Utility class providing helper methods for mocking, capturing arguments, and managing the
  * database state during tests.
  */
 public class Helpers {
-
-  /**
-   * Stubs the behavior of a Javalin {@link BodyValidator} for testing purposes.
-   *
-   * @param ctx The Javalin {@link Context} to mock.
-   * @param clazz The class of the body validator.
-   * @param <T> The type of the body.
-   * @return An {@link OngoingStubbing} allowing further customization of the mocked validator.
-   */
-  @SuppressWarnings("unchecked")
-  public static <T> OngoingStubbing<T> stubBodyValidatorFor(Context ctx, Class<T> clazz) {
-    BodyValidator<T> mockValidator = (BodyValidator<T>) mock(BodyValidator.class);
-    when(ctx.bodyValidator(clazz)).thenReturn(mockValidator);
-    when(mockValidator.check(any(), anyString())).thenReturn(mockValidator);
-    return when(mockValidator.get());
-  }
 
   /**
    * Captures the JSON argument passed to {@link Context#json(Object)} for verification.
