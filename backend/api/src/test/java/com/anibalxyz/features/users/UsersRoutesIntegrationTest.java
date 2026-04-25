@@ -16,10 +16,7 @@ import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.application.UserService;
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.UserRepository;
+import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.EmailAlreadyTakenError;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
@@ -268,16 +265,16 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("PUT /users/{id}: given no properties provided, then return 400 Bad Request")
     public void PUT_users_id_noPropertiesProvided_return400() {
-      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
+      User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
       UserUpdateRequest requestBody = new UserUpdateRequest(null, null, null);
 
       ErrorResult expectedResult =
           ErrorMapper.map(new UserService.UpdateUserByIdError.EmptyCommand());
 
-      Response response = http.put("/users/" + user.getId(), requestBody);
+      Response response = http.put("/users/" + user.id(), requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
-      assertThat(userRepository.findById(user.getId()).orElseThrow()).isEqualTo(user.toDomain());
+      assertThat(userRepository.findById(user.id()).orElseThrow()).isEqualTo(user);
       assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
           .isEqualTo(expectedResult.response());
     }
@@ -285,17 +282,18 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("PUT /users/{id}: given an already taken email, then return 400 validation error")
     public void PUT_users_id_alreadyTakenEmail_return400() {
-      UserEntity existingUser =
-          persistUser(em, "existing." + VALID_NAME, "existing." + VALID_EMAIL);
-      UserEntity userToUpdate = persistUser(em, VALID_NAME, "update.me@mail.com");
-      UserUpdateRequest requestBody = new UserUpdateRequest(null, existingUser.getEmail(), null);
+      User existingUser =
+          persistUser(em, "existing." + VALID_NAME, "existing." + VALID_EMAIL).toDomain();
+      User userToUpdate = persistUser(em, VALID_NAME, "update.me@mail.com").toDomain();
+      UserUpdateRequest requestBody =
+          new UserUpdateRequest(null, existingUser.email().value(), null);
 
       ErrorResult expectedResult = errorResultFromAlreadyTakenEmail(requestBody.email());
 
-      Response response = http.put("/users/" + userToUpdate.getId(), requestBody);
+      Response response = http.put("/users/" + userToUpdate.id(), requestBody);
       assertThat(400).isEqualTo(response.code()).isEqualTo(expectedResult.status());
-      assertThat(userRepository.findById(userToUpdate.getId()).orElseThrow().email().value())
-          .isEqualTo(userToUpdate.getEmail());
+      assertThat(userRepository.findById(userToUpdate.id()).orElseThrow().email().value())
+          .isEqualTo(userToUpdate.email().value());
       assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
           .isEqualTo(expectedResult.response());
     }
@@ -303,18 +301,17 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("PUT /users/{id}: given an invalid property, then return 400 validation error")
     public void PUT_users_id_invalidProperty_return400ValidationError() {
-      UserEntity originalUser = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
       UserCreateRequest requestBody = new UserCreateRequest("  ", VALID_EMAIL, VALID_PASSWORD);
 
       ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
-      Response response = http.put("/users/" + originalUser.getId(), requestBody);
+      Response response = http.put("/users/" + user.id(), requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
       assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
           .isEqualTo(expectedResult.response());
-      assertThat(userRepository.findById(originalUser.getId()).orElseThrow())
-          .isEqualTo(originalUser.toDomain());
+      assertThat(userRepository.findById(user.id()).orElseThrow()).isEqualTo(user);
     }
   }
 
@@ -350,10 +347,10 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("GET /users/{id}: given an existing user id, then return 200 and the user data")
     public void GET_users_id_existingId_return200AndUser() {
-      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
-      UserDetailResponse expected = UserMapper.toDetailResponse(user.toDomain());
+      User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
+      UserDetailResponse expected = UserMapper.toDetailResponse(user);
 
-      Response response = http.get("/users/" + user.getId());
+      Response response = http.get("/users/" + user.id());
       assertThat(response.code()).isEqualTo(200);
       assertThat(http.parseBody(response, new TypeReference<UserDetailResponse>() {}))
           .isEqualTo(expected);
@@ -369,19 +366,22 @@ public class UsersRoutesIntegrationTest {
       assertThat(response.code()).isEqualTo(201);
 
       UserCreateResponse responseBody = http.parseBody(response, new TypeReference<>() {});
-      UserEntity persisted = em.find(UserEntity.class, responseBody.id());
+      User persisted = em.find(UserEntity.class, responseBody.id()).toDomain();
 
       assertNotNull(persisted);
-      assertTrue(PasswordHash.isValidHash(persisted.getPasswordHash()));
       assertTrue(
-          PasswordHash.of(persisted.getPasswordHash()).getValue().matches(requestBody.password()));
-      assertThat(persisted.getCreatedAt())
-          .isCloseTo(persisted.getUpdatedAt(), within(5, ChronoUnit.SECONDS));
-      assertThat(persisted.getId()).isEqualTo(responseBody.id()).isPositive();
-      assertThat(responseBody.name()).isEqualTo(requestBody.name()).isEqualTo(persisted.getName());
+          PasswordHash.of(persisted.passwordHash().value())
+              .getValue()
+              .matches(requestBody.password()));
+      assertThat(persisted.createdAt())
+          .isCloseTo(persisted.updatedAt(), within(5, ChronoUnit.SECONDS));
+      assertThat(persisted.id()).isEqualTo(responseBody.id()).isPositive();
+      assertThat(responseBody.name())
+          .isEqualTo(requestBody.name())
+          .isEqualTo(persisted.name().value());
       assertThat(responseBody.email())
           .isEqualTo(Email.normalize(requestBody.email()))
-          .isEqualTo(persisted.getEmail());
+          .isEqualTo(persisted.email().value());
     }
 
     @ParameterizedTest
@@ -389,9 +389,9 @@ public class UsersRoutesIntegrationTest {
     @DisplayName(
         "PUT /users/{id}: given valid id and property, then return 200 and the updated user")
     public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp) {
-      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
-      PasswordHash prevPasswordHash = PasswordHash.of(user.getPasswordHash()).getValue();
-      Instant prevUpdatedAt = user.getUpdatedAt();
+      User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
+      PasswordHash prevPasswordHash = PasswordHash.of(user.passwordHash().value()).getValue();
+      Instant prevUpdatedAt = user.updatedAt();
 
       UserUpdateRequest request =
           new UserUpdateRequest(
@@ -399,43 +399,45 @@ public class UsersRoutesIntegrationTest {
               updatingProp.equals("email") ? "new.user@mail.com" : null,
               updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD) : null);
 
-      Response response = http.put("/users/" + user.getId(), request);
+      Response response = http.put("/users/" + user.id(), request);
       assertThat(response.code()).isEqualTo(200);
 
-      UserEntity updated = em.find(UserEntity.class, user.getId());
-      em.refresh(updated);
+      UserEntity updatedEntity = em.find(UserEntity.class, user.id());
+      em.refresh(updatedEntity);
+      User updated = updatedEntity.toDomain();
+
       UserDetailResponse responseBody = http.parseBody(response, new TypeReference<>() {});
 
       switch (updatingProp) {
         case "name" -> {
-          assertThat(updated.getName()).isEqualTo(request.name());
+          assertThat(updated.name().value()).isEqualTo(request.name());
           assertThat(responseBody.name()).isEqualTo(request.name());
         }
         case "email" -> {
-          assertThat(updated.getEmail()).isEqualTo(Email.normalize(request.email()));
+          assertThat(updated.email().value()).isEqualTo(Email.normalize(request.email()));
           assertThat(responseBody.email()).isEqualTo(request.email());
         }
         case "password" -> {
-          PasswordHash updatedHash = PasswordHash.of(updated.getPasswordHash()).getValue();
+          PasswordHash updatedHash = PasswordHash.of(updated.passwordHash().value()).getValue();
           assertTrue(updatedHash.matches(request.password()));
           assertThat(updatedHash.value()).isNotEqualTo(prevPasswordHash.value());
         }
       }
 
-      assertThat(updated.getUpdatedAt()).isEqualTo(responseBody.updatedAt()).isAfter(prevUpdatedAt);
+      assertThat(updated.updatedAt()).isEqualTo(responseBody.updatedAt()).isAfter(prevUpdatedAt);
     }
 
     @Test
     @DisplayName("DELETE /users/{id}: given an existing id, then return 204 and delete the user")
     public void DELETE_users_id_existingId_return204() {
-      UserEntity user = persistUser(em, "John Doe", "john@mail.com");
+      User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
 
-      try (Response response = http.delete("/users/" + user.getId())) {
+      try (Response response = http.delete("/users/" + user.id())) {
         assertThat(response.code()).isEqualTo(204);
       }
 
       em.clear();
-      assertThat(userRepository.findById(user.getId())).isEmpty();
+      assertThat(userRepository.findById(user.id())).isEmpty();
     }
   }
 }

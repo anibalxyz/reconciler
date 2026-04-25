@@ -19,8 +19,8 @@ import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
 import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.users.domain.Email;
+import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
-import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
 import com.anibalxyz.server.api.ErrorMapper;
@@ -231,8 +231,9 @@ public class AuthRoutesIntegrationTest {
     @Test
     @DisplayName("given invalid credentials, respond with 401 Auth")
     void invalidCredentials_respond401Unauthorized() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginRequest loginRequest = new LoginRequest("different" + user.getEmail(), VALID_PASSWORD);
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      LoginRequest loginRequest =
+          new LoginRequest("different" + user.email().value(), VALID_PASSWORD);
       ErrorResult expectedResult =
           ErrorMapper.map(
               new AuthService.AuthenticateUserError.InvalidCredentials(
@@ -248,18 +249,18 @@ public class AuthRoutesIntegrationTest {
     @Test
     @DisplayName("given valid credentials, respond 200 with refresh and access tokens")
     void validCredentials_respond200WithTokens() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginRequest loginRequest = new LoginRequest(user.getEmail(), VALID_PASSWORD);
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      LoginRequest loginRequest = new LoginRequest(user.email().value(), VALID_PASSWORD);
 
       Response loginResponse = http.post("/auth/login", loginRequest);
       assertThat(loginResponse.code()).isEqualTo(200);
 
       AuthResponse authResponse = http.parseBody(loginResponse, AuthResponse.class);
-      validateJwt(authResponse.accessToken(), user.getId());
+      validateJwt(authResponse.accessToken(), user.id());
 
       String refreshTokenCookie =
           getValueFromCookie(loginResponse.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
-      validateRefreshToken(refreshTokenCookie, user.getId());
+      validateRefreshToken(refreshTokenCookie, user.id());
     }
   }
 
@@ -333,8 +334,8 @@ public class AuthRoutesIntegrationTest {
     @Test
     @DisplayName("given valid refresh token, then respond with 200 with refreshed tokens")
     void validRefreshToken_respond200WithRefreshedTokens() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginResult expectedResult = loginUser(user.getEmail(), VALID_PASSWORD);
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      LoginResult expectedResult = loginUser(user.email().value(), VALID_PASSWORD);
 
       Map<String, String> cookie =
           Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + expectedResult.refreshToken);
@@ -342,11 +343,11 @@ public class AuthRoutesIntegrationTest {
       assertThat(response.code()).isEqualTo(200);
 
       AuthResponse authResponse = http.parseBody(response, AuthResponse.class);
-      validateJwt(authResponse.accessToken(), user.getId());
+      validateJwt(authResponse.accessToken(), user.id());
 
       String refreshTokenCookie =
           getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
-      validateRefreshToken(refreshTokenCookie, user.getId());
+      validateRefreshToken(refreshTokenCookie, user.id());
     }
   }
 }

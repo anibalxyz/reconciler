@@ -1,6 +1,5 @@
 package com.anibalxyz.features.users.infra;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
@@ -19,7 +18,6 @@ import org.hibernate.generator.EventType;
 @Entity
 @Table(name = "users")
 public class UserEntity {
-
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id")
@@ -42,7 +40,7 @@ public class UserEntity {
   @Column(name = "updated_at")
   private Instant updatedAt;
 
-  public UserEntity() {}
+  protected UserEntity() {}
 
   public UserEntity(
       Integer id,
@@ -70,8 +68,9 @@ public class UserEntity {
   }
 
   public User toDomain() throws CorruptedEmail, CorruptedName, CorruptedPasswordHash {
-    // Some branches will probably not be covered by the current acceptance tests.
-    // Once unit tests are implemented, then full coverage will be possible
+    // NOTE: some branches will probably not be covered by the current acceptance tests.
+    //        Once unit tests are implemented, then full coverage will be possible
+    // NOTE: these validations are causing over 7s of delay in the current test suite (Apr 25, 2026)
     Result<Email, ?> emailResult = Email.of(email);
     if (emailResult.isFailure()) throw new CorruptedEmail(email, id);
     Result<Name, ?> nameResult = Name.of(name);
@@ -87,65 +86,5 @@ public class UserEntity {
         passwordHashResult.getValue(),
         createdAt,
         updatedAt);
-  }
-
-  @ExcludeFromJacocoGenerated
-  public Integer getId() {
-    return id;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public void setId(Integer id) {
-    this.id = id;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public String getName() {
-    return name;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public String getEmail() {
-    return email;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public String getPasswordHash() {
-    return passwordHash;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public void setPasswordHash(String passwordHash) {
-    this.passwordHash = passwordHash;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public Instant getUpdatedAt() {
-    return updatedAt;
-  }
-
-  @ExcludeFromJacocoGenerated
-  public void setUpdatedAt(Instant updatedAt) {
-    this.updatedAt = updatedAt;
   }
 }

@@ -12,7 +12,7 @@ import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.out.ErrorResponse;
 import com.anibalxyz.features.users.api.UserRoutes;
-import com.anibalxyz.features.users.infra.UserEntity;
+import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
 import com.anibalxyz.server.api.ErrorMapper;
@@ -120,8 +120,8 @@ public class JwtMiddlewareIntegrationTest {
     @Test
     @DisplayName("ANY /*: given valid JWT, then authorize user")
     void ANY_endpoint_validJwt_authorizeUser() {
-      UserEntity userEntity = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      String validJwt = loginUser(userEntity.getEmail());
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      String validJwt = loginUser(user.email().value());
 
       Map<String, String> headers = authenticationHeaders(validJwt);
       Response response = http.get("/users", headers);
@@ -176,12 +176,12 @@ public class JwtMiddlewareIntegrationTest {
     @Test
     @DisplayName("GET /users: given expired JWT, then return 401 Auth")
     void GET_users_expiredJwt_return401Unauthorized() {
-      UserEntity userEntity = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
       long jwtAccessExpirationTimeMinutes = Constants.APP_ENV.JWT_ACCESS_EXPIRATION_TIME_MINUTES();
       long justExpiredTime = jwtAccessExpirationTimeMinutes + 1;
       Clock clockInThePast = Clock.offset(testClock, Duration.ofMinutes(-justExpiredTime));
       JwtService jwtService = new JwtService(Constants.APP_CONFIG.env(), clockInThePast);
-      String expiredJwt = jwtService.generateToken(userEntity.getId());
+      String expiredJwt = jwtService.generateToken(user.id());
 
       ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Expired());
 

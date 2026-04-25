@@ -34,7 +34,7 @@ public class RefreshTokenEntity {
   @Column(name = "revoked", nullable = false)
   private boolean revoked;
 
-  public RefreshTokenEntity() {}
+  protected RefreshTokenEntity() {}
 
   public static RefreshTokenEntity fromDomain(RefreshToken domain) {
     var entity = new RefreshTokenEntity();
@@ -48,25 +48,5 @@ public class RefreshTokenEntity {
 
   public RefreshToken toDomain() {
     return new RefreshToken(id, token, user.toDomain(), expiryDate, revoked);
-  }
-
-  public Long getId() {
-    return id;
-  }
-
-  public String getToken() {
-    return token;
-  }
-
-  public UserEntity getUser() {
-    return user;
-  }
-
-  public Instant getExpiryDate() {
-    return expiryDate;
-  }
-
-  public boolean isRevoked() {
-    return revoked;
   }
 }

@@ -4,6 +4,7 @@ import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import java.time.Instant;
 import org.jetbrains.annotations.NotNull;
 
+// TODO: migrate to class (no record getters)
 /**
  * Represents a User in the domain.
  *
