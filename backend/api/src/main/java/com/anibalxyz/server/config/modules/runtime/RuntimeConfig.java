@@ -8,7 +8,7 @@ import io.javalin.Javalin;
  * with the request lifecycle.
  */
 public abstract class RuntimeConfig {
-  protected Javalin server;
+  protected final Javalin server;
 
   public RuntimeConfig(Javalin server) {
     this.server = server;

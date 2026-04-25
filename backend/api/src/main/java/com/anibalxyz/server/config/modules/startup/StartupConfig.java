@@ -10,7 +10,7 @@ import io.javalin.config.JavalinConfig;
  */
 public abstract class StartupConfig {
 
-  protected JavalinConfig javalinConfig;
+  protected final JavalinConfig javalinConfig;
 
   public StartupConfig(JavalinConfig javalinConfig) {
     this.javalinConfig = javalinConfig;

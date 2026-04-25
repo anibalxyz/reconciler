@@ -10,7 +10,7 @@ public final class UnreachableCodeException extends IllegalStateException {
   }
 
   public static UnreachableCodeException of(Object unexpected) {
-    return new UnreachableCodeException(formatMessage(unexpected, null));
+    return of(unexpected, null);
   }
 
   public static UnreachableCodeException of(Object unexpected, String reason) {

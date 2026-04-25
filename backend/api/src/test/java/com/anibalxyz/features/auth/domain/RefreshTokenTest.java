@@ -69,7 +69,7 @@ class RefreshTokenTest {
 
     // Case 3: Past (expired 10 seconds ago)
     RefreshToken pastToken = buildToken(NOW.minusSeconds(10));
-    assertThat(presentToken.secondsUntilExpiry(NOW)).isZero();
+    assertThat(pastToken.secondsUntilExpiry(NOW)).isZero();
   }
 
   @Test

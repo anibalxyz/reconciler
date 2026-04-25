@@ -9,7 +9,7 @@ import io.javalin.Javalin;
  * all route modules without being tightly coupled to them.
  */
 public abstract class RouteRegistry {
-  protected Javalin server;
+  protected final Javalin server;
 
   public RouteRegistry(Javalin server) {
     this.server = server;

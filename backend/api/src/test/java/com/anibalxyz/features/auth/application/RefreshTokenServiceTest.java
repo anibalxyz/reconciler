@@ -4,7 +4,6 @@ import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN;
 import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.auth.domain.RefreshToken;

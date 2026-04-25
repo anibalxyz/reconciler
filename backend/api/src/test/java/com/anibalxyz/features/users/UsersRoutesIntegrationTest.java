@@ -113,7 +113,7 @@ public class UsersRoutesIntegrationTest {
       return ErrorMapper.map(correspondentError);
     }
 
-    private static ErrorResult errorResultFromAlreadyTakenEmail(String email) {
+    private static ErrorResult errorResultFromAlreadyTakenEmail() {
       ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
       correspondentError.add("email", new EmailAlreadyTakenError());
       return ErrorMapper.map(correspondentError);
@@ -170,7 +170,7 @@ public class UsersRoutesIntegrationTest {
       String malformedJson =
           """
                   {
-                      "name": "nombe",
+                      "name": "name",
                       "email":
                   }
                   """;
@@ -252,7 +252,7 @@ public class UsersRoutesIntegrationTest {
       UserCreateRequest requestBody =
           new UserCreateRequest(VALID_NAME, existingEmail, VALID_PASSWORD);
 
-      ErrorResult expectedResult = errorResultFromAlreadyTakenEmail(requestBody.email());
+      ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
 
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
@@ -288,7 +288,7 @@ public class UsersRoutesIntegrationTest {
       UserUpdateRequest requestBody =
           new UserUpdateRequest(null, existingUser.email().value(), null);
 
-      ErrorResult expectedResult = errorResultFromAlreadyTakenEmail(requestBody.email());
+      ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
 
       Response response = http.put("/users/" + userToUpdate.id(), requestBody);
       assertThat(400).isEqualTo(response.code()).isEqualTo(expectedResult.status());

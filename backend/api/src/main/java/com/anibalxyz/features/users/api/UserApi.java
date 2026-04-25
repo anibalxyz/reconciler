@@ -9,7 +9,6 @@ import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.api.out.UsersErrorResponseExamples;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
-import io.javalin.openapi.OpenApiSecurity;
 
 public interface UserApi {
 

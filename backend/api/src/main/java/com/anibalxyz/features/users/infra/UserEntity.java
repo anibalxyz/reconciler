@@ -26,10 +26,10 @@ public class UserEntity {
   @Column(name = "name", nullable = false, length = 100)
   private String name;
 
-  @Column(name = "email", nullable = false, unique = true, length = 255)
+  @Column(name = "email", nullable = false, unique = true)
   private String email;
 
-  @Column(name = "password_hash", nullable = false, length = 255)
+  @Column(name = "password_hash", nullable = false)
   private String passwordHash;
 
   @CurrentTimestamp(event = EventType.INSERT)
