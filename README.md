@@ -198,3 +198,11 @@ After running `compose up`, you can access the services at the following URLs.
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](/LICENSE) file for more details.
+
+## 💰 Bounty Contribution
+
+- **Task:** Standardize API Error Responses
+- **Reward:** $50
+- **Source:** GitHub-Paid
+- **Date:** 2026-04-28
+
