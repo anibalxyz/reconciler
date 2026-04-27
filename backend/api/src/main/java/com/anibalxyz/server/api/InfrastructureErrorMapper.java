@@ -11,6 +11,8 @@ import io.javalin.http.UnauthorizedResponse;
 import java.util.List;
 
 // TODO: implement exception handling for io.jsonwebtoken
+// TODO: implement mapper for UnhandledErrorException and UnreachableCodeException
+// TODO: add mapper for EndpointNotFound
 // TODO: implement unit-testing (currently almost full covered thanks to E2E)
 public class InfrastructureErrorMapper {
 

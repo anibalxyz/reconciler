@@ -5,35 +5,32 @@ public final class ErrorResponseExamples {
   public static final String INVALID_ID =
       """
             {
-              "error": "Bad Request",
-              "details": [
-                "Invalid ID format. Must be a number."
-              ]
+              "title": "Invalid or malformed request",
+              "code": "BAD_REQUEST",
+              "detail": "Invalid ID format. Must be a number."
             }""";
 
   public static final String RESOURCE_NOT_FOUND =
       """
             {
-              "error": "Resource not found",
-              "details": [
-                "Resource with id 1 not found"
-              ]
+              "title": "The requested resource was not found",
+              "code": "RESOURCE_NOT_FOUND",
+              "detail": "User with id 1 not found"
             }""";
 
   public static final String UNAUTHORIZED =
       """
             {
-              "error": "Unauthorized",
-              "details": [
-                "Missing or invalid Authorization header"
-              ]
+              "title": "Access denied",
+              "code": "UNAUTHORIZED",
+              "detail": "Missing or invalid Authorization header"
             }""";
 
   public static final String INTERNAL_SERVER_ERROR =
       """
             {
-              "error": "Internal Server Error",
-              "details": []
+              "title": "An internal server error occurred",
+              "code": "INTERNAL_SERVER_ERROR"
             }""";
 
   private ErrorResponseExamples() {}

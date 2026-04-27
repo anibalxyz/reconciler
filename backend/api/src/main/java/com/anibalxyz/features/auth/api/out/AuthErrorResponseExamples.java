@@ -5,27 +5,33 @@ public final class AuthErrorResponseExamples {
   public static final String INVALID_CREDENTIALS =
       """
             {
-              "error": "Invalid credentials",
-              "details": []
+              "title": "Access denied",
+              "code": "UNAUTHORIZED",
+              "detail": "Invalid credentials"
             }""";
 
   public static final String MISSING_REFRESH_TOKEN =
       """
             {
-              "error": "Unauthorized",
-              "details": [
-                "Missing refresh token in cookie"
-              ]
+              "title": "Access denied",
+              "code": "UNAUTHORIZED",
+              "detail": "Missing refresh token in cookie"
             }""";
 
   public static final String INVALID_INPUT_PROVIDED =
       """
+            {
+              "title": "There was one or more validation errors",
+              "code": "VALIDATION_ERROR",
+              "type": "/api/errors/validation-error",
+              "errors": [
                 {
-                  "error": "Invalid input provided",
-                  "details": [
-                    "Invalid email provided."
-                  ]
-                }""";
+                  "code": "INVALID_FIELD_FORMAT",
+                  "title": "Invalid field format",
+                  "field": "email"
+                }
+              ]
+            }""";
 
   private AuthErrorResponseExamples() {}
 }

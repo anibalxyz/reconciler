@@ -41,7 +41,7 @@ systems. Built with clean architecture principles, domain-driven design, and com
                                 .withInfo(
                                     info ->
                                         info.title("Reconciler API")
-                                            .version("1.0-SNAPSHOT")
+                                            .version("0.2.0") // TODO: use env var
                                             .description(infoDescription)
                                             // .termsOfService
                                             // ("https://github.com/anibalxyz/reconciler/blob/main/README.md")
