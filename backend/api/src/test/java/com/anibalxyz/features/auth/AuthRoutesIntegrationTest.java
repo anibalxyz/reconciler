@@ -1,54 +1,67 @@
 package com.anibalxyz.features.auth;
 
-import static com.anibalxyz.features.Constants.Users.*;
-import static com.anibalxyz.features.Helpers.cleanDatabase;
-import static com.anibalxyz.features.Helpers.persistUser;
+import static com.anibalxyz.features.auth.api.AuthController.REFRESH_TOKEN_COOKIE;
+import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.shared.Constants.Users.*;
+import static com.anibalxyz.shared.Helpers.cleanDatabase;
+import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.Constants;
-import com.anibalxyz.features.Constants.Auth.Token;
-import com.anibalxyz.features.HttpRequest;
 import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
+import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.application.RefreshTokenService;
-import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
-import com.anibalxyz.features.auth.domain.RefreshToken;
-import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
+import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
+import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
 import com.anibalxyz.features.common.api.out.ErrorResponse;
-import com.anibalxyz.features.users.infra.UserEntity;
+import com.anibalxyz.features.common.application.ValidationNotification;
+import com.anibalxyz.features.users.domain.Email;
+import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
-import com.anibalxyz.server.config.modules.runtime.JwtMiddlewareConfig;
+import com.anibalxyz.server.api.ErrorMapper;
+import com.anibalxyz.server.api.ErrorResult;
+import com.anibalxyz.server.api.InfrastructureErrorMapper;
+import com.anibalxyz.server.config.environment.AppEnvironmentSource;
+import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.HttpRequest;
+import com.anibalxyz.shared.MutableClock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.List;
+import java.time.*;
+import java.time.temporal.TemporalAdjusters;
+import java.util.Date;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 @DisplayName("Tests for AuthRoutes")
 public class AuthRoutesIntegrationTest {
-  private static final Supplier<ZonedDateTime> defaultClock =
-      () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
+  // Tuesday 10:00
+  private static final ZonedDateTime FIXED_NOW =
+      LocalDateTime.of(2026, 4, 21, 10, 0).atZone(ZoneId.of("America/Montevideo"));
+  private static final MutableClock testClock =
+      new MutableClock(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
+  private static final Instant SATURDAY_MIDDAY =
+      FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.SATURDAY)).with(LocalTime.NOON).toInstant();
+  private static final Instant MAINTENANCE_START =
+      FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).with(LocalTime.of(8, 0)).toInstant();
   private static Application app;
   private static EntityManagerFactory emf;
   private static HttpRequest http;
   private static JwtService jwtService;
-  private RefreshTokenService refreshTokenService;
-  private RefreshTokenRepository refreshTokenRepository;
+  private static AppEnvironmentSource env;
+  private static RefreshTokenService refreshTokenService;
   private EntityManager em;
 
   @BeforeAll
@@ -57,7 +70,7 @@ public class AuthRoutesIntegrationTest {
     app = createApplication();
     app.start(0);
 
-    String baseUrl = "http://localhost:" + app.javalin().port() + "/api";
+    String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
     emf = app.persistenceManager().emf();
     ObjectMapper objectMapper =
         new ObjectMapper()
@@ -66,21 +79,20 @@ public class AuthRoutesIntegrationTest {
 
     http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
 
-    jwtService = new JwtService(Constants.APP_CONFIG.env());
+    jwtService = new JwtService(Constants.APP_CONFIG.env(), testClock);
+    env = Constants.APP_CONFIG.env();
   }
 
   private static Application createApplication() {
-    Consumer<DependencyContainer> customRuntimeConfigs =
-        container -> {
-          new JwtMiddlewareConfig(container.server(), container.jwtMiddleware()).apply();
-        };
+    // JwtMiddleware registered internally but unused -> will change once decoupled
     Consumer<DependencyContainer> customRoutesRegistries =
         container -> {
-          new AuthRoutes(container.server(), container.authController()).register();
+          new AuthRoutes(container.server(), container.authController(), container.jwtMiddleware())
+              .register();
         };
 
     return Application.buildApplication(
-        Constants.APP_CONFIG, null, customRuntimeConfigs, customRoutesRegistries);
+        Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);
   }
 
   @AfterAll
@@ -101,18 +113,26 @@ public class AuthRoutesIntegrationTest {
     return null;
   }
 
-  private boolean isValidToken(String token, Token type) {
-    if (token == null || token.isBlank()) return false;
-    try {
-      switch (type) {
-        case ACCESS -> jwtService.validateToken(token);
-        case REFRESH -> refreshTokenService.verifyRefreshToken(token);
-        default -> throw new IllegalArgumentException("Invalid token type");
-      }
-      return true;
-    } catch (InvalidCredentialsException e) {
-      return false;
-    }
+  private static void validateJwt(String accessToken, Integer id) {
+    var jwtValidation = jwtService.validateToken(accessToken);
+    assertThat(jwtValidation.isSuccess()).isTrue();
+
+    var jwt = jwtValidation.getValue();
+    assertThat(jwt.getSubject()).isEqualTo(id.toString());
+    assertThat(jwt.getIssuedAt()).isEqualTo(testClock.instant());
+    assertThat(jwt.getIssuer()).isEqualTo(env.JWT_ISSUER());
+    assertThat(jwt.getExpiration())
+        .isEqualTo(
+            Date.from(
+                testClock.instant().plusSeconds(env.JWT_ACCESS_EXPIRATION_TIME_MINUTES() * 60)));
+  }
+
+  public static void validateRefreshToken(String token, Integer id) {
+    assertThat(token).isNotNull();
+
+    var refreshTokenData = refreshTokenService.verifyRefreshToken(token, testClock.instant());
+    assertThat(refreshTokenData.isSuccess()).isTrue();
+    assertThat(refreshTokenData.getValue().user().id()).isEqualTo(id);
   }
 
   @BeforeEach
@@ -123,9 +143,13 @@ public class AuthRoutesIntegrationTest {
 
   @BeforeEach
   public void di() {
-    refreshTokenRepository = new JpaRefreshTokenRepository(() -> em);
-    refreshTokenService =
-        new RefreshTokenService(Constants.APP_CONFIG.env(), refreshTokenRepository, defaultClock);
+    var refreshTokenRepository = new JpaRefreshTokenRepository(() -> em);
+    refreshTokenService = new RefreshTokenService(refreshTokenRepository);
+  }
+
+  @BeforeEach
+  public void resetClock() {
+    testClock.resetTo(FIXED_NOW.toInstant());
   }
 
   @AfterEach
@@ -135,305 +159,195 @@ public class AuthRoutesIntegrationTest {
     }
   }
 
+  private LoginResult loginUser(String email, String password) {
+    LoginRequest loginRequest = new LoginRequest(email, password);
+    Response loginResponse = http.post("/auth/login", loginRequest);
+    AuthResponse authResponse = http.parseBody(loginResponse, AuthResponse.class);
+
+    return new LoginResult(
+        authResponse.accessToken(),
+        getValueFromCookie(loginResponse.header("Set-Cookie"), REFRESH_TOKEN_COOKIE));
+  }
+
+  @Test
+  @DisplayName("POST /logout: always respond 204 and clear refresh token cookie")
+  void logout_always_respond204AndClearCookie() {
+    try (Response response = http.post("/auth/logout", "")) {
+      assertThat(response.code()).isEqualTo(204);
+
+      String setCookie = response.header("Set-Cookie");
+      assertThat(setCookie).isNotNull();
+      assertThat(setCookie).contains(REFRESH_TOKEN_COOKIE + "=");
+      assertThat(setCookie).contains("Max-Age=0");
+
+      String refreshTokenCookie =
+          getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
+      assertThat(refreshTokenCookie).isNullOrEmpty();
+    }
+  }
+
+  private record LoginResult(String accessToken, String refreshToken) {}
+
   @Nested
-  @DisplayName("Success Scenarios")
-  class SuccessScenarios {
+  @DisplayName("Tests for POST /login")
+  class Login {
 
     @Test
-    @DisplayName(
-        "POST /auth/login: given valid credentials, then return 200 OK and JWT with refresh token cookie")
-    void POST_auth_login_validCredentials_return200AndJwtWithRefreshTokenCookie() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginRequest request = new LoginRequest(user.getEmail(), VALID_PASSWORD);
+    @DisplayName("given validation failed, then respond with 400 validation error")
+    void validationFailed_respond400ValidationError() {
+      String invalidEmail = "invalid email";
+      LoginRequest loginRequest = new LoginRequest(invalidEmail, VALID_PASSWORD);
 
-      Response response = http.post("/auth/login", request);
-      assertThat(response.code()).isEqualTo(200);
+      ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
+      notification.add("email", Email.validateRaw(invalidEmail).getError());
 
-      String cookie = response.header("Set-Cookie");
-      assertThat(cookie).isNotNull();
+      ErrorResult expectedResult =
+          ErrorMapper.map(new AuthService.AuthenticateUserError.ValidationFailed(notification));
 
-      String refreshToken = getValueFromCookie(cookie, "refreshToken");
-      assertThat(refreshToken).isNotNull();
-      assertThat(isValidToken(refreshToken, Token.REFRESH)).isTrue();
+      Response loginResponse = http.post("/auth/login", loginRequest);
+      assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
-      AuthResponse body = http.parseBody(response, AuthResponse.class);
-      assertThat(body).isNotNull();
-      assertThat(isValidToken(body.accessToken(), Token.ACCESS)).isTrue();
+      ErrorResponse authResponse = http.parseBody(loginResponse, ErrorResponse.class);
+      assertThat(authResponse).isEqualTo(expectedResult.response());
     }
 
     @Test
-    @DisplayName(
-        "POST /auth/refresh: given valid refresh token, then return 200 OK and new JWT with new refresh token cookie")
-    void POST_auth_refresh_validRefreshToken_return200AndNewJwtWithNewRefreshTokenCookie() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginRequest request = new LoginRequest(user.getEmail(), VALID_PASSWORD);
+    @DisplayName("given outside maintenance window, respond with 503 Unavailable Server")
+    void outsideMaintenanceWindow_respond503UnavailableServer() {
+      testClock.resetTo(SATURDAY_MIDDAY);
+      LoginRequest loginRequest = new LoginRequest(VALID_EMAIL, VALID_PASSWORD);
 
-      String cookie;
-      try (Response loginResponse = http.post("/auth/login", request)) {
-        assertThat(loginResponse.code()).isEqualTo(200);
+      ErrorResult expectedResult =
+          ErrorMapper.map(
+              new AuthService.AuthenticateUserError.MaintenanceWindow(MAINTENANCE_START));
 
-        cookie = loginResponse.header("Set-Cookie");
-      }
+      Response loginResponse = http.post("/auth/login", loginRequest);
+      assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(503);
 
-      assertThat(cookie).isNotNull();
-
-      String refreshToken = getValueFromCookie(cookie, "refreshToken");
-      assertThat(refreshToken).isNotNull();
-      assertThat(isValidToken(refreshToken, Token.REFRESH)).isTrue();
-
-      Map<String, String> headers = Map.of("Cookie", "refreshToken=" + refreshToken);
-      Response refreshResponse = http.post("/auth/refresh", "", headers);
-      assertThat(refreshResponse.code()).isEqualTo(200);
-
-      AuthResponse body = http.parseBody(refreshResponse, AuthResponse.class);
-      assertThat(body).isNotNull();
-      assertThat(isValidToken(body.accessToken(), Token.ACCESS)).isTrue();
+      ErrorResponse authResponse = http.parseBody(loginResponse, ErrorResponse.class);
+      assertThat(authResponse).isEqualTo(expectedResult.response());
     }
 
     @Test
-    @DisplayName(
-        "POST /auth/logout: given existing refresh token, then return 204 and clear cookie")
-    void POST_auth_logout_existingRefreshToken_return204AndClearCookie() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginRequest request = new LoginRequest(user.getEmail(), VALID_PASSWORD);
-      String refreshToken;
-      try (Response loginResponse = http.post("/auth/login", request)) {
-        String cookie = loginResponse.header("Set-Cookie");
-        assertThat(cookie).isNotNull();
-        refreshToken = getValueFromCookie(cookie, "refreshToken");
-        assertThat(refreshToken).isNotNull();
-      }
+    @DisplayName("given invalid credentials, respond with 401 Auth")
+    void invalidCredentials_respond401Unauthorized() {
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      LoginRequest loginRequest =
+          new LoginRequest("different" + user.email().value(), VALID_PASSWORD);
+      ErrorResult expectedResult =
+          ErrorMapper.map(
+              new AuthService.AuthenticateUserError.InvalidCredentials(
+                  new InvalidCredentialsError()));
 
-      Map<String, String> headers = Map.of("Cookie", "refreshToken=" + refreshToken);
+      Response loginResponse = http.post("/auth/login", loginRequest);
+      assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
-      try (Response logoutResponse = http.post("/auth/logout", "", headers)) {
-
-        assertThat(logoutResponse.code()).isEqualTo(204);
-        String cookie = logoutResponse.header("Set-Cookie");
-        assertThat(cookie).isNotNull();
-        assertThat(getValueFromCookie(cookie, "refreshToken")).isEmpty();
-        assertThat(cookie).contains("Max-Age=0");
-      }
-      em.clear();
-
-      RefreshToken revokedToken = refreshTokenRepository.findByToken(refreshToken).orElseThrow();
-      assertThat(revokedToken.revoked()).isTrue();
+      ErrorResponse authResponse = http.parseBody(loginResponse, ErrorResponse.class);
+      assertThat(authResponse).isEqualTo(expectedResult.response());
     }
 
     @Test
-    @DisplayName("POST /auth/logout: given no refresh token, then return 204 and clear cookie")
-    void POST_auth_logout_noRefreshToken_return204AndClearCookie() {
-      try (Response response = http.post("/auth/logout", "")) {
+    @DisplayName("given valid credentials, respond 200 with refresh and access tokens")
+    void validCredentials_respond200WithTokens() {
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      LoginRequest loginRequest = new LoginRequest(user.email().value(), VALID_PASSWORD);
 
-        assertThat(response.code()).isEqualTo(204);
-        String cookie = response.header("Set-Cookie");
-        assertThat(cookie).isNotNull();
-        assertThat(getValueFromCookie(cookie, "refreshToken")).isEmpty();
-        assertThat(getValueFromCookie(cookie, "Max-Age")).isEqualTo("0");
-      }
-      assertThat(refreshTokenRepository.findAll()).isEmpty();
+      Response loginResponse = http.post("/auth/login", loginRequest);
+      assertThat(loginResponse.code()).isEqualTo(200);
+
+      AuthResponse authResponse = http.parseBody(loginResponse, AuthResponse.class);
+      validateJwt(authResponse.accessToken(), user.id());
+
+      String refreshTokenCookie =
+          getValueFromCookie(loginResponse.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
+      validateRefreshToken(refreshTokenCookie, user.id());
     }
   }
 
   @Nested
-  @DisplayName("Failure Scenarios")
-  class FailureScenarios {
+  @DisplayName("Tests for POST /refresh")
+  class Refresh {
 
     @Test
-    @DisplayName("POST /auth/login: given invalid password, then return 401 Unauthorized")
-    void POST_auth_login_invalidPassword_return401Unauthorized() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginRequest request =
-          new LoginRequest(user.getEmail(), VALID_PASSWORD + "invalid"); // ensure aren't equal
+    @DisplayName("given missing refreshToken cookie, then respond with 401 Unauthorized")
+    void missingCookie_respond401Unauthorized() {
+      ErrorResult expectedResult =
+          InfrastructureErrorMapper.map(
+              new UnauthorizedResponse("Missing refresh token in cookie"));
 
-      Response response = http.post("/auth/login", request);
-      assertThat(response.code()).isEqualTo(401);
+      Map<String, String> cookie = Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=");
 
-      String cookie = response.header("Set-Cookie");
-      assertThat(cookie).isNull();
+      Response response = http.post("/auth/refresh", "", cookie);
+      assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
-      assertThat(body.error()).isEqualTo("Invalid credentials");
+      String responseCookie =
+          getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
+      assertThat(responseCookie).isNullOrEmpty();
 
-      assertThat(refreshTokenRepository.findAll()).isEmpty();
+      ErrorResponse errorResponse = http.parseBody(response, ErrorResponse.class);
+      assertThat(errorResponse).isEqualTo(expectedResult.response());
     }
 
     @Test
-    @DisplayName("POST /auth/login: given non-existent email, then return 401 Unauthorized")
-    void POST_auth_login_nonExistentEmail_return401Unauthorized() {
-      LoginRequest request = new LoginRequest("non-existent@mail.com", VALID_PASSWORD);
+    @DisplayName("given outside maintenance window, respond with 503 Unavailable Server")
+    void outsideMaintenanceWindow_respond503UnavailableServer() {
+      testClock.resetTo(SATURDAY_MIDDAY);
+      ErrorResult expectedResult =
+          ErrorMapper.map(
+              new AuthService.AuthenticateUserError.MaintenanceWindow(MAINTENANCE_START));
 
-      Response response = http.post("/auth/login", request);
-      assertThat(response.code()).isEqualTo(401);
+      Map<String, String> cookie =
+          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_TOKEN);
+      Response response = http.post("/auth/refresh", "", cookie);
+      assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(503);
 
-      String cookie = response.header("Set-Cookie");
-      assertThat(cookie).isNull();
+      String responseCookie =
+          getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
+      assertThat(responseCookie).isNullOrEmpty();
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
-      assertThat(body.error()).isEqualTo("Invalid credentials");
-
-      assertThat(refreshTokenRepository.findAll()).isEmpty();
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-      "null, strong-password-123", // null email
-      "john.doe@example.com, null", // null password
-      "null, null", // null email and password
-      "'', strong-password-123", // blank email
-      "john.doe@example.com, ''", // blank password
-      "'', ''" // blank email and password
-    })
-    @DisplayName("POST /auth/login: given missing or blank fields, then return 400 Bad Request")
-    void POST_auth_login_missingOrBlankFields_return400BadRequest(String email, String password) {
-      String actualEmail = "null".equalsIgnoreCase(email) ? null : email;
-      String actualPassword = "null".equals(password) ? null : password;
-      LoginRequest request = new LoginRequest(actualEmail, actualPassword);
-
-      Response response = http.post("/auth/login", request);
-      assertThat(response.code()).isEqualTo(400);
-
-      String cookie = response.header("Set-Cookie");
-      assertThat(cookie).isNull();
-
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
-      assertThat(body.error()).isEqualTo("Invalid input provided");
-
-      assertThat(refreshTokenRepository.findAll()).isEmpty();
+      ErrorResponse errorResponse = http.parseBody(response, ErrorResponse.class);
+      assertThat(errorResponse).isEqualTo(expectedResult.response());
     }
 
     @Test
-    @DisplayName("POST /auth/login: given invalid email format, then return 400 Bad Request")
-    void POST_auth_login_invalidEmailFormat_return400BadRequest() {
-      LoginRequest request = new LoginRequest("invalid-email", VALID_PASSWORD);
+    @DisplayName("given invalid refresh token, then respond with 401 Unauthorized")
+    void invalidRefreshToken_respond401Unauthorized() {
+      ErrorResult expectedResult =
+          ErrorMapper.map(
+              new AuthService.RefreshTokensError.InvalidToken(InvalidRefreshTokenError.notFound()));
 
-      Response response = http.post("/auth/login", request);
-      assertThat(response.code()).isEqualTo(400);
+      // it is called "VALID" referring to the format, but is not a real value
+      Map<String, String> cookie =
+          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_TOKEN);
 
-      String cookie = response.header("Set-Cookie");
-      assertThat(cookie).isNull();
+      Response response = http.post("/auth/refresh", "", cookie);
+      assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
-      assertThat(body.error()).isEqualTo("Invalid input provided");
+      String responseCookie =
+          getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
+      assertThat(responseCookie).isNullOrEmpty();
 
-      assertThat(refreshTokenRepository.findAll()).isEmpty();
+      ErrorResponse errorResponse = http.parseBody(response, ErrorResponse.class);
+      assertThat(errorResponse).isEqualTo(expectedResult.response());
     }
 
     @Test
-    @DisplayName(
-        "POST /auth/refresh: given missing refresh token in cookie, then return 401 Unauthorized")
-    void POST_auth_refresh_missingRefreshTokenInCookie_return401Unauthorized() {
-      Response response = http.post("/auth/refresh", "", Map.of());
-      assertThat(response.code()).isEqualTo(401);
+    @DisplayName("given valid refresh token, then respond with 200 with refreshed tokens")
+    void validRefreshToken_respond200WithRefreshedTokens() {
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      LoginResult expectedResult = loginUser(user.email().value(), VALID_PASSWORD);
 
-      String cookie = response.header("Set-Cookie");
-      assertThat(cookie).isNull();
+      Map<String, String> cookie =
+          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + expectedResult.refreshToken);
+      Response response = http.post("/auth/refresh", "", cookie);
+      assertThat(response.code()).isEqualTo(200);
 
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
-      assertThat(body.error()).isEqualTo("Unauthorized");
+      AuthResponse authResponse = http.parseBody(response, AuthResponse.class);
+      validateJwt(authResponse.accessToken(), user.id());
 
-      assertThat(refreshTokenRepository.findAll()).isEmpty();
-    }
-
-    @Test
-    @DisplayName(
-        "POST /auth/refresh: given invalid refresh token, then return 401 Invalid credentials")
-    void POST_auth_refresh_invalidRefreshToken_return401InvalidCredentials() {
-      Map<String, String> headers = Map.of("Cookie", "refreshToken=invalid-token");
-      Response response = http.post("/auth/refresh", "", headers);
-      assertThat(response.code()).isEqualTo(401);
-
-      String cookie = response.header("Set-Cookie");
-      assertThat(cookie).isNull();
-
-      ErrorResponse body = http.parseBody(response, ErrorResponse.class);
-      assertThat(body.error()).isEqualTo("Invalid credentials");
-
-      assertThat(refreshTokenRepository.findAll()).isEmpty();
-    }
-
-    @Test
-    @DisplayName(
-        "POST /auth/refresh: given expired refresh token, then return 401 Invalid credentials")
-    void POST_auth_refresh_expiredRefreshToken_return401InvalidCredentials() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginRequest request = new LoginRequest(user.getEmail(), VALID_PASSWORD);
-
-      String cookie;
-      try (Response loginResponse = http.post("/auth/login", request)) {
-        cookie = loginResponse.header("Set-Cookie");
-      }
-      assertThat(cookie).isNotNull();
-      String refreshToken = getValueFromCookie(cookie, "refreshToken");
-      assertThat(refreshToken).isNotNull();
-
-      // Manually expire the token
-      em.getTransaction().begin();
-      em.createNativeQuery("UPDATE refresh_tokens SET expiry_date = NOW() - INTERVAL '1 second'")
-          .executeUpdate();
-      em.getTransaction().commit();
-
-      RefreshToken expiredRefreshToken =
-          refreshTokenRepository.findByToken(refreshToken).orElseThrow();
-
-      Map<String, String> headers = Map.of("Cookie", "refreshToken=" + refreshToken);
-      Response refreshResponse = http.post("/auth/refresh", "", headers);
-      assertThat(refreshResponse.code()).isEqualTo(401);
-
-      String refreshResponseCookie = refreshResponse.header("Set-Cookie");
-      assertThat(refreshResponseCookie).isNull();
-
-      ErrorResponse body = http.parseBody(refreshResponse, ErrorResponse.class);
-      assertThat(body.error()).isEqualTo("Invalid credentials");
-
-      List<RefreshToken> foundRefreshTokenList = refreshTokenRepository.findAll();
-      assertThat(foundRefreshTokenList).hasSize(1);
-      assertThat(foundRefreshTokenList.getFirst()).isEqualTo(expiredRefreshToken);
-    }
-
-    @Test
-    @DisplayName(
-        "POST /auth/refresh: given revoked refresh token, then return 401 Invalid credentials")
-    void POST_auth_refresh_revokedRefreshToken_return401InvalidCredentials() {
-      UserEntity user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      LoginRequest request = new LoginRequest(user.getEmail(), VALID_PASSWORD);
-
-      String oldRefreshToken;
-      try (Response loginResponse = http.post("/auth/login", request)) {
-        String cookie = loginResponse.header("Set-Cookie");
-        assertThat(cookie).isNotNull();
-        oldRefreshToken = getValueFromCookie(cookie, "refreshToken");
-        assertThat(oldRefreshToken).isNotNull();
-      }
-
-      // Use the refresh token, which will revoke it and issue a new one
-      Map<String, String> headers = Map.of("Cookie", "refreshToken=" + oldRefreshToken);
-      try (Response refreshResponse = http.post("/auth/refresh", "", headers)) {
-        assertThat(refreshResponse.code()).isEqualTo(200);
-
-        String cookie = refreshResponse.header("Set-Cookie");
-        assertThat(cookie).isNotNull();
-
-        String refreshToken = getValueFromCookie(cookie, "refreshToken");
-        assertThat(refreshToken).isNotNull();
-        assertThat(isValidToken(refreshToken, Token.REFRESH)).isTrue();
-
-        assertThat(refreshTokenRepository.findByToken(oldRefreshToken).orElseThrow().revoked())
-            .isTrue(); // assert that effectively was revoked
-      }
-
-      // Try to use the old, revoked token again
-      Response secondRefreshResponse = http.post("/auth/refresh", "", headers);
-      assertThat(secondRefreshResponse.code()).isEqualTo(401);
-
-      String refreshResponseCookie = secondRefreshResponse.header("Set-Cookie");
-      assertThat(refreshResponseCookie).isNull();
-
-      ErrorResponse body = http.parseBody(secondRefreshResponse, ErrorResponse.class);
-      assertThat(body.error()).isEqualTo("Invalid credentials");
-
-      int tokensThatShouldBeInDatabase = 2;
-      assertThat(refreshTokenRepository.findAll()).hasSize(tokensThatShouldBeInDatabase);
+      String refreshTokenCookie =
+          getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
+      validateRefreshToken(refreshTokenCookie, user.id());
     }
   }
 }

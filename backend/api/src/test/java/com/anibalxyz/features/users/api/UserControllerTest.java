@@ -1,31 +1,27 @@
 package com.anibalxyz.features.users.api;
 
-import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
-import static com.anibalxyz.features.Helpers.capturedJsonAs;
-import static com.anibalxyz.features.Helpers.stubBodyValidatorFor;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.features.Constants;
-import com.anibalxyz.features.common.application.exception.InvalidInputException;
-import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.common.application.ValidationNotification;
+import com.anibalxyz.features.common.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
-import com.anibalxyz.features.users.api.out.UserCreateResponse;
-import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.in.CreateUserCommand;
+import com.anibalxyz.features.users.application.in.UpdateUserCommand;
 import com.anibalxyz.features.users.domain.Email;
+import com.anibalxyz.features.users.domain.Name;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.error.UserNotFoundError;
+import com.anibalxyz.shared.Constants;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
-import io.javalin.validation.ValidationError;
-import io.javalin.validation.ValidationException;
 import io.javalin.validation.Validator;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,6 +33,8 @@ import org.mockito.stubbing.OngoingStubbing;
 @DisplayName("Tests for UserController")
 public class UserControllerTest {
 
+  private static int BCRYPT_LOG_ROUNDS;
+
   @Mock private UserService userService;
 
   @Mock private Context ctx;
@@ -46,10 +44,11 @@ public class UserControllerTest {
   @BeforeAll
   public static void setup() {
     Constants.init();
+    BCRYPT_LOG_ROUNDS = Constants.APP_ENV.BCRYPT_LOG_ROUNDS();
   }
 
   @SuppressWarnings("unchecked")
-  private OngoingStubbing<Integer> stubPathParamId() {
+  private OngoingStubbing<Integer> whenGettingPathParamId() {
     Validator<Integer> mockValidator = (Validator<Integer>) mock(Validator.class);
     when(ctx.pathParamAsClass("id", Integer.class)).thenReturn(mockValidator);
     return when(mockValidator.getOrThrow(any()));
@@ -58,117 +57,98 @@ public class UserControllerTest {
   @Nested
   @DisplayName("Failure Scenarios")
   class FailureScenarios {
-
     @Test
-    @DisplayName("getUserById: given a non-existing id, then throw ResourceNotFoundException")
-    public void getUserById_nonExistingId_throwsResourceNotFoundException() {
+    @DisplayName(
+        "getUserById: given the service returns UserNotFoundError, then throw FailureSignal")
+    public void getUserById_serviceReturnsUserNotFoundError_throwFailureSignal() {
       int nonExistingId = 999;
-      stubPathParamId().thenReturn(nonExistingId);
-      when(userService.getUserById(nonExistingId)).thenThrow(new ResourceNotFoundException(""));
+      whenGettingPathParamId().thenReturn(nonExistingId);
+      when(userService.getUserById(nonExistingId))
+          .thenReturn(Result.failure(UserNotFoundError.byId(nonExistingId)));
 
       assertThatThrownBy(() -> userController.getUserById(ctx))
-          .isInstanceOf(ResourceNotFoundException.class);
+          .isInstanceOf(FailureSignal.class)
+          .extracting(e -> ((FailureSignal) e).getError())
+          .isInstanceOf(UserNotFoundError.class);
     }
 
     @Test
     @DisplayName("getUserById: given an invalid id, then throw BadRequestResponse")
-    public void getUserById_invalidId_throwsBadRequestResponse() {
-      stubPathParamId().thenThrow(new BadRequestResponse());
+    public void getUserById_invalidId_throwBadRequestResponse() {
+      whenGettingPathParamId().thenThrow(new BadRequestResponse());
 
       assertThatThrownBy(() -> userController.getUserById(ctx))
           .isInstanceOf(BadRequestResponse.class);
     }
 
     @Test
-    @DisplayName("createUser: given an invalid property, then throw InvalidInputException")
-    public void createUser_invalidProperty_throwsInvalidInputException() {
-      UserCreateRequest request = new UserCreateRequest("John Doe", "mail.com", "abc");
-      stubBodyValidatorFor(ctx, UserCreateRequest.class).thenReturn(request);
+    @DisplayName(
+        "createUser: given the service returns ValidationNotification, then throw FailureSignal")
+    public void createUser_serviceReturnsValidationNotification_throwFailureSignal() {
+      UserCreateRequest request = mock(UserCreateRequest.class);
+      CreateUserCommand command = mock(CreateUserCommand.class);
+      when(request.toCommand()).thenReturn(command);
 
-      when(userService.createUser(request)).thenThrow(new InvalidInputException(""));
-
-      assertThatThrownBy(() -> userController.createUser(ctx))
-          .isInstanceOf(InvalidInputException.class);
-    }
-
-    @Test
-    @DisplayName("createUser: given a missing property, then throw ValidationException")
-    public void createUser_missingProperty_throwsValidationException() {
-      stubBodyValidatorFor(ctx, UserCreateRequest.class)
-          .thenThrow(
-              new ValidationException(
-                  Map.of("property", List.of(new ValidationError<>("Property is required")))));
+      when(ctx.bodyAsClass(UserCreateRequest.class)).thenReturn(request);
+      when(userService.createUser(command))
+          .thenReturn(Result.failure(new ValidationNotification<>()));
 
       assertThatThrownBy(() -> userController.createUser(ctx))
-          .isInstanceOf(ValidationException.class);
+          .isInstanceOf(FailureSignal.class)
+          .extracting(fs -> ((FailureSignal) fs).getError())
+          .isInstanceOf(ValidationNotification.class);
     }
 
     @Test
     @DisplayName("updateUserById: given an invalid id, then throw BadRequestResponse")
-    public void updateUserById_invalidId_throwsBadRequestResponse() {
-      stubPathParamId().thenThrow(new BadRequestResponse());
+    public void updateUserById_invalidId_throwBadRequestResponse() {
+      whenGettingPathParamId().thenThrow(new BadRequestResponse());
+
       assertThatThrownBy(() -> userController.updateUserById(ctx))
           .isInstanceOf(BadRequestResponse.class);
     }
 
     @Test
-    @DisplayName("updateUserById: given missing data, then throw ValidationException")
-    public void updateUserById_missingData_throwsValidationException() {
-      stubPathParamId().thenReturn(1);
-      stubBodyValidatorFor(ctx, UserUpdateRequest.class)
-          .thenThrow(
-              new ValidationException(
-                  Map.of("property", List.of(new ValidationError<>("Property is required")))));
-      assertThatThrownBy(() -> userController.updateUserById(ctx))
-          .isInstanceOf(ValidationException.class);
-    }
+    @DisplayName(
+        "updateUserById: given the service returns UpdateUserByIdError, then throw FailureSignal")
+    public void updateUserById_serviceReturnsUpdateUserByIdError_throwFailureSignal() {
+      UserUpdateRequest request = mock(UserUpdateRequest.class);
+      UpdateUserCommand command = mock(UpdateUserCommand.class);
+      when(request.toCommand()).thenReturn(command);
+      whenGettingPathParamId().thenReturn(1);
 
-    @Test
-    @DisplayName("updateUserById: given an invalid property, then throw InvalidInputException")
-    public void updateUserById_invalidProperty_throwsInvalidInputException() {
-      UserUpdateRequest request = new UserUpdateRequest("John Doe", "mail.com", "abc");
-      int validId = 1;
-
-      stubPathParamId().thenReturn(validId);
-      stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
-
-      when(userService.updateUserById(validId, request)).thenThrow(new InvalidInputException(""));
+      when(ctx.bodyAsClass(UserUpdateRequest.class)).thenReturn(request);
+      when(userService.updateUserById(1, command))
+          .thenReturn(Result.failure(new UserService.UpdateUserByIdError.EmptyCommand()));
 
       assertThatThrownBy(() -> userController.updateUserById(ctx))
-          .isInstanceOf(InvalidInputException.class);
-    }
-
-    @Test
-    @DisplayName("updateUserById: given a non-existing id, then throw ResourceNotFoundException")
-    public void updateUserById_nonExistingId_throwsResourceNotFoundException() {
-      UserUpdateRequest request = new UserUpdateRequest("John Doe", "mail.com", "abc");
-      int nonExistingId = 999;
-      stubPathParamId().thenReturn(nonExistingId);
-      stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
-
-      when(userService.updateUserById(nonExistingId, request))
-          .thenThrow(new ResourceNotFoundException(""));
-
-      assertThatThrownBy(() -> userController.updateUserById(ctx))
-          .isInstanceOf(ResourceNotFoundException.class);
+          .isInstanceOf(FailureSignal.class)
+          .extracting(fs -> ((FailureSignal) fs).getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.class);
     }
 
     @Test
     @DisplayName("deleteUserById: given an invalid id, then throw BadRequestResponse")
-    public void deleteUserById_invalidId_throwsBadRequestResponse() {
-      stubPathParamId().thenThrow(new BadRequestResponse());
+    public void deleteUserById_invalidId_throwBadRequestResponse() {
+      whenGettingPathParamId().thenThrow(new BadRequestResponse());
+
       assertThatThrownBy(() -> userController.deleteUserById(ctx))
           .isInstanceOf(BadRequestResponse.class);
     }
 
     @Test
-    @DisplayName("deleteUserById: given a non-existing id, then throw ResourceNotFoundException")
-    public void deleteUserById_nonExistingId_throwsResourceNotFoundException() {
+    @DisplayName(
+        "deleteUserById: given the service returns UserNotFoundError, then throw FailureSignal")
+    public void deleteUserById_serviceReturnsUserNotFoundError_throwFailureSignal() {
       int nonExistingId = 999;
-      stubPathParamId().thenReturn(nonExistingId);
-      doThrow(new ResourceNotFoundException("")).when(userService).deleteUserById(nonExistingId);
+      whenGettingPathParamId().thenReturn(nonExistingId);
+      when(userService.deleteUserById(nonExistingId))
+          .thenReturn(Result.failure(UserNotFoundError.byId(nonExistingId)));
+
       assertThatThrownBy(() -> userController.deleteUserById(ctx))
-          .isInstanceOf(ResourceNotFoundException.class);
+          .isInstanceOf(FailureSignal.class)
+          .extracting(fs -> ((FailureSignal) fs).getError())
+          .isInstanceOf(UserNotFoundError.class);
     }
   }
 
@@ -176,163 +156,133 @@ public class UserControllerTest {
   @DisplayName("Success Scenarios")
   class SuccessScenarios {
     @BeforeEach
-    void setUp() {
+    public void stubStatusChaining() {
       when(ctx.status(anyInt())).thenReturn(ctx);
     }
 
     @Test
-    @DisplayName("getAllUsers: given users exist, then return 200 and users as JSON")
-    public void getAllUsers_return200AndUsersJson() {
+    @DisplayName("getAllUsers: given there are users, then respond 200 with users list")
+    public void getAllUsers_thereAreUsers_respond200WithUsersList() {
       Instant instant = Instant.now();
-      int logRounds = BCRYPT_LOG_ROUNDS;
-      // Given there are users
       List<User> fakeUsers =
           List.of(
               new User(
                   1,
-                  "John Doe",
-                  new Email("john.doe@example.com"),
-                  PasswordHash.generate("12345678", logRounds),
+                  Name.of("John Doe").getValue(),
+                  Email.of("john.doe@example.com").getValue(),
+                  PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS).getValue(),
                   instant,
                   instant),
               new User(
                   2,
-                  "Jane Smith",
-                  new Email("jane.smith@example.com"),
-                  PasswordHash.generate("87654321", logRounds),
+                  Name.of("Jane Smith").getValue(),
+                  Email.of("jane.smith@example.com").getValue(),
+                  PasswordHash.generate("87654321", BCRYPT_LOG_ROUNDS).getValue(),
                   instant,
                   instant));
 
-      // When getAllUsers is called
       when(userService.getAllUsers()).thenReturn(fakeUsers);
       userController.getAllUsers(ctx);
 
       verify(ctx).status(200);
-
-      @SuppressWarnings("unchecked")
-      List<UserDetailResponse> actual = capturedJsonAs(ctx, List.class);
-
-      List<UserDetailResponse> expected =
-          fakeUsers.stream().map(UserMapper::toDetailResponse).toList();
-
-      // then return users as JSON
-      assertThat(actual).isEqualTo(expected);
+      verify(ctx).json(fakeUsers.stream().map(UserMapper::toDetailResponse).toList());
     }
 
     @Test
-    @DisplayName("getAllUsers: given no users exist, then return 200 and empty JSON array")
-    public void getAllUsers_return200AndEmptyJsonArray() {
+    @DisplayName("getAllUsers: given there are no users, then respond 200 with empty list")
+    public void getAllUsers_thereAreNoUsers_respond200WithEmptyList() {
       List<User> fakeUsers = List.of();
 
       when(userService.getAllUsers()).thenReturn(fakeUsers);
       userController.getAllUsers(ctx);
 
       verify(ctx).status(200);
-
-      @SuppressWarnings("unchecked")
-      List<UserDetailResponse> actual = capturedJsonAs(ctx, List.class);
-      List<UserDetailResponse> expected = List.of();
-
-      assertThat(actual).isEqualTo(expected);
+      verify(ctx).json(List.of());
     }
 
     @Test
-    @DisplayName("getUserById: given an existing id, then return 200 and user as JSON")
-    public void getUserById_existingId_returns200AndUserJson() {
+    @DisplayName("getUserById: given the service returns User, then return 200 with User")
+    public void getUserById_serviceReturnsUser_respond200WithUser() {
       Instant instant = Instant.now();
-      int logRounds = BCRYPT_LOG_ROUNDS;
       int id = 1;
       User fakeUser =
           new User(
               id,
-              "John Doe",
-              new Email("johndoe@gmail.com"),
-              PasswordHash.generate("12345678", logRounds),
+              Name.of("John Doe").getValue(),
+              Email.of("johndoe@gmail.com").getValue(),
+              PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS).getValue(),
               instant,
               instant);
 
-      stubPathParamId().thenReturn(id);
-      when(userService.getUserById(id)).thenReturn(fakeUser);
+      whenGettingPathParamId().thenReturn(id);
+      when(userService.getUserById(id)).thenReturn(Result.success(fakeUser));
 
       userController.getUserById(ctx);
 
       verify(ctx).status(200);
-
-      UserDetailResponse actual = capturedJsonAs(ctx, UserDetailResponse.class);
-      UserDetailResponse expected = UserMapper.toDetailResponse(fakeUser);
-
-      assertThat(actual).isEqualTo(expected);
+      verify(ctx).json(UserMapper.toDetailResponse(fakeUser));
     }
 
     @Test
-    @DisplayName("createUser: given valid data, then return 201 and new user")
-    public void createUser_validData_return201AndNewUser() {
+    @DisplayName("createUser: given the service returns User, then respond 201 with new user")
+    public void createUser_serviceReturnsUser_respond201WithNewUser() {
       Instant instant = Instant.now();
-      int logRounds = BCRYPT_LOG_ROUNDS;
       UserCreateRequest request =
           new UserCreateRequest("John Doe", "johndoe@gmail.com", "12345678");
       User fakeUser =
           new User(
               1,
-              request.name(),
-              new Email(request.email()),
-              PasswordHash.generate(request.password(), logRounds),
+              Name.of(request.name()).getValue(),
+              Email.of(request.email()).getValue(),
+              PasswordHash.generate(request.password(), BCRYPT_LOG_ROUNDS).getValue(),
               instant,
               instant);
 
-      stubBodyValidatorFor(ctx, UserCreateRequest.class).thenReturn(request);
+      when(ctx.bodyAsClass(UserCreateRequest.class)).thenReturn(request);
 
-      when(userService.createUser(request)).thenReturn(fakeUser);
+      when(userService.createUser(request.toCommand())).thenReturn(Result.success(fakeUser));
 
       userController.createUser(ctx);
 
       verify(ctx).status(201);
-
-      UserCreateResponse actualResponse = capturedJsonAs(ctx, UserCreateResponse.class);
-      UserCreateResponse expectedResponse = UserMapper.toCreateResponse(fakeUser);
-
-      assertThat(actualResponse).isEqualTo(expectedResponse);
+      verify(ctx).json(UserMapper.toCreateResponse(fakeUser));
     }
 
     @Test
     @DisplayName(
-        "updateUserById: given an existing id and valid data, then return 200 and updated user")
-    public void updateUserById_existingIdAndValidData_returns200AndUpdatedUser() {
+        "updateUserById: given the service returns User, then respond 200 with updated user")
+    public void updateUserById_serviceReturnsUser_respond200WithUpdatedUser() {
       UserUpdateRequest request =
           new UserUpdateRequest("John Doe", "john@mail.com", "password12345678");
       int id = 1;
 
       Instant instant = Instant.now();
-      int logRounds = BCRYPT_LOG_ROUNDS;
       User fakeUser =
           new User(
               id,
-              request.name(),
-              new Email(request.email()),
-              PasswordHash.generate(request.password(), logRounds),
+              Name.of(request.name()).getValue(),
+              Email.of(request.email()).getValue(),
+              PasswordHash.generate(request.password(), BCRYPT_LOG_ROUNDS).getValue(),
               instant,
               instant);
 
-      stubPathParamId().thenReturn(id);
-      stubBodyValidatorFor(ctx, UserUpdateRequest.class).thenReturn(request);
-      when(userService.updateUserById(id, request)).thenReturn(fakeUser);
+      whenGettingPathParamId().thenReturn(id);
+      when(ctx.bodyAsClass(UserUpdateRequest.class)).thenReturn(request);
+      when(userService.updateUserById(id, request.toCommand()))
+          .thenReturn(Result.success(fakeUser));
 
       userController.updateUserById(ctx);
 
       verify(ctx).status(200);
-
-      UserDetailResponse expectedResponse = UserMapper.toDetailResponse(fakeUser);
-      UserDetailResponse actualResponse = capturedJsonAs(ctx, UserDetailResponse.class);
-
-      assertThat(actualResponse).isEqualTo(expectedResponse);
+      verify(ctx).json(UserMapper.toDetailResponse(fakeUser));
     }
 
     @Test
-    @DisplayName("deleteUserById: given an existing id, then return 204 No Content")
-    public void deleteUserById_existingId_returns204NoContent() {
+    @DisplayName("deleteUserById: given the service returns success, then respond 204 no content")
+    public void deleteUserById_serviceReturnsSuccess_respond204NoContent() {
       int validId = 1;
-      stubPathParamId().thenReturn(validId);
-      doNothing().when(userService).deleteUserById(validId);
+      whenGettingPathParamId().thenReturn(validId);
+      when(userService.deleteUserById(validId)).thenReturn(Result.success(null));
 
       userController.deleteUserById(ctx);
 

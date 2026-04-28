@@ -1,63 +1,70 @@
 package com.anibalxyz.features.users.application;
 
-import static com.anibalxyz.features.Constants.Environment.BCRYPT_LOG_ROUNDS;
-import static com.anibalxyz.features.Constants.Users.VALID_PASSWORD;
+import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.features.Constants;
-import com.anibalxyz.features.common.application.exception.ConflictException;
-import com.anibalxyz.features.common.application.exception.InvalidInputException;
-import com.anibalxyz.features.common.application.exception.ResourceNotFoundException;
-import com.anibalxyz.features.users.application.in.UserUpdatePayload;
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.features.users.domain.UserRepository;
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.common.application.ValidationNotification;
+import com.anibalxyz.features.common.domain.error.DomainError;
+import com.anibalxyz.features.common.domain.error.ReasonedError;
+import com.anibalxyz.features.users.api.in.UserCreateRequest;
+import com.anibalxyz.features.users.api.in.UserUpdateRequest;
+import com.anibalxyz.features.users.application.in.UpdateUserCommand;
+import com.anibalxyz.features.users.domain.*;
+import com.anibalxyz.features.users.domain.error.*;
+import com.anibalxyz.shared.Constants;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.EmptySource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+// TODO: cache or pre-create basic/common objects to speed up tests
+//       e.g. creating a PasswordHash object is expensive.
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for UserService")
 public class UserServiceTest {
+
+  public static int BCRYPT_LOG_ROUNDS;
+
   @Mock private UserRepository userRepository;
 
   private UserService userService;
 
-  private static UserUpdatePayload createPayload(String name, String email, String password) {
-    return new UserUpdatePayload() {
-      @Override
-      public String name() {
-        return name;
-      }
-
-      @Override
-      public String email() {
-        return email;
-      }
-
-      @Override
-      public String password() {
-        return password;
-      }
-    };
-  }
-
   @BeforeAll
   public static void setup() {
     Constants.init();
+    BCRYPT_LOG_ROUNDS = Constants.APP_ENV.BCRYPT_LOG_ROUNDS();
+  }
+
+  private static User buildUser(int id, String email) {
+    return new User(
+        id,
+        Name.of("User").getValue(),
+        Email.of(email).getValue(),
+        PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS).getValue(),
+        Instant.now(),
+        Instant.now());
+  }
+
+  private static void assertHasFailureOn(
+      ValidationNotification<? extends DomainError> n,
+      String field,
+      Class<? extends DomainError> errorClass) {
+    assertThat(n.getErrors())
+        .satisfiesExactly(
+            e -> {
+              assertThat(e.field()).isEqualTo(field);
+              assertThat(e.error()).isInstanceOf(errorClass);
+            });
   }
 
   @BeforeEach
@@ -72,263 +79,154 @@ public class UserServiceTest {
     @Test
     @DisplayName("getAllUsers: given users exist, then return a list of all users")
     public void getAllUsers_usersExist_returnListOfUsers() {
-      Instant currentDate = Instant.now();
       List<User> expectedUsers =
-          List.of(
-              new User(
-                  1,
-                  "User 1",
-                  new Email("user1@mail.com"),
-                  PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-                  currentDate,
-                  currentDate),
-              new User(
-                  2,
-                  "User 2",
-                  new Email("user2@mail.com"),
-                  PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-                  currentDate,
-                  currentDate));
+          List.of(buildUser(1, "user1@mail.com"), buildUser(2, "user2@mail.com"));
       when(userRepository.findAll()).thenReturn(expectedUsers);
 
-      List<User> actualUsers = userService.getAllUsers();
-
-      assertThat(actualUsers).isEqualTo(expectedUsers);
+      assertThat(userService.getAllUsers()).isEqualTo(expectedUsers);
     }
 
     @Test
     @DisplayName("getAllUsers: given no users exist, then return an empty list")
     public void getAllUsers_noUsersExist_returnEmptyList() {
-      List<User> expectedResult = List.of();
-      when(userRepository.findAll()).thenReturn(expectedResult);
+      when(userRepository.findAll()).thenReturn(List.of());
 
-      List<User> actualResult = userService.getAllUsers();
-
-      assertThat(actualResult).isEqualTo(expectedResult);
+      assertThat(userService.getAllUsers()).isEmpty();
     }
 
     @Test
     @DisplayName("getUserById: given an existing id, then return the correct user")
     public void getUserById_existingId_returnUser() {
-      Instant currentDate = Instant.now();
-      User expectedUser =
-          new User(
-              1,
-              "User 1",
-              new Email("user1@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
-      when(userRepository.findById(expectedUser.getId())).thenReturn(Optional.of(expectedUser));
+      User expected = buildUser(1, "user1@mail.com");
+      when(userRepository.findById(expected.id())).thenReturn(Optional.of(expected));
 
-      User actualUser = userService.getUserById(expectedUser.getId());
+      Result<User, UserNotFoundError> result = userService.getUserById(expected.id());
 
-      assertThat(actualUser).isEqualTo(expectedUser);
+      assertThat(result.isSuccess()).isTrue();
+      assertThat(result.getValue()).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("getUserByEmail: given an existing email, then return the correct user")
     public void getUserByEmail_existingEmail_returnUser() {
-      Instant currentDate = Instant.now();
-      User expectedUser =
-          new User(
-              1,
-              "User 1",
-              new Email("user1@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
-      when(userRepository.findByEmail(new Email(expectedUser.getEmail().value())))
-          .thenReturn(Optional.of(expectedUser));
+      User expected = buildUser(1, "user1@mail.com");
+      when(userRepository.findByEmail(expected.email())).thenReturn(Optional.of(expected));
 
-      User actualUser = userService.getUserByEmail(expectedUser.getEmail().value());
+      Result<User, DomainError> result = userService.getUserByEmail(expected.email().value());
 
-      assertThat(actualUser).isEqualTo(expectedUser);
+      assertThat(result.isSuccess()).isTrue();
+      assertThat(result.getValue()).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("createUser: given valid data, then return the created user")
     public void createUser_validData_returnCreatedUser() {
-      int validId = 1;
-      Instant currentDate = Instant.now();
-      UserUpdatePayload payload = createPayload("User 1", "user1@mail.com", VALID_PASSWORD);
-      User creatingUser =
-          new User(
-              payload.name(),
-              new Email(payload.email()),
-              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS));
-      User expectedUser =
-          creatingUser.withId(validId).withCreatedAt(currentDate).withUpdatedAt(currentDate);
+      UserCreateRequest request = new UserCreateRequest("User 1", "user1@mail.com", VALID_PASSWORD);
 
-      when(userRepository.findByEmail(expectedUser.getEmail())).thenReturn(Optional.empty());
+      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+          .thenReturn(Optional.empty());
       when(userRepository.save(
               argThat(
-                  user ->
-                      user.getName().equals(creatingUser.getName())
-                          && user.getEmail().equals(creatingUser.getEmail())
-                          && user.getPasswordHash().matches(payload.password()))))
-          .thenAnswer(invocation -> invocation.getArgument(0));
+                  u ->
+                      u.name().equals(Name.of(request.name()).getValue())
+                          && u.email().equals(Email.of(request.email()).getValue())
+                          && u.passwordHash().matches(request.password()))))
+          .thenAnswer(inv -> inv.getArgument(0));
 
-      User actualUser =
-          userService
-              .createUser(payload)
-              .withId(validId)
-              .withCreatedAt(currentDate)
-              .withUpdatedAt(currentDate);
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
 
-      assertThat(actualUser.getName()).isEqualTo(expectedUser.getName());
-      assertThat(actualUser.getEmail()).isEqualTo(expectedUser.getEmail());
-      assertTrue(actualUser.getPasswordHash().matches(payload.password()));
-      assertThat(actualUser.getUpdatedAt()).isEqualTo(expectedUser.getUpdatedAt());
-      assertThat(actualUser.getCreatedAt()).isEqualTo(expectedUser.getCreatedAt());
+      assertThat(result.isSuccess()).isTrue();
+      User actual = result.getValue();
+      assertThat(actual.name()).isEqualTo(Name.of(request.name()).getValue());
+      assertThat(actual.email()).isEqualTo(Email.of(request.email()).getValue());
+      assertTrue(actual.passwordHash().matches(request.password()));
     }
 
     @Test
     @DisplayName("updateUserById: given a valid id and name, then return the updated user")
     public void updateUserById_validIdAndName_returnUpdatedUser() {
-      int existingId = 1;
-      UserUpdatePayload payload = createPayload("New Name", null, null);
-      Instant currentDate = Instant.now();
-      User existingUser =
-          new User(
-              existingId,
-              "Previous",
-              new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
+      User existing = buildUser(1, "previous@mail.com");
+      UserUpdateRequest request = new UserUpdateRequest("New Name", null, null);
+      User expected = existing.withName(Name.of(request.name()).getValue());
 
-      User expectedUpdatedUser = existingUser.withName(payload.name());
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.save(expected)).thenAnswer(inv -> inv.getArgument(0));
 
-      when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
-      when(userRepository.save(expectedUpdatedUser))
-          .thenAnswer(invocation -> invocation.getArgument(0));
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), request.toCommand());
 
-      User actualUpdatedUser = userService.updateUserById(existingId, payload);
-
-      assertThat(actualUpdatedUser).isEqualTo(expectedUpdatedUser);
+      assertThat(result.isSuccess()).isTrue();
+      assertThat(result.getValue()).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("updateUserById: given a valid id and email, then return the updated user")
     public void updateUserById_validIdAndEmail_returnUpdatedUser() {
-      int existingId = 1;
-      UserUpdatePayload payload = createPayload(null, "new@mail.com", null);
-      Instant currentDate = Instant.now();
-      User existingUser =
-          new User(
-              existingId,
-              "Previous",
-              new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
+      User existing = buildUser(1, "previous@mail.com");
+      UserUpdateRequest request = new UserUpdateRequest(null, "new@mail.com", null);
+      User expected = existing.withEmail(Email.of(request.email()).getValue());
 
-      User expectedUpdatedUser = existingUser.withEmail(new Email(payload.email()));
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findByEmail(expected.email())).thenReturn(Optional.empty());
+      when(userRepository.save(expected)).thenAnswer(inv -> inv.getArgument(0));
 
-      when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
-      when(userRepository.findByEmail(expectedUpdatedUser.getEmail())).thenReturn(Optional.empty());
-      when(userRepository.save(expectedUpdatedUser))
-          .thenAnswer(invocation -> invocation.getArgument(0));
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), request.toCommand());
 
-      User actualUpdatedUser = userService.updateUserById(existingId, payload);
-
-      assertThat(actualUpdatedUser).isEqualTo(expectedUpdatedUser);
+      assertThat(result.isSuccess()).isTrue();
+      assertThat(result.getValue()).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("updateUserById: given a valid id and password, then return the updated user")
     public void updateUserById_validIdAndPassword_returnUpdatedUser() {
-      int existingId = 1;
-      UserUpdatePayload payload = createPayload(null, null, "new" + VALID_PASSWORD);
-      Instant currentDate = Instant.now();
-      User existingUser =
-          new User(
-              existingId,
-              "Previous",
-              new Email("previous@email.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
+      User existing = buildUser(1, "previous@mail.com");
+      String newPassword = "new" + VALID_PASSWORD;
+      UserUpdateRequest request = new UserUpdateRequest(null, null, newPassword);
 
-      User expectedUpdatedUser =
-          existingUser.withPasswordHash(
-              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS));
-
-      when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
       when(userRepository.save(
               argThat(
-                  user ->
-                      user.getId() == existingId
-                          && user.getEmail().equals(expectedUpdatedUser.getEmail())
-                          && user.getPasswordHash().matches(payload.password())
-                          && user.getUpdatedAt().equals(expectedUpdatedUser.getUpdatedAt())
-                          && user.getCreatedAt().equals(expectedUpdatedUser.getCreatedAt()))))
-          .thenAnswer(invocation -> invocation.getArgument(0));
+                  u ->
+                      u.id().equals(existing.id())
+                          && u.email().equals(existing.email())
+                          && u.passwordHash().matches(newPassword))))
+          .thenAnswer(inv -> inv.getArgument(0));
 
-      User actualUpdatedUser = userService.updateUserById(existingId, payload);
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), request.toCommand());
 
-      assertThat(actualUpdatedUser.getName()).isEqualTo(expectedUpdatedUser.getName());
-      assertThat(actualUpdatedUser.getEmail()).isEqualTo(expectedUpdatedUser.getEmail());
-      assertTrue(actualUpdatedUser.getPasswordHash().matches(payload.password()));
-      assertThat(actualUpdatedUser.getUpdatedAt()).isEqualTo(expectedUpdatedUser.getUpdatedAt());
-      assertThat(actualUpdatedUser.getCreatedAt()).isEqualTo(expectedUpdatedUser.getCreatedAt());
+      assertThat(result.isSuccess()).isTrue();
+      assertTrue(result.getValue().passwordHash().matches(newPassword));
     }
 
     @Test
     @DisplayName(
         "updateUserById: given an email already in use by the user, then return the unmodified user")
     public void updateUserById_emailAlreadyUsedByUser_returnUnmodifiedUser() {
-      int updatingId = 1;
-      UserUpdatePayload payload = createPayload(null, "updating@mail.com", null);
-      Instant now = Instant.now();
-      User existingUser =
-          new User(
-              updatingId,
-              "Previous",
-              new Email(payload.email()),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              now,
-              now);
+      User existing = buildUser(1, "same@mail.com");
+      UserUpdateRequest request = new UserUpdateRequest(null, "same@mail.com", null);
 
-      when(userRepository.findById(updatingId)).thenReturn(Optional.of(existingUser));
-      when(userRepository.save(existingUser)).thenAnswer(invocation -> invocation.getArgument(0));
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.save(existing)).thenAnswer(inv -> inv.getArgument(0));
 
-      User updatedUser = userService.updateUserById(updatingId, payload);
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), request.toCommand());
 
-      assertThat(updatedUser).isEqualTo(existingUser);
+      assertThat(result.isSuccess()).isTrue();
+      assertThat(result.getValue()).isEqualTo(existing);
     }
 
     @Test
-    @DisplayName("updateUserById: given an empty payload, then return the unmodified user")
-    public void updateUserById_emptyPayload_returnSameUser() {
-      int existingId = 1;
-      UserUpdatePayload payload = createPayload(null, null, null);
-      Instant currentDate = Instant.now();
-      User existingUser =
-          new User(
-              existingId,
-              "Previous",
-              new Email("previous@email.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
+    @DisplayName("deleteUserById: given an existing id, then return success")
+    public void deleteUserById_existingId_returnSuccess() {
+      when(userRepository.deleteById(1)).thenReturn(true);
 
-      when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
-      when(userRepository.save(existingUser)).thenAnswer(invocation -> invocation.getArgument(0));
+      Result<Void, UserNotFoundError> result = userService.deleteUserById(1);
 
-      User actualUser = userService.updateUserById(existingId, payload);
-
-      assertThat(actualUser).isEqualTo(existingUser);
-    }
-
-    @Test
-    @DisplayName("deleteUserById: given an existing id, then delete user")
-    public void deleteUserById_existingId_deleteUser() {
-      int existingId = 1;
-      when(userRepository.deleteById(existingId)).thenReturn(true);
-
-      assertThatCode(() -> userService.deleteUserById(existingId)).doesNotThrowAnyException();
+      assertThat(result.isSuccess()).isTrue();
+      assertThat(result.getValue()).isNull();
     }
   }
 
@@ -337,182 +235,452 @@ public class UserServiceTest {
   class FailureScenarios {
 
     @Test
-    @DisplayName("getUserById: given a non-existing id, then throw ResourceNotFoundException")
-    public void getUserById_nonExistingId_throwResourceNotFoundException() {
-      int nonExistingId = 999;
-      when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+    @DisplayName("getUserById: given a non-existing id, then return UserNotFoundError")
+    public void getUserById_nonExistingId_returnUserNotFoundError() {
+      int id = 999;
+      when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-      assertThatThrownBy(() -> userService.getUserById(nonExistingId))
-          .isInstanceOf(ResourceNotFoundException.class)
-          .hasMessage("User with id " + nonExistingId + " not found");
+      Result<User, UserNotFoundError> result = userService.getUserById(id);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserNotFoundError.class)
+          .extracting(ReasonedError::getReason)
+          .isEqualTo(new UserNotFoundError.Reason.ById(id));
     }
 
     @Test
-    @DisplayName("getUserByEmail: given a non-existing email, then throw ResourceNotFoundException")
-    public void getUserByEmail_nonExistingEmail_throwResourceNotFoundException() {
-      String nonExistingEmail = "non.existing@mail.com";
-      when(userRepository.findByEmail(new Email(nonExistingEmail))).thenReturn(Optional.empty());
+    @DisplayName("getUserByEmail: given a non-existing email, then return UserNotFoundError")
+    public void getUserByEmail_nonExistingEmail_returnUserNotFoundError() {
+      String email = "non.existing@mail.com";
+      when(userRepository.findByEmail(Email.of(email).getValue())).thenReturn(Optional.empty());
 
-      assertThatThrownBy(() -> userService.getUserByEmail(nonExistingEmail))
-          .isInstanceOf(ResourceNotFoundException.class)
-          .hasMessage("User with email " + nonExistingEmail + " not found");
-    }
+      Result<User, DomainError> result = userService.getUserByEmail(email);
 
-    @ParameterizedTest
-    @CsvSource({"blank", "format"})
-    @DisplayName("getUserByEmail: given an invalid email format, then throw InvalidInputException")
-    public void getUserByEmail_invalidEmailFormat_throwInvalidInputException(
-        String invalidationCause) {
-      String email = invalidationCause.equals("format") ? "mailemail.com" : " ";
-
-      assertThatThrownBy(() -> userService.getUserByEmail(email))
-          .isInstanceOf(InvalidInputException.class)
-          .hasMessage("Invalid email format: " + email);
-    }
-
-    @Test
-    @DisplayName("createUser: given an existing email, then throw ConflictException")
-    public void createUser_existingEmail_throwConflictException() {
-      Instant currentDate = Instant.now();
-      UserUpdatePayload payload = createPayload("User 1", "user1@mail.com", VALID_PASSWORD);
-      User existingUser =
-          new User(
-              1,
-              payload.name(),
-              new Email(payload.email()),
-              PasswordHash.generate(payload.password(), BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
-      when(userRepository.findByEmail(new Email(payload.email())))
-          .thenReturn(Optional.of(existingUser));
-
-      assertThatThrownBy(() -> userService.createUser(payload))
-          .isInstanceOf(ConflictException.class)
-          .hasMessage("Email already in use. Please use another");
-    }
-
-    @ParameterizedTest
-    @CsvSource({"blank", "format"})
-    @DisplayName("createUser: given an invalid email format, then throw InvalidInputException")
-    public void createUser_invalidEmailFormat_throwInvalidInputException(String invalidationCause) {
-      String email = invalidationCause.equals("format") ? "mailemail.com" : " ";
-      UserUpdatePayload payload = createPayload("User", email, VALID_PASSWORD);
-
-      assertThatThrownBy(() -> userService.createUser(payload))
-          .isInstanceOf(InvalidInputException.class)
-          .hasMessage("Invalid email format: " + payload.email());
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {" ", "invalid"})
-    @DisplayName("createUser: given an invalid password, then throw InvalidInputException")
-    public void createUser_invalidPassword_throwInvalidPasswordFormatException(String password) {
-      UserUpdatePayload payload = createPayload("User", "mail@email.com", password);
-      when(userRepository.findByEmail(new Email(payload.email()))).thenReturn(Optional.empty());
-
-      assertThatThrownBy(() -> userService.createUser(payload))
-          .isInstanceOf(InvalidInputException.class);
-    }
-
-    @Test
-    @DisplayName("updateUserById: given a non-existing id, then throw ResourceNotFoundException")
-    public void updateUserById_nonExistingId_throwResourceNotFoundException() {
-      int nonExistingId = 999;
-      UserUpdatePayload payload = createPayload("New Name", null, null);
-
-      when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-
-      assertThatThrownBy(() -> userService.updateUserById(nonExistingId, payload))
-          .isInstanceOf(ResourceNotFoundException.class)
-          .hasMessage("User with id " + nonExistingId + " not found");
-    }
-
-    @ParameterizedTest
-    @CsvSource({"blank", "format"})
-    @DisplayName("updateUserById: given an invalid email format, then throw InvalidInputException")
-    public void updateUserById_invalidEmailFormat_throwInvalidInputException(
-        String invalidationCause) {
-      int existingId = 1;
-      String email = invalidationCause.equals("format") ? "invalidemail" : " ";
-      UserUpdatePayload payload = createPayload(null, email, null);
-      Instant currentDate = Instant.now();
-      User existingUser =
-          new User(
-              existingId,
-              "Previous",
-              new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
-
-      when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
-
-      assertThatThrownBy(() -> userService.updateUserById(existingId, payload))
-          .isInstanceOf(InvalidInputException.class)
-          .hasMessage("Invalid email format: " + payload.email());
-    }
-
-    @ParameterizedTest
-    @EmptySource
-    @ValueSource(strings = {" ", "invalid"})
-    @DisplayName(
-        "updateUserById: given an invalid password format, then throw InvalidInputException")
-    public void updateUserById_invalidPasswordFormat_throwInvalidPasswordFormatException(
-        String password) {
-      int existingId = 1;
-      UserUpdatePayload payload = createPayload(null, null, password);
-      Instant currentDate = Instant.now();
-      User existingUser =
-          new User(
-              existingId,
-              "Previous",
-              new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              currentDate,
-              currentDate);
-
-      when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
-
-      // the message doesn't matter as it is being unit-tested
-      assertThatThrownBy(() -> userService.updateUserById(existingId, payload))
-          .isInstanceOf(InvalidInputException.class);
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserNotFoundError.class)
+          .extracting(e -> ((UserNotFoundError) e).getReason())
+          .isEqualTo(new UserNotFoundError.Reason.ByEmail(email));
     }
 
     @Test
     @DisplayName(
-        "updateUserById: given an email already in use by another user, then throw ConflictException")
-    public void updateUserById_emailAlreadyUsedByAnotherUser_throwConflictException() {
-      int updatingId = 1;
-      UserUpdatePayload payload = createPayload(null, "updating@mail.com", null);
-      Instant now = Instant.now();
-      User existingUser =
-          new User(
-              2,
-              "Previous",
-              new Email("previous@mail.com"),
-              PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS),
-              now,
-              now);
+        "getUserByEmail: given a blank email, then return InvalidEmailError with Blank reason")
+    public void getUserByEmail_blankEmail_returnInvalidEmailErrorWithBlankReason() {
+      Result<User, DomainError> result = userService.getUserByEmail(" ");
 
-      when(userRepository.findById(updatingId)).thenReturn(Optional.of(existingUser));
-      when(userRepository.findByEmail(new Email(payload.email())))
-          .thenReturn(Optional.of(existingUser));
-
-      assertThatThrownBy(() -> userService.updateUserById(updatingId, payload))
-          .isInstanceOf(ConflictException.class)
-          .hasMessage("Email already in use. Please use another");
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(InvalidEmailError.class)
+          .extracting(e -> ((InvalidEmailError) e).getReason())
+          .isInstanceOf(InvalidEmailError.Reason.Blank.class);
     }
 
     @Test
-    @DisplayName("deleteUserById: given a non-existing id, then throw ResourceNotFoundException")
-    public void deleteUserById_nonExistingId_throwResourceNotFoundException() {
-      int nonExistingId = 999;
-      when(userRepository.deleteById(nonExistingId)).thenReturn(false);
+    @DisplayName(
+        "getUserByEmail: given an invalid email format, then return InvalidEmailError with InvalidFormat reason")
+    public void getUserByEmail_invalidEmailFormat_returnInvalidEmailErrorWithInvalidFormatReason() {
+      Result<User, DomainError> result = userService.getUserByEmail("mailemail.com");
 
-      assertThatThrownBy(() -> userService.deleteUserById(nonExistingId))
-          .isInstanceOf(ResourceNotFoundException.class)
-          .hasMessage("User with id " + nonExistingId + " not found");
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(InvalidEmailError.class)
+          .extracting(e -> ((InvalidEmailError) e).getReason())
+          .isEqualTo(new InvalidEmailError.Reason.InvalidFormat());
+    }
+
+    // ── createUser ────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("createUser: given a missing name, then return Absent error on name")
+    public void createUser_missingName_returnAbsentErrorOnName() {
+      UserCreateRequest request = new UserCreateRequest(null, "mail@email.com", VALID_PASSWORD);
+      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+          .thenReturn(Optional.empty());
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError().getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("name");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidNameError.class)
+                    .extracting(err -> ((InvalidNameError) err).getReason())
+                    .isInstanceOf(InvalidNameError.Reason.Absent.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a blank name, then return Blank error on name")
+    public void createUser_blankName_returnBlankErrorOnName() {
+      UserCreateRequest request = new UserCreateRequest(" ", "mail@email.com", VALID_PASSWORD);
+      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+          .thenReturn(Optional.empty());
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError().getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("name");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidNameError.class)
+                    .extracting(err -> ((InvalidNameError) err).getReason())
+                    .isInstanceOf(InvalidNameError.Reason.Blank.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a missing email, then return Absent error on email")
+    public void createUser_missingEmail_returnAbsentErrorOnEmail() {
+      UserCreateRequest request = new UserCreateRequest("User", null, VALID_PASSWORD);
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError().getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("email");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidEmailError.class)
+                    .extracting(err -> ((InvalidEmailError) err).getReason())
+                    .isInstanceOf(InvalidEmailError.Reason.Absent.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a blank email, then return Blank error on email")
+    public void createUser_blankEmail_returnBlankErrorOnEmail() {
+      UserCreateRequest request = new UserCreateRequest("User", " ", VALID_PASSWORD);
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError().getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("email");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidEmailError.class)
+                    .extracting(err -> ((InvalidEmailError) err).getReason())
+                    .isInstanceOf(InvalidEmailError.Reason.Blank.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a missing password, then return Absent error on password")
+    public void createUser_missingPassword_returnAbsentErrorOnPassword() {
+      UserCreateRequest request = new UserCreateRequest("User", "mail@email.com", null);
+      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+          .thenReturn(Optional.empty());
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError().getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("password");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidPasswordError.class)
+                    .extracting(err -> ((InvalidPasswordError) err).getReason())
+                    .isInstanceOf(InvalidPasswordError.Reason.Absent.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a blank password, then return Blank error on password")
+    public void createUser_blankPassword_returnBlankErrorOnPassword() {
+      UserCreateRequest request = new UserCreateRequest("User", "mail@email.com", " ");
+      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+          .thenReturn(Optional.empty());
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError().getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("password");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidPasswordError.class)
+                    .extracting(err -> ((InvalidPasswordError) err).getReason())
+                    .isInstanceOf(InvalidPasswordError.Reason.Blank.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given an existing email, then return EmailAlreadyTakenError on email")
+    public void createUser_existingEmail_returnEmailAlreadyTakenError() {
+      UserCreateRequest request = new UserCreateRequest("User 1", "user1@mail.com", VALID_PASSWORD);
+      User existing = buildUser(1, request.email());
+      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+          .thenReturn(Optional.of(existing));
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertHasFailureOn(result.getError(), "email", EmailAlreadyTakenError.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"some@mail", "some-mail.com", "@mail.com"})
+    @DisplayName(
+        "createUser: given an invalid email format, then return InvalidFormat error on email")
+    public void createUser_invalidEmail_returnInvalidFormatErrorOnEmail(String email) {
+      UserCreateRequest request = new UserCreateRequest("User", email, VALID_PASSWORD);
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError().getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("email");
+                assertThat(e.error()).isInstanceOf(InvalidEmailError.class);
+              });
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "short",
+          "long-72-chars-12345678901234567890123456789012345678901234567890123456789"
+        })
+    @DisplayName(
+        "createUser: given an invalid password value, then return InvalidValue error on password")
+    public void createUser_invalidPassword_returnInvalidValueErrorOnPassword(String password) {
+      UserCreateRequest request = new UserCreateRequest("User", "mail@email.com", password);
+      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+          .thenReturn(Optional.empty());
+
+      Result<User, ValidationNotification<UserDomainError>> result =
+          userService.createUser(request.toCommand());
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError().getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("password");
+                assertThat(e.error()).isInstanceOf(InvalidPasswordError.class);
+              });
+    }
+
+    // ── updateUserById ────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("updateUserById: given a non-existing id, then return NotFound error")
+    public void updateUserById_nonExistingId_returnNotFoundError() {
+      int id = 999;
+      UpdateUserCommand command = new UpdateUserCommand("New Name", null, null);
+      when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(id, command);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.NotFound.class)
+          .extracting(e -> ((UserService.UpdateUserByIdError.NotFound) e).error().getReason())
+          .isEqualTo(new UserNotFoundError.Reason.ById(id));
+    }
+
+    @Test
+    @DisplayName("updateUserById: given all fields empty, then return EmptyCommand error")
+    public void updateUserById_emptyCommand_returnEmptyCommandFailure() {
+      UpdateUserCommand command = new UpdateUserCommand(null, null, null);
+
+      Result<User, UserService.UpdateUserByIdError> result = userService.updateUserById(1, command);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.EmptyCommand.class);
+    }
+
+    @Test
+    @DisplayName("updateUserById: given a blank name, then return Blank error on name")
+    public void updateUserById_blankName_returnBlankErrorOnName() {
+      User existing = buildUser(1, "previous@mail.com");
+      UpdateUserCommand command = new UpdateUserCommand(" ", null, VALID_PASSWORD);
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), command);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
+      ValidationNotification<UserDomainError> n =
+          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+
+      assertThat(n.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("name");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidNameError.class)
+                    .extracting(err -> ((InvalidNameError) err).getReason())
+                    .isInstanceOf(InvalidNameError.Reason.Blank.class);
+              });
+    }
+
+    @Test
+    @DisplayName("updateUserById: given a blank email, then return Blank error on email")
+    public void updateUserById_blankEmail_returnBlankErrorOnEmail() {
+      User existing = buildUser(1, "previous@mail.com");
+      UpdateUserCommand command = new UpdateUserCommand(null, " ", VALID_PASSWORD);
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), command);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
+      ValidationNotification<UserDomainError> n =
+          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+
+      assertThat(n.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("email");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidEmailError.class)
+                    .extracting(err -> ((InvalidEmailError) err).getReason())
+                    .isInstanceOf(InvalidEmailError.Reason.Blank.class);
+              });
+    }
+
+    @Test
+    @DisplayName("updateUserById: given a blank password, then return Blank error on password")
+    public void updateUserById_blankPassword_returnBlankErrorOnPassword() {
+      User existing = buildUser(1, "previous@mail.com");
+      UpdateUserCommand command = new UpdateUserCommand("New Name", null, " ");
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), command);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
+      ValidationNotification<UserDomainError> n =
+          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+
+      assertThat(n.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("password");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidPasswordError.class)
+                    .extracting(err -> ((InvalidPasswordError) err).getReason())
+                    .isInstanceOf(InvalidPasswordError.Reason.Blank.class);
+              });
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"some@mail", "some-mail.com", "@mail.com"})
+    @DisplayName(
+        "updateUserById: given an invalid email format, then return InvalidFormat error on email")
+    public void updateUserById_invalidEmail_returnInvalidFormatErrorOnEmail(String email) {
+      User existing = buildUser(1, "previous@mail.com");
+      UpdateUserCommand command = new UpdateUserCommand(null, email, null);
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), command);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
+      ValidationNotification<UserDomainError> n =
+          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+
+      assertThat(n.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("email");
+                assertThat(e.error()).isInstanceOf(InvalidEmailError.class);
+              });
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "short",
+          "long-72-chars-12345678901234567890123456789012345678901234567890123456789"
+        })
+    @DisplayName(
+        "updateUserById: given an invalid password value, then return InvalidValue error on password")
+    public void updateUserById_invalidPassword_returnInvalidValueErrorOnPassword(String password) {
+      User existing = buildUser(1, "previous@mail.com");
+      UpdateUserCommand command = new UpdateUserCommand(null, null, password);
+      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+
+      Result<User, UserService.UpdateUserByIdError> result =
+          userService.updateUserById(existing.id(), command);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
+      ValidationNotification<UserDomainError> n =
+          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+
+      assertThat(n.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("password");
+                assertThat(e.error()).isInstanceOf(InvalidPasswordError.class);
+              });
+    }
+
+    @Test
+    @DisplayName(
+        "updateUserById: given an email already in use, then return EmailAlreadyTakenError on email")
+    public void updateUserById_emailAlreadyInUse_returnEmailAlreadyTakenError() {
+      User existing = buildUser(2, "previous@mail.com");
+      UpdateUserCommand command = new UpdateUserCommand(null, "taken@mail.com", null);
+      when(userRepository.findById(1)).thenReturn(Optional.of(existing));
+      when(userRepository.findByEmail(Email.of(command.email()).getValue()))
+          .thenReturn(Optional.of(existing));
+
+      Result<User, UserService.UpdateUserByIdError> result = userService.updateUserById(1, command);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
+      ValidationNotification<UserDomainError> n =
+          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+
+      assertHasFailureOn(n, "email", EmailAlreadyTakenError.class);
+    }
+
+    @Test
+    @DisplayName("deleteUserById: given a non-existing id, then return UserNotFoundError")
+    public void deleteUserById_nonExistingId_returnUserNotFoundError() {
+      int id = 999;
+      when(userRepository.deleteById(id)).thenReturn(false);
+
+      Result<Void, UserNotFoundError> result = userService.deleteUserById(id);
+
+      assertThat(result.isFailure()).isTrue();
+      assertThat(result.getError())
+          .isInstanceOf(UserNotFoundError.class)
+          .extracting(ReasonedError::getReason)
+          .isEqualTo(new UserNotFoundError.Reason.ById(id));
     }
   }
 }

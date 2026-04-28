@@ -1,150 +1,147 @@
 package com.anibalxyz.features.auth.application;
 
-import static com.anibalxyz.features.Constants.Environment.*;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.Constants;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
-import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.shared.Constants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
+import java.time.*;
 import javax.crypto.SecretKey;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @DisplayName("Tests for JwtService")
 @ExtendWith(MockitoExtension.class)
-public class JwtServiceTest {
+class JwtServiceTest {
+  private static final ZonedDateTime FIXED_NOW =
+      LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
+  private static final Clock testClock = Clock.fixed(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
+  private static final String JWT_SECRET = "some_secret_greather_than_32_bytes";
+  private static final SecretKey JWT_KEY =
+      Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+  private static final String JWT_ISSUER = "test-issuer";
+  private static final long JWT_EXPIRATION_MINUTES = 30L;
+  private static final int USER_ID = 123;
+  private static final JwtEnvironmentStub env;
 
-  @Mock private JwtEnvironment env;
-  @InjectMocks private JwtService jwtService;
+  static {
+    // placed here to avoid error caused by bad order of declaration
+    env = new JwtEnvironmentStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES);
+  }
+
+  private JwtService jwtService;
 
   @BeforeAll
-  public static void init() {
+  static void init() {
     Constants.init();
-    Assertions.setMaxStackTraceElementsDisplayed(120);
   }
 
   @BeforeEach
-  public void setup() {
-    lenient().when(env.JWT_SECRET()).thenReturn(JWT_SECRET);
-    lenient().when(env.JWT_ISSUER()).thenReturn(JWT_ISSUER);
-    lenient()
-        .when(env.JWT_ACCESS_EXPIRATION_TIME_MINUTES())
-        .thenReturn(JWT_ACCESS_EXPIRATION_TIME_MINUTES);
-    lenient().when(env.JWT_KEY()).thenReturn(JWT_KEY);
+  void setup() {
+    jwtService = new JwtService(env, testClock);
   }
 
-  @Nested
-  @DisplayName("Success Scenarios")
-  class SuccessScenarios {
-    @Test
-    @DisplayName("generateToken: given a valid user ID, then return a non-null token")
-    public void generateToken_validUserId_returnNonNullToken() {
-      Integer userId = 123;
-
-      String token = jwtService.generateToken(userId);
-
-      assertNotNull(token);
-    }
-
-    @Test
-    @DisplayName("validateToken: given a valid token, then return valid claims")
-    public void validateToken_validToken_returnValidClaims() {
-
-      Integer userId = 123;
-      String token = jwtService.generateToken(userId);
-
-      Claims claims = assertDoesNotThrow(() -> jwtService.validateToken(token));
-
-      assertEquals(String.valueOf(userId), claims.getSubject());
-      assertEquals(JWT_ISSUER, claims.getIssuer());
-    }
+  @Test
+  @DisplayName("generateToken: given valid user ID, then return valid jwt")
+  void generateToken_validUserId_returnValidJwt() {
+    String jwt = jwtService.generateToken(USER_ID);
+    Result<Claims, JwtService.JwtValidationError> validationResult = jwtService.validateToken(jwt);
+    assertThat(validationResult.isSuccess()).isTrue();
   }
 
-  @Nested
-  @DisplayName("Failure Scenarios")
-  class FailureScenarios {
-    @Test
-    @DisplayName("validateToken: given an expired token, then throw InvalidCredentialsException")
-    public void validateToken_expiredToken_throwInvalidCredentialsException() {
-      when(env.JWT_ACCESS_EXPIRATION_TIME_MINUTES()).thenReturn(Duration.ofSeconds(1).toMinutes());
+  @Test
+  @DisplayName("validateToken: given valid token, then return success with correct claims")
+  void validateToken_validToken_returnSuccessWithCorrectClaims() {
+    String token = jwtService.generateToken(USER_ID);
 
-      Integer userId = 123;
-      String token = jwtService.generateToken(userId);
+    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
 
-      // Wait for the token to expire
-      try {
-        Thread.sleep(1500); // Sleep for 1.5 seconds
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
+    assertThat(result.isSuccess()).isTrue();
+    assertThat(result.getValue().getSubject()).isEqualTo(String.valueOf(USER_ID));
+    assertThat(result.getValue().getIssuer()).isEqualTo(JWT_ISSUER);
+  }
 
-      assertThatThrownBy(() -> jwtService.validateToken(token))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("JWT has expired");
-    }
+  @Test
+  @DisplayName("validateToken: given expired token, then return failure with Expired reason")
+  void validateToken_expiredToken_returnFailureWithExpired() {
+    JwtService delayedService = new JwtService(env, Clock.offset(testClock, Duration.ofHours(-50)));
+    String token = delayedService.generateToken(USER_ID);
 
-    @Test
-    @DisplayName("validateToken: given a malformed token, then throw InvalidCredentialsException")
-    public void validateToken_malformedToken_throwInvalidCredentialsException() {
+    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
 
-      String malformedToken = "this.is.not.a.valid.jwt";
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Expired.class);
+  }
 
-      assertThatThrownBy(() -> jwtService.validateToken(malformedToken))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Invalid JWT token");
-    }
+  @Test
+  @DisplayName("validateToken: given premature token, then return failure with Invalid reason")
+  void validateToken_prematureToken_returnFailureWithInvalid() {
+    JwtService delayedService = new JwtService(env, Clock.offset(testClock, Duration.ofHours(50)));
+    String token = delayedService.generateToken(USER_ID);
 
-    @Test
-    @DisplayName(
-        "validateToken: given a token with invalid signature, then throw InvalidCredentialsException")
-    public void validateToken_invalidSignatureToken_throwInvalidCredentialsException() {
-      // NOTE: the hand-made service uses default environment-injected values while the mocked one
-      //       changes the signature
-      JwtService jwtServiceWithDifferentSignature = new JwtService(Constants.APP_CONFIG.env());
+    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
 
-      byte[] differentSecretBytes =
-          Constants.APP_CONFIG
-              .env()
-              .JWT_SECRET()
-              .concat("makeItDifferent")
-              .getBytes(StandardCharsets.UTF_8);
-      SecretKey differentKey = Keys.hmacShaKeyFor(differentSecretBytes);
-      when(env.JWT_KEY()).thenReturn(differentKey);
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
+  }
 
-      Integer userId = 123;
-      String token = jwtServiceWithDifferentSignature.generateToken(userId);
+  @Test
+  @DisplayName("validateToken: given malformed token, then return failure with Invalid reason")
+  void validateToken_malformedToken_returnFailureWithInvalid() {
+    Result<Claims, JwtService.JwtValidationError> result =
+        jwtService.validateToken("this.is.not.a.valid.jwt...");
 
-      assertThatThrownBy(() -> jwtService.validateToken(token))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Invalid JWT token");
-    }
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
+  }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {" "})
-    @DisplayName(
-        "validateToken: given a null or empty token, then throw InvalidCredentialsException")
-    public void validateToken_nullOrEmptyToken_throwInvalidCredentialsException(
-        String invalidToken) {
-      assertThatThrownBy(() -> jwtService.validateToken(invalidToken))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Invalid JWT token");
+  @Test
+  @DisplayName(
+      "validateToken: given token with invalid signature, then return failure with Invalid reason")
+  void validateToken_invalidSignature_returnFailureWithInvalid() {
+    // Must be the same size (or less) as JWT_SECRET
+    // NOTE: replace with a different char. Currently: "s" -> "^".
+    String stringToMakeItDifferent = JWT_SECRET.substring(0, JWT_SECRET.length() - 1) + "^";
+    SecretKey differentKey =
+        Keys.hmacShaKeyFor((stringToMakeItDifferent).getBytes(StandardCharsets.UTF_8));
+    JwtService serviceWithDifferentKey = new JwtService(env.withJWT_KEY(differentKey), testClock);
+
+    // Token signed with differentKey, validated by jwtService (which uses JWT_KEY)
+    String token = serviceWithDifferentKey.generateToken(USER_ID);
+    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
+
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = {" "})
+  @DisplayName(
+      "validateToken: given null, empty or blank token, then return failure with Missing reason")
+  void validateToken_nullOrBlankToken_returnFailureWithMissing(String token) {
+    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
+
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Missing.class);
+  }
+
+  private record JwtEnvironmentStub(
+      SecretKey JWT_KEY, String JWT_ISSUER, long JWT_ACCESS_EXPIRATION_TIME_MINUTES)
+      implements JwtEnvironment {
+    public JwtEnvironmentStub withJWT_KEY(SecretKey JWT_KEY) {
+      return new JwtEnvironmentStub(
+          JWT_KEY, this.JWT_ISSUER, this.JWT_ACCESS_EXPIRATION_TIME_MINUTES);
     }
   }
 }

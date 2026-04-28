@@ -1,13 +1,12 @@
 package com.anibalxyz.features.users.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for Email Value Object")
@@ -15,20 +14,33 @@ public class EmailTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"valid@mail.com", "a@mail.uy", "vAl1d.e-mail@domain.ar"})
-  @DisplayName("constructor: given a valid email, then create an Email object")
-  public void constructor_validEmail_returnEmailObject(String validEmailString) {
-    assertDoesNotThrow(
-        () -> {
-          Email email = new Email(validEmailString);
-        });
+  @DisplayName("of: given a valid email, then return a successful Result")
+  public void of_validEmail_returnSuccess(String validEmailString) {
+    Result<Email, InvalidEmailError> result = Email.of(validEmailString);
+    assertThat(result.isSuccess()).isTrue();
+    assertThat(result.getValue().value()).isEqualTo(Email.normalize(validEmailString));
   }
 
   @ParameterizedTest
-  @NullAndEmptySource
+  @ValueSource(strings = {"", " "})
+  @DisplayName("of: given a blank email, then return a failed Result with Blank reason")
+  public void of_blankEmail_returnFailureWithBlank(String blank) {
+    Result<Email, InvalidEmailError> result = Email.of(blank);
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError().getReason()).isInstanceOf(InvalidEmailError.Reason.Blank.class);
+  }
+
+  @Test
+  @DisplayName("of: given an absent email, then return a failed Result with Absent reason")
+  public void of_absentEmail_returnFailureWithAbsent() {
+    Result<Email, InvalidEmailError> result = Email.of(null);
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError().getReason()).isInstanceOf(InvalidEmailError.Reason.Absent.class);
+  }
+
+  @ParameterizedTest
   @ValueSource(
       strings = {
-        "",
-        " ",
         "plainaddress",
         "#@%^%#$@#$@#.com",
         "@example.com",
@@ -36,19 +48,22 @@ public class EmailTest {
         "email@example@com",
         "lengthGT255qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqw@mail.com"
       })
-  @DisplayName("constructor: given an invalid email format, then throw IllegalArgumentException")
-  public void constructor_invalidEmail_throwsIllegalArgumentException(String invalidEmailString) {
-    assertThatThrownBy(() -> new Email(invalidEmailString))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Invalid email format");
+  @DisplayName(
+      "of: given an invalid email format, then return a failed Result with InvalidFormat reason")
+  public void of_invalidEmailFormat_returnFailureWithInvalidFormat(String invalidEmailString) {
+    Result<Email, InvalidEmailError> result = Email.of(invalidEmailString);
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError().getReason())
+        .isInstanceOf(InvalidEmailError.Reason.InvalidFormat.class);
   }
 
   @Test
   @DisplayName(
-      "constructor: given an email with uppercase letters, then return the email normalized to lowercase")
-  public void constructor_uppercaseEmail_returnNormalizedToLowerCaseEmail() {
+      "of: given an email with uppercase letters, then return the email normalized to lowercase")
+  public void of_uppercaseEmail_returnNormalizedToLowerCase() {
     String uppercaseEmail = "ExampleEMAIL@Domain.COM";
-    Email email = new Email(uppercaseEmail);
-    assertThat(email.value()).isEqualTo(uppercaseEmail.toLowerCase());
+    Result<Email, InvalidEmailError> email = Email.of(uppercaseEmail);
+    assertThat(email.isSuccess()).isTrue();
+    assertThat(email.getValue().value()).isEqualTo(uppercaseEmail.toLowerCase());
   }
 }

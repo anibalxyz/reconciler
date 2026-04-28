@@ -1,279 +1,253 @@
 package com.anibalxyz.features.auth.application;
 
-import static com.anibalxyz.features.Constants.Auth.VALID_REFRESH_TOKEN;
-import static com.anibalxyz.features.Constants.Environment.JWT_REFRESH_EXPIRATION_TIME_DAYS;
-import static com.anibalxyz.features.Constants.Users.VALID_USER;
+import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.features.Constants;
-import com.anibalxyz.features.auth.application.env.RefreshTokenEnvironment;
-import com.anibalxyz.features.auth.application.exception.InvalidCredentialsException;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
-import jakarta.persistence.PersistenceException;
+import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
+import com.anibalxyz.features.common.Result;
+import com.anibalxyz.shared.Constants;
 import java.time.*;
-import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for RefreshTokenService")
-public class RefreshTokenServiceTest {
-  private static final Supplier<ZonedDateTime> defaultClock =
-      () -> ZonedDateTime.now(ZoneId.of("America/Montevideo"));
+class RefreshTokenServiceTest {
+  private static final Duration EXPIRATION = Duration.ofDays(7);
+  private static final Instant FIXED_NOW =
+      LocalDateTime.of(2025, 11, 25, 10, 0).toInstant(ZoneOffset.UTC);
   @Mock private RefreshTokenRepository refreshTokenRepository;
-  @Mock private RefreshTokenEnvironment env;
-  @Mock private Supplier<ZonedDateTime> clock;
-
-  @InjectMocks private RefreshTokenService refreshTokenService;
+  private RefreshTokenService refreshTokenService;
 
   @BeforeAll
-  public static void init() {
+  static void init() {
     Constants.init();
   }
 
-  @Nested
-  @DisplayName("Success Scenarios")
-  class SuccessfulScenarios {
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    @DisplayName("createRefreshToken: given valid user, then return refresh token")
-    public void createRefreshToken_validUser_returnRefreshToken(boolean useWindow) {
-      RefreshToken expectedRefreshToken =
-          new RefreshToken(
-              1L, VALID_REFRESH_TOKEN, VALID_USER, Instant.now().plusSeconds(2), false);
-
-      when(clock.get()).thenReturn(defaultClock.get());
-      when(env.JWT_REFRESH_EXPIRATION_TIME_DAYS()).thenReturn(JWT_REFRESH_EXPIRATION_TIME_DAYS);
-      when(env.AUTH_ENABLE_TIME_WINDOW()).thenReturn(useWindow);
-      when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(expectedRefreshToken);
-
-      RefreshToken actualRefreshToken = refreshTokenService.createRefreshToken(VALID_USER);
-      assertThat(actualRefreshToken).isEqualTo(expectedRefreshToken);
-    }
-
-    @Test
-    @DisplayName(
-        "createRefreshToken: given time window is enabled and expiry is after next Friday, then cap expiry to next Friday 20hs")
-    void createRefreshToken_windowEnabledAndExpiryAfterNextFriday_capExpiryToNextFriday() {
-      // Set the clock to a Thursday 10 hs. With a 7-day expiration,
-      // the token would normally (without being capped) expire next Thursday 10 hs.
-      ZonedDateTime thursday =
-          LocalDateTime.of(2025, 11, 27, 10, 0).atZone(ZoneId.of("America/Montevideo"));
-      when(clock.get()).thenReturn(thursday);
-
-      // Cap the expiry to the upcoming Friday at 20:00 (relative to selected Thursday).
-      Instant expectedExpiry =
-          thursday
-              .with(TemporalAdjusters.next(DayOfWeek.FRIDAY))
-              .withHour(20)
-              .withMinute(0)
-              .withSecond(0)
-              .withNano(0)
-              .toInstant();
-
-      RefreshToken expectedRefreshToken =
-          new RefreshToken(1L, VALID_REFRESH_TOKEN, VALID_USER, expectedExpiry, false);
-
-      when(env.JWT_REFRESH_EXPIRATION_TIME_DAYS()).thenReturn(Duration.ofDays(7));
-      when(env.AUTH_ENABLE_TIME_WINDOW()).thenReturn(true);
-      when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(expectedRefreshToken);
-
-      RefreshToken actualRefreshToken = refreshTokenService.createRefreshToken(VALID_USER);
-
-      assertThat(actualRefreshToken).isEqualTo(expectedRefreshToken);
-
-      verify(refreshTokenRepository)
-          .save(argThat(token -> token.expiryDate().equals(expectedExpiry)));
-    }
-
-    @Test
-    @DisplayName(
-        "createRefreshToken: given time window is enabled and expiry is Before next Friday, then do not cap expiry")
-    void createRefreshToken_windowEnabledAndExpiryBeforeNextFriday_doNotCapExpiry() {
-      // Set the clock to a Tuesday 13 hs.
-      // With a 1-day expiration, the token has to expire on Wednesday 13 hs.
-      ZonedDateTime tuesday =
-          LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
-      when(clock.get()).thenReturn(tuesday);
-
-      Instant expectedExpiry = tuesday.plusDays(1).toInstant();
-
-      RefreshToken expectedRefreshToken =
-          new RefreshToken(1L, VALID_REFRESH_TOKEN, VALID_USER, expectedExpiry, false);
-
-      when(env.JWT_REFRESH_EXPIRATION_TIME_DAYS()).thenReturn(Duration.ofDays(1));
-      when(env.AUTH_ENABLE_TIME_WINDOW()).thenReturn(true);
-      when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(expectedRefreshToken);
-
-      RefreshToken actualRefreshToken = refreshTokenService.createRefreshToken(VALID_USER);
-
-      assertThat(actualRefreshToken).isEqualTo(expectedRefreshToken);
-
-      verify(refreshTokenRepository)
-          .save(argThat(token -> token.expiryDate().equals(expectedExpiry)));
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    @DisplayName(
-        "verifyAndRotate: given valid refresh token string, then return created refresh token")
-    public void verifyAndRotate_validRefreshTokenString_returnCreatedRefreshToken(
-        boolean useWindow) {
-      RefreshToken oldRefreshToken =
-          new RefreshToken(
-              1L, VALID_REFRESH_TOKEN, VALID_USER, Instant.now().plusSeconds(2), false);
-      RefreshToken newRefreshToken =
-          new RefreshToken(
-              2L, VALID_REFRESH_TOKEN, VALID_USER, Instant.now().plusSeconds(2), false);
-
-      when(clock.get()).thenReturn(defaultClock.get());
-      when(env.JWT_REFRESH_EXPIRATION_TIME_DAYS()).thenReturn(JWT_REFRESH_EXPIRATION_TIME_DAYS);
-      when(env.AUTH_ENABLE_TIME_WINDOW()).thenReturn(useWindow);
-
-      when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN))
-          .thenReturn(Optional.of(oldRefreshToken));
-
-      when(refreshTokenRepository.save(oldRefreshToken.withRevoked(true)))
-          .thenReturn(null); // do nothing
-
-      when(refreshTokenRepository.save(argThat(token -> !token.revoked())))
-          .thenReturn(newRefreshToken); // 2nd call
-
-      RefreshToken actualRefreshToken = refreshTokenService.verifyAndRotate(VALID_REFRESH_TOKEN);
-      assertThat(actualRefreshToken).isEqualTo(newRefreshToken);
-
-      verify(refreshTokenRepository).save(oldRefreshToken.withRevoked(true));
-      verify(refreshTokenRepository, times(2)).save(any(RefreshToken.class));
-    }
-
-    @Test
-    @DisplayName("cleanupExpiredTokens: given tokens exist, then return number of deleted tokens")
-    public void cleanupExpiredTokens_tokensExist_returnNumberOfDeletedTokens() {
-      int expectedDeletedTokens = 5;
-      when(refreshTokenRepository.deleteExpiredTokens()).thenReturn(expectedDeletedTokens);
-      int actualDeletedTokens = refreshTokenService.cleanupExpiredTokens();
-      assertThat(actualDeletedTokens).isEqualTo(expectedDeletedTokens);
-    }
-
-    @Test
-    @DisplayName("revokeToken: given existing token, then revoke token")
-    public void revokeToken_existingToken_revokeToken() {
-      RefreshToken token =
-          new RefreshToken(
-              1L, VALID_REFRESH_TOKEN, VALID_USER, Instant.now().plusSeconds(2), false);
-
-      when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.of(token));
-
-      refreshTokenService.revokeToken(VALID_REFRESH_TOKEN);
-
-      verify(refreshTokenRepository).save(token.withRevoked(true));
-    }
-
-    @Test
-    @DisplayName("revokeToken: given non-existing token, then do nothing")
-    public void revokeToken_nonExistingToken_doNothing() {
-      when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.empty());
-
-      refreshTokenService.revokeToken(VALID_REFRESH_TOKEN);
-
-      verify(refreshTokenRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("revokeToken: given null token, then do nothing")
-    public void revokeToken_nullToken_doNothing() {
-      refreshTokenService.revokeToken(null);
-
-      verify(refreshTokenRepository, never()).findByToken(any());
-      verify(refreshTokenRepository, never()).save(any());
-    }
+  @BeforeEach
+  void di() {
+    refreshTokenService = new RefreshTokenService(refreshTokenRepository);
   }
 
-  @Nested
-  @DisplayName("Failure Scenarios")
-  class FailureScenarios {
-    @Test
-    @DisplayName("createRefreshToken: given repository fails, then propagate thrown exception")
-    public void createRefreshToken_repositoryFails_propagateThrownException() {
-      when(clock.get()).thenReturn(defaultClock.get());
-      when(env.JWT_REFRESH_EXPIRATION_TIME_DAYS()).thenReturn(JWT_REFRESH_EXPIRATION_TIME_DAYS);
-      when(env.AUTH_ENABLE_TIME_WINDOW()).thenReturn(false);
+  private RefreshToken buildToken(Instant expiryDate, boolean revoked) {
+    return new RefreshToken(1L, VALID_REFRESH_TOKEN, VALID_USER, expiryDate, revoked);
+  }
 
-      when(refreshTokenRepository.save(any(RefreshToken.class)))
-          .thenThrow(PersistenceException.class);
-      assertThatThrownBy(() -> refreshTokenService.createRefreshToken(null))
-          .isInstanceOf(PersistenceException.class);
-    }
+  private RefreshToken persistToken(long id, RefreshToken t) {
+    return new RefreshToken(id, t.token(), t.user(), t.expiryDate(), t.revoked());
+  }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "non-existing"})
-    @DisplayName(
-        "verifyAndRotate: given non-existing refresh token string, then throw InvalidCredentialsException")
-    public void verifyAndRotate_nonExistingRefreshTokenString_throwInvalidCredentialsException(
-        String cause) {
-      String token = cause.equals("null") ? null : cause;
+  private RefreshToken persistToken(RefreshToken t) {
+    return persistToken(1L, t);
+  }
 
-      when(refreshTokenRepository.findByToken(token)).thenReturn(Optional.empty());
+  @Test
+  @DisplayName("createRefreshToken: given a User, then persist and return refresh token")
+  void createRefreshToken_user_persistAndReturnRefreshToken() {
+    Instant expiryDate = FIXED_NOW.plus(EXPIRATION);
+    RefreshToken expected = buildToken(expiryDate, false);
+    when(refreshTokenRepository.save(
+            argThat(
+                refreshToken ->
+                    refreshToken.id() == null
+                        // This could be a UUID check if it were a dependency instead static call
+                        && refreshToken.user().equals(VALID_USER)
+                        && refreshToken.expiryDate().equals(expiryDate)
+                        && !refreshToken.revoked())))
+        .thenAnswer(i -> persistToken(i.getArgument(0)));
 
-      assertThatThrownBy(() -> refreshTokenService.verifyAndRotate(token))
-          .isInstanceOf(InvalidCredentialsException.class);
-    }
+    RefreshToken actual = refreshTokenService.createRefreshToken(VALID_USER, expiryDate);
 
-    @ParameterizedTest
-    @ValueSource(strings = {"expired", "revoked"})
-    @DisplayName(
-        "verifyAndRotate: given invalid refresh token string, then throw InvalidCredentialsException")
-    public void verifyAndRotate_invalidRefreshTokenString_throwInvalidCredentialsException(
-        String cause) {
-      RefreshToken validRefreshToken =
-          new RefreshToken(
-              1L,
-              VALID_REFRESH_TOKEN,
-              VALID_USER,
-              Instant.now().plusSeconds(2),
-              cause.equals("revoked"));
-      if (cause.equals("expired")) {
-        try {
-          Thread.sleep(Duration.ofSeconds(3));
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-      }
+    assertThat(actual.id()).isNotNull();
+    assertThat(actual).usingRecursiveComparison().ignoringFields("id", "token").isEqualTo(expected);
+  }
 
-      when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN))
-          .thenReturn(Optional.of(validRefreshToken));
+  @Test
+  @DisplayName("verifyRefreshToken: given valid RefreshToken, then return success")
+  void verifyRefreshToken_validRefreshToken_returnSuccess() {
+    RefreshToken token = buildToken(FIXED_NOW.plus(1, ChronoUnit.DAYS), false);
+    when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.of(token));
 
-      assertThatThrownBy(() -> refreshTokenService.verifyAndRotate(VALID_REFRESH_TOKEN))
-          .isInstanceOf(InvalidCredentialsException.class)
-          .hasMessage("Refresh token is expired or revoked");
-    }
+    Result<RefreshToken, InvalidRefreshTokenError> result =
+        refreshTokenService.verifyRefreshToken(VALID_REFRESH_TOKEN, FIXED_NOW);
 
-    @Test
-    @DisplayName("verifyAndRotate: given repository fails, then propagate thrown exception")
-    public void verifyAndRotate_repositoryFails_propagateThrownException() {
-      when(refreshTokenRepository.findByToken(null)).thenThrow(PersistenceException.class);
-      assertThatThrownBy(() -> refreshTokenService.verifyAndRotate(null))
-          .isInstanceOf(PersistenceException.class);
-    }
+    assertThat(result.isSuccess()).isTrue();
+    assertThat(result.getValue()).isEqualTo(token);
+  }
 
-    @Test
-    @DisplayName("cleanupExpiredTokens: given repository fails, then propagate thrown exception")
-    public void cleanupExpiredTokens_repositoryFails_propagateThrownException() {
-      when(refreshTokenRepository.deleteExpiredTokens()).thenThrow(PersistenceException.class);
-      assertThatThrownBy(() -> refreshTokenService.cleanupExpiredTokens())
-          .isInstanceOf(PersistenceException.class);
-    }
+  @Test
+  @DisplayName("verifyRefreshToken: given token not found, then return failure with NotFound")
+  void verifyRefreshToken_tokenNotFound_returnFailureWithNotFound() {
+    when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.empty());
+
+    Result<RefreshToken, InvalidRefreshTokenError> result =
+        refreshTokenService.verifyRefreshToken(VALID_REFRESH_TOKEN, FIXED_NOW);
+
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError().getReason())
+        .isInstanceOf(InvalidRefreshTokenError.Reason.NotFound.class);
+  }
+
+  @Test
+  @DisplayName("verifyRefreshToken: given expired token, then return failure with Expired reason")
+  void verifyRefreshToken_expiredToken_returnFailureWithExpired() {
+    RefreshToken token = buildToken(FIXED_NOW.minusSeconds(60), false);
+    when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.of(token));
+
+    Result<RefreshToken, InvalidRefreshTokenError> result =
+        refreshTokenService.verifyRefreshToken(VALID_REFRESH_TOKEN, FIXED_NOW);
+
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError().getReason())
+        .isInstanceOf(InvalidRefreshTokenError.Reason.Expired.class);
+  }
+
+  @Test
+  @DisplayName("verifyRefreshToken: given revoked token, then return failure with Revoked reason")
+  void verifyRefreshToken_revokedToken_returnFailureWithRevoked() {
+    RefreshToken token = buildToken(FIXED_NOW.plus(1, ChronoUnit.DAYS), true);
+    when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.of(token));
+
+    Result<RefreshToken, InvalidRefreshTokenError> result =
+        refreshTokenService.verifyRefreshToken(VALID_REFRESH_TOKEN, FIXED_NOW);
+
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError().getReason())
+        .isInstanceOf(InvalidRefreshTokenError.Reason.Revoked.class);
+  }
+
+  @Test
+  @DisplayName("verifyAndRotate: given verification failed, then return verification error")
+  void verifyAndRotate_verificationFailed_returnVerificationError() {
+    // simple way to stub verifyRefreshToken() internals to return an error
+    when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.empty());
+
+    Instant now = FIXED_NOW;
+    Result<RefreshToken, InvalidRefreshTokenError> result =
+        refreshTokenService.verifyAndRotate(VALID_REFRESH_TOKEN, now, now.plusSeconds(10));
+
+    assertThat(result.isFailure()).isTrue();
+    assertThat(result.getError().getReason())
+        .isInstanceOf(InvalidRefreshTokenError.Reason.NotFound.class);
+  }
+
+  @Test
+  @DisplayName(
+      "verifyAndRotate: given verification passed, then revoke the old token and return the new one")
+  void verifyAndRotate_validationPassed_revokeOldAndReturnNew() {
+    Instant now = FIXED_NOW;
+    Instant oldExpiryDate = now.plus(10, ChronoUnit.MINUTES); // still valid
+    Instant newExpiryDate = oldExpiryDate.plus(3, ChronoUnit.DAYS);
+
+    RefreshToken refreshToken = buildToken(oldExpiryDate, false);
+
+    when(refreshTokenRepository.findByToken(refreshToken.token()))
+        .thenReturn(Optional.of(refreshToken));
+    Function<RefreshToken, Boolean> isRevokedToken =
+        r ->
+            Objects.equals(r.id(), refreshToken.id())
+                && Objects.equals(r.token(), refreshToken.token())
+                && Objects.equals(r.user(), refreshToken.user())
+                && Objects.equals(r.expiryDate(), refreshToken.expiryDate())
+                && r.revoked();
+    Function<RefreshToken, Boolean> wasCorrectlyUpdated =
+        r ->
+            r.id() == null
+                && Objects.equals(r.user(), refreshToken.user())
+                && Objects.equals(r.expiryDate(), newExpiryDate)
+                && !r.revoked();
+
+    long newId = refreshToken.id() + 1;
+    when(refreshTokenRepository.save(any(RefreshToken.class)))
+        .thenAnswer(
+            i -> {
+              RefreshToken arg = i.getArgument(0);
+              // 1) revokeToken() internal call
+              if (isRevokedToken.apply(arg)) {
+                return arg;
+              }
+              // 2) createRefreshToken() internal call
+              if (wasCorrectlyUpdated.apply(arg)) {
+                return persistToken(newId, arg);
+              }
+
+              return fail("Method called with an unexpected argument: ", arg);
+            });
+
+    Result<RefreshToken, ?> result =
+        refreshTokenService.verifyAndRotate(refreshToken.token(), now, newExpiryDate);
+
+    verify(refreshTokenRepository).save(argThat(isRevokedToken::apply));
+    verify(refreshTokenRepository).save(argThat(wasCorrectlyUpdated::apply));
+
+    assertThat(result.isSuccess()).isTrue();
+    RefreshToken newRefreshToken = result.getValue();
+
+    assertThat(newRefreshToken.id()).isEqualTo(newId);
+    assertThat(newRefreshToken.token()).isNotEqualTo(refreshToken.token());
+    assertThat(newRefreshToken.user()).isEqualTo(refreshToken.user());
+    assertThat(newRefreshToken.expiryDate()).isEqualTo(newExpiryDate);
+  }
+
+  @Test
+  @DisplayName("revokeToken: given no token, then do nothing")
+  void revokeToken_noToken_doNothing() {
+    refreshTokenService.revokeToken(null);
+    refreshTokenService.revokeToken("");
+
+    verify(refreshTokenRepository, never()).save(any());
+    verify(refreshTokenRepository, never()).findByToken(any());
+  }
+
+  @Test
+  @DisplayName("revokeToken: given token not found, then do nothing")
+  void revokeToken_tokenNotFound_doNothing() {
+    when(refreshTokenRepository.findByToken(VALID_REFRESH_TOKEN)).thenReturn(Optional.empty());
+
+    refreshTokenService.revokeToken(VALID_REFRESH_TOKEN);
+
+    verify(refreshTokenRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("revokeToken: given valid token, then revoke it")
+  void revokeToken_validToken_revokeIt() {
+    RefreshToken refreshToken = buildToken(FIXED_NOW, false);
+    when(refreshTokenRepository.findByToken(refreshToken.token()))
+        .thenReturn(Optional.of(refreshToken));
+
+    refreshTokenService.revokeToken(VALID_REFRESH_TOKEN);
+
+    verify(refreshTokenRepository)
+        .save(
+            argThat(
+                r ->
+                    Objects.equals(r.id(), refreshToken.id())
+                        && Objects.equals(r.token(), refreshToken.token())
+                        && Objects.equals(r.user(), refreshToken.user())
+                        && Objects.equals(r.expiryDate(), refreshToken.expiryDate())
+                        && r.revoked()));
+  }
+
+  @Test
+  @DisplayName("cleanupExpiredTokens: once called, then return count of deleted tokens")
+  void cleanupExpiredTokens_returnCount() {
+    int expectedCount = 213;
+    when(refreshTokenRepository.deleteExpiredTokens()).thenReturn(expectedCount);
+
+    int actualCount = refreshTokenService.cleanupExpiredTokens();
+
+    assertThat(actualCount).isEqualTo(expectedCount);
   }
 }

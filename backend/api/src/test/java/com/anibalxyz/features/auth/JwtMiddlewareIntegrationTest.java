@@ -1,33 +1,32 @@
 package com.anibalxyz.features.auth;
 
-import static com.anibalxyz.features.Constants.Users.*;
-import static com.anibalxyz.features.Helpers.cleanDatabase;
-import static com.anibalxyz.features.Helpers.persistUser;
+import static com.anibalxyz.shared.Constants.Users.*;
+import static com.anibalxyz.shared.Helpers.cleanDatabase;
+import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.Constants;
-import com.anibalxyz.features.HttpRequest;
 import com.anibalxyz.features.auth.api.AuthRoutes;
+import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.out.ErrorResponse;
-import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.UserRoutes;
-import com.anibalxyz.features.users.api.out.UserDetailResponse;
-import com.anibalxyz.features.users.infra.UserEntity;
+import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
-import com.anibalxyz.server.config.modules.runtime.JwtMiddlewareConfig;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.anibalxyz.server.api.ErrorMapper;
+import com.anibalxyz.server.api.ErrorResult;
+import com.anibalxyz.server.api.InfrastructureErrorMapper;
+import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.HttpRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
+import java.time.*;
 import java.util.Map;
 import java.util.function.Consumer;
 import okhttp3.OkHttpClient;
@@ -44,10 +43,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for JwtMiddleware")
 public class JwtMiddlewareIntegrationTest {
+  private static final ZonedDateTime FIXED_NOW =
+      LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
+  private static final Clock testClock = Clock.fixed(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
   private static Application app;
   private static EntityManagerFactory emf;
   private static HttpRequest http;
-  private JwtService jwtService;
   private EntityManager em;
 
   @BeforeAll
@@ -56,7 +57,7 @@ public class JwtMiddlewareIntegrationTest {
     app = createApplication();
     app.start(0);
 
-    String baseUrl = "http://localhost:" + app.javalin().port() + "/api";
+    String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
     emf = app.persistenceManager().emf();
     ObjectMapper objectMapper =
         new ObjectMapper()
@@ -67,16 +68,15 @@ public class JwtMiddlewareIntegrationTest {
   }
 
   private static Application createApplication() {
-    Consumer<DependencyContainer> customRuntimeConfigs =
-        container -> new JwtMiddlewareConfig(container.server(), container.jwtMiddleware()).apply();
     Consumer<DependencyContainer> customRoutesRegistries =
         container -> {
           new UserRoutes(container.server(), container.userController()).register();
-          new AuthRoutes(container.server(), container.authController()).register();
+          new AuthRoutes(container.server(), container.authController(), container.jwtMiddleware())
+              .register();
         };
 
     return Application.buildApplication(
-        Constants.APP_CONFIG, null, customRuntimeConfigs, customRoutesRegistries);
+        Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);
   }
 
   @AfterAll
@@ -91,11 +91,6 @@ public class JwtMiddlewareIntegrationTest {
     cleanDatabase(em);
   }
 
-  @BeforeEach
-  public void di() {
-    jwtService = new JwtService(Constants.APP_CONFIG.env());
-  }
-
   @AfterEach
   public void closeEntityManager() {
     if (em.isOpen()) {
@@ -103,34 +98,34 @@ public class JwtMiddlewareIntegrationTest {
     }
   }
 
-  private String loginUser(String email, String password) {
-    LoginRequest loginRequest = new LoginRequest(email, password);
+  private String loginUser(String email) {
+    LoginRequest loginRequest = new LoginRequest(email, VALID_PASSWORD);
     Response loginResponse = http.post("/auth/login", loginRequest);
-    AuthResponse authResponse = http.parseBody(loginResponse, new TypeReference<>() {});
+    AuthResponse authResponse = http.parseBody(loginResponse, AuthResponse.class);
     return authResponse.accessToken();
   }
+
+  private Map<String, String> authenticationHeaders(String jwt) {
+    return Map.of(
+        JwtMiddleware.AUTHORIZATION_HEADER, JwtMiddleware.BEARER_PREFIX + (jwt == null ? "" : jwt));
+  }
+
+  // NOTE: `ANY_endpoint` tests refer to any *protected* endpoint.
+  //       With the current implementation (Apr 13/2026), that means it has a required role != GUEST
 
   @Nested
   @DisplayName("Success Scenarios")
   class SuccessScenarios {
 
     @Test
-    @DisplayName("GET /users: given valid JWT, then return 200 OK")
-    void GET_users_validJwt_return200Ok() {
-      UserEntity userEntity = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      String validJwt = loginUser(userEntity.getEmail(), VALID_PASSWORD);
-      List<UserDetailResponse> expectedResponse =
-          List.of(UserMapper.toDetailResponse(userEntity.toDomain()));
+    @DisplayName("ANY /*: given valid JWT, then authorize user")
+    void ANY_endpoint_validJwt_authorizeUser() {
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      String validJwt = loginUser(user.email().value());
 
-      Map<String, String> headers = Map.of("Authorization", "Bearer " + validJwt);
-      Response response = http.get("/users/", headers);
+      Map<String, String> headers = authenticationHeaders(validJwt);
+      Response response = http.get("/users", headers);
       assertThat(response.code()).isEqualTo(200);
-
-      List<UserDetailResponse> actualResponseBody =
-          http.parseBody(response, new TypeReference<>() {});
-      assertThat(actualResponseBody).isNotEmpty();
-
-      assertThat(actualResponseBody).isEqualTo(expectedResponse);
     }
   }
 
@@ -140,56 +135,62 @@ public class JwtMiddlewareIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"missingHeader", "invalidHeader", "missingJwt"})
-    @DisplayName("GET /users: given missing JWT, then return 401 Unauthorized")
-    void GET_users_missingJwt_return401Unauthorized(String cause) {
-      ErrorResponse expectedResponseBody =
-          new ErrorResponse("Unauthorized", List.of("Missing or invalid Authorization header"));
+    @DisplayName("ANY /*: given missing JWT, then response with 401 Auth")
+    void ANY_endpoint_missingJwt_response401Unauthorized(String cause) {
+      ErrorResult expectedResult =
+          InfrastructureErrorMapper.map(
+              new UnauthorizedResponse("Missing or invalid Authorization header"));
 
       Map<String, String> headers =
           switch (cause) {
             case "missingHeader" -> Map.of();
-            case "invalidHeader" -> Map.of("Authorization", "Beerear ");
-            case "missingJwt" -> Map.of("Authorization", "Bearer "); // ctx.header() trims the space
+            case "invalidHeader" ->
+                Map.of(JwtMiddleware.AUTHORIZATION_HEADER, "invalid" + JwtMiddleware.BEARER_PREFIX);
+            case "missingJwt" ->
+                Map.of(JwtMiddleware.AUTHORIZATION_HEADER, JwtMiddleware.BEARER_PREFIX);
             default -> throw new IllegalStateException("Unexpected value: " + cause);
           };
 
       Response response = http.get("/users/", headers);
-      assertThat(response.code()).isEqualTo(401);
+      assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
       ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
-      assertThat(actualResponseBody).isEqualTo(expectedResponseBody);
+      // NOTE: this is fragile as we are assuming UnauthorizedResponse.message
+      //       Once we use custom exception, this will be cleaner
+      assertThat(actualResponseBody).isEqualTo(expectedResult.response());
     }
 
     @Test
-    @DisplayName("GET /users: given invalid JWT, then return 401 Unauthorized")
+    @DisplayName("GET /users: given invalid JWT, then return 401 Auth")
     void GET_users_invalidJwt_return401Unauthorized() {
-      ErrorResponse expectedResponseBody =
-          new ErrorResponse("Invalid credentials", List.of("Invalid JWT token"));
+      ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Invalid());
 
-      Map<String, String> headers = Map.of("Authorization", "Bearer " + "invalid-token");
+      Map<String, String> headers = authenticationHeaders("invalid-token");
       Response response = http.get("/users/", headers);
-      assertThat(response.code()).isEqualTo(401);
+      assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
       ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
-      assertThat(actualResponseBody).isEqualTo(expectedResponseBody);
+      assertThat(actualResponseBody).isEqualTo(expectedResult.response());
     }
 
     @Test
-    @DisplayName("GET /users: given expired JWT, then return 401 Unauthorized")
+    @DisplayName("GET /users: given expired JWT, then return 401 Auth")
     void GET_users_expiredJwt_return401Unauthorized() {
-      UserEntity userEntity = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-      Instant expiredInstant = Instant.now().minus(1, ChronoUnit.DAYS);
-      String expiredJwt = jwtService.generateToken(userEntity.getId(), expiredInstant);
+      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      long jwtAccessExpirationTimeMinutes = Constants.APP_ENV.JWT_ACCESS_EXPIRATION_TIME_MINUTES();
+      long justExpiredTime = jwtAccessExpirationTimeMinutes + 1;
+      Clock clockInThePast = Clock.offset(testClock, Duration.ofMinutes(-justExpiredTime));
+      JwtService jwtService = new JwtService(Constants.APP_CONFIG.env(), clockInThePast);
+      String expiredJwt = jwtService.generateToken(user.id());
 
-      ErrorResponse expectedResponseBody =
-          new ErrorResponse("Invalid credentials", List.of("JWT has expired"));
+      ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Expired());
 
-      Map<String, String> headers = Map.of("Authorization", "Bearer " + expiredJwt);
+      Map<String, String> headers = authenticationHeaders(expiredJwt);
       Response response = http.get("/users/", headers);
-      assertThat(response.code()).isEqualTo(401);
+      assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
       ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
-      assertThat(actualResponseBody).isEqualTo(expectedResponseBody);
+      assertThat(actualResponseBody).isEqualTo(expectedResult.response());
     }
   }
 }
