@@ -1,8 +1,8 @@
 package com.anibalxyz.features.common.api;
 
-import com.anibalxyz.features.common.api.out.ErrorDetail;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
-import com.anibalxyz.features.common.api.out.ValidationErrorCode;
+import com.anibalxyz.features.common.api.out.code.ValidationErrorCode;
+import com.anibalxyz.features.common.api.out.response.error.ErrorDetail;
+import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.common.domain.error.DomainError;
 import com.anibalxyz.server.api.ErrorResult;

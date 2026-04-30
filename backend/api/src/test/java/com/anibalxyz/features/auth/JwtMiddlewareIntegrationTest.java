@@ -10,7 +10,7 @@ import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.server.Application;

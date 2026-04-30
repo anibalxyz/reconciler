@@ -3,7 +3,7 @@ package com.anibalxyz.features.auth.api;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthErrorResponseExamples;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import io.javalin.http.Context;
 import io.javalin.openapi.HttpMethod;
 import io.javalin.openapi.OpenApi;

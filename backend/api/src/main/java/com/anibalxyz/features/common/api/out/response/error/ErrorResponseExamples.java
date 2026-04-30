@@ -1,4 +1,4 @@
-package com.anibalxyz.features.common.api.out;
+package com.anibalxyz.features.common.api.out.response.error;
 
 public final class ErrorResponseExamples {
 

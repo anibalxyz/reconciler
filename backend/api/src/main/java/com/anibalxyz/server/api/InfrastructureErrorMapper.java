@@ -1,7 +1,7 @@
 package com.anibalxyz.server.api;
 
-import com.anibalxyz.features.common.api.out.CommonErrorCode;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
+import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;

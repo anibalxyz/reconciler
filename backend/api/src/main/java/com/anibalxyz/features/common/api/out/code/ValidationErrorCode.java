@@ -1,4 +1,4 @@
-package com.anibalxyz.features.common.api.out;
+package com.anibalxyz.features.common.api.out.code;
 
 public enum ValidationErrorCode implements ErrorCode {
   // TODO: check hierarchy management

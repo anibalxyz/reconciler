@@ -1,7 +1,13 @@
 package com.anibalxyz.features.users.api.out;
 
+import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
+import com.anibalxyz.features.common.api.out.response.success.ResponseMeta;
+import com.anibalxyz.features.common.api.out.response.success.SuccessResponse;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.javalin.openapi.OpenApiExample;
+import io.javalin.openapi.OpenApiName;
 import java.time.Instant;
+import java.util.List;
 
 // TODO: improve semantics
 public record UserDetailResponse(
@@ -9,4 +15,26 @@ public record UserDetailResponse(
     @OpenApiExample("John Doe") String name,
     @OpenApiExample("john.doe@example.com") String email,
     @OpenApiExample("2025-10-10T10:00:00") Instant createdAt,
-    @OpenApiExample("2025-10-10T10:00:00") Instant updatedAt) {}
+    @OpenApiExample("2025-10-10T10:00:00") Instant updatedAt)
+    implements SuccessResponse {
+
+  @JsonPropertyOrder({"data", "meta"})
+  @OpenApiName("UserDetailResponseCollection")
+  public static class Collection extends CollectionResponse<UserDetailResponse> {
+    public Collection(List<UserDetailResponse> data, ResponseMeta meta) {
+      super(data, meta);
+    }
+
+    @Override
+    @OpenApiName("data")
+    public List<UserDetailResponse> data() {
+      return super.data();
+    }
+
+    @Override
+    @OpenApiName("meta")
+    public ResponseMeta meta() {
+      return super.meta();
+    }
+  }
+}

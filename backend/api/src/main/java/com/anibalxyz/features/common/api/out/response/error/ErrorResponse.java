@@ -1,5 +1,6 @@
-package com.anibalxyz.features.common.api.out;
+package com.anibalxyz.features.common.api.out.response.error;
 
+import com.anibalxyz.features.common.api.out.code.ErrorCode;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
