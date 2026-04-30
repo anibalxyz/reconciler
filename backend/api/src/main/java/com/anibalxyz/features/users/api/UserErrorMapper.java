@@ -1,10 +1,10 @@
 package com.anibalxyz.features.users.api;
 
 import com.anibalxyz.features.common.api.ValidationErrorMapper;
-import com.anibalxyz.features.common.api.out.CommonErrorCode;
-import com.anibalxyz.features.common.api.out.ErrorDetail;
-import com.anibalxyz.features.common.api.out.ErrorResponse;
-import com.anibalxyz.features.common.api.out.ValidationErrorCode;
+import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
+import com.anibalxyz.features.common.api.out.code.ValidationErrorCode;
+import com.anibalxyz.features.common.api.out.response.error.ErrorDetail;
+import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.common.domain.error.DomainError;
 import com.anibalxyz.features.common.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.application.UserService;

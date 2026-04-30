@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.common.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
@@ -185,7 +186,10 @@ public class UserControllerTest {
       userController.getAllUsers(ctx);
 
       verify(ctx).status(200);
-      verify(ctx).json(fakeUsers.stream().map(UserMapper::toDetailResponse).toList());
+      var expected =
+          CollectionResponse.ofSinglePage(
+              fakeUsers.stream().map(UserMapper::toDetailResponse).toList());
+      verify(ctx).json(expected);
     }
 
     @Test
@@ -197,7 +201,7 @@ public class UserControllerTest {
       userController.getAllUsers(ctx);
 
       verify(ctx).status(200);
-      verify(ctx).json(List.of());
+      verify(ctx).json(CollectionResponse.ofSinglePage(List.of()));
     }
 
     @Test

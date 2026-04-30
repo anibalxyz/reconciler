@@ -7,7 +7,8 @@ import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.anibalxyz.features.common.api.out.ErrorResponse;
+import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
+import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.UserRoutes;
@@ -326,13 +327,15 @@ public class UsersRoutesIntegrationTest {
           List.of(
               persistUser(em, "Name", "name@mail.com"),
               persistUser(em, "Alfredo", "alfredo@mail.com"));
-      List<UserDetailResponse> expected =
-          persisted.stream().map(u -> UserMapper.toDetailResponse(u.toDomain())).toList();
+      CollectionResponse<UserDetailResponse> expected =
+          CollectionResponse.ofSinglePage(
+              persisted.stream().map(u -> UserMapper.toDetailResponse(u.toDomain())).toList());
 
       Response response = http.get("/users");
       assertThat(response.code()).isEqualTo(200);
-      List<UserDetailResponse> actual = http.parseBody(response, new TypeReference<>() {});
-      assertThat(actual).usingRecursiveFieldByFieldElementComparator().isEqualTo(expected);
+      CollectionResponse<UserDetailResponse> actual =
+          http.parseBody(response, new TypeReference<>() {});
+      assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -340,8 +343,9 @@ public class UsersRoutesIntegrationTest {
     public void GET_users_noUsersExist_return200AndEmptyList() {
       Response response = http.get("/users");
       assertThat(response.code()).isEqualTo(200);
-      List<UserDetailResponse> actual = http.parseBody(response, new TypeReference<>() {});
-      assertThat(actual).isEmpty();
+      CollectionResponse<UserDetailResponse> actual =
+          http.parseBody(response, new TypeReference<>() {});
+      assertThat(actual.data()).isEmpty();
     }
 
     @Test

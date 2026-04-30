@@ -1,6 +1,7 @@
 package com.anibalxyz.features.users.api;
 
 import com.anibalxyz.features.common.Result;
+import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.common.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
@@ -24,7 +25,9 @@ public class UserController implements UserApi {
   @Override
   public void getAllUsers(Context ctx) {
     List<User> users = userService.getAllUsers();
-    List<UserDetailResponse> response = users.stream().map(UserMapper::toDetailResponse).toList();
+    List<UserDetailResponse> usersList = users.stream().map(UserMapper::toDetailResponse).toList();
+    CollectionResponse<UserDetailResponse> response = CollectionResponse.ofSinglePage(usersList);
+
     ctx.status(200).json(response);
   }
 

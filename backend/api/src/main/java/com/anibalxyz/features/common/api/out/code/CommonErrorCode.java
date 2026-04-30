@@ -1,4 +1,4 @@
-package com.anibalxyz.features.common.api.out;
+package com.anibalxyz.features.common.api.out.code;
 
 public enum CommonErrorCode implements ErrorCode {
   RESOURCE_NOT_FOUND("The requested resource was not found"),

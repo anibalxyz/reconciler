@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.api;
 
-import com.anibalxyz.features.common.api.out.ErrorResponse;
-import com.anibalxyz.features.common.api.out.ErrorResponseExamples;
+import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
+import com.anibalxyz.features.common.api.out.response.error.ErrorResponseExamples;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
@@ -23,7 +23,7 @@ public interface UserApi {
         @OpenApiResponse(
             status = "200",
             description = "A list of all users.",
-            content = @OpenApiContent(from = UserDetailResponse[].class)),
+            content = @OpenApiContent(from = UserDetailResponse.Collection.class)),
         @OpenApiResponse(
             status = "401",
             description = "Authentication information is missing or invalid.",
