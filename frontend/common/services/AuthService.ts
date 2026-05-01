@@ -2,9 +2,19 @@ export interface AuthResponse {
   accessToken: string;
 }
 
+export interface ErrorDetail {
+  field: string;
+  message: string;
+}
+
 export interface ErrorResponse {
-  error: string;
-  details: string[];
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+  instance?: string;
+  code: string;
+  errors?: ErrorDetail[];
 }
 
 export interface UserCreateResponse {
@@ -24,8 +34,11 @@ export type ApiResponse<T> = {
 };
 
 const serverUnreachableError: ErrorResponse = {
-  error: 'Server unreachable',
-  details: ['Looks like we are having some problems :( Please try again later!'],
+  title: 'Server unreachable',
+  detail: 'Looks like we are having some problems :( Please try again later!',
+  type: '',
+  status: 500,
+  code: 'UNREACHABLE_ERROR',
 };
 
 async function performRequest<T>(request: Request): Promise<ApiResponse<T | ErrorResponse>> {

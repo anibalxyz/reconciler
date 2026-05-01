@@ -6,6 +6,7 @@ import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 import io.javalin.http.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,16 @@ public class ExceptionsConfig extends RuntimeConfig {
     // Will be obsolete when fully migrated to custom exceptions.
     server.exception(HttpResponseException.class, this::handleException);
 
-    server.exception(Exception.class, this::handleException);
+    server.exception(
+        Exception.class,
+        (e, ctx) -> {
+          // Avoid interfering with CORS preflight requests; let the CORS plugin
+          // handle OPTIONS to prevent browser-side security blocks.
+          if (ctx.method().equals(HandlerType.OPTIONS)) {
+            return;
+          }
+          handleException(e, ctx);
+        });
   }
 
   private void handleException(Exception e, Context ctx) {

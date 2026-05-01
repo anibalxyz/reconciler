@@ -27,32 +27,9 @@ export default function App() {
     });
   }, [authService]);
 
-  const refreshToken = useCallback(async (): Promise<number> => {
-    const response = await authService.refreshToken();
-    let responseCode = response.status;
-    if ('accessToken' in response.data) {
-      setAccessToken(response.data.accessToken);
-    } else {
-      const noSessionMessages = ['Missing refresh token in cookie', 'Refresh token not found'];
-      const expiredSessionMessages = ['Refresh token is expired or revoked'];
-
-      if (noSessionMessages.includes(response.data.details[0])) {
-        responseCode = 400;
-      } else if (expiredSessionMessages.includes(response.data.details[0])) {
-        responseCode = 401;
-      }
-    }
-    return responseCode;
-  }, [authService]);
-
-  const getModalPropsByStatus = useCallback((status: number): ModalContentProps | null => {
-    if (status < 400) {
-      return null;
-    }
-    // TODO: Frontend currently would treats all 401 from /api/auth/refresh endpoint as session expired.
-    //       It will be refined once error codes are standardized. For a while, cases will be differentiated using response details.
+  const getModalPropsByErrorCode = useCallback((status: string): ModalContentProps | null => {
     switch (status) {
-      case 400:
+      case 'UNAUTHORIZED':
         return {
           title: "It looks like you're not logged in",
           message: 'Please sign in to continue',
@@ -60,12 +37,20 @@ export default function App() {
           type: 'warn',
           redirect: '/login',
         };
-      case 401:
+      case 'REFRESH_TOKEN_EXPIRED':
         return {
           title: 'Your session has expired',
           message: 'Please sign in again',
           confirm: 'Sign in',
           type: 'info',
+          redirect: '/login',
+        };
+      case 'REFRESH_TOKEN_NOT_FOUND':
+        return {
+          title: 'Session expired or removed',
+          message: 'Please sign in again.',
+          confirm: 'Sign in',
+          type: 'warn',
           redirect: '/login',
         };
       default:
@@ -81,8 +66,17 @@ export default function App() {
 
   useEffect(() => {
     const run = async () => {
-      const status = await refreshToken();
-      setModal(getModalPropsByStatus(status));
+      const response = await authService.refreshToken();
+      let modalContent;
+
+      if ('accessToken' in response.data) {
+        setAccessToken(response.data.accessToken);
+        modalContent = null;
+      } else {
+        modalContent = getModalPropsByErrorCode(response.data.code);
+      }
+
+      setModal(modalContent);
     };
 
     // This waits until the browser finishes reloading and all cookies are reattached
@@ -96,7 +90,7 @@ export default function App() {
     return () => {
       if (!documentIsReady) window.removeEventListener('load', run);
     };
-  }, [getModalPropsByStatus, refreshToken]);
+  }, [getModalPropsByErrorCode, authService]);
 
   if (modal)
     return (
@@ -107,7 +101,7 @@ export default function App() {
 
   if (accessToken)
     return (
-      <AuthContext value={{ accessToken, refreshToken, logout }}>
+      <AuthContext value={{ accessToken, refreshToken: authService.refreshToken, logout }}>
         <Home />
       </AuthContext>
     );

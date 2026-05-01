@@ -2,6 +2,7 @@ package com.anibalxyz.features.auth.api;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.anibalxyz.features.auth.api.out.AuthErrorCode;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.domain.error.AuthDomainError;
@@ -144,8 +145,7 @@ public class AuthErrorMapperTest {
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
-          .isEqualTo(
-              new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Refresh token not found"));
+          .isEqualTo(new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND));
     }
   }
 
@@ -160,8 +160,7 @@ public class AuthErrorMapperTest {
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
-          .isEqualTo(
-              new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Refresh token not found"));
+          .isEqualTo(new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND));
     }
 
     @Test
@@ -171,8 +170,7 @@ public class AuthErrorMapperTest {
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
-          .isEqualTo(
-              new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Refresh token expired"));
+          .isEqualTo(new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED));
     }
 
     @Test
@@ -182,8 +180,7 @@ public class AuthErrorMapperTest {
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
-          .isEqualTo(
-              new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Refresh token revoked"));
+          .isEqualTo(new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED));
     }
   }
 

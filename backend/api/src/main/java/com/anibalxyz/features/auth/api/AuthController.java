@@ -13,6 +13,8 @@ import io.javalin.http.*;
 import java.time.Clock;
 
 public class AuthController implements AuthApi {
+  // TODO: make configurable via environment
+  public static final int REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER = 2;
   public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
   private final AuthApiEnvironment env;
   private final AuthService authService;
@@ -43,7 +45,8 @@ public class AuthController implements AuthApi {
     setRefreshTokenCookie(
         ctx,
         authResultValue.refreshToken().token(),
-        authResultValue.refreshToken().secondsUntilExpiry(clock.instant()));
+        authResultValue.refreshToken().secondsUntilExpiry(clock.instant())
+            * REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER);
     ctx.status(200).json(new AuthResponse(authResultValue.accessToken()));
   }
 
@@ -77,7 +80,8 @@ public class AuthController implements AuthApi {
     setRefreshTokenCookie(
         ctx,
         authResultValue.refreshToken().token(),
-        authResultValue.refreshToken().secondsUntilExpiry(clock.instant()));
+        authResultValue.refreshToken().secondsUntilExpiry(clock.instant())
+            * REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER);
     ctx.status(200).json(new AuthResponse(authResultValue.accessToken()));
   }
 

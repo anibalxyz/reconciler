@@ -1,5 +1,6 @@
 package com.anibalxyz.features.auth.api;
 
+import com.anibalxyz.features.auth.api.out.AuthErrorCode;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.domain.error.AuthDomainError;
@@ -54,11 +55,11 @@ public class AuthErrorMapper implements FeatureErrorMapper {
         401,
         switch (error.getReason()) {
           case InvalidRefreshTokenError.Reason.NotFound ignored ->
-              new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Refresh token not found");
+              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
           case InvalidRefreshTokenError.Reason.Expired ignored ->
-              new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Refresh token expired");
+              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
           case InvalidRefreshTokenError.Reason.Revoked ignored ->
-              new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Refresh token revoked");
+              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
         });
   }
 
