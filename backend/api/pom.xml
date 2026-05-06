@@ -15,13 +15,14 @@
 
         <jetbrains.annotations.version>26.0.2</jetbrains.annotations.version>
         <postgresql.version>42.7.8</postgresql.version>
-        <jackson.version>2.18.3</jackson.version>
+        <jackson.version>2.21.3</jackson.version>
         <javalin.version>6.7.0</javalin.version>
         <jakarta-persistence.version>3.2.0</jakarta-persistence.version>
         <hibernate.version>7.1.0.Final</hibernate.version>
         <jbcrypt.version>0.4</jbcrypt.version>
         <slf4j.version>2.0.17</slf4j.version>
         <logback.version>1.5.32</logback.version>
+        <logstash-logback-encoder.version>8.1</logstash-logback-encoder.version>
         <janino.version>3.1.12</janino.version>
         <junit.version>5.13.4</junit.version>
         <mockito.version>5.19.0</mockito.version>
@@ -227,6 +228,13 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
