@@ -129,7 +129,9 @@ public class AuthControllerTest {
       assertThat(actualCookie.getName()).isEqualTo("refreshToken");
       assertThat(actualCookie.getValue()).isEqualTo(result.refreshToken().token());
       assertThat(actualCookie.getMaxAge())
-          .isEqualTo(result.refreshToken().secondsUntilExpiry(FIXED_NOW.toInstant()));
+          .isEqualTo(
+              result.refreshToken().secondsUntilExpiry(FIXED_NOW.toInstant())
+                  * AuthController.REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER);
 
       verify(ctx).status(200);
       verify(ctx).json(expectedResponse);
