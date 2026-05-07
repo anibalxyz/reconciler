@@ -81,7 +81,7 @@ def docker(cmd_ref: List[str], service: str):
     else:
         cmd.append(f"{image}{service}")
 
-    subprocess.run(["docker"] + cmd)
+    return subprocess.run(["docker"] + cmd)
 
 
 def run_image_command(command: List[str], services: List[str]):
@@ -104,11 +104,15 @@ def run_image_command(command: List[str], services: List[str]):
     if "all" in services:
         valid_services.remove("all")
         for s in valid_services:
-            docker(command, s)
+            result = docker(command, s)
+            if result.returncode != 0:
+                raise typer.Exit(code=result.returncode)
         return
 
     for s in services:
-        docker(command, s)
+        result = docker(command, s)
+        if result.returncode != 0:
+            raise typer.Exit(code=result.returncode)
 
 
 @app.command()

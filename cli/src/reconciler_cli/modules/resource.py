@@ -25,10 +25,10 @@ def execute_resource_command(verb: str, rss: str):
 
     if verb == "list":
         print(f"Listing {rss}...")
-        subprocess.run(["docker", rss[:-1], "ls"])
+        return subprocess.run(["docker", rss[:-1], "ls"])
     elif verb == "prune":
         print(f"Pruning {rss}...")
-        subprocess.run(["docker", rss[:-1], "prune", "-f"])
+        return subprocess.run(["docker", rss[:-1], "prune", "-f"])
     else:
         raise ValueError(f"Invalid verb: {verb}")
 
@@ -48,11 +48,15 @@ def prune(
     """
     if rss == "all":
         for r in DOCKER_RESOURCES:
-            execute_resource_command("prune", r)
+            result = execute_resource_command("prune", r)
+            if result.returncode != 0:
+                raise typer.Exit(code=result.returncode)
             if r != DOCKER_RESOURCES[-1]:
                 print()
     else:
-        execute_resource_command("prune", rss)
+        result = execute_resource_command("prune", rss)
+        if result.returncode != 0:
+            raise typer.Exit(code=result.returncode)
     return
 
 
@@ -71,9 +75,13 @@ def list(
     """
     if rss == "all":
         for r in DOCKER_RESOURCES:
-            execute_resource_command("list", r)
+            result = execute_resource_command("list", r)
+            if result.returncode != 0:
+                raise typer.Exit(code=result.returncode)
             if r != DOCKER_RESOURCES[-1]:
                 print()
     else:
-        execute_resource_command("list", rss)
+        result = execute_resource_command("list", rss)
+        if result.returncode != 0:
+            raise typer.Exit(code=result.returncode)
     return

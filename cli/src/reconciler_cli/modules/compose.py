@@ -49,7 +49,7 @@ def compose(cmd: List[str]):
 
     run_env = os.environ.copy()
     run_env["APP_ENV"] = env
-    subprocess.run(base_cmd + cmd, env=run_env)
+    return subprocess.run(base_cmd + cmd, env=run_env)
 
 
 def get_lifecycle_services():
@@ -83,10 +83,9 @@ def run_lifecycle_command(command: List[str], services: List[str]):
         raise typer.BadParameter(f"Invalid service(s): {', '.join(invalid)}")
 
     if "all" in services:
-        compose(command)
-        return
+        return compose(command)
 
-    compose(command + services)
+    return compose(command + services)
 
 
 app = typer.Typer(
@@ -114,7 +113,9 @@ def up(
     cmd = ["up"]
     if detach:
         cmd.append("--detach")
-    run_lifecycle_command(cmd, services)
+    result = run_lifecycle_command(cmd, services)
+    if result.returncode != 0:
+        raise typer.Exit(code=result.returncode)
 
 
 @app.command()
@@ -128,7 +129,9 @@ def down(
     ] = None,
 ):
     """Stops and removes containers and networks."""
-    run_lifecycle_command(["down", "--remove-orphans"], services)
+    result = run_lifecycle_command(["down", "--remove-orphans"], services)
+    if result.returncode != 0:
+        raise typer.Exit(code=result.returncode)
 
 
 # TODO: make start/stop/restart/down work over running services only
@@ -143,7 +146,9 @@ def start(
     ] = None,
 ):
     """Starts existing, stopped containers."""
-    run_lifecycle_command(["start"], services)
+    result = run_lifecycle_command(["start"], services)
+    if result.returncode != 0:
+        raise typer.Exit(code=result.returncode)
 
 
 @app.command()
@@ -157,7 +162,9 @@ def stop(
     ] = None,
 ):
     """Stops running containers without removing them."""
-    run_lifecycle_command(["stop"], services)
+    result = run_lifecycle_command(["stop"], services)
+    if result.returncode != 0:
+        raise typer.Exit(code=result.returncode)
 
 
 @app.command()
@@ -171,7 +178,9 @@ def restart(
     ] = None,
 ):
     """Restarts running containers."""
-    run_lifecycle_command(["restart"], services)
+    result = run_lifecycle_command(["restart"], services)
+    if result.returncode != 0:
+        raise typer.Exit(code=result.returncode)
 
 
 @app.command()
@@ -185,7 +194,9 @@ def logs(
     ] = None,
 ):
     """Follows log output for services."""
-    run_lifecycle_command(["logs", "--follow", "--tail=50"], services)
+    result = run_lifecycle_command(["logs", "--follow", "--tail=50"], services)
+    if result.returncode != 0:
+        raise typer.Exit(code=result.returncode)
 
 
 @app.command()
@@ -264,7 +275,9 @@ def test(
         build(buildable, cache)
 
         up(["db", "flyway"])
-        up(["api"], False)
+        result = compose(["up", "--exit-code-from", "api", "api"])
+        if result.returncode != 0:
+            raise typer.Exit(code=result.returncode)
     finally:
         try:
             lifecycle = get_lifecycle_services()
