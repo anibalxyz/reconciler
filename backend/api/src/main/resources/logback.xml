@@ -3,10 +3,11 @@
 
     <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <includeMdcKeyName>requestId</includeMdcKeyName>
-            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>request_id</includeMdcKeyName>
+            <includeMdcKeyName>user_id</includeMdcKeyName>
             <includeMdcKeyName>path</includeMdcKeyName>
             <includeMdcKeyName>method</includeMdcKeyName>
+            <includeMdcKeyName>status</includeMdcKeyName>
 
             <customFields>{"service":"reconciler-api"}</customFields>
             <timeZone>UTC</timeZone>
