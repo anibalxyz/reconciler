@@ -1,5 +1,7 @@
 package com.anibalxyz.features.auth.api;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.anibalxyz.features.auth.api.out.AuthErrorCode;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.JwtService;
@@ -17,10 +19,15 @@ import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.FeatureErrorMapper;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AuthErrorMapper implements FeatureErrorMapper {
 
+  private static final Logger log = LoggerFactory.getLogger(AuthErrorMapper.class);
+
   public ErrorResult mapInvalidCredentialsError() {
+    log.warn("Invalid credentials attempt");
     return new ErrorResult(
         401, new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Invalid credentials"));
   }
@@ -29,11 +36,14 @@ public class AuthErrorMapper implements FeatureErrorMapper {
     return switch (error) {
       case AuthService.AuthenticateUserError.InvalidCredentials ignored ->
           mapInvalidCredentialsError();
-      case AuthService.AuthenticateUserError.MaintenanceWindow e ->
-          new ErrorResult(
-              503,
-              new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
-                  .detail("Service unavailable until " + e.availableFrom()));
+      case AuthService.AuthenticateUserError.MaintenanceWindow e -> {
+        log.debug(
+            "Authentication during maintenance window", kv("available_from", e.availableFrom()));
+        yield new ErrorResult(
+            503,
+            new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
+                .detail("Service unavailable until " + e.availableFrom()));
+      }
       case AuthService.AuthenticateUserError.ValidationFailed e ->
           ValidationErrorMapper.map(e.notification(), ErrorMapper::mapFieldError);
     };
@@ -41,11 +51,14 @@ public class AuthErrorMapper implements FeatureErrorMapper {
 
   public ErrorResult mapRefreshTokensError(AuthService.RefreshTokensError error) {
     return switch (error) {
-      case AuthService.RefreshTokensError.MaintenanceWindow e ->
-          new ErrorResult(
-              503,
-              new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
-                  .detail("Service unavailable until " + e.availableFrom()));
+      case AuthService.RefreshTokensError.MaintenanceWindow e -> {
+        log.debug(
+            "Token refresh during maintenance window", kv("available_from", e.availableFrom()));
+        yield new ErrorResult(
+            503,
+            new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
+                .detail("Service unavailable until " + e.availableFrom()));
+      }
       case AuthService.RefreshTokensError.InvalidToken e -> mapInvalidRefreshTokenError(e.error());
     };
   }
@@ -54,12 +67,18 @@ public class AuthErrorMapper implements FeatureErrorMapper {
     return new ErrorResult(
         401,
         switch (error.getReason()) {
-          case InvalidRefreshTokenError.Reason.NotFound ignored ->
-              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
-          case InvalidRefreshTokenError.Reason.Expired ignored ->
-              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
-          case InvalidRefreshTokenError.Reason.Revoked ignored ->
-              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
+          case InvalidRefreshTokenError.Reason.NotFound ignored -> {
+            log.debug("Refresh token not found");
+            yield new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
+          }
+          case InvalidRefreshTokenError.Reason.Expired ignored -> {
+            log.debug("Refresh token expired");
+            yield new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
+          }
+          case InvalidRefreshTokenError.Reason.Revoked ignored -> {
+            log.warn("Revoked refresh token used");
+            yield new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
+          }
         });
   }
 
@@ -105,9 +124,18 @@ public class AuthErrorMapper implements FeatureErrorMapper {
     ErrorResponse base = new ErrorResponse(CommonErrorCode.UNAUTHORIZED);
     base =
         switch (jwe) {
-          case JwtService.JwtValidationError.Invalid ignored -> base.detail("Invalid JWT token");
-          case JwtService.JwtValidationError.Missing ignored -> base.detail("Missing JWT token");
-          case JwtService.JwtValidationError.Expired ignored -> base.detail("JWT has expired");
+          case JwtService.JwtValidationError.Invalid ignored -> {
+            log.warn("Invalid JWT token");
+            yield base.detail("Invalid JWT token");
+          }
+          case JwtService.JwtValidationError.Missing ignored -> {
+            log.warn("Missing JWT token");
+            yield base.detail("Missing JWT token");
+          }
+          case JwtService.JwtValidationError.Expired ignored -> {
+            log.debug("JWT has expired");
+            yield base.detail("JWT has expired");
+          }
         };
 
     return new ErrorResult(401, base);

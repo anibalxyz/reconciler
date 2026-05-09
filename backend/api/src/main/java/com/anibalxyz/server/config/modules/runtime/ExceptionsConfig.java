@@ -31,8 +31,6 @@ public class ExceptionsConfig extends RuntimeConfig {
           String requestId = ctx.attribute("requestId");
           MDC.put("status", String.valueOf(result.status()));
 
-          // TODO: add personalized logs within mapper
-
           ctx.status(result.status()).json(result.response().instance(requestId));
         });
 
@@ -58,9 +56,9 @@ public class ExceptionsConfig extends RuntimeConfig {
     MDC.put("status", String.valueOf(result.status()));
 
     if (result.status() >= 500) {
-      log.error("Internal Server Error: {}", e.getMessage(), e);
+      log.error("{}: {}", e.getClass().getSimpleName(), e.getMessage());
     } else {
-      log.debug("Client error: {}", e.getMessage());
+      log.debug("{}: {}", e.getClass().getSimpleName(), e.getMessage());
     }
 
     ctx.status(result.status()).json(result.response().instance(requestId));
