@@ -157,7 +157,8 @@ public class JwtMiddlewareIntegrationTest {
       ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
       // NOTE: this is fragile as we are assuming UnauthorizedResponse.message
       //       Once we use custom exception, this will be cleaner
-      assertThat(actualResponseBody).isEqualTo(expectedResult.response());
+      assertThat(actualResponseBody.instance()).isNotNull();
+      assertThat(actualResponseBody.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -170,7 +171,8 @@ public class JwtMiddlewareIntegrationTest {
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
       ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
-      assertThat(actualResponseBody).isEqualTo(expectedResult.response());
+      assertThat(actualResponseBody.instance()).isNotNull();
+      assertThat(actualResponseBody.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -190,7 +192,8 @@ public class JwtMiddlewareIntegrationTest {
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
       ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
-      assertThat(actualResponseBody).isEqualTo(expectedResult.response());
+      assertThat(actualResponseBody.instance()).isNotNull();
+      assertThat(actualResponseBody.instance(null)).isEqualTo(expectedResult.response());
     }
   }
 }

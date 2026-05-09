@@ -10,6 +10,7 @@ import io.javalin.http.HandlerType;
 import io.javalin.http.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 // TODO: use a more semantic name for this class
 public class ExceptionsConfig extends RuntimeConfig {
@@ -27,14 +28,12 @@ public class ExceptionsConfig extends RuntimeConfig {
         FailureSignal.class,
         (e, ctx) -> {
           ErrorResult result = ErrorMapper.map(e.getError());
+          String requestId = ctx.attribute("requestId");
+          MDC.put("status", String.valueOf(result.status()));
 
-          log.debug(
-              "Failure signal received: [Status: {}] [Error: {}] [Path: {}]",
-              result.status(),
-              e.getError().getClass().getSimpleName(),
-              ctx.path());
+          // TODO: add personalized logs within mapper
 
-          ctx.status(result.status()).json(result.response());
+          ctx.status(result.status()).json(result.response().instance(requestId));
         });
 
     // Force Javalin's built-in exceptions to pass through our centralized mapper.
@@ -55,14 +54,15 @@ public class ExceptionsConfig extends RuntimeConfig {
 
   private void handleException(Exception e, Context ctx) {
     ErrorResult result = InfrastructureErrorMapper.map(e);
+    String requestId = ctx.attribute("requestId");
+    MDC.put("status", String.valueOf(result.status()));
 
     if (result.status() >= 500) {
-      log.error("Internal Server Error [Path: {}]: ", ctx.path(), e);
+      log.error("Internal Server Error: {}", e.getMessage(), e);
     } else {
-      log.debug(
-          "Client error [Status: {}] [Path: {}]: {}", result.status(), ctx.path(), e.getMessage());
+      log.debug("Client error: {}", e.getMessage());
     }
 
-    ctx.status(result.status()).json(result.response());
+    ctx.status(result.status()).json(result.response().instance(requestId));
   }
 }
