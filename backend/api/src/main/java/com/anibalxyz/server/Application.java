@@ -7,10 +7,7 @@ import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.runtime.ExceptionsConfig;
-import com.anibalxyz.server.config.modules.runtime.LifecycleConfig;
-import com.anibalxyz.server.config.modules.runtime.MetricsConfig;
-import com.anibalxyz.server.config.modules.runtime.SchedulerConfig;
+import com.anibalxyz.server.config.modules.runtime.*;
 import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
@@ -141,6 +138,7 @@ public class Application {
             clock);
 
     new LifecycleConfig(server, persistenceManager).apply();
+    new AccessLogConfig(server).apply();
     new MetricsConfig(server).apply();
     new ExceptionsConfig(server).apply();
     // TODO: Refactor request lifecycle management.
