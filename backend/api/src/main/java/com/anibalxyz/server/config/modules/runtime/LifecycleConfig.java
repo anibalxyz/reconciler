@@ -63,9 +63,7 @@ public class LifecycleConfig extends RuntimeConfig {
     server.before(
         ctx -> {
           String requestId = RequestContext.initialize(ctx);
-          ctx.attribute("requestId", requestId);
+          ctx.attribute(RequestContext.REQUEST_ID_KEY, requestId);
         });
-
-    server.after(ctx -> RequestContext.clear());
   }
 }

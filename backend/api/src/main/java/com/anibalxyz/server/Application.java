@@ -13,6 +13,7 @@ import com.anibalxyz.server.config.modules.runtime.SchedulerConfig;
 import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
+import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import java.time.Clock;
@@ -140,6 +141,14 @@ public class Application {
 
     new LifecycleConfig(server, persistenceManager).apply();
     new ExceptionsConfig(server).apply();
+    // TODO: Refactor request lifecycle management.
+    //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the absolute
+    //       last operation in the 'after' hook chain.
+    //       Scattered 'before/after' hooks across modules (Lifecycle, Metrics, AccessLog) make
+    //       execution order non-deterministic.
+    //       Planned improvement: Centralize all hooks into a single Orchestrator/Config that
+    //       accepts Consumers from each module.
+    server.after(ctx -> RequestContext.clear());
 
     if (customRuntimeConfigs != null) customRuntimeConfigs.accept(container);
     if (customRoutesRegistries != null) customRoutesRegistries.accept(container);

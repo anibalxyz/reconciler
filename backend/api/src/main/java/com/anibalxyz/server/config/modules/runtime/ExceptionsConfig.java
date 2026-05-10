@@ -4,6 +4,7 @@ import com.anibalxyz.features.common.application.exception.FailureSignal;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
+import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -28,7 +29,7 @@ public class ExceptionsConfig extends RuntimeConfig {
         FailureSignal.class,
         (e, ctx) -> {
           ErrorResult result = ErrorMapper.map(e.getError());
-          String requestId = ctx.attribute("requestId");
+          String requestId = ctx.attribute(RequestContext.REQUEST_ID_KEY);
           MDC.put("status", String.valueOf(result.status()));
 
           ctx.status(result.status()).json(result.response().instance(requestId));
@@ -52,7 +53,7 @@ public class ExceptionsConfig extends RuntimeConfig {
 
   private void handleException(Exception e, Context ctx) {
     ErrorResult result = InfrastructureErrorMapper.map(e);
-    String requestId = ctx.attribute("requestId");
+    String requestId = ctx.attribute(RequestContext.REQUEST_ID_KEY);
     MDC.put("status", String.valueOf(result.status()));
 
     if (result.status() >= 500) {
