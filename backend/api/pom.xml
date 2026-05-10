@@ -23,6 +23,7 @@
         <slf4j.version>2.0.17</slf4j.version>
         <logback.version>1.5.32</logback.version>
         <logstash-logback-encoder.version>8.1</logstash-logback-encoder.version>
+        <micrometer-registry-prometheus.version>1.16.5</micrometer-registry-prometheus.version>
         <janino.version>3.1.12</janino.version>
         <junit.version>5.13.4</junit.version>
         <mockito.version>5.19.0</mockito.version>
@@ -234,6 +235,13 @@
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>${logstash-logback-encoder.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>${micrometer-registry-prometheus.version}</version>
             <scope>compile</scope>
         </dependency>
 

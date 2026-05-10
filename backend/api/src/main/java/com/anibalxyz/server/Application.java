@@ -9,6 +9,7 @@ import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.modules.runtime.ExceptionsConfig;
 import com.anibalxyz.server.config.modules.runtime.LifecycleConfig;
+import com.anibalxyz.server.config.modules.runtime.MetricsConfig;
 import com.anibalxyz.server.config.modules.runtime.SchedulerConfig;
 import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
@@ -140,6 +141,7 @@ public class Application {
             clock);
 
     new LifecycleConfig(server, persistenceManager).apply();
+    new MetricsConfig(server).apply();
     new ExceptionsConfig(server).apply();
     // TODO: Refactor request lifecycle management.
     //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the absolute
