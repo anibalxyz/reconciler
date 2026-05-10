@@ -2,6 +2,7 @@ package com.anibalxyz.server.config.modules.runtime;
 
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.context.ContextProvider;
+import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import jakarta.persistence.EntityManager;
 
@@ -16,6 +17,12 @@ public class LifecycleConfig extends RuntimeConfig {
   public LifecycleConfig(Javalin server, PersistenceManager persistenceManager) {
     super(server);
     this.persistenceManager = persistenceManager;
+  }
+
+  @Override
+  public void apply() {
+    setEntityManagerLifecycle();
+    setMDCLifecycle();
   }
 
   /**
@@ -52,8 +59,13 @@ public class LifecycleConfig extends RuntimeConfig {
         });
   }
 
-  @Override
-  public void apply() {
-    setEntityManagerLifecycle();
+  private void setMDCLifecycle() {
+    server.before(
+        ctx -> {
+          String requestId = RequestContext.initialize(ctx);
+          ctx.attribute("requestId", requestId);
+        });
+
+    server.after(ctx -> RequestContext.clear());
   }
 }

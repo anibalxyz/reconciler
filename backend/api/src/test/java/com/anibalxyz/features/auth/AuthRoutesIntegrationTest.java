@@ -208,7 +208,8 @@ public class AuthRoutesIntegrationTest {
       assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
       ErrorResponse authResponse = http.parseBody(loginResponse, ErrorResponse.class);
-      assertThat(authResponse).isEqualTo(expectedResult.response());
+      assertThat(authResponse.instance()).isNotNull();
+      assertThat(authResponse.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -225,7 +226,8 @@ public class AuthRoutesIntegrationTest {
       assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(503);
 
       ErrorResponse authResponse = http.parseBody(loginResponse, ErrorResponse.class);
-      assertThat(authResponse).isEqualTo(expectedResult.response());
+      assertThat(authResponse.instance()).isNotNull();
+      assertThat(authResponse.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -243,7 +245,8 @@ public class AuthRoutesIntegrationTest {
       assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
       ErrorResponse authResponse = http.parseBody(loginResponse, ErrorResponse.class);
-      assertThat(authResponse).isEqualTo(expectedResult.response());
+      assertThat(authResponse.instance()).isNotNull();
+      assertThat(authResponse.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -285,7 +288,8 @@ public class AuthRoutesIntegrationTest {
       assertThat(responseCookie).isNullOrEmpty();
 
       ErrorResponse errorResponse = http.parseBody(response, ErrorResponse.class);
-      assertThat(errorResponse).isEqualTo(expectedResult.response());
+      assertThat(errorResponse.instance()).isNotNull();
+      assertThat(errorResponse.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -306,7 +310,8 @@ public class AuthRoutesIntegrationTest {
       assertThat(responseCookie).isNullOrEmpty();
 
       ErrorResponse errorResponse = http.parseBody(response, ErrorResponse.class);
-      assertThat(errorResponse).isEqualTo(expectedResult.response());
+      assertThat(errorResponse.instance()).isNotNull();
+      assertThat(errorResponse.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -328,7 +333,8 @@ public class AuthRoutesIntegrationTest {
       assertThat(responseCookie).isNullOrEmpty();
 
       ErrorResponse errorResponse = http.parseBody(response, ErrorResponse.class);
-      assertThat(errorResponse).isEqualTo(expectedResult.response());
+      assertThat(errorResponse.instance()).isNotNull();
+      assertThat(errorResponse.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test

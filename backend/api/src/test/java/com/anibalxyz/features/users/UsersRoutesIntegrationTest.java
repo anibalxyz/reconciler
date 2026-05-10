@@ -160,8 +160,10 @@ public class UsersRoutesIntegrationTest {
           };
 
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(404);
-      assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
-          .isEqualTo(expectedResult.response());
+
+      ErrorResponse actualResponse = http.parseBody(response, ErrorResponse.class);
+      assertThat(actualResponse.instance()).isNotNull();
+      assertThat(actualResponse.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @ParameterizedTest
@@ -182,8 +184,10 @@ public class UsersRoutesIntegrationTest {
               ? http.post("/users", malformedJson)
               : http.put("/users/1", malformedJson);
       assertThat(response.code()).isEqualTo(400);
-      assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
-          .isEqualTo(expectedResult.response());
+
+      ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
+      assertThat(actual.instance()).isNotNull();
+      assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @ParameterizedTest
@@ -206,11 +210,12 @@ public class UsersRoutesIntegrationTest {
               : http.put("/users/1", requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
-      ErrorResponse actual = http.parseBody(response, new TypeReference<>() {});
+      ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
       ErrorResponse expected = expectedResult.response();
       assertThat(actual.detail()).isEqualTo(expected.detail());
       assertThat(actual.code()).isEqualTo(expected.code());
       assertThat(actual.title()).isEqualTo(expected.title());
+      assertThat(actual.instance()).isNotNull();
       assertThat(userRepository.findAll()).isEmpty();
     }
 
@@ -224,8 +229,9 @@ public class UsersRoutesIntegrationTest {
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
-      assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
-          .isEqualTo(expectedResult.response());
+      ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
+      assertThat(actual.instance()).isNotNull();
+      assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
       assertThat(userRepository.findByEmail(Email.of(requestBody.email()).getValue())).isEmpty();
     }
 
@@ -239,8 +245,9 @@ public class UsersRoutesIntegrationTest {
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
-      assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
-          .isEqualTo(expectedResult.response());
+      ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
+      assertThat(actual.instance()).isNotNull();
+      assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
       assertThat(em.createQuery("SELECT COUNT(u) FROM UserEntity u", Long.class).getSingleResult())
           .isZero();
     }
@@ -258,8 +265,9 @@ public class UsersRoutesIntegrationTest {
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
-      assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
-          .isEqualTo(expectedResult.response());
+      ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
+      assertThat(actual.instance()).isNotNull();
+      assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
       assertThat(userRepository.findAll()).hasSize(1);
     }
 
@@ -276,8 +284,9 @@ public class UsersRoutesIntegrationTest {
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
       assertThat(userRepository.findById(user.id()).orElseThrow()).isEqualTo(user);
-      assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
-          .isEqualTo(expectedResult.response());
+      ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
+      assertThat(actual.instance()).isNotNull();
+      assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -295,8 +304,9 @@ public class UsersRoutesIntegrationTest {
       assertThat(400).isEqualTo(response.code()).isEqualTo(expectedResult.status());
       assertThat(userRepository.findById(userToUpdate.id()).orElseThrow().email().value())
           .isEqualTo(userToUpdate.email().value());
-      assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
-          .isEqualTo(expectedResult.response());
+      ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
+      assertThat(actual.instance()).isNotNull();
+      assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
     }
 
     @Test
@@ -310,8 +320,9 @@ public class UsersRoutesIntegrationTest {
       Response response = http.put("/users/" + user.id(), requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
-      assertThat(http.parseBody(response, new TypeReference<ErrorResponse>() {}))
-          .isEqualTo(expectedResult.response());
+      ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
+      assertThat(actual.instance()).isNotNull();
+      assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
       assertThat(userRepository.findById(user.id()).orElseThrow()).isEqualTo(user);
     }
   }

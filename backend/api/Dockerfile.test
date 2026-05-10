@@ -10,5 +10,5 @@ COPY src ./src
 
 # The 'verify' phase compiles and runs all tests.
 # The container will execute this command, stream output, and then exit.
-# TODO: check if needs -B option (or add it dinamically)
-CMD ["sh", "-c", "echo 'Waiting for DB to be ready...' && sleep 1 && mvn verify"]
+# TODO: check if needs -B option (or add it dynamically)
+CMD ["sh", "-c", "echo 'Waiting for DB to be ready...' >&2 && sleep 1 && exec mvn verify"]
