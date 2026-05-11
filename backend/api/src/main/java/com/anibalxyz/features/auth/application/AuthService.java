@@ -15,6 +15,7 @@ import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
+import com.anibalxyz.server.context.RequestContext;
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
@@ -111,6 +112,8 @@ public class AuthService {
       return Result.failure(
           new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
     }
+
+      RequestContext.setUserId(user.id());
 
     String accessToken = jwtService.generateToken(user.id());
     RefreshToken refreshToken =

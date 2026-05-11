@@ -4,6 +4,7 @@ import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.common.api.Role;
 import com.anibalxyz.features.common.application.exception.FailureSignal;
+import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
@@ -66,7 +67,8 @@ public class JwtMiddleware {
       throw new FailureSignal(validationResult.getError());
     }
 
-    Integer userId = Integer.parseInt(validationResult.getValue().getSubject());
+    int userId = Integer.parseInt(validationResult.getValue().getSubject());
+    RequestContext.setUserId(userId);
     ctx.attribute(JWT_USER_ID, userId);
   }
 }

@@ -17,6 +17,7 @@ import org.slf4j.MDC;
 public class RequestContext {
 
   public static final String REQUEST_ID_KEY = "request_id";
+  public static final String USER_ID_KEY = "user_id";
 
   private RequestContext() {}
 
@@ -34,6 +35,7 @@ public class RequestContext {
     MDC.put(REQUEST_ID_KEY, requestId);
     MDC.put("method", ctx.method().name());
     MDC.put("path", ctx.path());
+    setUserId("anonymous");
 
     return requestId;
   }
@@ -55,5 +57,13 @@ public class RequestContext {
    */
   public static void clear() {
     MDC.clear();
+  }
+
+  private static void setUserId(String userId) {
+    MDC.put(USER_ID_KEY, userId);
+  }
+
+  public static void setUserId(int userId) {
+    setUserId(String.valueOf(userId));
   }
 }
