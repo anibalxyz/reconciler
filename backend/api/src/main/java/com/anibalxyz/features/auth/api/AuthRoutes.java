@@ -21,6 +21,6 @@ public class AuthRoutes extends RouteRegistry {
         .post("/refresh", authApi::refresh)
         .post("/logout", authApi::logout);
 
-    jwtMiddleware.register();
+    jwtMiddleware.register(); // TODO: move to a separate module
   }
 }
