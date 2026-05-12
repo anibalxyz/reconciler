@@ -1,5 +1,7 @@
 package com.anibalxyz.server.config.modules.runtime;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.anibalxyz.features.auth.application.RefreshTokenService;
 import io.javalin.Javalin;
 import java.util.concurrent.Executors;
@@ -34,7 +36,7 @@ public class SchedulerConfig extends RuntimeConfig {
     scheduler.scheduleAtFixedRate(
         () -> {
           int deletedCount = refreshTokenService.cleanupExpiredTokens();
-          log.info("Finished scheduled refresh token cleanup. Deleted {} tokens.", deletedCount);
+          log.info("Finished scheduled refresh token cleanup", kv("deleted_count", deletedCount));
         },
         0,
         24,

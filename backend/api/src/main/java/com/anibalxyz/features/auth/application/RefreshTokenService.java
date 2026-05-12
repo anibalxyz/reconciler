@@ -8,8 +8,11 @@ import com.anibalxyz.features.users.domain.User;
 import java.time.*;
 import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RefreshTokenService {
+  private static final Logger log = LoggerFactory.getLogger(RefreshTokenService.class);
   private final RefreshTokenRepository refreshTokenRepository;
 
   public RefreshTokenService(RefreshTokenRepository refreshTokenRepository) {
@@ -55,6 +58,7 @@ public class RefreshTokenService {
     if (refreshToken.revoked()) {
       // NOTE: here could add logic to invalidate all tokens for the user
       // if a revoked token is used, as it could signal a token theft attempt.
+      log.warn("Attempted use of revoked refresh token");
       return Result.failure(InvalidRefreshTokenError.revoked());
     }
 

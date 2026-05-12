@@ -19,9 +19,12 @@ import com.anibalxyz.server.context.RequestContext;
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // TODO: check if can divide this class as it is too overloaded
 public class AuthService {
+  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
   private final AuthEnvironment env;
   private final Clock clock;
   private final UserService userService;
@@ -120,6 +123,7 @@ public class AuthService {
         refreshTokenService.createRefreshToken(
             user,
             calculateExpiryDate(ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS()));
+    log.info("User authenticated");
     return Result.success(new AuthResult(accessToken, refreshToken));
   }
 
@@ -140,6 +144,7 @@ public class AuthService {
 
     RefreshToken newRefreshToken = rotationResult.getValue();
     String newAccessToken = jwtService.generateToken(newRefreshToken.user().id());
+    log.info("Tokens refreshed");
     return Result.success(new AuthResult(newAccessToken, newRefreshToken));
   }
 

@@ -10,8 +10,11 @@ import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.*;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserService {
+  private static final Logger log = LoggerFactory.getLogger(UserService.class);
   private final UsersEnvironment env;
   private final UserRepository userRepository;
 
@@ -74,6 +77,7 @@ public class UserService {
       return Result.failure(notification);
     }
 
+    log.info("User created");
     return Result.success(
         userRepository.save(
             new User(nameResult.getValue(), emailResult.getValue(), passwordResult.getValue())));
@@ -129,6 +133,7 @@ public class UserService {
       return Result.failure(new UpdateUserByIdError.ValidationFailed(notification));
     }
 
+    log.info("User updated");
     return Result.success(userRepository.save(user));
   }
 
@@ -138,9 +143,11 @@ public class UserService {
    * @param id The ID of the user to delete.
    */
   public Result<Void, UserNotFoundError> deleteUserById(int id) {
-    return userRepository.deleteById(id)
-        ? Result.success(null)
-        : Result.failure(UserNotFoundError.byId(id));
+    if (userRepository.deleteById(id)) {
+      log.info("User deleted");
+      return Result.success(null);
+    }
+    return Result.failure(UserNotFoundError.byId(id));
   }
 
   public sealed interface UpdateUserByIdError {
