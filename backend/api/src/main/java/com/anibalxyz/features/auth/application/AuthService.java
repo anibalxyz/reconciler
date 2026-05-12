@@ -113,7 +113,7 @@ public class AuthService {
           new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
     }
 
-      RequestContext.setUserId(user.id());
+    RequestContext.setUserId(user.id());
 
     String accessToken = jwtService.generateToken(user.id());
     RefreshToken refreshToken =
@@ -124,7 +124,6 @@ public class AuthService {
   }
 
   public Result<AuthResult, RefreshTokensError> refreshTokens(String refreshTokenString) {
-    // TODO: can refactor this 4 lines
     Optional<Instant> blocked = blockedUntil(ZonedDateTime.now(clock));
     if (blocked.isPresent()) {
       return Result.failure(new RefreshTokensError.MaintenanceWindow(blocked.get()));
