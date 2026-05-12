@@ -1,5 +1,7 @@
 package com.anibalxyz.server.config.environment;
 
+import static net.logstash.logback.argument.StructuredArguments.v;
+
 import com.anibalxyz.persistence.DatabaseVariables;
 import com.anibalxyz.server.config.AppEnv;
 import io.javalin.http.SameSite;
@@ -11,11 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
-import static net.logstash.logback.argument.StructuredArguments.v;
-
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
@@ -210,36 +208,7 @@ public class ConfigurationFactory {
         new ApplicationConfiguration(
             env, DatabaseVariables.generate(dbHost, dbPort, dbName, dbUser, dbPassword));
 
-    Map<String, Object> configSummary = new LinkedHashMap<>();
-    configSummary.put("environment", env.APP_ENV());
-
-    Map<String, Object> api = new LinkedHashMap<>();
-    api.put("url", env.API_URL());
-    api.put("port", env.API_PORT());
-    api.put("prefix", env.API_PREFIX());
-    api.put("corsOriginsCount", env.CORS_ALLOWED_ORIGINS().length);
-    configSummary.put("api", api);
-
-    Map<String, Object> database = new LinkedHashMap<>();
-    database.put("url", result.database().url());
-    database.put("user", result.database().user());
-    configSummary.put("database", database);
-
-    Map<String, Object> jwt = new LinkedHashMap<>();
-    jwt.put("issuer", env.JWT_ISSUER());
-    jwt.put("accessTokenExpirationMinutes", env.JWT_ACCESS_EXPIRATION_TIME_MINUTES());
-    jwt.put("refreshTokenExpirationDays", env.JWT_REFRESH_EXPIRATION_TIME_DAYS().toDays());
-    configSummary.put("jwt", jwt);
-
-    Map<String, Object> auth = new LinkedHashMap<>();
-    auth.put("bcryptLogRounds", env.BCRYPT_LOG_ROUNDS());
-    auth.put("cookieSecure", env.AUTH_COOKIE_SECURE());
-    auth.put("cookieDomain", env.AUTH_COOKIE_DOMAIN());
-    auth.put("cookieSameSite", env.AUTH_COOKIE_SAMESITE());
-    auth.put("cookiePath", env.AUTH_COOKIE_PATH());
-    configSummary.put("auth", auth);
-
-    log.info("Configuration loaded", v("config", configSummary));
+    log.info("Configuration loaded", v("config", result.toMap()));
     return result;
   }
 
