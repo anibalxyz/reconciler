@@ -49,6 +49,11 @@ def compose(cmd: List[str]):
 
     run_env = os.environ.copy()
     run_env["APP_ENV"] = env
+
+    print(
+        f"▶  APP_ENV={env} docker compose {' '.join(shlex.quote(p) for p in (compose_files + env_files + project_name + cmd))}"
+    )
+
     return subprocess.run(base_cmd + cmd, env=run_env)
 
 
