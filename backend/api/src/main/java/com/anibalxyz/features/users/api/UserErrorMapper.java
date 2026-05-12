@@ -13,39 +13,34 @@ import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.FeatureErrorMapper;
+import com.anibalxyz.server.api.LogEntry;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 public class UserErrorMapper implements FeatureErrorMapper {
 
-  private static final Logger log = LoggerFactory.getLogger(UserErrorMapper.class);
-
   public ErrorResult mapUserNotFoundError(UserNotFoundError error) {
     ErrorResponse base = new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND);
-    return new ErrorResult(
-        404,
-        switch (error.getReason()) {
-          case UserNotFoundError.Reason.ById r -> {
-            log.debug("User not found", kv("user_nf_id", r.id()));
-            yield base.detail("User with id " + r.id() + " not found");
-          }
-
-          case UserNotFoundError.Reason.ByEmail r ->
-              throw UnreachableCodeException.of(r, "no endpoint exposes email-based user lookups");
-        });
+    return switch (error.getReason()) {
+      case UserNotFoundError.Reason.ById r ->
+          new ErrorResult(
+              404,
+              base.detail("User with id " + r.id() + " not found"),
+              LogEntry.debug("User not found", kv("user_nf_id", r.id())));
+      case UserNotFoundError.Reason.ByEmail r ->
+          throw UnreachableCodeException.of(r, "no endpoint exposes email-based user lookups");
+    };
   }
 
   public ErrorResult mapUpdateUserByIdError(UserService.UpdateUserByIdError error) {
     return switch (error) {
-      case UserService.UpdateUserByIdError.EmptyCommand ignored -> {
-        log.debug("Update user with no fields provided");
-        yield new ErrorResult(
-            400,
-            new ErrorResponse(ValidationErrorCode.VALIDATION_ERROR)
-                .detail("At least one field (name, email, password) must be provided"));
-      }
+      case UserService.UpdateUserByIdError.EmptyCommand ignored ->
+          new ErrorResult(
+              400,
+              new ErrorResponse(ValidationErrorCode.VALIDATION_ERROR)
+                  .detail("At least one field (name, email, password) must be provided"),
+              LogEntry.debug("Update user with no fields provided"));
       case UserService.UpdateUserByIdError.NotFound e -> mapUserNotFoundError(e.error());
       case UserService.UpdateUserByIdError.ValidationFailed e ->
           ValidationErrorMapper.map(e.notification(), this::mapFieldError);

@@ -21,15 +21,24 @@ public class ServerConfig extends StartupConfig {
     this.env = env;
   }
 
-  @Override
-  public void apply() {
-    javalinConfig.useVirtualThreads = true;
-    javalinConfig.router.ignoreTrailingSlashes = true;
-    javalinConfig.jetty.modifyServer(server -> server.setStopTimeout(5_000)); // graceful shutdown
-    javalinConfig.http.defaultContentType = "application/json; charset=utf-8";
-    String[] hosts = env.CORS_ALLOWED_ORIGINS();
+  private static void overrideIpGetter(JavalinConfig config) {
+    config.contextResolver.ip =
+        ctx -> {
+          String ip = ctx.header("X-Real-IP");
+          return (ip != null && !ip.isBlank()) ? ip : ctx.req().getRemoteAddr();
+        };
+  }
+
+  private static void configureJsonMapper(JavalinConfig config) {
+    config.jsonMapper(
+        new JavalinJackson()
+            .updateMapper(
+                mapper -> mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)));
+  }
+
+  private static void configureCors(JavalinConfig config, String[] hosts) {
     if (hosts != null && hosts.length > 0) {
-      javalinConfig.bundledPlugins.enableCors(
+      config.bundledPlugins.enableCors(
           cors ->
               cors.addRule(
                   rule -> {
@@ -41,9 +50,17 @@ public class ServerConfig extends StartupConfig {
     } else {
       log.warn("CORS_ALLOWED_ORIGINS not set. CORS will reject all origins");
     }
-    javalinConfig.jsonMapper(
-        new JavalinJackson()
-            .updateMapper(
-                mapper -> mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)));
+  }
+
+  @Override
+  public void apply() {
+    javalinConfig.useVirtualThreads = true;
+    javalinConfig.router.ignoreTrailingSlashes = true;
+    javalinConfig.jetty.modifyServer(server -> server.setStopTimeout(5_000)); // graceful shutdown
+    javalinConfig.http.defaultContentType = "application/json; charset=utf-8";
+
+    configureCors(javalinConfig, env.CORS_ALLOWED_ORIGINS());
+    configureJsonMapper(javalinConfig);
+    overrideIpGetter(javalinConfig);
   }
 }

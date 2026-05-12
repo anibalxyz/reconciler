@@ -1,5 +1,7 @@
 package com.anibalxyz.server.config.environment;
 
+import static net.logstash.logback.argument.StructuredArguments.v;
+
 import com.anibalxyz.persistence.DatabaseVariables;
 import com.anibalxyz.server.config.AppEnv;
 import io.javalin.http.SameSite;
@@ -205,11 +207,8 @@ public class ConfigurationFactory {
     ApplicationConfiguration result =
         new ApplicationConfiguration(
             env, DatabaseVariables.generate(dbHost, dbPort, dbName, dbUser, dbPassword));
-    if (appEnv != AppEnv.PROD) { // is PROD check needed | useful?
-      // TODO: implement a mapper
-      // Some values will not be correctly shown. e.g. CORS_ALLOWED_ORIGINS
-      log.debug("Loaded Configuration: {}", result);
-    }
+
+    log.info("Configuration loaded", v("config", result.toMap()));
     return result;
   }
 

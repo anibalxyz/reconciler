@@ -11,11 +11,14 @@ import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.common.application.exception.FailureSignal;
 import io.javalin.http.*;
 import java.time.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AuthController implements AuthApi {
   // TODO: make configurable via environment
   public static final int REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER = 2;
   public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
+  private static final Logger log = LoggerFactory.getLogger(AuthController.class);
   private final AuthApiEnvironment env;
   private final AuthService authService;
   private final RefreshTokenService refreshTokenService;
@@ -59,6 +62,7 @@ public class AuthController implements AuthApi {
     emptyRefreshTokenCookie(ctx);
 
     ctx.status(204);
+    log.info("User logged out");
   }
 
   @Override

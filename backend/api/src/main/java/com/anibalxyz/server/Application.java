@@ -1,5 +1,7 @@
 package com.anibalxyz.server;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.system.api.SystemRoutes;
 import com.anibalxyz.features.users.api.UserRoutes;
@@ -7,9 +9,7 @@ import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.runtime.ExceptionsConfig;
-import com.anibalxyz.server.config.modules.runtime.LifecycleConfig;
-import com.anibalxyz.server.config.modules.runtime.SchedulerConfig;
+import com.anibalxyz.server.config.modules.runtime.*;
 import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
@@ -19,6 +19,8 @@ import io.javalin.config.JavalinConfig;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The main application class, acting as the Composition Root.
@@ -29,6 +31,7 @@ import java.util.function.Consumer;
  * instance tailored for different environments (e.g., test, development).
  */
 public class Application {
+  private static final Logger log = LoggerFactory.getLogger(Application.class);
   private final Javalin javalin;
   private final PersistenceManager persistenceManager;
   private final ApplicationConfiguration config;
@@ -140,6 +143,8 @@ public class Application {
             clock);
 
     new LifecycleConfig(server, persistenceManager).apply();
+    new AccessLogConfig(server).apply();
+    new MetricsConfig(server).apply();
     new ExceptionsConfig(server).apply();
     // TODO: Refactor request lifecycle management.
     //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the absolute
@@ -174,7 +179,11 @@ public class Application {
    * @param port The port to listen on.
    */
   public void start(int port) {
+    log.info("Starting server on port {} [{} mode]", port, config.env().APP_ENV());
     javalin.start(port);
+    log.info(
+        "Server started successfully and is ready to accept connections on {}",
+        kv("api_url", config.env().API_URL()));
   }
 
   /** Stops the web server and shuts down the persistence layer gracefully. */
