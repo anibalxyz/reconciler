@@ -4,7 +4,9 @@ import com.anibalxyz.features.common.application.exception.FailureSignal;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
+import com.anibalxyz.server.api.LogEntry;
 import com.anibalxyz.server.context.RequestContext;
+import org.slf4j.event.Level;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -31,6 +33,7 @@ public class ExceptionsConfig extends RuntimeConfig {
           ErrorResult result = ErrorMapper.map(e.getError());
           String requestId = ctx.attribute(RequestContext.REQUEST_ID_KEY);
           MDC.put("status", String.valueOf(result.status()));
+          emitLogEntry(result.logEntry());
 
           ctx.status(result.status()).json(result.response().instance(requestId));
         });
@@ -55,6 +58,7 @@ public class ExceptionsConfig extends RuntimeConfig {
     ErrorResult result = InfrastructureErrorMapper.map(e);
     String requestId = ctx.attribute(RequestContext.REQUEST_ID_KEY);
     MDC.put("status", String.valueOf(result.status()));
+    emitLogEntry(result.logEntry());
 
     if (result.status() >= 500) {
       log.error("{}: {}", e.getClass().getSimpleName(), e.getMessage());
@@ -63,5 +67,16 @@ public class ExceptionsConfig extends RuntimeConfig {
     }
 
     ctx.status(result.status()).json(result.response().instance(requestId));
+  }
+
+  private void emitLogEntry(LogEntry entry) {
+    if (entry == null) return;
+    switch (entry.level()) {
+      case WARN -> log.warn(entry.message(), entry.args());
+      case DEBUG -> log.debug(entry.message(), entry.args());
+      case INFO -> log.info(entry.message(), entry.args());
+      case ERROR -> log.error(entry.message(), entry.args());
+      case TRACE -> log.trace(entry.message(), entry.args());
+    }
   }
 }

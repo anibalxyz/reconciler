@@ -17,33 +17,32 @@ import com.anibalxyz.features.common.domain.error.InvalidValueError;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.FeatureErrorMapper;
+import com.anibalxyz.server.api.LogEntry;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 public class AuthErrorMapper implements FeatureErrorMapper {
 
-  private static final Logger log = LoggerFactory.getLogger(AuthErrorMapper.class);
-
   public ErrorResult mapInvalidCredentialsError() {
-    log.warn("Invalid credentials attempt");
     return new ErrorResult(
-        401, new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Invalid credentials"));
+        401,
+        new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Invalid credentials"),
+      LogEntry.warn("Invalid credentials attempt"));
   }
 
   public ErrorResult mapAuthenticateUserError(AuthService.AuthenticateUserError error) {
     return switch (error) {
       case AuthService.AuthenticateUserError.InvalidCredentials ignored ->
           mapInvalidCredentialsError();
-      case AuthService.AuthenticateUserError.MaintenanceWindow e -> {
-        log.debug(
-            "Authentication during maintenance window", kv("available_from", e.availableFrom()));
-        yield new ErrorResult(
-            503,
-            new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
-                .detail("Service unavailable until " + e.availableFrom()));
-      }
+      case AuthService.AuthenticateUserError.MaintenanceWindow e ->
+          new ErrorResult(
+              503,
+              new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
+                  .detail("Service unavailable until " + e.availableFrom()),
+            LogEntry.debug(
+                    "Authentication during maintenance window",
+                    kv("available_from", e.availableFrom())));
       case AuthService.AuthenticateUserError.ValidationFailed e ->
           ValidationErrorMapper.map(e.notification(), ErrorMapper::mapFieldError);
     };
@@ -51,35 +50,36 @@ public class AuthErrorMapper implements FeatureErrorMapper {
 
   public ErrorResult mapRefreshTokensError(AuthService.RefreshTokensError error) {
     return switch (error) {
-      case AuthService.RefreshTokensError.MaintenanceWindow e -> {
-        log.debug(
-            "Token refresh during maintenance window", kv("available_from", e.availableFrom()));
-        yield new ErrorResult(
-            503,
-            new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
-                .detail("Service unavailable until " + e.availableFrom()));
-      }
+      case AuthService.RefreshTokensError.MaintenanceWindow e ->
+          new ErrorResult(
+              503,
+              new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
+                  .detail("Service unavailable until " + e.availableFrom()),
+            LogEntry.debug(
+                    "Token refresh during maintenance window",
+                    kv("available_from", e.availableFrom())));
       case AuthService.RefreshTokensError.InvalidToken e -> mapInvalidRefreshTokenError(e.error());
     };
   }
 
   public ErrorResult mapInvalidRefreshTokenError(InvalidRefreshTokenError error) {
-    return new ErrorResult(
-        401,
-        switch (error.getReason()) {
-          case InvalidRefreshTokenError.Reason.NotFound ignored -> {
-            log.debug("Refresh token not found");
-            yield new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
-          }
-          case InvalidRefreshTokenError.Reason.Expired ignored -> {
-            log.debug("Refresh token expired");
-            yield new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
-          }
-          case InvalidRefreshTokenError.Reason.Revoked ignored -> {
-            log.warn("Revoked refresh token used");
-            yield new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
-          }
-        });
+    return switch (error.getReason()) {
+      case InvalidRefreshTokenError.Reason.NotFound ignored ->
+          new ErrorResult(
+              401,
+              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND),
+                LogEntry.debug("Refresh token not found"));
+      case InvalidRefreshTokenError.Reason.Expired ignored ->
+          new ErrorResult(
+              401,
+              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED),
+                LogEntry.debug("Refresh token expired"));
+      case InvalidRefreshTokenError.Reason.Revoked ignored ->
+          new ErrorResult(
+              401,
+              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED),
+                LogEntry.warn("Revoked refresh token used"));
+    };
   }
 
   @Override
@@ -122,29 +122,20 @@ public class AuthErrorMapper implements FeatureErrorMapper {
 
   public ErrorResult mapJwtValidationError(JwtService.JwtValidationError jwe) {
     ErrorResponse base = new ErrorResponse(CommonErrorCode.UNAUTHORIZED);
-    base =
-        switch (jwe) {
-          case JwtService.JwtValidationError.Invalid ignored -> {
-            log.warn("Invalid JWT token");
-            yield base.detail("Invalid JWT token");
-          }
-          case JwtService.JwtValidationError.Missing ignored -> {
-            log.warn("Missing JWT token");
-            yield base.detail("Missing JWT token");
-          }
-          case JwtService.JwtValidationError.Expired ignored -> {
-            log.debug("JWT has expired");
-            yield base.detail("JWT has expired");
-          }
-        };
-
-    return new ErrorResult(401, base);
+    return switch (jwe) {
+      case JwtService.JwtValidationError.Invalid ignored ->
+          new ErrorResult(
+              401, base.detail("Invalid JWT token"), LogEntry.warn("Invalid JWT token"));
+      case JwtService.JwtValidationError.Missing ignored ->
+          new ErrorResult(
+              401, base.detail("Missing JWT token"), LogEntry.warn("Missing JWT token"));
+      case JwtService.JwtValidationError.Expired ignored ->
+          new ErrorResult(
+              401, base.detail("JWT has expired"), LogEntry.debug("JWT has expired"));
+    };
   }
 
   public ErrorDetail mapInvalidValue(InvalidValueError error) {
-    // No switch here — InvalidRefreshTokenError is the only permitted type, and it is
-    // unreachable as a field error. If new InvalidValueError subtypes are added to
-    // AuthDomainError, this should be refactored into a switch.
     if (error instanceof InvalidRefreshTokenError e) {
       throw UnreachableCodeException.of(
           e, "refresh token errors are not field-level validation errors");
