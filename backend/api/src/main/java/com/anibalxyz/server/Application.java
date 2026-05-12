@@ -17,6 +17,8 @@ import io.javalin.config.JavalinConfig;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The main application class, acting as the Composition Root.
@@ -27,6 +29,7 @@ import java.util.function.Consumer;
  * instance tailored for different environments (e.g., test, development).
  */
 public class Application {
+  private static final Logger log = LoggerFactory.getLogger(Application.class);
   private final Javalin javalin;
   private final PersistenceManager persistenceManager;
   private final ApplicationConfiguration config;
@@ -174,7 +177,9 @@ public class Application {
    * @param port The port to listen on.
    */
   public void start(int port) {
+    log.info("Starting server on port {} [{} mode]", port, config.env().APP_ENV());
     javalin.start(port);
+    log.info("Server started successfully and is ready to accept connections");
   }
 
   /** Stops the web server and shuts down the persistence layer gracefully. */

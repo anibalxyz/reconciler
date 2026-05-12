@@ -7,6 +7,8 @@ import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.tool.schema.Action;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages the lifecycle of the JPA {@link EntityManagerFactory}.
@@ -16,12 +18,15 @@ import org.hibernate.tool.schema.Action;
  * provides a graceful shutdown mechanism.
  */
 public class PersistenceManager {
+  private static final Logger log = LoggerFactory.getLogger(PersistenceManager.class);
   private final EntityManagerFactory emf;
   private final DatabaseVariables dbConfig;
 
   public PersistenceManager(DatabaseVariables dbConfig) {
     this.dbConfig = dbConfig;
+    log.info("Initializing database connection pool: {}", dbConfig);
     emf = getProperties().createEntityManagerFactory();
+    log.info("Database connection pool initialized successfully");
   }
 
   public EntityManagerFactory emf() {
