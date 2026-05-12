@@ -10,6 +10,7 @@ import io.javalin.http.SameSite;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Arrays;
 import javax.crypto.SecretKey;
 
 /**
@@ -41,5 +42,17 @@ public record AppEnvironmentSource(
         ServerEnvironment,
         JwtEnvironment,
         AuthApiEnvironment,
-        AuthEnvironment {}
-  // TODO: implement toString() method to output a prettier string and to hide sensitive data
+        AuthEnvironment {
+  @Override
+  public String toString() {
+    return "AppEnvironmentSource["
+        + "APP_ENV=" + APP_ENV
+        + ", API_PORT=" + API_PORT
+        + ", API_URL=" + API_URL
+        + ", CORS_ALLOWED_ORIGINS=" + Arrays.toString(CORS_ALLOWED_ORIGINS)
+        + ", JWT_KEY=******"
+        + ", JWT_ISSUER=" + JWT_ISSUER
+        + ", BCRYPT_LOG_ROUNDS=" + BCRYPT_LOG_ROUNDS
+        + "]";
+  }
+}
