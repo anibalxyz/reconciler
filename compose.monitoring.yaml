@@ -1,0 +1,15 @@
+services:
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: reconciler-${APP_ENV}-loki
+    pull_policy: missing
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./monitoring/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - main
+
+volumes:
+  loki-data:
+    name: reconciler-${APP_ENV}-loki-data
