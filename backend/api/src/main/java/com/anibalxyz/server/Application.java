@@ -181,7 +181,9 @@ public class Application {
   public void start(int port) {
     log.info("Starting server on port {} [{} mode]", port, config.env().APP_ENV());
     javalin.start(port);
-    log.info("Server started successfully and is ready to accept connections on {}", kv("api_url", config.env().API_URL()));
+    log.info(
+        "Server started successfully and is ready to accept connections on {}",
+        kv("api_url", config.env().API_URL()));
   }
 
   /** Stops the web server and shuts down the persistence layer gracefully. */
