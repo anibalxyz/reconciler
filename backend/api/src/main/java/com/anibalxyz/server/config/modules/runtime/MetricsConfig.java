@@ -35,7 +35,11 @@ public class MetricsConfig extends RuntimeConfig {
     new ProcessorMetrics().bindTo(registry);
     new UptimeMetrics().bindTo(registry);
 
-    server.before(ctx -> ctx.attribute(METRICS_TIMER_ATTR, Timer.start(registry)));
+    server.before(
+        ctx -> {
+          if (ctx.path().equals(METRICS_PATH)) return;
+          ctx.attribute(METRICS_TIMER_ATTR, Timer.start(registry));
+        });
 
     server.after(
         ctx -> {
