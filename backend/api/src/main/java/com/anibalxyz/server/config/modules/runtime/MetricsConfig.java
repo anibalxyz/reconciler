@@ -10,7 +10,6 @@ import io.micrometer.core.instrument.binder.logging.LogbackMetrics;
 import io.micrometer.core.instrument.binder.system.FileDescriptorMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.binder.system.UptimeMetrics;
-import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +21,9 @@ public class MetricsConfig extends RuntimeConfig {
   private static final Logger log = LoggerFactory.getLogger(MetricsConfig.class);
   private final PrometheusMeterRegistry registry;
 
-  public MetricsConfig(Javalin server) {
+  public MetricsConfig(Javalin server, PrometheusMeterRegistry registry) {
     super(server);
-    registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+    this.registry = registry;
   }
 
   @Override

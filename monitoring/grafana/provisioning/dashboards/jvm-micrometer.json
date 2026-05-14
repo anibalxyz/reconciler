@@ -836,11 +836,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "tomcat_threads_busy_threads{application=\"$application\", instance=\"$instance\"}",
+          "expr": "jetty_threads_current{instance=\"$instance\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "TOMCAT - BSY",
+          "legendFormat": "JETTY - ACTIVE",
           "refId": "A"
         },
         {
@@ -848,11 +848,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "tomcat_threads_current_threads{application=\"$application\", instance=\"$instance\"}",
+          "expr": "jetty_threads_idle{instance=\"$instance\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "TOMCAT - CUR",
+          "legendFormat": "JETTY - IDLE",
           "refId": "B"
         },
         {
@@ -860,23 +860,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "tomcat_threads_config_max_threads{application=\"$application\", instance=\"$instance\"}",
+          "expr": "jetty_connections_current_connections{instance=\"$instance\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "TOMCAT - MAX",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "jetty_threads_busy{application=\"$application\", instance=\"$instance\"}",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 2,
-          "legendFormat": "JETTY - BSY",
+          "legendFormat": "JETTY - CONN",
           "refId": "D"
         },
         {
@@ -884,23 +872,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jetty_threads_current{application=\"$application\", instance=\"$instance\"}",
+          "expr": "jetty_connections_max_connections{instance=\"$instance\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "JETTY - CUR",
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "jetty_threads_config_max{application=\"$application\", instance=\"$instance\"}",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 2,
-          "legendFormat": "JETTY - MAX",
+          "legendFormat": "JETTY - MAX CONN",
           "refId": "F"
         }
       ],
