@@ -53,7 +53,7 @@ public class MetricsConfig extends RuntimeConfig {
               Timer.builder("http_server_requests")
                   .description("HTTP request duration")
                   .tag("method", ctx.method().name())
-                  .tag("path", ctx.matchedPath())
+                  .tag("path", ctx.endpointHandlerPath())
                   .tag("status", String.valueOf(ctx.statusCode()))
                   .register(registry));
         });
