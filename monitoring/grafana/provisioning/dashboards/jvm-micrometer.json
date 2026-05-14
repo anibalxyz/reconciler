@@ -37,7 +37,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 2,
+  "id": 1,
   "links": [],
   "panels": [
     {
@@ -1238,7 +1238,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 6,
+        "w": 12,
         "x": 12,
         "y": 13
       },
@@ -1300,143 +1300,6 @@
         }
       ],
       "title": "JVM Total",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 18,
-        "y": 13
-      },
-      "id": 86,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.6.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "process_memory_vss_bytes{application=\"$application\", instance=\"$instance\"}",
-          "format": "time_series",
-          "hide": true,
-          "intervalFactor": 2,
-          "legendFormat": "vss",
-          "metric": "",
-          "refId": "A",
-          "step": 2400
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "process_memory_rss_bytes{application=\"$application\", instance=\"$instance\"}",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "rss",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "process_memory_swap_bytes{application=\"$application\", instance=\"$instance\"}",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "swap",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "process_memory_rss_bytes{application=\"$application\", instance=\"$instance\"} + process_memory_swap_bytes{application=\"$application\", instance=\"$instance\"}",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "total",
-          "refId": "D"
-        }
-      ],
-      "title": "JVM Process Memory",
       "type": "timeseries"
     },
     {
@@ -3315,12 +3178,12 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "JVM (Micrometer)",
   "uid": "dflvz6yxfqo74d",
-  "version": 1
+  "version": 3
 }
