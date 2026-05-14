@@ -8,16 +8,16 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.UnauthorizedResponse;
+import io.javalin.router.EndpointNotFound;
 import java.util.List;
 
 // TODO: implement exception handling for io.jsonwebtoken
 // TODO: implement mapper for UnhandledErrorException and UnreachableCodeException
-// TODO: add mapper for EndpointNotFound
 // TODO: implement unit-testing (currently almost full covered thanks to E2E)
 public class InfrastructureErrorMapper {
 
   private static final List<Resolver> resolvers =
-      List.of(new Resolver.BadRequest(), new Resolver.Auth());
+      List.of(new Resolver.BadRequest(), new Resolver.Auth(), new Resolver.NotFound());
 
   private InfrastructureErrorMapper() {}
 
@@ -60,6 +60,14 @@ public class InfrastructureErrorMapper {
               default -> null;
             };
         return new ErrorResult(401, base);
+      }
+    }
+
+    final class NotFound implements Resolver {
+      @Override
+      public ErrorResult execute(Exception e) {
+        if (!(e instanceof EndpointNotFound)) return new ErrorResult(404, null);
+        return new ErrorResult(404, new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND).detail(e.getMessage()));
       }
     }
   }
