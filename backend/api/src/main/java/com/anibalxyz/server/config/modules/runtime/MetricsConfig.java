@@ -49,11 +49,14 @@ public class MetricsConfig extends RuntimeConfig {
           Timer.Sample sample = ctx.attribute(METRICS_TIMER_ATTR);
           if (sample == null) return;
 
+          var path = ctx.endpointHandlerPath();
+          if (path.startsWith("No handler matched")) path = "/unmatched";
+
           sample.stop(
               Timer.builder("http_server_requests")
                   .description("HTTP request duration")
                   .tag("method", ctx.method().name())
-                  .tag("path", ctx.endpointHandlerPath())
+                  .tag("path", path)
                   .tag("status", String.valueOf(ctx.statusCode()))
                   .register(registry));
         });
