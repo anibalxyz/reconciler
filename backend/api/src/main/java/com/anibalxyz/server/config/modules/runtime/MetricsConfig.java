@@ -58,6 +58,7 @@ public class MetricsConfig extends RuntimeConfig {
                   .tag("method", ctx.method().name())
                   .tag("path", path)
                   .tag("status", String.valueOf(ctx.statusCode()))
+                  .publishPercentileHistogram()
                   .register(registry));
         });
 
