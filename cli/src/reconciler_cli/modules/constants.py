@@ -11,6 +11,10 @@ SERVICES: Dict[str, str] = {
     "DB": "db",
     "FLYWAY": "flyway",
     "NGINX": "nginx",
+    "GRAFANA": "monitoring/grafana",
+    "PROMETHEUS": "monitoring/prometheus",
+    "LOKI": "monitoring/loki",
+    "PROMTAIL": "monitoring/promtail",
 }
 
 # A list of all available environments for the project.
