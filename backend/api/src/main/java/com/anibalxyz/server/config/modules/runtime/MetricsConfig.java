@@ -40,7 +40,8 @@ public class MetricsConfig extends RuntimeConfig {
 
     server.before(
         ctx -> {
-          if (ctx.path().equals(METRICS_PATH)) return;
+          if (ctx.path().equals(METRICS_PATH)
+              || ctx.path().startsWith("/webjars/")) return;
           ctx.attribute(METRICS_TIMER_ATTR, Timer.start(registry));
         });
 
@@ -51,6 +52,7 @@ public class MetricsConfig extends RuntimeConfig {
 
           var path = ctx.endpointHandlerPath();
           if (path.startsWith("No handler matched")) path = "/unmatched";
+          if (path.equals("/openapi") || path.equals("/swagger")) path = "/api-docs";
 
           sample.stop(
               Timer.builder("http_server_requests")

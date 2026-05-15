@@ -22,6 +22,7 @@ public class AccessLogConfig extends RuntimeConfig {
     server.before(
         ctx -> {
           if (ctx.path().equals(METRICS_PATH)) return;
+          if (ctx.path().startsWith("/webjars/")) return;
           ctx.attribute(REQUEST_START_TIME_ATTR, System.currentTimeMillis());
         });
 
