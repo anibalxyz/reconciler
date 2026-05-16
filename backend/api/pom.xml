@@ -246,6 +246,12 @@
         </dependency>
 
         <dependency>
+            <groupId>io.javalin</groupId>
+            <artifactId>javalin-micrometer</artifactId>
+            <version>${javalin.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.codehaus.janino</groupId>
             <artifactId>janino</artifactId>
             <version>${janino.version}</version>

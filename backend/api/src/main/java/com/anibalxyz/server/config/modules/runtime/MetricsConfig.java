@@ -6,9 +6,10 @@ import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
+import io.micrometer.core.instrument.binder.logging.LogbackMetrics;
+import io.micrometer.core.instrument.binder.system.FileDescriptorMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.binder.system.UptimeMetrics;
-import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +21,9 @@ public class MetricsConfig extends RuntimeConfig {
   private static final Logger log = LoggerFactory.getLogger(MetricsConfig.class);
   private final PrometheusMeterRegistry registry;
 
-  public MetricsConfig(Javalin server) {
+  public MetricsConfig(Javalin server, PrometheusMeterRegistry registry) {
     super(server);
-    registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+    this.registry = registry;
   }
 
   @Override
@@ -34,20 +35,32 @@ public class MetricsConfig extends RuntimeConfig {
     new JvmThreadMetrics().bindTo(registry);
     new ProcessorMetrics().bindTo(registry);
     new UptimeMetrics().bindTo(registry);
+    new LogbackMetrics().bindTo(registry);
+    new FileDescriptorMetrics().bindTo(registry);
 
-    server.before(ctx -> ctx.attribute(METRICS_TIMER_ATTR, Timer.start(registry)));
+    server.before(
+        ctx -> {
+          if (ctx.path().equals(METRICS_PATH)
+              || ctx.path().startsWith("/webjars/")) return;
+          ctx.attribute(METRICS_TIMER_ATTR, Timer.start(registry));
+        });
 
     server.after(
         ctx -> {
           Timer.Sample sample = ctx.attribute(METRICS_TIMER_ATTR);
           if (sample == null) return;
 
+          var path = ctx.endpointHandlerPath();
+          if (path.startsWith("No handler matched")) path = "/unmatched";
+          if (path.equals("/openapi") || path.equals("/swagger")) path = "/api-docs";
+
           sample.stop(
               Timer.builder("http_server_requests")
                   .description("HTTP request duration")
                   .tag("method", ctx.method().name())
-                  .tag("path", ctx.matchedPath())
+                  .tag("path", path)
                   .tag("status", String.valueOf(ctx.statusCode()))
+                  .publishPercentileHistogram()
                   .register(registry));
         });
 

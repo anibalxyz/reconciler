@@ -1,5 +1,6 @@
 package com.anibalxyz.server.config.modules.runtime;
 
+import static com.anibalxyz.server.config.modules.runtime.MetricsConfig.METRICS_PATH;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import io.javalin.Javalin;
@@ -18,14 +19,19 @@ public class AccessLogConfig extends RuntimeConfig {
 
   @Override
   public void apply() {
-    server.before(ctx -> ctx.attribute(REQUEST_START_TIME_ATTR, System.currentTimeMillis()));
+    server.before(
+        ctx -> {
+          if (ctx.path().equals(METRICS_PATH)) return;
+          if (ctx.path().startsWith("/webjars/")) return;
+          ctx.attribute(REQUEST_START_TIME_ATTR, System.currentTimeMillis());
+        });
 
     server.after(
         ctx -> {
-          MDC.put("status", String.valueOf(ctx.statusCode()));
           Long startTime = ctx.attribute(REQUEST_START_TIME_ATTR);
           if (startTime == null) return;
 
+          MDC.put("status", String.valueOf(ctx.statusCode()));
           long duration = System.currentTimeMillis() - startTime;
           log.info(
               "{} {} -> {} [{}ms]",

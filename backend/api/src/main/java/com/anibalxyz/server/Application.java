@@ -16,6 +16,9 @@ import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
+import io.javalin.micrometer.MicrometerPlugin;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.function.Consumer;
@@ -74,10 +77,16 @@ public class Application {
       throw new IllegalStateException("Unknown environment: " + appEnv);
     }
 
+    var prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+
     // 1. Declare specific startup configurations for dev/prod
     Consumer<JavalinConfig> startupConfig =
         javalinConfig -> {
           new SwaggerConfig(javalinConfig, config.env()).apply();
+          javalinConfig.registerPlugin(
+              new MicrometerPlugin(
+                  micrometerPluginConfig ->
+                      micrometerPluginConfig.registry = prometheusMeterRegistry));
         };
 
     // 2. Declare specific runtime configurations for dev/prod
@@ -87,6 +96,9 @@ public class Application {
           String openapiRedirect = appEnv == AppEnv.PROD ? "/openapi" : "/swagger";
           container.server().get("/", ctx -> ctx.redirect(openapiRedirect));
           container.server().get("/api", ctx -> ctx.redirect(openapiRedirect));
+
+          new AccessLogConfig(container.server()).apply();
+          new MetricsConfig(container.server(), prometheusMeterRegistry).apply();
         };
 
     // 3. Declare specific route registries for dev/prod
@@ -143,8 +155,6 @@ public class Application {
             clock);
 
     new LifecycleConfig(server, persistenceManager).apply();
-    new AccessLogConfig(server).apply();
-    new MetricsConfig(server).apply();
     new ExceptionsConfig(server).apply();
     // TODO: Refactor request lifecycle management.
     //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the absolute

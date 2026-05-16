@@ -1,0 +1,74 @@
+services:
+  promtail:
+    image: grafana/promtail:3.4.2
+    container_name: reconciler-${APP_ENV}-promtail
+    pull_policy: missing
+    command:
+      - -config.file=/etc/promtail/promtail-config.yaml
+      - -config.expand-env=true
+    environment:
+      - APP_ENV=${APP_ENV}
+    volumes:
+      - ./monitoring/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - loki
+    networks:
+      - main
+
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: reconciler-${APP_ENV}-loki
+    pull_policy: missing
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./monitoring/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - main
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: reconciler-${APP_ENV}-prometheus
+    pull_policy: missing
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+    ports:
+      - 9090:9090
+    volumes:
+      - ./monitoring/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - main
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: reconciler-${APP_ENV}-grafana
+    pull_policy: missing
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - main
+
+volumes:
+  loki-data:
+    name: reconciler-${APP_ENV}-loki-data
+  prometheus-data:
+    name: reconciler-${APP_ENV}-prometheus-data
+  grafana-data:
+    name: reconciler-${APP_ENV}-grafana-data

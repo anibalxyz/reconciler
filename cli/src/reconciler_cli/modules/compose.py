@@ -16,14 +16,24 @@ from reconciler_cli.modules.image import build, get_buildable_services
 
 core_lifecycle_services = [SERVICES["DB"], SERVICES["FLYWAY"]]
 
+MONITORING_SERVICES = [
+    SERVICES["GRAFANA"],
+    SERVICES["PROMETHEUS"],
+    SERVICES["LOKI"],
+    SERVICES["PROMTAIL"],
+]
+
 LIFECYCLE_SERVICES: Dict[str, List[str]] = {
     "dev": core_lifecycle_services
     + [
         SERVICES["API"],
         SERVICES["PUBLIC_SITE"],
         SERVICES["DASHBOARD"],
-    ],
-    "prod": core_lifecycle_services + [SERVICES["NGINX"], SERVICES["API"]],
+    ]
+    + MONITORING_SERVICES,
+    "prod": core_lifecycle_services
+    + [SERVICES["NGINX"], SERVICES["API"]]
+    + MONITORING_SERVICES,
     "test": core_lifecycle_services + [SERVICES["API"]],
 }
 
@@ -37,6 +47,8 @@ def compose(cmd: List[str]):
     """
     env = get_current_env()
     compose_files = ["-f", "compose.yaml", "-f", f"compose.{env}.yaml"]
+    if env in ("dev", "prod"):
+        compose_files.extend(["-f", "compose.monitoring.yaml"])
     env_files = []
     for f in ENV_FILES.get(env):
         env_files += ["--env-file", str(f)]
@@ -49,6 +61,11 @@ def compose(cmd: List[str]):
 
     run_env = os.environ.copy()
     run_env["APP_ENV"] = env
+
+    print(
+        f"▶  APP_ENV={env} docker compose {' '.join(shlex.quote(p) for p in (compose_files + env_files + project_name + cmd))}"
+    )
+
     return subprocess.run(base_cmd + cmd, env=run_env)
 
 
