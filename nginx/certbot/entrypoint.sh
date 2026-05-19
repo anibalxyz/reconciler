@@ -29,7 +29,6 @@ is_self_signed() {
   return 1
 }
 
-# TODO: manual test no-staging
 obtain_cert() {
   local args=""
   [ "$CERTBOT_STAGING" = "true" ] && args="--staging"
