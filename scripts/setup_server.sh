@@ -131,17 +131,25 @@ show_final_message() {
 }
 
 setup_cron() {
-  local cron_file="/etc/cron.d/reconciler-certbot"
+  local cron_certbot="/etc/cron.d/reconciler-certbot"
+  local cron_prune="/etc/cron.d/reconciler-docker-prune"
 
+  # TODO: check 'compose up' does not leave orphan containers
   echo "==> Setting up certbot renewal cron..."
-
-  # TODO: check 'compose up' does not leave orphan conainers
-  cat > "$cron_file" <<CRON
-0 */12 * * * root export PATH="/usr/local/bin:/usr/sbin:/sbin:/usr/bin:/bin"; cd ${PROJECT_DIR} && cli compose up certbot --no-detach && docker kill -s HUP reconciler-prod-nginx
+  cat > "$cron_certbot" <<CRON
+PATH=/usr/local/bin:/usr/sbin:/sbin:/usr/bin:/bin
+0 */12 * * * root cd ${PROJECT_DIR} && cli compose up certbot --no-detach && docker kill -s HUP reconciler-prod-nginx
 CRON
-
-  chmod 644 "$cron_file"
-  echo "  Created $cron_file"
+  chmod 644 "$cron_certbot"
+  echo "  Created $cron_certbot"
+  
+  echo "==> Setting up docker prune cron..."
+  cat > "$cron_prune" <<CRON
+PATH=/usr/local/bin:/usr/sbin:/sbin:/usr/bin:/bin
+0 3 * * 0 root cli resource prune all
+CRON
+  chmod 644 "$cron_prune"
+  echo "  Created $cron_prune"
 }
 
 deploy() {
