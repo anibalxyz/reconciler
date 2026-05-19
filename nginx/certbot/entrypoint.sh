@@ -15,9 +15,14 @@ wait_for_nginx() {
 }
 
 is_self_signed() {
-  local subject issuer
-  subject=$(openssl x509 -in "$1" -noout -subject 2>/dev/null)
-  issuer=$(openssl x509 -in "$1" -noout -issuer 2>/dev/null)
+  local subject issuer raw_subject raw_issuer
+  
+  raw_subject=$(openssl x509 -in "$1" -noout -subject 2>/dev/null)
+  raw_issuer=$(openssl x509 -in "$1" -noout -issuer 2>/dev/null)
+
+  subject="${raw_subject#*=}"
+  issuer="${raw_issuer#*=}"
+
   if [ "$subject" = "$issuer" ]; then
     return 0
   fi
