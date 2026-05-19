@@ -7,10 +7,6 @@ FROM prom/prometheus:v3.2.1
 
 COPY --from=tools /usr/bin/envsubst /bin/envsubst
 COPY prometheus.yaml /etc/prometheus/prometheus.template.yaml
-
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-USER nobody
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
