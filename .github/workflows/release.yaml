@@ -153,6 +153,26 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Docker metadata for Prometheus
+        id: meta-prometheus
+        uses: docker/metadata-action@v5
+        with:
+          images: anibalxyz/reconciler-prod-prometheus
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+      - name: Build and push Prometheus image
+        uses: docker/build-push-action@v6
+        with:
+          context: monitoring/prometheus
+          file: monitoring/prometheus/Dockerfile
+          push: true
+          tags: ${{ steps.meta-prometheus.outputs.tags }}
+          labels: ${{ steps.meta-prometheus.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       # Creates a GitHub Release with auto-generated changelog from commits/PRs
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

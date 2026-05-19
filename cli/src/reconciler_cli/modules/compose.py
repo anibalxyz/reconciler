@@ -49,6 +49,8 @@ def compose(cmd: List[str]):
     compose_files = ["-f", "compose.yaml", "-f", f"compose.{env}.yaml"]
     if env in ("dev", "prod"):
         compose_files.extend(["-f", "compose.monitoring.yaml"])
+    if env == "dev":
+        compose_files.extend(["-f", "compose.monitoring.dev.yaml"])
     env_files = []
     for f in ENV_FILES.get(env):
         env_files += ["--env-file", str(f)]

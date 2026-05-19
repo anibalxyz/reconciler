@@ -6,7 +6,7 @@ scrape_configs:
   - job_name: reconciler-api
     static_configs:
       - targets:
-          - api:4001
+          - api:${API_PORT}
     metrics_path: /internal/metrics
 
   - job_name: prometheus
