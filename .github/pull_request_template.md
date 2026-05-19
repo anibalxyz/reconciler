@@ -14,7 +14,7 @@
 
 <!-- How was this validated? -->
 - [ ] Unit tests added/updated
-- [ ] Integration tests added/updated  
+- [ ] Integration tests added/updated
 - [ ] Manual testing completed
 - [ ] Edge cases considered
 - [ ] N/A (no tests required)

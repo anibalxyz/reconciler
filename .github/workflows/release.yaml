@@ -132,9 +132,81 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Creates a GitHub Release with auto-generated changelog from commits/PRs
-      # Release is created using the tag name (e.g., v0.1.0)
+      - name: Docker metadata for Certbot
+        id: meta-certbot
+        uses: docker/metadata-action@v5
+        with:
+          images: anibalxyz/reconciler-prod-certbot
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Build and push Certbot image
+        uses: docker/build-push-action@v6
+        with:
+          context: nginx/certbot
+          file: nginx/certbot/Dockerfile
+          push: true
+          tags: ${{ steps.meta-certbot.outputs.tags }}
+          labels: ${{ steps.meta-certbot.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Docker metadata for Prometheus
+        id: meta-prometheus
+        uses: docker/metadata-action@v5
+        with:
+          images: anibalxyz/reconciler-prod-prometheus
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+      - name: Build and push Prometheus image
+        uses: docker/build-push-action@v6
+        with:
+          context: monitoring/prometheus
+          file: monitoring/prometheus/Dockerfile
+          push: true
+          tags: ${{ steps.meta-prometheus.outputs.tags }}
+          labels: ${{ steps.meta-prometheus.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── CLI wheel ──────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Set CLI version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/version = \"0.0.0\"/version = \"${VERSION}\"/" cli/pyproject.toml
+
+      - name: Build CLI wheel
+        run: pip wheel ./cli --no-deps -w cli/dist/
+
+      # ── Release Assembly ────────────────────────────────────
+
+      - name: Build release assets
+        run: |
+          tar czf release-assets.tar.gz \
+            compose.yaml \
+            compose.prod.yaml \
+            compose.monitoring.yaml \
+            compose.monitoring.dev.yaml \
+            backend/.env.prod.example \
+            frontend/.env.prod.example \
+            backend/db/migrations/ \
+            monitoring/promtail/promtail-config.yaml \
+            monitoring/loki/loki-config.yaml \
+            monitoring/prometheus/prometheus.yaml \
+            monitoring/grafana/provisioning/ \
+            cli/dist/reconciler_cli-*.whl
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          files: release-assets.tar.gz
