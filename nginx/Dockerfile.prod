@@ -3,6 +3,10 @@ FROM anibalxyz/reconciler-prod-public-site AS public-site
 
 FROM nginx:1.29.3-alpine AS final
 
+RUN apk add --no-cache openssl
+COPY init-cert.sh /docker-entrypoint.d/40-init-cert.sh
+RUN chmod +x /docker-entrypoint.d/40-init-cert.sh
+
 COPY nginx.conf /etc/nginx/templates/nginx.conf.template
 
 COPY 404.html /usr/share/nginx/html/404.html
