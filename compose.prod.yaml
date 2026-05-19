@@ -29,19 +29,17 @@ services:
     networks:
       - main
   certbot:
-    image: certbot/certbot:latest
+    image: anibalxyz/reconciler-prod-certbot:latest
     container_name: reconciler-prod-certbot
+    pull_policy: always
     restart: no
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-www:/var/www/certbot
-      - ./scripts/cert-entry.sh:/entrypoint.sh:ro
     environment:
       - DOMAIN=${DOMAIN}
       - CERTBOT_EMAIL=${CERTBOT_EMAIL}
       - CERTBOT_STAGING=${CERTBOT_STAGING}
-    entrypoint: /bin/sh
-    command: /entrypoint.sh
     networks:
       - main
 

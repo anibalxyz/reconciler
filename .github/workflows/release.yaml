@@ -132,8 +132,28 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Docker metadata for Certbot
+        id: meta-certbot
+        uses: docker/metadata-action@v5
+        with:
+          images: anibalxyz/reconciler-prod-certbot
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Build and push Certbot image
+        uses: docker/build-push-action@v6
+        with:
+          context: nginx/certbot
+          file: nginx/certbot/Dockerfile
+          push: true
+          tags: ${{ steps.meta-certbot.outputs.tags }}
+          labels: ${{ steps.meta-certbot.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       # Creates a GitHub Release with auto-generated changelog from commits/PRs
-      # Release is created using the tag name (e.g., v0.1.0)
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
