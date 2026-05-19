@@ -32,7 +32,7 @@ LIFECYCLE_SERVICES: Dict[str, List[str]] = {
     ]
     + MONITORING_SERVICES,
     "prod": core_lifecycle_services
-    + [SERVICES["NGINX"], SERVICES["API"]]
+    + [SERVICES["NGINX"], SERVICES["API"], SERVICES["CERTBOT"]]
     + MONITORING_SERVICES,
     "test": core_lifecycle_services + [SERVICES["API"]],
 }

@@ -11,6 +11,7 @@ SERVICES: Dict[str, str] = {
     "DB": "db",
     "FLYWAY": "flyway",
     "NGINX": "nginx",
+    "CERTBOT": "nginx/certbot",
     "GRAFANA": "monitoring/grafana",
     "PROMETHEUS": "monitoring/prometheus",
     "LOKI": "monitoring/loki",
