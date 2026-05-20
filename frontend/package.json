@@ -30,6 +30,7 @@
     "email": "anibalboggioict@gmail.com",
     "url": "https://github.com/anibalxyz"
   },
+  "type": "module",
   "workspaces": [
     "dashboard",
     "public-site"
@@ -41,7 +42,9 @@
     "dev:public": "npm run dev --workspace=@anibalxyz/reconciler-public-site",
     "format": "npm run format --workspaces",
     "format:check": "npm run format:check --workspaces",
-    "lint": "npm run lint --workspaces"
+    "lint": "npm run lint --workspaces",
+    "prepare": "cd .. && husky ./frontend/.husky",
+    "typecheck": "npm run typecheck --workspaces"
   },
   "dependencies": {
     "@tailwindcss/vite": "4.1.16",
@@ -52,6 +55,8 @@
     "@types/node": "24.0.0",
     "eslint": "9.39.1",
     "eslint-config-prettier": "10.1.8",
+    "husky": "9.1.7",
+    "lint-staged": "17.0.5",
     "prettier": "3.6.2",
     "prettier-plugin-astro": "0.14.1",
     "prettier-plugin-tailwindcss": "0.7.1",

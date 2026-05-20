@@ -1,13 +1,15 @@
 {
   "name": "@anibalxyz/reconciler-public-site",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "astro build",
     "dev": "astro dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "astro": "5.16.5"
