@@ -247,41 +247,20 @@ Reconciler versioning is based on [SemVer](https://semver.org/).
   - **MINOR:** New features, backward-compatible
   - **PATCH:** Bug fixes, refactors, optimizations
 
-- **Source of truth:** `VERSION` file in project root
-- **When to release:** When pushing a version tag (e.g., `v0.2.0`)
+- **Version tag:** Pushing a tag `vMAJOR.MINOR.PATCH` triggers the release workflow; no manual commits needed
 - **Docker images:** Tagged with version (`0.1.0`) and `latest` (stable releases only)
 
 ### Creating a Release
 
-#### 1. Ensure `main` is up to date
-
-```bash
-git switch main
-git pull origin main
-```
-
-#### 2. Bump the version and create tag
-
-Copy this block exactly, replacing `X.Y.Z` with the actual version number (e.g., `0.2.0`):
-
 ```bash
 VERSION="X.Y.Z"
-
-echo "$VERSION" > VERSION
-git add VERSION
-git commit -m "chore(release): bump version to $VERSION"
-git push origin main
-
 git tag -a "v$VERSION" -m "Release v$VERSION"
 git push origin "v$VERSION"
 ```
 
-#### 3. Automated release
-
-GitHub Actions automatically:
+That's it. The release workflow (`.github/workflows/release.yaml`) automatically:
 
 - Builds and pushes Docker images to Docker Hub
+- Injects the version into the CLI `pyproject.toml` at build time and builds a Python wheel
+- Bundles release assets (compose files, env templates, DB migrations, monitoring configs, CLI wheel) into `release-assets.tar.gz`
 - Creates a GitHub Release with auto-generated changelog
-
-> [!NOTE]
-> The Release workflow is triggered automatically when a tag matching `v*` is pushed to the repository.
