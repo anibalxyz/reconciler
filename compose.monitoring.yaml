@@ -48,6 +48,7 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      # TODO: solve alert when running in dev: DOMAIN not set
       - GF_SERVER_ROOT_URL=https://${DOMAIN}/grafana/
       - GF_INSTALL_PLUGINS=
     volumes:

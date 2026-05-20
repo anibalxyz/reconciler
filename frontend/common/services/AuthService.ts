@@ -2,9 +2,13 @@ export interface AuthResponse {
   accessToken: string;
 }
 
+// TODO: this is NOT the real backend ErrorDetail structure.
+//       The real record only guarantees `code` (String).
+//       `title` and `field` are assumptions based on current validation errors
 export interface ErrorDetail {
-  field: string;
-  message: string;
+  code: string;
+  title: string;
+  field?: string;
 }
 
 export interface ErrorResponse {

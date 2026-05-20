@@ -1,6 +1,6 @@
 // NOTE: could refactor with `register.ts` but isnt a priority,
 // it will not visibly improve the performance
-import AuthService from '@common/services/AuthService';
+import AuthService, { type ErrorResponse } from '@common/services/AuthService';
 import { loginSchema } from '@validation/authSchemas';
 import { updateValidationErrors } from './ui';
 
@@ -16,22 +16,27 @@ loginForm.addEventListener('submit', async (event) => {
   const formData = loginSchema.safeParse(Object.fromEntries(new FormData(loginForm)));
   if (!formData.success) {
     const errors = Object.values(formData.error.flatten().fieldErrors).flatMap((msgs) => msgs ?? []);
-    updateValidationErrors(validationErrorDiv, validationErrorList, errors);
+    updateValidationErrors(
+      validationErrorDiv,
+      validationErrorList,
+      errors.map((msg) => ({ code: 'VALIDATION_ERROR', title: msg })),
+    );
     return;
   }
 
   const { email, password } = formData.data;
 
   const response = await authService.loginUser(email, password);
-  if ('error' in response.data) {
-    updateValidationErrors(validationErrorDiv, validationErrorList, response.data.details);
+  if ('accessToken' in response.data) {
+    validationErrorDiv.classList.add('invisible');
+    successModal.showModal();
+    successModal.addEventListener('close', () => {
+      window.location.href = '/dashboard';
+    });
     return;
   }
 
-  validationErrorDiv.classList.add('invisible'); // after login -> smoother transition
-
-  successModal.showModal();
-  successModal.addEventListener('close', () => {
-    window.location.href = '/dashboard';
-  });
+  const errorData = response.data as ErrorResponse;
+  const errorDetails = errorData.errors?.length ? errorData.errors : [{ code: errorData.code, title: errorData.title }];
+  updateValidationErrors(validationErrorDiv, validationErrorList, errorDetails);
 });
