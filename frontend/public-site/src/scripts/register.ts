@@ -36,12 +36,16 @@ registerForm.addEventListener('submit', async (event) => {
     }
 
     const loginError = responseLogin.data as ErrorResponse;
-    const loginDetails = loginError.errors?.length ? loginError.errors : [{ code: loginError.code, title: loginError.title }];
+    const loginDetails = loginError.errors?.length
+      ? loginError.errors
+      : [{ code: loginError.code, title: loginError.title }];
     updateValidationErrors(validationErrorDiv, validationErrorList, loginDetails);
     return;
   }
 
   const registerError = responseRegister.data as ErrorResponse;
-  const registerDetails = registerError.errors?.length ? registerError.errors : [{ code: registerError.code, title: registerError.title }];
+  const registerDetails = registerError.errors?.length
+    ? registerError.errors
+    : [{ code: registerError.code, title: registerError.title }];
   updateValidationErrors(validationErrorDiv, validationErrorList, registerDetails);
 });
