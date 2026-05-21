@@ -1,5 +1,6 @@
 services:
   prometheus:
+    pull_policy: missing
     ports:
       - 9090:9090
 

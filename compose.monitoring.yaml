@@ -2,7 +2,7 @@ services:
   promtail:
     image: grafana/promtail:3.4.2
     container_name: reconciler-${APP_ENV}-promtail
-    pull_policy: always
+    pull_policy: missing
     command:
       - -config.file=/etc/promtail/promtail-config.yaml
       - -config.expand-env=true
@@ -20,7 +20,7 @@ services:
   loki:
     image: grafana/loki:3.4.2
     container_name: reconciler-${APP_ENV}-loki
-    pull_policy: always
+    pull_policy: missing
     command: -config.file=/etc/loki/loki-config.yaml
     volumes:
       - ./monitoring/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
@@ -29,7 +29,7 @@ services:
       - main
 
   prometheus:
-    image: anibalxyz/reconciler-prod-prometheus:latest
+    image: anibalxyz/reconciler-${APP_ENV}-prometheus:latest
     container_name: reconciler-${APP_ENV}-prometheus
     pull_policy: always
     environment:
@@ -43,13 +43,12 @@ services:
   grafana:
     image: grafana/grafana:11.6.0
     container_name: reconciler-${APP_ENV}-grafana
-    pull_policy: always
+    pull_policy: missing
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
-      # TODO: solve alert when running in dev: DOMAIN not set
-      - GF_SERVER_ROOT_URL=https://${DOMAIN}/grafana/
+      - GF_SERVER_ROOT_URL=https://${DOMAIN:-localhost}/grafana/
       - GF_INSTALL_PLUGINS=
     volumes:
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro

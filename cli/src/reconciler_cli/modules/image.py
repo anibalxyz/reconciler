@@ -17,8 +17,9 @@ core_buildable_services: List[str] = [
 ]
 
 BUILDABLE_SERVICES: Dict[str, List[str]] = {
-    "dev": core_buildable_services,
-    "prod": core_buildable_services + [SERVICES["NGINX"]],
+    "dev": core_buildable_services + [SERVICES["PROMETHEUS"]],
+    "prod": core_buildable_services
+    + [SERVICES["NGINX"], SERVICES["CERTBOT"], SERVICES["PROMETHEUS"]],
     "test": [SERVICES["API"]],
 }
 
@@ -29,6 +30,9 @@ REGISTRY_SERVICES = [
     SERVICES["NGINX"],
     SERVICES["DASHBOARD"],
     SERVICES["PUBLIC_SITE"],
+    SERVICES["FRONTEND"],
+    SERVICES["PROMETHEUS"],
+    SERVICES["CERTBOT"],
 ]
 
 
