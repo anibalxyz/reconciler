@@ -25,9 +25,10 @@ public class SwaggerConfig extends StartupConfig {
     this.env = env;
   }
 
-  public static void swaggerPatch(Context ctx) {
+  public static void swaggerPatch(Context ctx, AppEnv env) {
     String html = ctx.result();
     if (html == null) return;
+    String credentialsOption = env == AppEnv.PROD ? "same-origin" : "include";
     String patch =
 """
 <script>
@@ -35,14 +36,15 @@ public class SwaggerConfig extends StartupConfig {
     const originalFetch = window.fetch;
     window.fetch = function(...args) {
       const options = args[1] || {};
-      options.credentials = 'same-origin';
+      options.credentials = '%s';
       args[1] = options;
       return originalFetch.apply(this, args);
     };
     console.info("Swagger patched Successfully via 'after' handler");
   })();
 </script>
-""";
+"""
+            .formatted(credentialsOption);
     ctx.result(html.replace("</body>", patch + "</body>"));
   }
 
@@ -99,8 +101,23 @@ systems. Built with clean architecture principles, domain-driven design, and com
           server -> server.description("Production Server").url(env.API_PUBLIC_URL()));
     } else {
       definition
-          .withServer(server -> server.description("API URL: add '/api' prefix").url(env.API_URL()))
-          .withServer(server -> server.description("Root URL").url(env.SERVER_URL()));
+          .withServer(
+              server ->
+                  server
+                      .description("API PREFIX only - proxied by frontend (the most comfortable)")
+                      .url("/api"))
+          .withServer(
+              server ->
+                  server
+                      .description(
+                          "API URL - direct-to-backend url but needs proper CORS configuration (/health does not work)")
+                      .url(env.API_URL()))
+          .withServer(
+              server ->
+                  server
+                      .description(
+                          "ROOT URL - currently used to complement API URL server (enables /health but blocks the rest)")
+                      .url(env.SERVER_URL()));
     }
   }
 

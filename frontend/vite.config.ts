@@ -7,7 +7,7 @@ const API_URL = env.API_URL ?? 'http://localhost:4001';
 
 console.log('API_URL: ', API_URL);
 
-const redirectApiDocsPlugin = (): Plugin => ({
+const redirectsPlugin = (): Plugin => ({
   name: 'redirect-api-docs',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
@@ -23,46 +23,9 @@ const redirectApiDocsPlugin = (): Plugin => ({
         redirect('/openapi');
         return;
       }
-      next();
-    });
-  },
-});
-
-// Note: this aims to be just a temporal patch, until the use of npm swagger-ui
-//       Generated with Claude
-const swaggerPatchPlugin = (): Plugin => ({
-  name: 'swagger-credentials-patch',
-  configureServer(server) {
-    server.middlewares.use(async (req, res, next) => {
-      if (req.url === '/swagger') {
-        try {
-          const backendUrl = `${API_URL}/swagger`;
-          const response = await fetch(backendUrl);
-          let html = await response.text();
-
-          html = html.replace(
-            '</body>',
-            `<script>
-              (function() {
-                const originalFetch = window.fetch;
-                window.fetch = function(...args) {
-                  const options = args[1] || {};
-                  options.credentials = 'include';
-                  args[1] = options;
-                  return originalFetch.apply(this, args);
-                };
-                console.log('✅ Swagger patched via Vite');
-              })();
-            </script>
-            </body>`,
-          );
-
-          res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          res.end(html);
-          return;
-        } catch (error) {
-          console.error('Error proxying /swagger:', error);
-        }
+      if (req.url?.startsWith('/api/webjars')) {
+        redirect(req.url.replace('/api/webjars', '/webjars'));
+        return;
       }
       next();
     });
@@ -70,14 +33,20 @@ const swaggerPatchPlugin = (): Plugin => ({
 });
 
 export default defineConfig({
-  plugins: [tailwindcss(), redirectApiDocsPlugin(), swaggerPatchPlugin()],
+  plugins: [tailwindcss(), redirectsPlugin()],
   server: {
     proxy: {
+      '^/api/health$': {
+        target: API_URL,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
       '^/api($|/.*)': {
         target: API_URL,
         changeOrigin: true,
       },
-      '^/openapi$': {
+
+      '^/(openapi|swagger)$': {
         target: API_URL,
         changeOrigin: true,
       },

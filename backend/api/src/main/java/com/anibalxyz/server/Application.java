@@ -99,7 +99,9 @@ public class Application {
             container.server().get("/", ctx -> ctx.redirect("/swagger"));
             container.server().get("/api", ctx -> ctx.redirect("/swagger"));
 
-            container.server().after("/swagger", SwaggerConfig::swaggerPatch);
+            container
+                .server()
+                .after("/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
           }
 
           new AccessLogConfig(container.server()).apply();
