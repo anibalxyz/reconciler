@@ -13,7 +13,6 @@ public record ApplicationConfiguration(AppEnvironmentSource env, DatabaseVariabl
     Map<String, Object> api = new LinkedHashMap<>();
     api.put("url", env.API_URL());
     api.put("port", env.API_PORT());
-    api.put("prefix", env.API_PREFIX());
     api.put("corsOrigins", env.CORS_ALLOWED_ORIGINS());
     configSummary.put("api", api);
 

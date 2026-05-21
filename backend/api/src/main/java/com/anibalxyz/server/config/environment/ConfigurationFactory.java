@@ -127,9 +127,14 @@ public class ConfigurationFactory {
     }
     String apiHost = getEnvVar("API_HOST", callback);
     int apiPort = Integer.parseInt(getEnvVar("API_PORT", callback));
-    String apiPrefix = getEnvVar("API_PREFIX", callback);
+    String apiPrefix = "/api";
     String serverUrl = apiProtocol + "://" + apiHost + ":" + apiPort;
     String apiUrl = serverUrl + apiPrefix;
+    String apiPublicUrl = getEnvVar("API_PUBLIC_URL", callback, true);
+    if (apiPublicUrl == null || apiPublicUrl.isBlank()) {
+      apiPublicUrl = apiUrl;
+    }
+
     String frontendProtocol =
         Optional.ofNullable(getEnvVar("FRONTEND_PROTOCOL", callback, true))
             .filter(s -> !s.isBlank())
@@ -191,7 +196,7 @@ public class ConfigurationFactory {
             serverUrl,
             apiUrl,
             apiPort,
-            apiPrefix,
+            apiPublicUrl,
             corsAllowedOrigins,
             contactEmail,
             bcryptLogRounds,
