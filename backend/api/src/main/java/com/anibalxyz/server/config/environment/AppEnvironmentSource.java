@@ -38,7 +38,8 @@ public record AppEnvironmentSource(
     Boolean AUTH_COOKIE_SECURE,
     String AUTH_COOKIE_DOMAIN,
     SameSite AUTH_COOKIE_SAMESITE,
-    String AUTH_COOKIE_PATH)
+    String AUTH_COOKIE_PATH,
+    Boolean SWAGGER_ENABLED)
     implements UsersEnvironment,
         ServerEnvironment,
         JwtEnvironment,

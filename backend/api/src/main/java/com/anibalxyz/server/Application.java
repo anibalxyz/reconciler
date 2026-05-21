@@ -82,7 +82,9 @@ public class Application {
     // 1. Declare specific startup configurations for dev/prod
     Consumer<JavalinConfig> startupConfig =
         javalinConfig -> {
-          new SwaggerConfig(javalinConfig, config.env()).apply();
+          if (config.env().SWAGGER_ENABLED()) {
+            new SwaggerConfig(javalinConfig, config.env()).apply();
+          }
           javalinConfig.registerPlugin(
               new MicrometerPlugin(
                   micrometerPluginConfig ->
@@ -93,9 +95,10 @@ public class Application {
     // TODO: move to a separate file, e.g. RedirectRoutes within features.common
     Consumer<DependencyContainer> runtimeConfigs =
         container -> {
-          String openapiRedirect = appEnv == AppEnv.PROD ? "/openapi" : "/swagger";
-          container.server().get("/", ctx -> ctx.redirect(openapiRedirect));
-          container.server().get("/api", ctx -> ctx.redirect(openapiRedirect));
+          if (config.env().SWAGGER_ENABLED()) {
+            container.server().get("/", ctx -> ctx.redirect("/swagger"));
+            container.server().get("/api", ctx -> ctx.redirect("/swagger"));
+          }
 
           new AccessLogConfig(container.server()).apply();
           new MetricsConfig(container.server(), prometheusMeterRegistry).apply();

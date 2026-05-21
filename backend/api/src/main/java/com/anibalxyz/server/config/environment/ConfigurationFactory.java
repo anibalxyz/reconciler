@@ -188,6 +188,12 @@ public class ConfigurationFactory {
       throw new IllegalStateException("Invalid value for AUTH_COOKIE_SAMESITE: " + e.getMessage());
     }
 
+    // Feature Flags
+    // TODO: add separate inner record for feature flags
+    String swaggerEnabledRaw = getEnvVar("SWAGGER_ENABLED", callback, true);
+    if (swaggerEnabledRaw == null || swaggerEnabledRaw.isBlank()) swaggerEnabledRaw = "false";
+    Boolean swaggerEnabled = Boolean.parseBoolean(swaggerEnabledRaw);
+
     AppEnvironmentSource env =
         new AppEnvironmentSource(
             appEnv,
@@ -207,7 +213,8 @@ public class ConfigurationFactory {
             authCookieSecure,
             authCookieDomain.isBlank() ? null : authCookieDomain,
             authCookieSameSite,
-            authCookiePath);
+            authCookiePath,
+            swaggerEnabled);
 
     ApplicationConfiguration result =
         new ApplicationConfiguration(
