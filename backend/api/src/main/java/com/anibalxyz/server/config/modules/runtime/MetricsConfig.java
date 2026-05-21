@@ -40,8 +40,7 @@ public class MetricsConfig extends RuntimeConfig {
 
     server.before(
         ctx -> {
-          if (ctx.path().equals(METRICS_PATH)
-              || ctx.path().startsWith("/webjars/")) return;
+          if (ctx.path().equals(METRICS_PATH) || ctx.path().startsWith("/webjars/")) return;
           ctx.attribute(METRICS_TIMER_ATTR, Timer.start(registry));
         });
 

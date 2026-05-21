@@ -17,7 +17,6 @@ import com.anibalxyz.server.api.LogEntry;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
 
-
 public class UserErrorMapper implements FeatureErrorMapper {
 
   public ErrorResult mapUserNotFoundError(UserNotFoundError error) {

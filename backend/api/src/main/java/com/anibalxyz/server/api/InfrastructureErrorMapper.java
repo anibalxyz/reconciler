@@ -67,7 +67,8 @@ public class InfrastructureErrorMapper {
       @Override
       public ErrorResult execute(Exception e) {
         if (!(e instanceof EndpointNotFound)) return new ErrorResult(404, null);
-        return new ErrorResult(404, new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND).detail(e.getMessage()));
+        return new ErrorResult(
+            404, new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND).detail(e.getMessage()));
       }
     }
   }

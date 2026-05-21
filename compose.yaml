@@ -38,6 +38,7 @@ services:
   flyway:
     image: flyway/flyway:11-alpine
     container_name: reconciler-${APP_ENV}-flyway
+    pull_policy: missing
     volumes:
       - ./backend/db/migrations:/flyway/sql
     command:
