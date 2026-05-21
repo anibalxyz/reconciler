@@ -1,5 +1,7 @@
 package com.anibalxyz.server.config.modules.runtime;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.anibalxyz.features.common.application.exception.FailureSignal;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
@@ -14,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.event.Level;
-
-import static net.logstash.logback.argument.StructuredArguments.kv;
 
 // TODO: use a more semantic name for this class
 public class ExceptionsConfig extends RuntimeConfig {
@@ -63,9 +63,17 @@ public class ExceptionsConfig extends RuntimeConfig {
     emitLogEntry(result);
 
     if (result.status() >= 500) {
-      log.error("{}: {}", e.getClass().getSimpleName(), e.getMessage(), kv("error_code", result.response().code()));
+      log.error(
+          "{}: {}",
+          e.getClass().getSimpleName(),
+          e.getMessage(),
+          kv("error_code", result.response().code()));
     } else {
-      log.debug("{}: {}", e.getClass().getSimpleName(), e.getMessage(), kv("error_code", result.response().code()));
+      log.debug(
+          "{}: {}",
+          e.getClass().getSimpleName(),
+          e.getMessage(),
+          kv("error_code", result.response().code()));
     }
 
     ctx.status(result.status()).json(result.response().instance(requestId));

@@ -127,9 +127,14 @@ public class ConfigurationFactory {
     }
     String apiHost = getEnvVar("API_HOST", callback);
     int apiPort = Integer.parseInt(getEnvVar("API_PORT", callback));
-    String apiPrefix = getEnvVar("API_PREFIX", callback);
+    String apiPrefix = "/api";
     String serverUrl = apiProtocol + "://" + apiHost + ":" + apiPort;
     String apiUrl = serverUrl + apiPrefix;
+    String apiPublicUrl = getEnvVar("API_PUBLIC_URL", callback, true);
+    if (apiPublicUrl == null || apiPublicUrl.isBlank()) {
+      apiPublicUrl = apiUrl;
+    }
+
     String frontendProtocol =
         Optional.ofNullable(getEnvVar("FRONTEND_PROTOCOL", callback, true))
             .filter(s -> !s.isBlank())
@@ -183,6 +188,12 @@ public class ConfigurationFactory {
       throw new IllegalStateException("Invalid value for AUTH_COOKIE_SAMESITE: " + e.getMessage());
     }
 
+    // Feature Flags
+    // TODO: add separate inner record for feature flags
+    String swaggerEnabledRaw = getEnvVar("SWAGGER_ENABLED", callback, true);
+    if (swaggerEnabledRaw == null || swaggerEnabledRaw.isBlank()) swaggerEnabledRaw = "false";
+    Boolean swaggerEnabled = Boolean.parseBoolean(swaggerEnabledRaw);
+
     AppEnvironmentSource env =
         new AppEnvironmentSource(
             appEnv,
@@ -191,7 +202,7 @@ public class ConfigurationFactory {
             serverUrl,
             apiUrl,
             apiPort,
-            apiPrefix,
+            apiPublicUrl,
             corsAllowedOrigins,
             contactEmail,
             bcryptLogRounds,
@@ -202,7 +213,8 @@ public class ConfigurationFactory {
             authCookieSecure,
             authCookieDomain.isBlank() ? null : authCookieDomain,
             authCookieSameSite,
-            authCookiePath);
+            authCookiePath,
+            swaggerEnabled);
 
     ApplicationConfiguration result =
         new ApplicationConfiguration(

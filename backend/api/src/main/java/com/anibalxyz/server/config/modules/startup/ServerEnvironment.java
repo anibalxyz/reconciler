@@ -9,9 +9,9 @@ public interface ServerEnvironment {
 
   String SERVER_URL();
 
-  String API_PREFIX();
-
   String[] CORS_ALLOWED_ORIGINS();
 
   String CONTACT_EMAIL();
+
+  String API_PUBLIC_URL();
 }
