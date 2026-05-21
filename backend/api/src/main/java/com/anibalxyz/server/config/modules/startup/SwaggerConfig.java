@@ -4,6 +4,7 @@ import com.anibalxyz.server.config.AppEnv;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import io.javalin.config.JavalinConfig;
+import io.javalin.http.Context;
 import io.javalin.openapi.plugin.DefinitionConfiguration;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
@@ -22,6 +23,27 @@ public class SwaggerConfig extends StartupConfig {
   public SwaggerConfig(JavalinConfig javalinConfig, ServerEnvironment env) {
     super(javalinConfig);
     this.env = env;
+  }
+
+  public static void swaggerPatch(Context ctx) {
+    String html = ctx.result();
+    if (html == null) return;
+    String patch =
+"""
+<script>
+  (function() {
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+      const options = args[1] || {};
+      options.credentials = 'same-origin';
+      args[1] = options;
+      return originalFetch.apply(this, args);
+    };
+    console.info("Swagger patched Successfully via 'after' handler");
+  })();
+</script>
+""";
+    ctx.result(html.replace("</body>", patch + "</body>"));
   }
 
   @Override

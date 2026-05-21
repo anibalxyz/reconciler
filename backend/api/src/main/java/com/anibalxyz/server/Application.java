@@ -98,6 +98,8 @@ public class Application {
           if (config.env().SWAGGER_ENABLED()) {
             container.server().get("/", ctx -> ctx.redirect("/swagger"));
             container.server().get("/api", ctx -> ctx.redirect("/swagger"));
+
+            container.server().after("/swagger", SwaggerConfig::swaggerPatch);
           }
 
           new AccessLogConfig(container.server()).apply();
