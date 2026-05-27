@@ -1,7 +1,13 @@
 /* eslint-disable */
 /** @type {import('prettier').Config & import('prettier-plugin-tailwindcss').PluginOptions} */
 module.exports = {
-  plugins: ['prettier-plugin-tailwindcss'],
+  plugins: ['prettier-plugin-astro', 'prettier-plugin-tailwindcss'],
+  overrides: [
+    {
+      files: '*.astro',
+      options: { parser: 'astro' },
+    },
+  ],
   printWidth: 120,
   tabWidth: 2,
   useTabs: false,

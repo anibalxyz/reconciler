@@ -40,27 +40,32 @@
     "build:public": "npm run build --workspace=@anibalxyz/reconciler-public-site",
     "dev:dashboard": "npm run dev --workspace=@anibalxyz/reconciler-dashboard",
     "dev:public": "npm run dev --workspace=@anibalxyz/reconciler-public-site",
-    "format": "npm run format --workspaces",
-    "format:check": "npm run format:check --workspaces",
-    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces && prettier --write common",
+    "format:check": "npm run format:check --workspaces && prettier --check common",
+    "lint": "npm run lint --workspaces && eslint common",
     "prepare": "cd .. && husky ./frontend/.husky",
-    "typecheck": "npm run typecheck --workspaces"
+    "typecheck": "npm run typecheck --workspaces && tsc --noEmit --project common/tsconfig.json"
   },
   "dependencies": {
-    "@tailwindcss/vite": "4.1.16",
-    "tailwindcss": "4.1.18",
-    "zod": "3.25.76"
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "24.0.0",
-    "eslint": "9.39.1",
+    "@eslint/js": "10.0.1",
+    "@tailwindcss/vite": "4.3.0",
+    "@types/node": "24.12.4",
+    "eslint": "10.4.0",
     "eslint-config-prettier": "10.1.8",
     "husky": "9.1.7",
     "lint-staged": "17.0.5",
-    "prettier": "3.6.2",
-    "prettier-plugin-astro": "0.14.1",
-    "prettier-plugin-tailwindcss": "0.7.1",
-    "typescript": "5.8.3",
-    "typescript-eslint": "8.46.3"
+    "prettier": "3.8.3",
+    "prettier-plugin-tailwindcss": "0.8.0",
+    "tailwindcss": "4.3.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.60.0",
+    "vite": "7.3.3",
+    "vite-tsconfig-paths": "6.1.1"
+  },
+  "engines": {
+    "node": "^24.16.0"
   }
 }
