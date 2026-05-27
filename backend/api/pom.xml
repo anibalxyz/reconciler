@@ -13,25 +13,25 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <jetbrains.annotations.version>26.0.2</jetbrains.annotations.version>
-        <postgresql.version>42.7.8</postgresql.version>
+        <jetbrains.annotations.version>26.1.0</jetbrains.annotations.version>
+        <postgresql.version>42.7.11</postgresql.version>
         <jackson.version>2.21.3</jackson.version>
         <javalin.version>6.7.0</javalin.version>
         <jakarta-persistence.version>3.2.0</jakarta-persistence.version>
         <hibernate.version>7.1.0.Final</hibernate.version>
         <jbcrypt.version>0.4</jbcrypt.version>
-        <slf4j.version>2.0.17</slf4j.version>
+        <slf4j.version>2.0.18</slf4j.version>
         <logback.version>1.5.32</logback.version>
-        <logstash-logback-encoder.version>8.1</logstash-logback-encoder.version>
+        <logstash-logback-encoder.version>8.1</logstash-logback-encoder.version> <!-- 9.0 -->
         <micrometer-registry-prometheus.version>1.16.5</micrometer-registry-prometheus.version>
         <janino.version>3.1.12</janino.version>
-        <junit.version>5.13.4</junit.version>
-        <mockito.version>5.19.0</mockito.version>
+        <junit.version>5.14.4</junit.version> <!-- 6.1.0 -->
+        <mockito.version>5.23.0</mockito.version>
         <assertj.version>3.27.7</assertj.version>
-        <okhttp.version>4.12.0</okhttp.version>
+        <okhttp.version>4.12.0</okhttp.version> <!-- 5.3.2 -->
 
-        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
-        <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
+        <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+        <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
         <jjwt.version>0.13.0</jjwt.version>
     </properties>
 
@@ -116,7 +116,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.13</version>
+                <version>0.8.14</version>
                 <executions>
                     <execution>
                         <goals>
