@@ -2,12 +2,12 @@ package com.anibalxyz.shared;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Map;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Utility class for simplifying the process of sending HTTP requests and parsing responses,
@@ -43,13 +43,9 @@ public class HttpRequest {
   }
 
   private RequestBody createJsonRequestBody(Object body) {
-    try {
-      String jsonBody =
-          body.getClass().equals(String.class) ? (String) body : mapper.writeValueAsString(body);
-      return okhttp3.RequestBody.create(jsonBody, okhttp3.MediaType.get("application/json"));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    String jsonBody =
+        body.getClass().equals(String.class) ? (String) body : mapper.writeValueAsString(body);
+    return okhttp3.RequestBody.create(jsonBody, okhttp3.MediaType.get("application/json"));
   }
 
   public Response post(String path, @NotNull Object body) {

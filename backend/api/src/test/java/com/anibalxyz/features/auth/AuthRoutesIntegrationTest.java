@@ -30,9 +30,6 @@ import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
 import com.anibalxyz.shared.MutableClock;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -44,6 +41,7 @@ import java.util.function.Consumer;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.*;
+import tools.jackson.databind.ObjectMapper;
 
 @DisplayName("Tests for AuthRoutes")
 public class AuthRoutesIntegrationTest {
@@ -73,9 +71,7 @@ public class AuthRoutesIntegrationTest {
     String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
     emf = app.persistenceManager().emf();
     ObjectMapper objectMapper =
-        new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        new ObjectMapper();
 
     http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
 
