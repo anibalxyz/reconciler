@@ -30,12 +30,9 @@ import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
+// TODO: update to 'tools.jackson' once Javalin updated to v7
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.http.BadRequestResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -50,12 +47,17 @@ import okhttp3.Response;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @DisplayName("Tests for UserRoutes")
 public class UsersRoutesIntegrationTest {
   private static final ZonedDateTime FIXED_NOW =
       LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
   private static final Clock testClock = Clock.fixed(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
+  private static final Logger log = LoggerFactory.getLogger(UsersRoutesIntegrationTest.class);
   private static HttpRequest http;
   private static Application app;
   private static EntityManagerFactory emf;
@@ -70,10 +72,7 @@ public class UsersRoutesIntegrationTest {
 
     String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
     emf = app.persistenceManager().emf();
-    ObjectMapper objectMapper =
-        new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    ObjectMapper objectMapper = new ObjectMapper();
 
     http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
   }
