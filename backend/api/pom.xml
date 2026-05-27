@@ -28,7 +28,7 @@
         <junit.version>6.1.0</junit.version>
         <mockito.version>5.23.0</mockito.version>
         <assertj.version>3.27.7</assertj.version>
-        <okhttp.version>4.12.0</okhttp.version> <!-- 5.3.2 -->
+        <okhttp.version>5.3.2</okhttp.version>
 
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
         <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
@@ -303,7 +303,7 @@
 
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
+            <artifactId>okhttp-jvm</artifactId>
             <version>${okhttp.version}</version>
             <scope>test</scope>
         </dependency>
