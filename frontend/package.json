@@ -40,11 +40,11 @@
     "build:public": "npm run build --workspace=@anibalxyz/reconciler-public-site",
     "dev:dashboard": "npm run dev --workspace=@anibalxyz/reconciler-dashboard",
     "dev:public": "npm run dev --workspace=@anibalxyz/reconciler-public-site",
-    "format": "npm run format --workspaces",
-    "format:check": "npm run format:check --workspaces",
-    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces && prettier --write common",
+    "format:check": "npm run format:check --workspaces && prettier --check common",
+    "lint": "npm run lint --workspaces && eslint common",
     "prepare": "cd .. && husky ./frontend/.husky",
-    "typecheck": "npm run typecheck --workspaces"
+    "typecheck": "npm run typecheck --workspaces && tsc --noEmit --project common/tsconfig.json"
   },
   "dependencies": {
     "zod": "4.4.3"
