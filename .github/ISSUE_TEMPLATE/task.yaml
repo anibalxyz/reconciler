@@ -42,6 +42,17 @@ body:
         This is needed because...
 
   - type: textarea
+    id: approach
+    validations:
+      required: false
+    attributes:
+      label: Proposed Approach
+      description: How can this be done?
+      placeholder: |
+        Plan:
+        1. Step one
+        2. Step two
+  - type: textarea
     id: context
     validations:
       required: false
