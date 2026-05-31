@@ -1,7 +1,7 @@
 ## Summary
 
 <!--
-    With issue: "Closes #N — [1-2 sentences refreshing context]".
+    With issue: "Closes #N. [1-2 sentences refreshing context]".
     Without issue: full description of the change (what + why).
 -->
 
