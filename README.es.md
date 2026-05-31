@@ -2,11 +2,17 @@
 
 [🇬🇧 English Version](/README.md)
 
-Reconciler es una aplicación ligera y modular diseñada para ayudar a equipos a conciliar transacciones financieras entre extractos bancarios y sistemas internos. Construida siguiendo buenas prácticas de la industria, ofrece una plataforma intuitiva y personalizable con utilidades potentes tanto para usuarios individuales como para entornos colaborativos.
+Una plataforma de conciliación de transacciones. Construida desde cero como proyecto personal para **aprender** ingeniería de software moderna y buenas prácticas.
+
+> [!NOTE]
+> Esta traducción fue generada mayormente de forma automática, por lo que puede no sonar natural en algunas partes.
 
 <details>
 <summary>Tabla de Contenidos</summary>
 
+- [Overview](#overview)
+  - [Product](#product)
+  - [Personal Project](#personal-project)
 - [Características](#características)
 - [Stack Tecnológico](#stack-tecnológico)
 - [Estructura del Proyecto](#estructura-del-proyecto)
@@ -14,6 +20,28 @@ Reconciler es una aplicación ligera y modular diseñada para ayudar a equipos a
 - [Licencia](#licencia)
 
 </details>
+
+## Overview
+
+### Product
+
+Una plataforma de conciliación financiera para emparejar transacciones entre extractos bancarios y sistemas internos. Cargá datos de ambas fuentes, deja que el sistema encuentre coincidencias, luego revisá y resolvé discrepancias.
+
+Esta es la cara visible del proyecto y lo que finalmente entregará. Pensalo como la excusa que justifica construir todo lo que está debajo.
+
+### Personal Project
+
+Reconciler empezó como un simple CLI en Java para aprender sintaxis de Java (y POO a la fuerza) antes de arrancar un proyecto más grande que tenía planeado.
+
+Pero se me ocurrió agregarle una UI web, luego agregar Docker para aprender en el camino, luego implementar cosas que iba aprendiendo en paralelo como buenas prácticas,
+luego me di cuenta de que podía automatizar el setup de Docker con una CLI custom (inicialmente hecha con GNU Make), y después... acá estamos: esto se convirtió en el 99% de mi portafolio,
+un sistema de nivel productivo (lo dijo Claude, así que debe ser cierto) que construí de cero hasta este punto.
+
+Estoy aplicando clean architecture con feature-based packaging, testing comprehensivo (unit, integration, coverage), Docker con multi-environment Compose, CI/CD con GitHub Actions, observabilidad con Prometheus, Grafana, Loki y Promtail, y gestión de infraestructura desde la CLI hasta el servidor deployado.
+
+Por supuesto que queda un largo camino por recorrer (que se alarga cada día que aprendo algo nuevo), pero estoy orgulloso de cuánto he crecido y aprendido; me siento listo y _confiado_ para integrarme a un equipo y contribuir desde el día uno.
+
+Hay una cantidad asombrosa e increíble de _cero_ "Características de Producto"... pero hay una base suficientemente sólida lista para crecer y construir algo real
 
 ## Características
 
@@ -27,13 +55,13 @@ Reconciler es una aplicación ligera y modular diseñada para ayudar a equipos a
 ---
 
 - 🚧 **Sitio Público**: Sitio de acceso general con portal de inicio de sesión/registro usando Astro para SSR optimizado para SEO
-  - *Estado actual*: Infraestructura técnica completa, contenido placeholder temporal y navbar
+  - _Estado actual_: Infraestructura técnica completa, contenido placeholder temporal y navbar
 - 🔨 **Autenticación de Usuario**: Autenticación basada en JWT con rotación de refresh tokens, control de acceso por ventana de tiempo (Lun-Vie 08:00-20:00), y funcionalidad de cierre de sesión
-  - *Mejoras conocidas*: Reglas adicionales de ventana de tiempo, mecanismos de bloqueo de cookies revocadas
+  - _Mejoras conocidas_: Reglas adicionales de ventana de tiempo, mecanismos de bloqueo de cookies revocadas
 - 🚧 **Panel de Control**: Centro principal basado en React para navegar por las características de la aplicación
-  - *Estado actual*: Flujo de autenticación completo, enlace temporal a Swagger UI como placeholder
+  - _Estado actual_: Flujo de autenticación completo, enlace temporal a Swagger UI como placeholder
 - 🔨 **Gestión de Usuarios**: Operaciones CRUD para cuentas de usuario con control de acceso basado en roles
-  - *Mejoras conocidas*: Paginación, restringir creación solo a administradores
+  - _Mejoras conocidas_: Paginación, restringir creación solo a administradores
 - ✅ **Documentación de API**: Swagger UI interactivo con especificaciones OpenAPI para todos los endpoints
 - 📋 **Configuración Inicial**: Configurar parámetros centrales como fuentes de transacciones, categorías y acciones de registro disponibles (requerido una vez después de la implementación)
 - 📋 **Carga de Transacciones**: Cargar datos tanto del banco como de los sistemas internos en formatos compatibles
@@ -61,136 +89,72 @@ Resumen de los archivos y directorios más importantes:
 ```text
 .
 ├── cli/                 # Herramienta CLI de Python
-│   ├── src/             # Código fuente
-│   │   └── modules/     # Módulos de comandos de la CLI
-│   └── pyproject.toml   # Definición del proyecto y dependencias
 ├── backend/
 │   ├── api/             # Código fuente Java (Javalin)
-│   │   └── pom.xml      # Dependencias del Backend (Maven)
 │   └── db/
-│       └── migrations/  # Migraciones de la base de datos (Flyway)
+│       └── migrations/  # Migraciones de base de datos (Flyway)
 ├── frontend/
 │   ├── common/          # Utilidades y servicios compartidos
 │   ├── dashboard/       # Aplicación React para el dashboard
 │   └── public-site/     # Aplicación Astro para el sitio público
 ├── nginx/               # Configuración de Nginx para producción
+├── monitoring/          # Configuración del stack de monitoreo (Prometheus, Grafana, Loki, Promtail)
 ├── compose.yaml         # Configuración base de Docker Compose para todos los servicios
 ├── compose.<env>.yaml   # Overrides de Docker Compose para el entorno <env>
+├── docs/                # Documentación de referencia (backend, frontend, infra, cli)
+│   └── skills/          # Convenciones procedurales para commits, PRs, testing, releases
+├── .github/             # Templates de issues y PRs, workflows CI/CD
+├── AGENTS.md            # Guía para agentes de IA
+├── CONTRIBUTING.md      # Guía de contribución
+├── README.md            # Este archivo (inglés)
 └── README.es.md         # Este archivo
 ```
 
 ## Getting Started
 
-### Prerrequisitos
+**Requisitos previos:** Git, Docker v20.10+ con Compose v2+ o v5.1+, Python 3.10+.
 
-- **Git** (para clonar el repositorio)
-- **Docker v20.10+** y Docker Compose v2+ (para ejecutar la aplicación). **No usar v5.x**
-- **Python 3.10+** y **pip** (para usar la CLI)
-
-> [!WARNING]
-> Este proyecto está diseñado para ejecutarse con Docker; es el enfoque recomendado y oficialmente soportado. Ejecutar servicios localmente en la máquina host es parcialmente soportado para **API y frontend** (principalmente para desarrollo), pero puede requerir configuración manual adicional.
->
-> **Para desarrollo local** (API y frontend):
->
-> - **Java 21** y **Maven**: Para compilar y ejecutar la API de backend
-> - **Node.js 22+** y un gestor de paquetes (`npm`, `pnpm` o `yarn`): Para compilar y ejecutar las aplicaciones frontend
-> - **PostgreSQL Server**: Instancia en ejecución para que la aplicación se conecte
->
-> **No soportado para ejecución local** (servicios que deben correr vía Docker):
->
-> - **Flyway**: Las migraciones de base de datos deben ejecutarse vía Docker
-> - **Nginx**: La configuración del proxy inverso para producción es Docker-only
->
-> El soporte para ejecutar todos los servicios localmente no está planificado por ahora.
-
-### 1. Clonar el repositorio
+> [!NOTE]
+> Docker es la forma activamente soportada de ejecutar el proyecto.
+> Algunos servicios también pueden ejecutarse localmente para desarrollo, pero requieren herramientas adicionales.
 
 ```bash
-git clone https://github.com/anibalxyz/reconciler.git
-
-# Los siguientes comandos asumirán que estás en la raíz del proyecto
+# Clonar el repositorio
+git clone git@github.com:anibalxyz/reconciler.git
 cd reconciler
 ```
 
-### 2. Instalar la CLI
-
-La gestión del proyecto se realiza mediante una CLI personalizada. Se recomienda instalarla en un entorno virtual.
-
 ```bash
-# Crear y activar un entorno virtual
-python3 -m venv ./cli/.venv
-source ./cli/.venv/bin/activate
-
-# Instalar la CLI en modo editable
-pip install -e ./cli[dev]
-```
-
-```bash
-# Si no quieres usar modo editable
-pip install ./cli
-```
-
-Gracias a [Typer](https://typer.tiangolo.com/), la CLI está completamente auto-documentada, por lo que puedes obtener
-ayuda para cualquier comando o subcomando simplemente agregando `--help`.
-
-```bash
-# Prueba
-cli --help
-```
-
-### 3. Configurar el entorno
-
-La CLI gestiona entornos (`dev`, `prod`, `test`, etc.). Selecciona el entorno e inicializa la configuración con `--init`.
-
-```bash
-# Sintaxis: cli set env <environment> --init
+# Configurar el entorno e inicializar archivos de configuración desde plantillas
+# Se te pedirá completar los valores en `.env.dev` usando `nano`
 cli set env dev --init
 ```
 
-Este comando:
-
-1. Persiste el entorno elegido en `cli.cfg`.
-2. Si faltan, crea archivos `.env.*` a partir de las plantillas `.example` y abrirá `nano` para editarlos.
-
-### 4. Ejecutar la aplicación
-
-Primero, construir las imágenes Docker para todos los servicios del entorno actual.
-
 ```bash
+# Construir todas las imágenes Docker necesarias
 cli image build all
 ```
 
-Luego, iniciar los servicios con Docker Compose.
-
 ```bash
+# Iniciar todos los servicios
 cli compose up all
 ```
 
-### 5. Detener la aplicación
-
-Para detener y eliminar contenedores y redes en ejecución:
+| Servicio      | URL (puerto por defecto) |
+| :------------ | :----------------------- |
+| API           | <http://localhost:4001/> |
+| Sitio Público | <http://localhost:5174/> |
+| Dashboard     | <http://localhost:5175/> |
 
 ```bash
+# Detener y eliminar todos los contenedores
 cli compose down all
 ```
 
-### Acceso a la aplicación
-
-Después de ejecutar `compose up`, puede acceder a los servicios en las siguientes URL.
-
-> [!NOTE]
-> Los puertos que se enumeran a continuación son los valores predeterminados definidos en los archivos `.env`. Si los cambia, deberá ajustar las URL en consecuencia.
-
-| Entorno | Servicio           | URL                                              | Descripción                             |
-| :------ | :----------------- | :----------------------------------------------- | :-------------------------------------- |
-| `dev`   | API                | <http://localhost:4001/>                         | Swagger UI para documentación de la API |
-| `dev`   | Sitio Público      | <http://localhost:5174/>                         | Páginas de login y registro             |
-| `dev`   | Dashboard          | <http://localhost:5175/>                         | Dashboard autenticado (requiere login)  |
-| `prod`  | Frontend via Nginx | <http://localhost/>                              | público y dashboard                     |
-| `prod`  | API via Nginx      | <http://localhost/api/>                          | API y Swagger UI                        |
-
 > [!TIP]
-> Para acceder al Dashboard debes iniciar sesión primero desde el Sitio Público. El Dashboard incluye un enlace temporal a Swagger UI para explorar la API.
+> Para la guía completa incluyendo prerrequisitos, instalación de la CLI, dev walkthrough y arquitectura, ver [docs/infra/cli.md](docs/infra/cli.md).
+>
+> Un comando demo de una línea con configuración fija (sin necesidad de setup) estará disponible pronto.
 
 ## Licencia
 

@@ -2,14 +2,15 @@
 
 [🇪🇸 Versión en español](/README.es.md)
 
-Reconciler is a lightweight and modular application designed to help teams reconcile financial transactions between bank
-statements and internal systems. Built with industry best practices, it aims to provide an intuitive and customizable
-platform with powerful utilities for both individual users and collaborative environments.
+A transaction reconciliation platform. Built from scratch as a personal project to **learn** modern software engineering and best practices.
 
 <details>
 <summary>Table of Contents</summary>
 
-- [Features](#features)
+- [Overview](#overview)
+  - [Product](#product)
+  - [Personal Project](#personal-project)
+- [Product Features](#product-features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
@@ -17,7 +18,29 @@ platform with powerful utilities for both individual users and collaborative env
 
 </details>
 
-## Features
+## Overview
+
+### Product
+
+A financial reconciliation platform for matching transactions between bank statements and internal systems. Upload data from both sources, let the system find matches, then review and resolve discrepancies.
+
+This is the project's visible face and what it will ultimately deliver. Think of it as the excuse that justifies building everything below.
+
+### Personal Project
+
+Reconciler started as a simple Java CLI to learn Java syntax (and OOP by force) before starting a larger project I had planned.
+
+But I thought of adding a web UI, then adding Docker to learn it along the way, then implementing things I was learning in parallel such as good practices,
+then I realized I could automate the Docker setup with a custom CLI (initially made with GNU Make), and then... here we are: this became 99% of my portfolio,
+a production-grade system (Claude said it, so it must be true) that I built from zero to this point.
+
+I'm applying clean architecture with feature-based packaging, comprehensive testing (unit, integration, coverage), Docker with multi-environment Compose, CI/CD through GitHub Actions, observability with Prometheus, Grafana, Loki, and Promtail, and infrastructure management from the CLI to the deployed server.
+
+Of course there is a long way to go (which is getting longer every day I learn something new), but I'm proud of how much I've grown and learned; I feel ready and _confident_ to integrate into a team and contribute from day one.
+
+There is an astonishing and unbelievable amount of _zero_ "Product Features"... but there is a solid enough foundation ready to grow and build something real
+
+## Product Features
 
 **Legend**:
 
@@ -29,13 +52,13 @@ platform with powerful utilities for both individual users and collaborative env
 ---
 
 - 🚧 **Public Site**: General access site with login/registration portal using Astro for SEO-optimized SSR
-  - *Current state*: Technical infrastructure complete, temporary placeholder content and navbar
+  - _Current state_: Technical infrastructure complete, temporary placeholder content and navbar
 - 🔨 **User Authentication**: JWT-based authentication with refresh token rotation, time-window access control (Mon-Fri 08:00-20:00), and logout functionality
-  - *Known improvements*: Additional time-window rules, revoked cookie blocking mechanisms
+  - _Known improvements_: Additional time-window rules, revoked cookie blocking mechanisms
 - 🚧 **Dashboard**: React-based authenticated central hub for navigating application features
-  - *Current state*: Authentication flow complete, temporary Swagger UI link placeholder
+  - _Current state_: Authentication flow complete, temporary Swagger UI link placeholder
 - 🔨 **User Management**: CRUD operations for user accounts with role-based access control
-  - *Known improvements*: Pagination, restrict creation to admins only
+  - _Known improvements_: Pagination, restrict creation to admins only
 - ✅ **API Documentation**: Interactive Swagger UI with OpenAPI specifications for all endpoints
 - 📋 **Initial Setup**: Configure core parameters such as transaction sources, categories, and available log actions (required once after deployment)
 - 📋 **Transaction Upload**: Upload data from both bank and internal systems in supported formats
@@ -60,15 +83,11 @@ platform with powerful utilities for both individual users and collaborative env
 
 A brief overview of the most important files and directories in the project:
 
-```text
+```properties
 .
 ├── cli/                 # Python CLI tool
-│   ├── src/             # Source code
-│   │   └── modules/     # CLI command modules
-│   └── pyproject.toml   # Project definition and dependencies
 ├── backend/
 │   ├── api/             # Java API (Javalin) source code
-│   │   └── pom.xml      # Backend dependencies (Maven)
 │   └── db/
 │       └── migrations/  # Database migrations (Flyway)
 ├── frontend/
@@ -76,124 +95,66 @@ A brief overview of the most important files and directories in the project:
 │   ├── dashboard/       # React application for the dashboard
 │   └── public-site/     # Astro application for the public site
 ├── nginx/               # Nginx configuration for the production environment
+├── monitoring/          # Monitoring stack configuration (Prometheus, Grafana, Loki, Promtail)
 ├── compose.yaml         # Base Docker Compose configuration for all services
 ├── compose.<env>.yaml   # Docker Compose overrides for the <env> environment
+├── docs/                # Reference documentation (backend, frontend, infra, cli)
+│   └── skills/          # Procedural conventions for commits, PRs, testing, releases
+├── .github/             # Issue & PR templates, CI/CD workflows
+├── AGENTS.md            # AI agents guide
+├── CONTRIBUTING.md      # Contribution guide
 └── README.md            # This file
 ```
 
 ## Getting Started
 
-### Prerequisites
+**Prerequisites:** Git, Docker v20.10+ with Compose v2+ or v5.1+, Python 3.10+.
 
-- **Git** (to clone the repository)
-- **Docker v20.10+** and Docker Compose v2+ (to run the application). **Do NOT use v5.x**
-- **Python 3.10+** and **pip** (to use the CLI tool)
-
-> [!WARNING]
-> This project is designed to be run with Docker, which is the recommended and officially supported approach. Running services locally on your host machine is partially supported for **API and frontend** (mainly for development), but may require additional manual configuration.
->
-> **For local development** (API and frontend services):
->
-> - **Java 21** and **Maven**: To build and run the backend API
-> - **Node.js 22+** and a package manager (`npm`, `pnpm`, or `yarn`): To build and run the frontend applications
-> - **PostgreSQL Server**: A running instance for the application to connect to
->
-> **Not supported for local execution** (Docker-only services):
->
-> - **Flyway**: Database migrations must be run via Docker
-> - **Nginx**: Production reverse proxy setup is Docker-only
->
-> Local execution support for all services is not currently planned.
-
-### 1. Clone the Repository
+> [!NOTE]
+> Docker is the actively supported way to run the project.
+> Some services can also run locally for development, but that requires additional tooling.
 
 ```bash
-git clone https://github.com/anibalxyz/reconciler.git
-
-# All the following commands will assume you are in the project root
+# Clone the repository
+git clone git@github.com:anibalxyz/reconciler.git
 cd reconciler
 ```
 
-### 2. Install the CLI
-
-This project is managed by a powerful, custom-built command-line interface. The CLI provides a unified and intuitive way to manage the application's environments and lifecycle.
-
-The CLI is a Python application. It is recommended to install it in a virtual environment.
-
 ```bash
-# Create and activate a virtual environment
-python3 -m venv ./cli/.venv
-source ./cli/.venv/bin/activate
-
-# Install the CLI in editable mode
-pip install -e ./cli[dev]
-```
-
-```bash
-# If you don't want to use editable mode
-pip install ./cli
-```
-
-Thanks to [Typer](https://typer.tiangolo.com/), the CLI is fully self-documented, so you can get help for any command or subcommand by simply adding `--help` to it.
-
-```bash
-# Try it out!
-cli --help
-```
-
-### 3. Set Up The Environment
-
-The CLI can manage different environments (e.g., `dev`, `prod`, `test`). Set your desired environment and initialize the configuration files in one go using the `--init` flag. This is the recommended way to get started.
-
-```bash
-# Syntax: cli set env <environment> --init
+# Set the environment and initialize config files from templates
+# You will be prompted to fill in values in the `.env.dev` using `nano`
 cli set env dev --init
 ```
 
-This command will:
-
-1. Persist the chosen environment in the `cli.cfg` file.
-2. If they don't exist, create `.env.*` files from their `.example` templates and prompt you to edit them with `nano`.
-
-### 4. Run the Application
-
-First, build the Docker images for all services in the current environment.
-
 ```bash
+# Build all needed Docker images
 cli image build all
 ```
 
-Then, start the services using Docker Compose.
-
 ```bash
+# Start all services
 cli compose up all
 ```
 
-### 5. Stop the Application
-
-To stop and remove all running containers and networks, use `compose down`.
+| Service     | URL (default port)       |
+| :---------- | :----------------------- |
+| API         | <http://localhost:4001/> |
+| Public Site | <http://localhost:5174/> |
+| Dashboard   | <http://localhost:5175/> |
 
 ```bash
+# Stop and remove all containers
 cli compose down all
 ```
 
-### Accessing the Application
-
-After running `compose up`, you can access the services at the following URLs.
-
-> [!NOTE]
-> The ports listed below are the default values defined in the `.env` files. If you change them, you will need to adjust the URLs accordingly.
-
-| Environment | Service            | URL                      | Description                                      |
-| :-----------| :------------------| :------------------------| :------------------------------------------------|
-| `dev`       | API                | <http://localhost:4001/> | Swagger UI for API documentation                 |
-| `dev`       | Public Site        | <http://localhost:5174/> | Login and registration pages                     |
-| `dev`       | Dashboard          | <http://localhost:5175/> | Authenticated dashboard (requires login)         |
-| `prod`      | Frontend via Nginx | <http://localhost/>      | Public site and dashboard                        |
-| `prod`      | API via Nginx      | <http://localhost/api/>  | API and Swagger UI                               |
-
 > [!TIP]
-> To access the Dashboard, you'll need to log in through the Public Site first. A temporary Swagger UI link is available in the Dashboard for API exploration.
+> For the full guide including prerequisites, CLI installation, dev walkthrough, and architecture, see [docs/infra/cli.md](docs/infra/cli.md).
+>
+> A one-liner demo command with fixed configuration (no setup required) is coming soon.
+
+## Contributing
+
+Interested in contributing? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
