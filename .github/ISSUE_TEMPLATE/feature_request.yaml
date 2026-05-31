@@ -1,6 +1,6 @@
 name: Feature Request
 description: Suggest a new feature for the project
-labels: ["feature", "needs-triage"]
+labels: ["feature"]
 body:
   - type: textarea
     id: problem
@@ -23,6 +23,16 @@ body:
       placeholder: |
         The proposed approach is...
   - type: textarea
+    id: acceptance
+    validations:
+      required: false
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know this is done?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+  - type: textarea
     id: alternatives
     validations:
       required: false
@@ -34,7 +44,7 @@ body:
         - Solution 1: too manual, error-prone
         - Solution 2: too slow
         - ...
-        
+
         This approach is better because...
   - type: textarea
     id: context
@@ -49,4 +59,3 @@ body:
         - Examples from other applications
         - Specific use cases or workflows
         - Related issues: #123, #456
-    

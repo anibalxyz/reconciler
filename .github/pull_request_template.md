@@ -1,26 +1,19 @@
-## What
+## Summary
 
-<!-- Brief summary: what does this PR do? -->
+<!--
+    With issue: "Closes #N. [1-2 sentences refreshing context]".
+    Without issue: full description of the change (what + why).
+-->
 
-## Why
+## Key decisions
 
-<!-- Why was this change necessary? What problem does it solve? -->
-
-## How
-
-<!-- Technical approach and key implementation details -->
+<!-- Decisions, tradeoffs, alternatives that came up during implementation and the issue couldn't foresee. -->
 
 ## Testing
 
-<!-- How was this validated? -->
+<!-- Delete rows that don't apply. -->
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
-- [ ] Manual testing completed
-- [ ] Edge cases considered
+- [ ] Manual testing completed (describe how)
 - [ ] N/A (no tests required)
-
-## Other information
-
-<!-- Breaking changes, evidences, dependencies, related issues -->
-
-Closes #

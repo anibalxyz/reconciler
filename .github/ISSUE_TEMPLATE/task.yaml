@@ -1,6 +1,6 @@
 name: Task / Chore
 description: Maintenance tasks, refactors, or technical improvements
-labels: ["chore", "needs-triage"]
+labels: ["chore"]
 body:
   - type: dropdown
     id: task-type
@@ -41,6 +41,17 @@ body:
       placeholder: |
         This is needed because...
 
+  - type: textarea
+    id: approach
+    validations:
+      required: false
+    attributes:
+      label: Proposed Approach
+      description: How can this be done?
+      placeholder: |
+        Plan:
+        1. Step one
+        2. Step two
   - type: textarea
     id: context
     validations:

@@ -68,4 +68,4 @@ openssl s_client -connect $DOMAIN:443 -servername $DOMAIN </dev/null 2>/dev/null
 System cron files are automatically configured under `/etc/cron.d/` during setup:
 
 * **SSL Renewal (`reconciler-certbot`)**: Runs every 12 hours. It automatically checks and renews the Let's Encrypt certificate, reloading Nginx gracefully with zero downtime if changes are applied.
-* **Disk Cleanup (`reconciler-docker-prune`)**: Runs weekly (Sundays at 3:00 AM). It safely prunes dangling images and old stopped containers to prevent the VPS from running out of disk space.
+* **Disk Cleanup (`reconciler-docker-prune`)**: Runs weekly (Sundays at 3:00 AM). It safely prunes dangling images and old stopped containers to prevent the server from running out of disk space.
