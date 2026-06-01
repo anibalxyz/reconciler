@@ -2,6 +2,8 @@
 
 Financial transaction reconciliation tool. Java 21 + Javalin backend, TypeScript + TailwindCSS frontend, PostgreSQL 17, Flyway migrations.
 
+Development workflow: [CONTRIBUTING.md](CONTRIBUTING.md) — setup, branching, commits, PRs, releases.
+
 ## CLI
 
 Python CLI (`cli/`) manages environments, Docker Compose, image builds, and testing.
