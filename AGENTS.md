@@ -2,28 +2,13 @@
 
 Financial transaction reconciliation tool. Java 21 + Javalin backend, TypeScript + TailwindCSS frontend, PostgreSQL 17, Flyway migrations.
 
-## Setup
+## CLI
 
-```bash
-python3 -m venv ./cli/.venv && source ./cli/.venv/bin/activate
-pip install -e ./cli[dev]
-cli set env dev --init          # creates .env.* from .example templates
-```
+Python CLI (`cli/`) manages environments, Docker Compose, image builds, and testing.
 
-From there `cli --help` discovers every command. Config: `cli.cfg` (current env), `backend/.env.{env}`, `frontend/.env.{env}`.
+**When to use:** environment setup, building images, running services, running tests.
 
-## Commands
-
-```bash
-cli compose test                # full test suite (builds, starts db+flyway, mvn verify, tears down)
-cli image build all             # build all Docker images
-cli compose up all              # start all services for current env
-cli compose down all            # stop and remove containers
-```
-
-Testing runs `mvn verify` inside Docker (surefire + failsafe + jacoco). Backend only, no frontend tests. `mvn verify` from the host also works if the test DB is already running (fastest for iteration + coverage report at `backend/api/target/site/jacoco/`). Use `cli compose test` for a clean full lifecycle.
-
-CI (`.github/workflows/ci.yaml`): PR to `main` runs frontend lint/format/typecheck, then `cli compose test`. Release: push tag `v*` builds Docker images + CLI wheel, creates GitHub Release.
+Full reference: [docs/infra/cli.md](docs/infra/cli.md)
 
 ## Architecture
 
