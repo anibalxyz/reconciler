@@ -45,7 +45,7 @@ Interface naming: descriptive, no prefix (`JpaUserRepository` not `IUserReposito
 ## Testing
 
 **Framework**: JUnit 5 + Mockito (inline mockmaker) + AssertJ + OkHttp. JaCoCo at `verify` phase.
-**Naming**: `<subject>_<givenClause>_<thenClause>`; see `docs/skills/testing/SKILL.md` for full convention.
+**Naming**: `<subject>_<givenClause>_<thenClause>`; see `.agents/skills/testing/SKILL.md` for full convention.
 **Nested classes** for success/failure grouping. Both unit and integration tests run via surefire.
 
 ## Code style
@@ -63,17 +63,3 @@ Interface naming: descriptive, no prefix (`JpaUserRepository` not `IUserReposito
 - **Always**: run `cli compose test` after any backend change.
 - **Always**: run `npm run lint` + `npm run format:check` + `npm run typecheck` after any frontend change.
 - **Never**: push to `main` directly. Always branch + PR.
-
-## Git
-
-Branch: `feat/`, `fix/`, `chore/` prefixes. PRs target `main`. Squash merge. SemVer tags on `main` for releases. Conventional commits.
-
-## Skills (for deeper workflows)
-
-| Topic   | Path                           |
-| ------- | ------------------------------ |
-| Commits | `docs/skills/commit/SKILL.md`  |
-| PRs     | `docs/skills/pr/SKILL.md`      |
-| Testing | `docs/skills/testing/SKILL.md` |
-| Release | `docs/skills/release/SKILL.md` |
-| Issues  | `docs/skills/issue/SKILL.md`   |

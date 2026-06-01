@@ -102,7 +102,7 @@ Resumen de los archivos y directorios más importantes:
 ├── compose.yaml         # Configuración base de Docker Compose para todos los servicios
 ├── compose.<env>.yaml   # Overrides de Docker Compose para el entorno <env>
 ├── docs/                # Documentación de referencia (backend, frontend, infra, cli)
-│   └── skills/          # Convenciones procedurales para commits, PRs, testing, releases
+├── .agents/skills/      # Convenciones procedurales para commits, PRs, testing, releases
 ├── .github/             # Templates de issues y PRs, workflows CI/CD
 ├── AGENTS.md            # Guía para agentes de IA
 ├── CONTRIBUTING.md      # Guía de contribución
