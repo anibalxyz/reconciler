@@ -27,11 +27,7 @@ features/common/  shared types: Result, DomainError, Notification
 
 Interface naming: descriptive, no prefix (`JpaUserRepository` not `IUserRepository` or `UserRepositoryImpl`). Server entrypoint: `com.anibalxyz.Main`.
 
-## Testing
-
-**Framework**: JUnit 5 + Mockito (inline mockmaker) + AssertJ + OkHttp. JaCoCo at `verify` phase.
-**Naming**: `<subject>_<givenClause>_<thenClause>`; see `.agents/skills/testing/SKILL.md` for full convention.
-**Nested classes** for success/failure grouping. Both unit and integration tests run via surefire.
+Testing conventions: `.agents/skills/testing/SKILL.md`.
 
 ## Code style
 
