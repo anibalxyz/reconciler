@@ -14,7 +14,14 @@ Full reference: [docs/infra/cli.md](docs/infra/cli.md)
 
 ## Architecture
 
-Feature-based, hexagonal-ish packaging:
+Monorepo with two development areas:
+
+- **Backend** (`backend/`): Java 21 + Javalin, PostgreSQL 17, Flyway migrations
+- **Frontend** (`frontend/`): npm workspaces — `dashboard/` (React/Vite), `public-site/` (Astro); `common/` provides shared code imported via `@common/` alias
+
+### Backend
+
+Feature-based, hexagonal-ish packaging. Each feature follows a consistent four-layer structure:
 
 ```txt
 features/{auth,users,system}/
@@ -27,9 +34,25 @@ persistence/    EntityManager management
 features/common/  shared types: Result, DomainError, Notification
 ```
 
-Interface naming: descriptive, no prefix (`JpaUserRepository` not `IUserRepository` or `UserRepositoryImpl`). Server entrypoint: `com.anibalxyz.Main`.
+**Key patterns**:
+
+- **Interface naming:** descriptive, no prefix (`JpaUserRepository` not `IUserRepository`)
+- **DI:** manual wiring in `DependencyContainer`, no framework
+- **Error flow:** `DomainError` → `Result` → `FailureSignal` → `ErrorMapper` → `ErrorResponse` (RFC 9457)
+- **Persistence:** request-scoped `EntityManager` via Javalin hooks; domain entities separate from JPA entities with `toDomain()`/`fromDomain()`
+- **Entrypoint:** `com.anibalxyz.Main`
 
 Testing conventions: `.agents/skills/testing/SKILL.md`.
+
+### Frontend
+
+npm workspaces — currently under restructuring; details will solidify soon.
+
+### Infrastructure
+
+- **Monitoring** (`monitoring/`): Prometheus + Grafana (metrics, dashboards), Loki + Promtail (log aggregation). JVM dashboard and RED dashboard.
+- **Nginx** (`nginx/`): Production reverse proxy with SSL termination and Let's Encrypt (certbot). See [docs/infra/deploy.md](docs/infra/deploy.md).
+- **Scripts** (`scripts/`): Server bootstrap; cron jobs for certbot renewal and docker prune.
 
 ## Code style
 
