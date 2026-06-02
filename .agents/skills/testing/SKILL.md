@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Run and write tests for the reconciler project. Use when running tests, naming test methods, or checking coverage.
+description: Run and write tests for the reconciler project. Use when running tests, naming test methods, checking coverage, debugging test failures, or running specific test subsets.
 ---
 
 ## Test framework

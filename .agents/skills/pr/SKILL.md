@@ -1,6 +1,6 @@
 ---
 name: pr
-description: Branch naming and pull requests for the reconciler project. Use when creating branches, opening PRs, or reviewing contributions.
+description: Branch naming and pull requests for the reconciler project. Use when creating branches, writing PR descriptions, opening PRs, or reviewing contributions.
 ---
 
 ## Title

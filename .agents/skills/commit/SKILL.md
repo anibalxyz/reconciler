@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Create conventional commits for the reconciler project. Use when writing commit messages, selecting types or scopes, or reviewing conventional commit format.
+description: Create and review conventional commits for the reconciler project. Use when writing commit messages, selecting type and scope, amending commits, squashing history, or reviewing git log before committing.
 ---
 
 ## Format

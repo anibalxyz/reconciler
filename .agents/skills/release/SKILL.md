@@ -1,6 +1,6 @@
 ---
 name: release
-description: Create a release for the reconciler project. Use when asked to create a release, or deciding version bumps.
+description: Create a release for the reconciler project. Use when asked to cut a release, deciding version bumps with semver, generating changelogs, or writing release notes.
 ---
 
 ## Versioning
