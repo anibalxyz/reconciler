@@ -41,8 +41,12 @@ Testing conventions: `.agents/skills/testing/SKILL.md`.
 - Frontend: TypeScript strict mode, ESLint + Prettier, TailwindCSS v4.
 - Frontend commands: `npm run lint`, `npm run format:check`, `npm run typecheck` (from `frontend/`).
 
-## Boundaries
+## Day-to-day Tips
 
-- **Always**: run `cli compose test` after any backend change.
-- **Always**: run `npm run lint` + `npm run format:check` + `npm run typecheck` after any frontend change.
-- **Never**: push to `main` directly. Always branch + PR.
+- **Test after backend changes:** run tests using the [CLI](#cli), or choose to run `mvn verify` from `backend/api/` for faster iteration if DB is already running.
+- **Check frontend after changes:** run `npm run lint`, `npm run format:check`, and `npm run typecheck` from `frontend/`.
+- **Sync Spanish README:** update `README.es.md` after `README.md` changes.
+- **If you have a doubt:** ask instead of assume; do not do modifications without a clear reason.
+- **When stuck on a task:** try to re-think the problem and take a new approach. Sometimes is more efficient starting from scratch.
+- **Look for existing patterns first:** before creating a file, find a similar one in the codebase (same type: controller, service, route, test) and follow its structure. Patterns are consistent across features; copying an existing one saves time and prevents style mismatches.
+- **Review the diff before committing:** read the full diff to catch accidental changes and have a clean context to write an accurate commit message.
