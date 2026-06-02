@@ -2,32 +2,26 @@
 
 Financial transaction reconciliation tool. Java 21 + Javalin backend, TypeScript + TailwindCSS frontend, PostgreSQL 17, Flyway migrations.
 
-## Setup
+Development workflow: [CONTRIBUTING.md](CONTRIBUTING.md) — setup, branching, commits, PRs, releases.
 
-```bash
-python3 -m venv ./cli/.venv && source ./cli/.venv/bin/activate
-pip install -e ./cli[dev]
-cli set env dev --init          # creates .env.* from .example templates
-```
+## CLI
 
-From there `cli --help` discovers every command. Config: `cli.cfg` (current env), `backend/.env.{env}`, `frontend/.env.{env}`.
+Python CLI (`cli/`) manages environments, Docker Compose, image builds, and testing.
 
-## Commands
+**When to use:** environment setup, building images, running services, running tests.
 
-```bash
-cli compose test                # full test suite (builds, starts db+flyway, mvn verify, tears down)
-cli image build all             # build all Docker images
-cli compose up all              # start all services for current env
-cli compose down all            # stop and remove containers
-```
-
-Testing runs `mvn verify` inside Docker (surefire + failsafe + jacoco). Backend only, no frontend tests. `mvn verify` from the host also works if the test DB is already running (fastest for iteration + coverage report at `backend/api/target/site/jacoco/`). Use `cli compose test` for a clean full lifecycle.
-
-CI (`.github/workflows/ci.yaml`): PR to `main` runs frontend lint/format/typecheck, then `cli compose test`. Release: push tag `v*` builds Docker images + CLI wheel, creates GitHub Release.
+Full reference: [docs/infra/cli.md](docs/infra/cli.md)
 
 ## Architecture
 
-Feature-based, hexagonal-ish packaging:
+Monorepo with two development areas:
+
+- **Backend** (`backend/`): Java 21 + Javalin, PostgreSQL 17, Flyway migrations
+- **Frontend** (`frontend/`): npm workspaces — `dashboard/` (React/Vite), `public-site/` (Astro); `common/` provides shared code imported via `@common/` alias
+
+### Backend
+
+Feature-based, hexagonal-ish packaging. Each feature follows a consistent four-layer structure:
 
 ```txt
 features/{auth,users,system}/
@@ -40,40 +34,39 @@ persistence/    EntityManager management
 features/common/  shared types: Result, DomainError, Notification
 ```
 
-Interface naming: descriptive, no prefix (`JpaUserRepository` not `IUserRepository` or `UserRepositoryImpl`). Server entrypoint: `com.anibalxyz.Main`.
+**Key patterns**:
 
-## Testing
+- **Interface naming:** descriptive, no prefix (`JpaUserRepository` not `IUserRepository`)
+- **DI:** manual wiring in `DependencyContainer`, no framework
+- **Error flow:** `DomainError` → `Result` → `FailureSignal` → `ErrorMapper` → `ErrorResponse` (RFC 9457)
+- **Persistence:** request-scoped `EntityManager` via Javalin hooks; domain entities separate from JPA entities with `toDomain()`/`fromDomain()`
+- **Entrypoint:** `com.anibalxyz.Main`
 
-**Framework**: JUnit 5 + Mockito (inline mockmaker) + AssertJ + OkHttp. JaCoCo at `verify` phase.
-**Naming**: `<subject>_<givenClause>_<thenClause>`; see `docs/skills/testing/SKILL.md` for full convention.
-**Nested classes** for success/failure grouping. Both unit and integration tests run via surefire.
+Testing conventions: `.agents/skills/testing/SKILL.md`.
+
+### Frontend
+
+npm workspaces — currently under restructuring; details will solidify soon.
+
+### Infrastructure
+
+- **Monitoring** (`monitoring/`): Prometheus + Grafana (metrics, dashboards), Loki + Promtail (log aggregation). JVM dashboard and RED dashboard.
+- **Nginx** (`nginx/`): Production reverse proxy with SSL termination and Let's Encrypt (certbot). See [docs/infra/deploy.md](docs/infra/deploy.md).
+- **Scripts** (`scripts/`): Server bootstrap; cron jobs for certbot renewal and docker prune.
 
 ## Code style
 
-- Java 21. Interface naming: descriptive, no prefix.
 - Use [Google Java Format](https://github.com/google/google-java-format) plugin for IntelliJ IDEA (latest version). No extra configuration needed.
 - JavaDoc: write it where it adds value (maintenance, understanding). Short descriptions are enough; include `@param` and `@return` only if they add information beyond the method header. Omit JavaDoc entirely when it adds no value.
 - Prettier plugin auto-orders Tailwind classes on save (frontend).
 - Write self-documenting code where possible. Use comments for justification, explanations, or complex logic. TODOs and FIXMEs are allowed; resolve them before opening a PR, or create a separate issue if unrelated.
-- Frontend: TypeScript strict mode, ESLint + Prettier, TailwindCSS v4.
-- Frontend commands: `npm run lint`, `npm run format:check`, `npm run typecheck` (from `frontend/`).
 
-## Boundaries
+## Day-to-day Tips
 
-- **Always**: run `cli compose test` after any backend change.
-- **Always**: run `npm run lint` + `npm run format:check` + `npm run typecheck` after any frontend change.
-- **Never**: push to `main` directly. Always branch + PR.
-
-## Git
-
-Branch: `feat/`, `fix/`, `chore/` prefixes. PRs target `main`. Squash merge. SemVer tags on `main` for releases. Conventional commits.
-
-## Skills (for deeper workflows)
-
-| Topic   | Path                           |
-| ------- | ------------------------------ |
-| Commits | `docs/skills/commit/SKILL.md`  |
-| PRs     | `docs/skills/pr/SKILL.md`      |
-| Testing | `docs/skills/testing/SKILL.md` |
-| Release | `docs/skills/release/SKILL.md` |
-| Issues  | `docs/skills/issue/SKILL.md`   |
+- **Test after backend changes:** run tests using the [CLI](#cli), or choose to run `mvn verify` from `backend/api/` for faster iteration if DB is already running.
+- **Check frontend after changes:** run `npm run lint`, `npm run format:check`, and `npm run typecheck` from `frontend/`.
+- **Sync Spanish README:** update `README.es.md` after `README.md` changes.
+- **If you have a doubt:** ask instead of assume; do not do modifications without a clear reason.
+- **When stuck on a task:** try to re-think the problem and take a new approach. Sometimes is more efficient starting from scratch.
+- **Look for existing patterns first:** before creating a file, find a similar one in the codebase (same type: controller, service, route, test) and follow its structure. Patterns are consistent across features; copying an existing one saves time and prevents style mismatches.
+- **Review the diff before committing:** read the full diff to catch accidental changes and have a clean context to write an accurate commit message.

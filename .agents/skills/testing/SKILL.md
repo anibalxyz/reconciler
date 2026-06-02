@@ -1,7 +1,15 @@
 ---
 name: testing
-description: Run and write tests for the reconciler project. Use when running tests, naming test methods, or checking coverage.
+description: Run and write tests for the reconciler project. Use when running tests, naming test methods, checking coverage, debugging test failures, or running specific test subsets.
 ---
+
+## Test framework
+
+- **JUnit** (6.1.0) — test framework and runner
+- **Mockito** (5.23.0) — inline mockmaker (configured via surefire/failsafe argLine)
+- **AssertJ** (3.27.7) — fluent assertions
+- **OkHttp** (5.3.2) — HTTP client for integration tests
+- **JaCoCo** (0.8.14) — coverage at `verify` phase (surefire + failsafe)
 
 ## Run tests
 

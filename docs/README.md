@@ -1,7 +1,7 @@
 # Documentation
 
 Reference documentation organized by area. For procedural conventions (commits, branches,
-PRs, testing, releases), see [AGENTS.md](../AGENTS.md) and [docs/skills/](skills/).
+PRs, testing, releases), see [AGENTS.md](../AGENTS.md) and [`.agents/skills/`](../.agents/skills/).
 
 - **Backend**: pending...
 - **Frontend**: pending...
@@ -10,8 +10,8 @@ PRs, testing, releases), see [AGENTS.md](../AGENTS.md) and [docs/skills/](skills
   - [CLI](infra/cli.md): Full setup guide, prerequisites, architecture
   - [Monitoring](infra/monitoring.md): Under construction
 - **Skills** (for deeper workflows):
-  - [Testing](skills/testing/SKILL.md)
-  - [Commits](skills/commit/SKILL.md)
-  - [PRs](skills/pr/SKILL.md)
-  - [Releases](skills/release/SKILL.md)
-  - [Issues](skills/issue/SKILL.md)
+  - [Testing](../.agents/skills/testing/SKILL.md)
+  - [Commits](../.agents/skills/commit/SKILL.md)
+  - [PRs](../.agents/skills/pr/SKILL.md)
+  - [Releases](../.agents/skills/release/SKILL.md)
+  - [Issues](../.agents/skills/issue/SKILL.md)

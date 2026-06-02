@@ -1,6 +1,6 @@
 ---
 name: issue
-description: Create and triage issues for the reconciler project. Use when creating, or deciding whether to open an issue.
+description: Create and triage issues for the reconciler project. Use when writing issue descriptions, creating issues, filling templates, applying labels and milestones, or deciding whether to open an issue.
 ---
 
 ## When to create an issue

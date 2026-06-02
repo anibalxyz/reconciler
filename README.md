@@ -1,6 +1,6 @@
 # Reconciler
 
-[🇪🇸 Versión en español](/README.es.md)
+[🇪🇸 Versión en español](README.es.md)
 
 A transaction reconciliation platform. Built from scratch as a personal project to **learn** modern software engineering and best practices.
 
@@ -99,7 +99,7 @@ A brief overview of the most important files and directories in the project:
 ├── compose.yaml         # Base Docker Compose configuration for all services
 ├── compose.<env>.yaml   # Docker Compose overrides for the <env> environment
 ├── docs/                # Reference documentation (backend, frontend, infra, cli)
-│   └── skills/          # Procedural conventions for commits, PRs, testing, releases
+├── .agents/skills/      # Procedural conventions for commits, PRs, testing, releases
 ├── .github/             # Issue & PR templates, CI/CD workflows
 ├── AGENTS.md            # AI agents guide
 ├── CONTRIBUTING.md      # Contribution guide
@@ -158,4 +158,4 @@ Interested in contributing? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](/LICENSE) file for more details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
