@@ -33,13 +33,10 @@ Testing conventions: `.agents/skills/testing/SKILL.md`.
 
 ## Code style
 
-- Java 21. Interface naming: descriptive, no prefix.
 - Use [Google Java Format](https://github.com/google/google-java-format) plugin for IntelliJ IDEA (latest version). No extra configuration needed.
 - JavaDoc: write it where it adds value (maintenance, understanding). Short descriptions are enough; include `@param` and `@return` only if they add information beyond the method header. Omit JavaDoc entirely when it adds no value.
 - Prettier plugin auto-orders Tailwind classes on save (frontend).
 - Write self-documenting code where possible. Use comments for justification, explanations, or complex logic. TODOs and FIXMEs are allowed; resolve them before opening a PR, or create a separate issue if unrelated.
-- Frontend: TypeScript strict mode, ESLint + Prettier, TailwindCSS v4.
-- Frontend commands: `npm run lint`, `npm run format:check`, `npm run typecheck` (from `frontend/`).
 
 ## Day-to-day Tips
 
