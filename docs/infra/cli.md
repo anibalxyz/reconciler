@@ -1,6 +1,6 @@
 # CLI - Full Setup Guide
 
-This guide covers the full setup: prerequisites, CLI installation, environment configuration, and how to build, run, and stop the application. For a quick start, see the [Getting Started](/README.md#getting-started) section in the README.
+This guide covers the full setup: prerequisites, CLI installation, environment configuration, and how to build, run, and stop the application. For a quick start, see the [Getting Started](../../README.md#getting-started) section in the README.
 
 ## Prerequisites
 

@@ -1,6 +1,6 @@
 # Reconciler
 
-[🇪🇸 Versión en español](/README.es.md)
+[🇪🇸 Versión en español](README.es.md)
 
 A transaction reconciliation platform. Built from scratch as a personal project to **learn** modern software engineering and best practices.
 
@@ -158,4 +158,4 @@ Interested in contributing? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](/LICENSE) file for more details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.

@@ -1,6 +1,6 @@
 # Reconciler
 
-[🇬🇧 English Version](/README.md)
+[🇬🇧 English Version](README.md)
 
 Una plataforma de conciliación de transacciones. Construida desde cero como proyecto personal para **aprender** ingeniería de software moderna y buenas prácticas.
 
@@ -158,4 +158,4 @@ cli compose down all
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulte el archivo [LICENSE](/LICENSE) para más detalles.
+Este proyecto está bajo la Licencia MIT. Consulte el archivo [LICENSE](LICENSE) para más detalles.
