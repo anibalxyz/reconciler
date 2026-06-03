@@ -8,14 +8,7 @@ import io.javalin.config.JavalinConfig;
  * is actually started. These configurations typically involve global settings, plugin
  * registrations, and other setup tasks.
  */
-public abstract class StartupConfig {
-
-  protected final JavalinConfig javalinConfig;
-
-  public StartupConfig(JavalinConfig javalinConfig) {
-    this.javalinConfig = javalinConfig;
-  }
-
+public interface StartupConfig {
   /** Applies the startup configuration logic to the Javalin configuration. */
-  public abstract void apply();
+  public abstract void apply(JavalinConfig javalinConfig);
 }

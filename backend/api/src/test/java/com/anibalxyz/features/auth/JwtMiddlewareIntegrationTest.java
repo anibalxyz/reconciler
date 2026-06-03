@@ -5,13 +5,11 @@ import static com.anibalxyz.shared.Helpers.cleanDatabase;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
@@ -66,8 +64,8 @@ public class JwtMiddlewareIntegrationTest {
   private static Application createApplication() {
     BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
         (server, container) -> {
-          new UserRoutes(container.userController()).register(server);
-          new AuthRoutes(container.authController(), container.jwtMiddleware()).register(server);
+          container.userRoutes().register(server);
+          container.authRoutes().register(server);
         };
 
     return Application.buildApplication(

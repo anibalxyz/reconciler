@@ -16,12 +16,11 @@ import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
  * information, contact details, license information, and server configurations. The OpenAPI
  * specification follows industry standards and provides complete API documentation.
  */
-public class SwaggerConfig extends StartupConfig {
+public class SwaggerConfig implements StartupConfig {
 
   private final ServerEnvironment env;
 
-  public SwaggerConfig(JavalinConfig javalinConfig, ServerEnvironment env) {
-    super(javalinConfig);
+  public SwaggerConfig( ServerEnvironment env) {
     this.env = env;
   }
 
@@ -49,12 +48,12 @@ public class SwaggerConfig extends StartupConfig {
   }
 
   @Override
-  public void apply() {
-    registerOpenApiPlugin();
-    registerSwaggerPlugin();
+  public void apply(JavalinConfig javalinConfig) {
+    registerOpenApiPlugin(javalinConfig);
+    registerSwaggerPlugin(javalinConfig);
   }
 
-  public void registerSwaggerPlugin() {
+  public void registerSwaggerPlugin(JavalinConfig javalinConfig) {
     javalinConfig.registerPlugin(
         new SwaggerPlugin(
             swaggerConfig -> {
@@ -62,7 +61,7 @@ public class SwaggerConfig extends StartupConfig {
             }));
   }
 
-  private void registerOpenApiPlugin() {
+  private void registerOpenApiPlugin(JavalinConfig javalinConfig) {
     javalinConfig.registerPlugin(
         new OpenApiPlugin(
             openApiConfig ->

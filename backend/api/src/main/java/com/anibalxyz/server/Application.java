@@ -2,23 +2,15 @@ package com.anibalxyz.server;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.features.auth.api.AuthRoutes;
-import com.anibalxyz.features.system.api.SystemRoutes;
-import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.modules.runtime.*;
-import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
-import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
-import io.javalin.micrometer.MicrometerPlugin;
-import io.micrometer.prometheusmetrics.PrometheusConfig;
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Objects;
@@ -81,18 +73,13 @@ public class Application {
       throw new IllegalStateException("Unknown environment: " + appEnv);
     }
 
-    var prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-
     // 1. Declare specific startup configurations for dev/prod
-    Consumer<JavalinConfig> startupConfig =
-        javalinConfig -> {
+    BiConsumer<JavalinConfig, DependencyContainer> startupConfig =
+        (javalinConfig, container) -> {
           if (config.env().SWAGGER_ENABLED()) {
-            new SwaggerConfig(javalinConfig, config.env()).apply();
+            container.swaggerConfig().apply(javalinConfig);
           }
-          javalinConfig.registerPlugin(
-              new MicrometerPlugin(
-                  micrometerPluginConfig ->
-                      micrometerPluginConfig.registry = prometheusMeterRegistry));
+          javalinConfig.registerPlugin(container.micrometerPlugin());
         };
 
     // 2. Declare specific runtime configurations for dev/prod
@@ -107,18 +94,18 @@ public class Application {
                 "/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
           }
 
-          new AccessLogConfig().apply(server);
-          new MetricsConfig(prometheusMeterRegistry).apply(server);
+          container.accessLogConfig().apply(server);
+          container.metricsConfig().apply(server);
         };
 
     // 3. Declare specific route registries for dev/prod
     // TODO: migrate endpoint declarations to use apiBuilder()
     BiConsumer<Javalin, DependencyContainer> routeRegistries =
         (server, container) -> {
-          new SystemRoutes(container.systemController()).register(server);
-          new UserRoutes(container.userController()).register(server);
-          new AuthRoutes(container.authController(), container.jwtMiddleware()).register(server);
-          new SchedulerConfig(container.refreshTokenService()).apply(server);
+          container.systemRoutes().register(server);
+          container.userRoutes().register(server);
+          container.authRoutes().register(server);
+          container.schedulerConfig().apply(server);
         };
 
     return buildApplication(config, clock, startupConfig, runtimeConfigs, routeRegistries);
@@ -140,28 +127,24 @@ public class Application {
   public static Application buildApplication(
       ApplicationConfiguration config,
       Clock clock,
-      Consumer<JavalinConfig> customStartupConfigs,
+      BiConsumer<JavalinConfig, DependencyContainer> customStartupConfigs,
       BiConsumer<Javalin, DependencyContainer> customRuntimeConfigs,
       BiConsumer<Javalin, DependencyContainer> customRoutesRegistries) {
     Objects.requireNonNull(
         clock,
         "Clock must not be null. If you don't need a specific clock, use buildClock() instead.");
 
-    PersistenceManager persistenceManager = new PersistenceManager(config.database());
+    DependencyContainer container = new DependencyContainer(config, clock);
 
     Consumer<JavalinConfig> finalStartupConfig =
         javalinConfig -> {
-          new ServerConfig(javalinConfig, config.env()).apply();
-          if (customStartupConfigs != null) customStartupConfigs.accept(javalinConfig);
+          container.serverConfig().apply(javalinConfig);
+          if (customStartupConfigs != null) customStartupConfigs.accept(javalinConfig, container);
         };
     Javalin server = Javalin.create(finalStartupConfig);
 
-    DependencyContainer container =
-        new DependencyContainer(
-            config.env(), new JavalinContextEntityManagerProvider(), persistenceManager, clock);
-
-    new LifecycleConfig(persistenceManager).apply(server);
-    new ExceptionsConfig().apply(server);
+    container.lifecycleConfig().apply(server);
+    container.exceptionsConfig().apply(server);
     // TODO: Refactor request lifecycle management.
     //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the absolute
     //       last operation in the 'after' hook chain.
@@ -174,7 +157,7 @@ public class Application {
     if (customRuntimeConfigs != null) customRuntimeConfigs.accept(server, container);
     if (customRoutesRegistries != null) customRoutesRegistries.accept(server, container);
 
-    return new Application(server, persistenceManager, config);
+    return new Application(server, container.persistenceManager(), config);
   }
 
   public Javalin javalin() {

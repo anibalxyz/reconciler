@@ -11,7 +11,6 @@ import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.users.api.UserMapper;
-import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
@@ -80,7 +79,7 @@ public class UsersRoutesIntegrationTest {
 
   private static Application createApplication() {
     BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
-        (server, container) -> new UserRoutes(container.userController()).register(server);
+        (server, container) -> container.userRoutes().register(server);
 
     return Application.buildApplication(
         Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);

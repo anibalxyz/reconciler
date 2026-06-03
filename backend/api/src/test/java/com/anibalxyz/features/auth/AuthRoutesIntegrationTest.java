@@ -7,7 +7,6 @@ import static com.anibalxyz.shared.Helpers.cleanDatabase;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthService;
@@ -82,9 +81,7 @@ public class AuthRoutesIntegrationTest {
   private static Application createApplication() {
     // JwtMiddleware registered internally but unused -> will change once decoupled
     BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
-        (server, container) -> {
-          new AuthRoutes(container.authController(), container.jwtMiddleware()).register(server);
-        };
+        (server, container) -> container.authRoutes().register(server);
 
     return Application.buildApplication(
         Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);

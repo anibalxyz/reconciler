@@ -11,13 +11,12 @@ import org.slf4j.LoggerFactory;
  * Jackson), enabling CORS, and registering default content types. This configuration is applied
  * once when the server starts.
  */
-public class ServerConfig extends StartupConfig {
+public class ServerConfig implements StartupConfig {
 
   private static final Logger log = LoggerFactory.getLogger(ServerConfig.class);
   private final ServerEnvironment env;
 
-  public ServerConfig(JavalinConfig javalinConfig, ServerEnvironment env) {
-    super(javalinConfig);
+  public ServerConfig(ServerEnvironment env) {
     this.env = env;
   }
 
@@ -53,7 +52,7 @@ public class ServerConfig extends StartupConfig {
   }
 
   @Override
-  public void apply() {
+  public void apply(JavalinConfig javalinConfig) {
     javalinConfig.useVirtualThreads = true;
     javalinConfig.router.ignoreTrailingSlashes = true;
     javalinConfig.jetty.modifyServer(server -> server.setStopTimeout(5_000)); // graceful shutdown
