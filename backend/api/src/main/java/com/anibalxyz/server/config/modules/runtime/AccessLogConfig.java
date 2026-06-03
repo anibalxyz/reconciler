@@ -8,17 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-public class AccessLogConfig extends RuntimeConfig {
+public class AccessLogConfig implements RuntimeConfig {
 
   public static final String REQUEST_START_TIME_ATTR = "requestStartTime";
   private static final Logger log = LoggerFactory.getLogger("reconciler.access");
 
-  public AccessLogConfig(Javalin server) {
-    super(server);
-  }
-
   @Override
-  public void apply() {
+  public void apply(Javalin server) {
     server.before(
         ctx -> {
           if (ctx.path().equals(METRICS_PATH)) return;

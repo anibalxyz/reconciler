@@ -1,24 +1,34 @@
 package com.anibalxyz.features.users.api;
 
-import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.features.common.api.routing.RouteGroup;
-import com.anibalxyz.features.common.api.routing.RouteRegistry;
-import io.javalin.Javalin;
+import static io.javalin.apibuilder.ApiBuilder.*;
 
-public class UserRoutes extends RouteRegistry {
+import com.anibalxyz.features.common.api.Role;
+import com.anibalxyz.server.config.modules.startup.StartupConfig;
+import io.javalin.config.JavalinConfig;
+
+public class UserRoutes implements StartupConfig {
   private final UserApi userApi;
 
-  public UserRoutes(Javalin server, UserApi userApi) {
-    super(server);
+  public UserRoutes(UserApi userApi) {
     this.userApi = userApi;
   }
 
-  public void register() {
-    new RouteGroup("/api/users", server)
-        .get(userApi::getAllUsers, Role.AUTHENTICATED)
-        .post(userApi::createUser, Role.GUEST)
-        .get("/{id}", userApi::getUserById, Role.AUTHENTICATED)
-        .put("/{id}", userApi::updateUserById, Role.AUTHENTICATED)
-        .delete("/{id}", userApi::deleteUserById, Role.AUTHENTICATED);
+  @Override
+  public void apply(JavalinConfig cfg) {
+    cfg.router.apiBuilder(
+        () ->
+            path(
+                "/api/users",
+                () -> {
+                  get(userApi::getAllUsers, Role.AUTHENTICATED);
+                  post(userApi::createUser, Role.GUEST);
+                  path(
+                      "/{id}",
+                      () -> {
+                        get(userApi::getUserById, Role.AUTHENTICATED);
+                        put(userApi::updateUserById, Role.AUTHENTICATED);
+                        delete(userApi::deleteUserById, Role.AUTHENTICATED);
+                      });
+                }));
   }
 }

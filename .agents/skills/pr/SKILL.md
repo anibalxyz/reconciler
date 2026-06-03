@@ -17,12 +17,13 @@ Same convention as commits:
 
 Format: `<prefix>/<description-in-kebab-case>`
 
-| Prefix   | Use                          | Example                       |
-| -------- | ---------------------------- | ----------------------------- |
-| `feat/`  | New feature                  | `feat/excel-export`           |
-| `fix/`   | Bug fix                      | `fix/token-refresh-timing`    |
-| `chore/` | Maintenance, deps, refactors | `chore/update-dependencies`   |
-| `docs/`  | Documentation                | `docs/expand-getting-started` |
+| Prefix      | Use                                    | Example                             |
+| ----------- | -------------------------------------- | ----------------------------------- |
+| `feat/`     | New feature                            | `feat/excel-export`                 |
+| `fix/`      | Bug fix                                | `fix/token-refresh-timing`          |
+| `chore/`    | Maintenance, deps, typos               | `chore/update-dependencies`         |
+| `docs/`     | Documentation                          | `docs/expand-getting-started`       |
+| `refactor/` | Code restructuring, no behavior change | `refactor/clarify-composition-root` |
 
 If no listed type fits, propose a candidate: a short name and a one-line definition the user could add to the table.
 Wait for confirmation before proceeding.

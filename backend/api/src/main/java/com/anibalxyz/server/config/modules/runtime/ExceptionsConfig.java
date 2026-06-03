@@ -18,17 +18,12 @@ import org.slf4j.MDC;
 import org.slf4j.event.Level;
 
 // TODO: use a more semantic name for this class
-public class ExceptionsConfig extends RuntimeConfig {
+public class ExceptionsConfig implements RuntimeConfig {
 
   private static final Logger log = LoggerFactory.getLogger(ExceptionsConfig.class);
 
-  public ExceptionsConfig(Javalin server) {
-    super(server);
-  }
-
-  /** {@inheritDoc} */
   @Override
-  public void apply() {
+  public void apply(Javalin server) {
     server.exception(
         FailureSignal.class,
         (e, ctx) -> {

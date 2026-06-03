@@ -5,13 +5,11 @@ import static com.anibalxyz.shared.Helpers.cleanDatabase;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.server.Application;
 import com.anibalxyz.server.DependencyContainer;
@@ -20,12 +18,14 @@ import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
+import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.*;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.AfterAll;
@@ -63,15 +63,16 @@ public class JwtMiddlewareIntegrationTest {
   }
 
   private static Application createApplication() {
-    Consumer<DependencyContainer> customRoutesRegistries =
-        container -> {
-          new UserRoutes(container.server(), container.userController()).register();
-          new AuthRoutes(container.server(), container.authController(), container.jwtMiddleware())
-              .register();
+    BiConsumer<JavalinConfig, DependencyContainer> startupConfigs =
+        (cfg, container) -> {
+          container.userRoutes().apply(cfg);
+          container.authRoutes().apply(cfg);
         };
+    BiConsumer<Javalin, DependencyContainer> runtimeConfigs =
+        (server, container) -> container.jwtMiddleware().apply(server);
 
     return Application.buildApplication(
-        Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);
+        Constants.APP_CONFIG, testClock, startupConfigs, runtimeConfigs);
   }
 
   @AfterAll

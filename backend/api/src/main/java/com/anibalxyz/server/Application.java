@@ -2,36 +2,29 @@ package com.anibalxyz.server;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.features.auth.api.AuthRoutes;
-import com.anibalxyz.features.system.api.SystemRoutes;
-import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.runtime.*;
-import com.anibalxyz.server.config.modules.startup.ServerConfig;
 import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
-import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
-import io.javalin.micrometer.MicrometerPlugin;
-import io.micrometer.prometheusmetrics.PrometheusConfig;
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The main application class, acting as the Composition Root.
+ * Top-level assembly orchestrator for the application.
  *
- * <p>This class is responsible for initializing and wiring together all major components of the
- * application, including the web server (Javalin), persistence layer (PersistenceManager),
- * dependency container, and all configurations and routes. It provides factory methods to create an
- * instance tailored for different environments (e.g., test, development).
+ * <p>Creates the {@link DependencyContainer}, configures and starts the Javalin server, and wires
+ * all configs, plugins, routes, and middlewares. Provides {@link #create} as a convenience for
+ * DEV/PROD and {@link #buildApplication} as a low-level entry point for testing and custom
+ * assembly.
  */
 public class Application {
   private static final Logger log = LoggerFactory.getLogger(Application.class);
@@ -46,7 +39,7 @@ public class Application {
     this.config = config;
   }
 
-  private static Clock buildClock(AppEnvironmentSource env) {
+  public static Clock buildClock(AppEnvironmentSource env) {
     if (env.APP_ENV() == AppEnv.PROD) {
       return Clock.system(env.SYSTEM_TIMEZONE());
     }
@@ -59,14 +52,17 @@ public class Application {
   }
 
   /**
-   * A general factory method that creates an {@link Application} instance based on the environment
-   * specified in the configuration.
+   * Convenience factory for {@link AppEnv#DEV} and {@link AppEnv#PROD} environments.
    *
-   * @param config The application configuration.
-   * @return A new {@code Application} instance for the appropriate environment.
-   * @throws IllegalStateException if the environment in the config is unknown.
+   * <p>Wires all startup configs, plugins, runtime configs, routes, middlewares, events, etc.
+   *
+   * @param config application configuration
+   * @return a fully assembled {@link Application}
+   * @throws IllegalStateException if the environment is {@link AppEnv#TEST} or unknown
    */
   public static Application create(ApplicationConfiguration config) {
+    Clock clock = buildClock(config.env());
+
     AppEnv appEnv = config.env().APP_ENV();
 
     if (appEnv == AppEnv.TEST) {
@@ -77,92 +73,74 @@ public class Application {
       throw new IllegalStateException("Unknown environment: " + appEnv);
     }
 
-    var prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-
     // 1. Declare specific startup configurations for dev/prod
-    Consumer<JavalinConfig> startupConfig =
-        javalinConfig -> {
+    BiConsumer<JavalinConfig, DependencyContainer> startupConfig =
+        (javalinConfig, container) -> {
           if (config.env().SWAGGER_ENABLED()) {
-            new SwaggerConfig(javalinConfig, config.env()).apply();
+            container.swaggerConfig().apply(javalinConfig);
           }
-          javalinConfig.registerPlugin(
-              new MicrometerPlugin(
-                  micrometerPluginConfig ->
-                      micrometerPluginConfig.registry = prometheusMeterRegistry));
+          javalinConfig.registerPlugin(container.micrometerPlugin());
+
+          container.systemRoutes().apply(javalinConfig);
+          container.userRoutes().apply(javalinConfig);
+          container.authRoutes().apply(javalinConfig);
         };
 
     // 2. Declare specific runtime configurations for dev/prod
     // TODO: move to a separate file, e.g. RedirectRoutes within features.common
-    Consumer<DependencyContainer> runtimeConfigs =
-        container -> {
+    BiConsumer<Javalin, DependencyContainer> runtimeConfigs =
+        (server, container) -> {
           if (config.env().SWAGGER_ENABLED()) {
-            container.server().get("/", ctx -> ctx.redirect("/swagger"));
-            container.server().get("/api", ctx -> ctx.redirect("/swagger"));
+            server.get("/", ctx -> ctx.redirect("/swagger"));
+            server.get("/api", ctx -> ctx.redirect("/swagger"));
 
-            container
-                .server()
-                .after("/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
+            server.after(
+                "/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
           }
 
-          new AccessLogConfig(container.server()).apply();
-          new MetricsConfig(container.server(), prometheusMeterRegistry).apply();
+          container.accessLogConfig().apply(server);
+          container.metricsConfig().apply(server);
+          container.schedulerConfig().apply(server);
+
+          container.jwtMiddleware().apply(server);
         };
 
-    // 3. Declare specific route registries for dev/prod
-    // TODO: migrate endpoint declarations to use apiBuilder()
-    Consumer<DependencyContainer> routeRegistries =
-        container -> {
-          new SystemRoutes(container.server(), container.systemController()).register();
-          new UserRoutes(container.server(), container.userController()).register();
-          new AuthRoutes(container.server(), container.authController(), container.jwtMiddleware())
-              .register();
-          new SchedulerConfig(container.server(), container.refreshTokenService()).apply();
-        };
-
-    Clock clock = buildClock(config.env());
-    return buildApplication(config, clock, startupConfig, runtimeConfigs, routeRegistries);
+    return buildApplication(config, clock, startupConfig, runtimeConfigs);
   }
 
   /**
-   * The private, environment-agnostic "assembler" for the application.
+   * Low-level assembly method that wires the full application.
    *
-   * <p>This method is responsible for the core assembly logic: initializing common components and
-   * then applying the specific configurations and routes provided to it. It does not make decisions
-   * based on the application environment.
+   * <p>Creates the {@link DependencyContainer}, configures the server via three extension points,
+   * and returns a ready-to-start {@link Application}. Base configs (server, lifecycle, exceptions)
+   * are always applied; the callbacks add environment-specific behavior.
    *
-   * @param config The application configuration.
-   * @param customStartupConfigs A consumer for specific startup configurations (e.g., Swagger).
-   * @param customRuntimeConfigs A consumer for specific runtime configurations.
-   * @param customRoutesRegistries A consumer for registering specific routes.
-   * @return A fully assembled {@code Application} instance.
+   * @param config application configuration
+   * @param clock clock to use (must not be null)
+   * @param startupConfigs applied inside the {@link JavalinConfig} lambda, before server creation
+   * @param runtimeConfigs applied after server creation, for runtime wiring
+   * @return a fully assembled {@link Application}
    */
   public static Application buildApplication(
       ApplicationConfiguration config,
       Clock clock,
-      Consumer<JavalinConfig> customStartupConfigs,
-      Consumer<DependencyContainer> customRuntimeConfigs,
-      Consumer<DependencyContainer> customRoutesRegistries) {
-    clock = clock != null ? clock : buildClock(config.env());
+      BiConsumer<JavalinConfig, DependencyContainer> startupConfigs,
+      BiConsumer<Javalin, DependencyContainer> runtimeConfigs) {
+    Objects.requireNonNull(
+        clock,
+        "Clock must not be null. If you don't need a specific clock, use buildClock() instead.");
 
-    PersistenceManager persistenceManager = new PersistenceManager(config.database());
+    DependencyContainer container = new DependencyContainer(config, clock);
 
     Consumer<JavalinConfig> finalStartupConfig =
         javalinConfig -> {
-          new ServerConfig(javalinConfig, config.env()).apply();
-          if (customStartupConfigs != null) customStartupConfigs.accept(javalinConfig);
+          container.serverConfig().apply(javalinConfig);
+          if (startupConfigs != null) startupConfigs.accept(javalinConfig, container);
         };
     Javalin server = Javalin.create(finalStartupConfig);
 
-    DependencyContainer container =
-        new DependencyContainer(
-            server,
-            config.env(),
-            new JavalinContextEntityManagerProvider(),
-            persistenceManager,
-            clock);
-
-    new LifecycleConfig(server, persistenceManager).apply();
-    new ExceptionsConfig(server).apply();
+    container.lifecycleConfig().apply(server);
+    container.exceptionsConfig().apply(server);
     // TODO: Refactor request lifecycle management.
     //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the absolute
     //       last operation in the 'after' hook chain.
@@ -172,10 +150,9 @@ public class Application {
     //       accepts Consumers from each module.
     server.after(ctx -> RequestContext.clear());
 
-    if (customRuntimeConfigs != null) customRuntimeConfigs.accept(container);
-    if (customRoutesRegistries != null) customRoutesRegistries.accept(container);
+    if (runtimeConfigs != null) runtimeConfigs.accept(server, container);
 
-    return new Application(server, persistenceManager, config);
+    return new Application(server, container.persistenceManager(), config);
   }
 
   public Javalin javalin() {

@@ -1,26 +1,27 @@
 package com.anibalxyz.features.auth.api;
 
-import com.anibalxyz.features.common.api.routing.RouteGroup;
-import com.anibalxyz.features.common.api.routing.RouteRegistry;
-import io.javalin.Javalin;
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.post;
 
-public class AuthRoutes extends RouteRegistry {
+import com.anibalxyz.server.config.modules.startup.StartupConfig;
+import io.javalin.config.JavalinConfig;
+
+public class AuthRoutes implements StartupConfig {
   private final AuthApi authApi;
-  private final JwtMiddleware jwtMiddleware;
 
-  public AuthRoutes(Javalin server, AuthApi authApi, JwtMiddleware jwtMiddleware) {
-    super(server);
+  public AuthRoutes(AuthApi authApi) {
     this.authApi = authApi;
-    this.jwtMiddleware = jwtMiddleware;
   }
 
-  @Override
-  public void register() {
-    new RouteGroup("/api/auth", server)
-        .post("/login", authApi::login)
-        .post("/refresh", authApi::refresh)
-        .post("/logout", authApi::logout);
-
-    jwtMiddleware.register(); // TODO: move to a separate module
+  public void apply(JavalinConfig cfg) {
+    cfg.router.apiBuilder(
+        () ->
+            path(
+                "/api/auth",
+                () -> {
+                  post("/login", authApi::login);
+                  post("/refresh", authApi::refresh);
+                  post("/logout", authApi::logout);
+                }));
   }
 }

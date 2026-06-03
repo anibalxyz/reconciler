@@ -7,13 +7,7 @@ import io.javalin.Javalin;
  * instance and typically involve setting up handlers, filters, or other components that interact
  * with the request lifecycle.
  */
-public abstract class RuntimeConfig {
-  protected final Javalin server;
-
-  public RuntimeConfig(Javalin server) {
-    this.server = server;
-  }
-
+public interface RuntimeConfig {
   /** Applies the runtime configuration logic to the Javalin server. */
-  public abstract void apply();
+  void apply(Javalin server);
 }

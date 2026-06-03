@@ -4,6 +4,7 @@ import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.common.api.Role;
 import com.anibalxyz.features.common.application.exception.FailureSignal;
+import com.anibalxyz.server.config.modules.runtime.RuntimeConfig;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -13,22 +14,20 @@ import io.javalin.security.RouteRole;
 import io.jsonwebtoken.Claims;
 import java.util.Set;
 
-public class JwtMiddleware {
+public class JwtMiddleware implements RuntimeConfig {
 
   public static final String JWT_USER_ID = "jwt_userId";
   public static final String AUTHORIZATION_HEADER = "Authorization";
   public static final String BEARER_PREFIX = "Bearer ";
-  private final Javalin server;
   private final JwtService jwtService;
 
-  public JwtMiddleware(Javalin server, JwtService jwtService) {
-    this.server = server;
+  public JwtMiddleware(JwtService jwtService) {
     this.jwtService = jwtService;
   }
 
-  // TODO: improve readability of this method. Basically: apply TDA principle
   // TODO: Missing branches will be covered soon with unit testing
-  public void register() {
+  @Override
+  public void apply(Javalin server) {
     server.beforeMatched(
         ctx -> {
           Set<RouteRole> permittedRoles = ctx.routeRoles();
