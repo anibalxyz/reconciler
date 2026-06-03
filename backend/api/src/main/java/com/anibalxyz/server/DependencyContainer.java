@@ -40,71 +40,75 @@ import java.time.Clock;
 public final class DependencyContainer {
 
   private final PersistenceManager persistenceManager;
-  private final LifecycleConfig lifecycleConfig;
-  private final ExceptionsConfig exceptionsConfig;
 
   private final ServerConfig serverConfig;
   private final SwaggerConfig swaggerConfig;
-
-  private final PrometheusMeterRegistry prometheusMeterRegistry;
   private final MicrometerPlugin micrometerPlugin;
-  private final MetricsConfig metricsConfig;
+
+  private final LifecycleConfig lifecycleConfig;
+  private final ExceptionsConfig exceptionsConfig;
   private final AccessLogConfig accessLogConfig;
+  private final MetricsConfig metricsConfig;
 
   private final SystemRoutes systemRoutes;
   private final UserRoutes userRoutes;
   private final AuthRoutes authRoutes;
+
   private final SchedulerConfig schedulerConfig;
 
   public DependencyContainer(ApplicationConfiguration config, Clock clock) {
+    // 1. Infrastructure
     AppEnvironmentSource env = config.env();
     EntityManagerProvider emProvider = new JavalinContextEntityManagerProvider();
-
+    var prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     persistenceManager = new PersistenceManager(config.database());
-    lifecycleConfig = new LifecycleConfig(persistenceManager);
-    exceptionsConfig = new ExceptionsConfig();
 
+    // 2. Configurations
+    // Startup Configurations
     serverConfig = new ServerConfig(config.env());
     swaggerConfig = new SwaggerConfig(config.env());
-
-    prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     micrometerPlugin =
         new MicrometerPlugin(
             micrometerPluginConfig -> micrometerPluginConfig.registry = prometheusMeterRegistry);
-    metricsConfig = new MetricsConfig(prometheusMeterRegistry);
+
+    // Runtime Configurations
+    lifecycleConfig = new LifecycleConfig(persistenceManager);
+    exceptionsConfig = new ExceptionsConfig();
     accessLogConfig = new AccessLogConfig();
+    metricsConfig = new MetricsConfig(prometheusMeterRegistry);
 
+    // 3. Repositories
     UserRepository userRepository = new JpaUserRepository(emProvider);
-    UserService userService = new UserService(env, userRepository);
-    UserController userController = new UserController(userService);
-
     RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
-    RefreshTokenService refreshTokenService = new RefreshTokenService(refreshTokenRepository);
 
+    // 4. Services
+    UserService userService = new UserService(env, userRepository);
+    RefreshTokenService refreshTokenService = new RefreshTokenService(refreshTokenRepository);
     JwtService jwtService = new JwtService(env, clock);
     AuthService authService =
         new AuthService(env, clock, userService, jwtService, refreshTokenService);
-    AuthApi authController = new AuthController(env, authService, refreshTokenService, clock);
-    JwtMiddleware jwtMiddleware = new JwtMiddleware(jwtService);
 
+    // 5. Controllers and Middlewares
+    // Controllers
+    UserController userController = new UserController(userService);
+    AuthApi authController = new AuthController(env, authService, refreshTokenService, clock);
     SystemController systemController = new SystemController(persistenceManager);
 
+    // Middlewares
+    JwtMiddleware jwtMiddleware = new JwtMiddleware(jwtService);
+
+    // 6. Routes and Events
+    // Routes
     systemRoutes = new SystemRoutes(systemController);
     userRoutes = new UserRoutes(userController);
     authRoutes = new AuthRoutes(authController, jwtMiddleware);
+
+    // Events
     schedulerConfig = new SchedulerConfig(refreshTokenService);
   }
 
   public PersistenceManager persistenceManager() {
     return persistenceManager;
-  }
-
-  public LifecycleConfig lifecycleConfig() {
-    return lifecycleConfig;
-  }
-
-  public ExceptionsConfig exceptionsConfig() {
-    return exceptionsConfig;
   }
 
   public ServerConfig serverConfig() {
@@ -119,12 +123,20 @@ public final class DependencyContainer {
     return micrometerPlugin;
   }
 
-  public MetricsConfig metricsConfig() {
-    return metricsConfig;
+  public LifecycleConfig lifecycleConfig() {
+    return lifecycleConfig;
+  }
+
+  public ExceptionsConfig exceptionsConfig() {
+    return exceptionsConfig;
   }
 
   public AccessLogConfig accessLogConfig() {
     return accessLogConfig;
+  }
+
+  public MetricsConfig metricsConfig() {
+    return metricsConfig;
   }
 
   public SystemRoutes systemRoutes() {

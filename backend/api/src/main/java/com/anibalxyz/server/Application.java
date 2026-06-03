@@ -20,12 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The main application class, acting as the Composition Root.
+ * Top-level assembly orchestrator for the application.
  *
- * <p>This class is responsible for initializing and wiring together all major components of the
- * application, including the web server (Javalin), persistence layer (PersistenceManager),
- * dependency container, and all configurations and routes. It provides factory methods to create an
- * instance tailored for different environments (e.g., test, development).
+ * <p>Creates the {@link DependencyContainer}, configures and starts the Javalin server, and wires
+ * all configs, plugins, routes, and middlewares. Provides {@link #create} as a convenience for
+ * DEV/PROD and {@link #buildApplication} as a low-level entry point for testing and custom
+ * assembly.
  */
 public class Application {
   private static final Logger log = LoggerFactory.getLogger(Application.class);
@@ -53,12 +53,13 @@ public class Application {
   }
 
   /**
-   * A general factory method that creates an {@link Application} instance based on the environment
-   * specified in the configuration.
+   * Convenience factory for {@link AppEnv#DEV} and {@link AppEnv#PROD} environments.
    *
-   * @param config The application configuration.
-   * @return A new {@code Application} instance for the appropriate environment.
-   * @throws IllegalStateException if the environment in the config is unknown.
+   * <p>Wires all startup configs, plugins, runtime configs, routes, middlewares, events, etc.
+   *
+   * @param config application configuration
+   * @return a fully assembled {@code Application}
+   * @throws IllegalStateException if the environment is {@link AppEnv#TEST} or unknown
    */
   public static Application create(ApplicationConfiguration config) {
     Clock clock = buildClock(config.env());
@@ -112,24 +113,25 @@ public class Application {
   }
 
   /**
-   * The private, environment-agnostic "assembler" for the application.
+   * Low-level assembly method that wires the full application.
    *
-   * <p>This method is responsible for the core assembly logic: initializing common components and
-   * then applying the specific configurations and routes provided to it. It does not make decisions
-   * based on the application environment.
+   * <p>Creates the {@link DependencyContainer}, configures the server via three extension points,
+   * and returns a ready-to-start {@link Application}. Base configs (server, lifecycle, exceptions)
+   * are always applied; the callbacks add environment-specific behavior.
    *
-   * @param config The application configuration.
-   * @param customStartupConfigs A consumer for specific startup configurations (e.g., Swagger).
-   * @param customRuntimeConfigs A consumer for specific runtime configurations.
-   * @param customRoutesRegistries A consumer for registering specific routes.
-   * @return A fully assembled {@code Application} instance.
+   * @param config application configuration
+   * @param clock clock to use (must not be null)
+   * @param startupConfigs applied inside the {@code JavalinConfig} lambda, before server creation
+   * @param runtimeConfigs applied after server creation, for runtime wiring
+   * @param routeRegistries applied after server creation, for route registration
+   * @return a fully assembled {@code Application}
    */
   public static Application buildApplication(
       ApplicationConfiguration config,
       Clock clock,
-      BiConsumer<JavalinConfig, DependencyContainer> customStartupConfigs,
-      BiConsumer<Javalin, DependencyContainer> customRuntimeConfigs,
-      BiConsumer<Javalin, DependencyContainer> customRoutesRegistries) {
+      BiConsumer<JavalinConfig, DependencyContainer> startupConfigs,
+      BiConsumer<Javalin, DependencyContainer> runtimeConfigs,
+      BiConsumer<Javalin, DependencyContainer> routeRegistries) {
     Objects.requireNonNull(
         clock,
         "Clock must not be null. If you don't need a specific clock, use buildClock() instead.");
@@ -139,7 +141,7 @@ public class Application {
     Consumer<JavalinConfig> finalStartupConfig =
         javalinConfig -> {
           container.serverConfig().apply(javalinConfig);
-          if (customStartupConfigs != null) customStartupConfigs.accept(javalinConfig, container);
+          if (startupConfigs != null) startupConfigs.accept(javalinConfig, container);
         };
     Javalin server = Javalin.create(finalStartupConfig);
 
@@ -154,8 +156,8 @@ public class Application {
     //       accepts Consumers from each module.
     server.after(ctx -> RequestContext.clear());
 
-    if (customRuntimeConfigs != null) customRuntimeConfigs.accept(server, container);
-    if (customRoutesRegistries != null) customRoutesRegistries.accept(server, container);
+    if (runtimeConfigs != null) runtimeConfigs.accept(server, container);
+    if (routeRegistries != null) routeRegistries.accept(server, container);
 
     return new Application(server, container.persistenceManager(), config);
   }
