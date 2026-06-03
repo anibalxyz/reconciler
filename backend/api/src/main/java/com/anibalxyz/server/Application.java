@@ -21,6 +21,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -47,7 +48,7 @@ public class Application {
     this.config = config;
   }
 
-  private static Clock buildClock(AppEnvironmentSource env) {
+  public static Clock buildClock(AppEnvironmentSource env) {
     if (env.APP_ENV() == AppEnv.PROD) {
       return Clock.system(env.SYSTEM_TIMEZONE());
     }
@@ -68,6 +69,8 @@ public class Application {
    * @throws IllegalStateException if the environment in the config is unknown.
    */
   public static Application create(ApplicationConfiguration config) {
+    Clock clock = buildClock(config.env());
+
     AppEnv appEnv = config.env().APP_ENV();
 
     if (appEnv == AppEnv.TEST) {
@@ -118,7 +121,6 @@ public class Application {
           new SchedulerConfig(container.refreshTokenService()).apply(server);
         };
 
-    Clock clock = buildClock(config.env());
     return buildApplication(config, clock, startupConfig, runtimeConfigs, routeRegistries);
   }
 
@@ -141,7 +143,9 @@ public class Application {
       Consumer<JavalinConfig> customStartupConfigs,
       BiConsumer<Javalin, DependencyContainer> customRuntimeConfigs,
       BiConsumer<Javalin, DependencyContainer> customRoutesRegistries) {
-    clock = clock != null ? clock : buildClock(config.env());
+    Objects.requireNonNull(
+        clock,
+        "Clock must not be null. If you don't need a specific clock, use buildClock() instead.");
 
     PersistenceManager persistenceManager = new PersistenceManager(config.database());
 
