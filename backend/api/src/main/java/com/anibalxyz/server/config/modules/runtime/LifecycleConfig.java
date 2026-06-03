@@ -10,26 +10,25 @@ import jakarta.persistence.EntityManager;
  * This class hooks into Javalin's request lifecycle to handle resources that need to be created and
  * torn down for each HTTP request.
  */
-public class LifecycleConfig extends RuntimeConfig {
+public class LifecycleConfig implements RuntimeConfig {
 
   private final PersistenceManager persistenceManager;
 
-  public LifecycleConfig(Javalin server, PersistenceManager persistenceManager) {
-    super(server);
+  public LifecycleConfig(PersistenceManager persistenceManager) {
     this.persistenceManager = persistenceManager;
   }
 
   @Override
-  public void apply() {
-    setEntityManagerLifecycle();
-    setMDCLifecycle();
+  public void apply(Javalin server) {
+    setEntityManagerLifecycle(server);
+    setMDCLifecycle(server);
   }
 
   /**
    * Manage the JPA {@link EntityManager}, ensuring that one is created at the beginning of a
    * request and properly closed at the end, whether the request succeeds or fails.
    */
-  private void setEntityManagerLifecycle() {
+  private void setEntityManagerLifecycle(Javalin server) {
     server.before(
         ctx -> {
           ContextProvider.set(ctx);
@@ -59,7 +58,7 @@ public class LifecycleConfig extends RuntimeConfig {
         });
   }
 
-  private void setMDCLifecycle() {
+  private void setMDCLifecycle(Javalin server) {
     server.before(
         ctx -> {
           String requestId = RequestContext.initialize(ctx);

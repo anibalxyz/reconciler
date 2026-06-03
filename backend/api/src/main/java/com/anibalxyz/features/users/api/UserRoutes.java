@@ -5,15 +5,15 @@ import com.anibalxyz.features.common.api.routing.RouteGroup;
 import com.anibalxyz.features.common.api.routing.RouteRegistry;
 import io.javalin.Javalin;
 
-public class UserRoutes extends RouteRegistry {
+public class UserRoutes implements RouteRegistry {
   private final UserApi userApi;
 
-  public UserRoutes(Javalin server, UserApi userApi) {
-    super(server);
+  public UserRoutes(UserApi userApi) {
     this.userApi = userApi;
   }
 
-  public void register() {
+  @Override
+  public void register(Javalin server) {
     new RouteGroup("/api/users", server)
         .get(userApi::getAllUsers, Role.AUTHENTICATED)
         .post(userApi::createUser, Role.GUEST)

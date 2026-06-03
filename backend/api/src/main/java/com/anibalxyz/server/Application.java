@@ -104,19 +104,19 @@ public class Application {
                 .after("/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
           }
 
-          new AccessLogConfig(container.server()).apply();
-          new MetricsConfig(container.server(), prometheusMeterRegistry).apply();
+          new AccessLogConfig().apply(container.server());
+          new MetricsConfig(prometheusMeterRegistry).apply(container.server());
         };
 
     // 3. Declare specific route registries for dev/prod
     // TODO: migrate endpoint declarations to use apiBuilder()
     Consumer<DependencyContainer> routeRegistries =
         container -> {
-          new SystemRoutes(container.server(), container.systemController()).register();
-          new UserRoutes(container.server(), container.userController()).register();
-          new AuthRoutes(container.server(), container.authController(), container.jwtMiddleware())
-              .register();
-          new SchedulerConfig(container.server(), container.refreshTokenService()).apply();
+          new SystemRoutes(container.systemController()).register(container.server());
+          new UserRoutes(container.userController()).register(container.server());
+          new AuthRoutes(container.authController(), container.jwtMiddleware())
+              .register(container.server());
+          new SchedulerConfig(container.refreshTokenService()).apply(container.server());
         };
 
     Clock clock = buildClock(config.env());
@@ -161,8 +161,8 @@ public class Application {
             persistenceManager,
             clock);
 
-    new LifecycleConfig(server, persistenceManager).apply();
-    new ExceptionsConfig(server).apply();
+    new LifecycleConfig(persistenceManager).apply(server);
+    new ExceptionsConfig().apply(server);
     // TODO: Refactor request lifecycle management.
     //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the absolute
     //       last operation in the 'after' hook chain.

@@ -65,9 +65,9 @@ public class JwtMiddlewareIntegrationTest {
   private static Application createApplication() {
     Consumer<DependencyContainer> customRoutesRegistries =
         container -> {
-          new UserRoutes(container.server(), container.userController()).register();
-          new AuthRoutes(container.server(), container.authController(), container.jwtMiddleware())
-              .register();
+          new UserRoutes(container.userController()).register(container.server());
+          new AuthRoutes(container.authController(), container.jwtMiddleware())
+              .register(container.server());
         };
 
     return Application.buildApplication(

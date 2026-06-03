@@ -17,20 +17,19 @@ import org.slf4j.LoggerFactory;
  * <p>Initializes a {@link ScheduledExecutorService} for recurring tasks and ensures a graceful
  * shutdown when the server stops.
  */
-public class SchedulerConfig extends RuntimeConfig {
+public class SchedulerConfig implements RuntimeConfig {
 
   private static final Logger log = LoggerFactory.getLogger(SchedulerConfig.class);
   private final RefreshTokenService refreshTokenService;
   private ScheduledExecutorService scheduler;
 
-  public SchedulerConfig(Javalin server, RefreshTokenService refreshTokenService) {
-    super(server);
+  public SchedulerConfig(RefreshTokenService refreshTokenService) {
     this.refreshTokenService = refreshTokenService;
   }
 
   /** Initializes schedules and registers shutdown hooks. */
   @Override
-  public void apply() {
+  public void apply(Javalin server) {
     scheduler = Executors.newSingleThreadScheduledExecutor();
 
     scheduler.scheduleAtFixedRate(

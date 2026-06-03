@@ -54,7 +54,7 @@ public class DependencyContainer {
     AuthService authService =
         new AuthService(env, clock, userService, jwtService, refreshTokenService);
     authController = new AuthController(env, authService, refreshTokenService, clock);
-    jwtMiddleware = new JwtMiddleware(server, jwtService);
+    jwtMiddleware = new JwtMiddleware(jwtService);
 
     systemController = new SystemController(persistenceManager);
   }

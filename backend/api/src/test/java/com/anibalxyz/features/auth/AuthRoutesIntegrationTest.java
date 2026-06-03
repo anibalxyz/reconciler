@@ -70,8 +70,7 @@ public class AuthRoutesIntegrationTest {
 
     String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
     emf = app.persistenceManager().emf();
-    ObjectMapper objectMapper =
-        new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
     http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
 
@@ -83,8 +82,8 @@ public class AuthRoutesIntegrationTest {
     // JwtMiddleware registered internally but unused -> will change once decoupled
     Consumer<DependencyContainer> customRoutesRegistries =
         container -> {
-          new AuthRoutes(container.server(), container.authController(), container.jwtMiddleware())
-              .register();
+          new AuthRoutes(container.authController(), container.jwtMiddleware())
+              .register(container.server());
         };
 
     return Application.buildApplication(

@@ -14,21 +14,20 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MetricsConfig extends RuntimeConfig {
+public class MetricsConfig implements RuntimeConfig {
 
   public static final String METRICS_PATH = "/internal/metrics";
   public static final String METRICS_TIMER_ATTR = "metrics_timer";
   private static final Logger log = LoggerFactory.getLogger(MetricsConfig.class);
   private final PrometheusMeterRegistry registry;
 
-  public MetricsConfig(Javalin server, PrometheusMeterRegistry registry) {
-    super(server);
+  public MetricsConfig(PrometheusMeterRegistry registry) {
     this.registry = registry;
   }
 
   @Override
   @SuppressWarnings("resource") // JvmGcMetrics already closed
-  public void apply() {
+  public void apply(Javalin server) {
     new ClassLoaderMetrics().bindTo(registry);
     new JvmMemoryMetrics().bindTo(registry);
     new JvmGcMetrics().bindTo(registry);

@@ -79,7 +79,7 @@ public class UsersRoutesIntegrationTest {
 
   private static Application createApplication() {
     Consumer<DependencyContainer> customRoutesRegistries =
-        container -> new UserRoutes(container.server(), container.userController()).register();
+        container -> new UserRoutes(container.userController()).register(container.server());
 
     return Application.buildApplication(
         Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);
