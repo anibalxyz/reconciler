@@ -29,7 +29,7 @@ import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
 import com.anibalxyz.shared.MutableClock;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -79,12 +79,10 @@ public class AuthRoutesIntegrationTest {
   }
 
   private static Application createApplication() {
-    // JwtMiddleware registered internally but unused -> will change once decoupled
-    BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
-        (server, container) -> container.authRoutes().register(server);
+    BiConsumer<JavalinConfig, DependencyContainer> startupConfig =
+        (cfg, container) -> container.authRoutes().apply(cfg);
 
-    return Application.buildApplication(
-        Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);
+    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfig, null);
   }
 
   @AfterAll

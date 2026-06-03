@@ -6,7 +6,6 @@ import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.runtime.*;
 import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
@@ -58,7 +57,7 @@ public class Application {
    * <p>Wires all startup configs, plugins, runtime configs, routes, middlewares, events, etc.
    *
    * @param config application configuration
-   * @return a fully assembled {@code Application}
+   * @return a fully assembled {@link Application}
    * @throws IllegalStateException if the environment is {@link AppEnv#TEST} or unknown
    */
   public static Application create(ApplicationConfiguration config) {
@@ -81,6 +80,10 @@ public class Application {
             container.swaggerConfig().apply(javalinConfig);
           }
           javalinConfig.registerPlugin(container.micrometerPlugin());
+
+          container.systemRoutes().apply(javalinConfig);
+          container.userRoutes().apply(javalinConfig);
+          container.authRoutes().apply(javalinConfig);
         };
 
     // 2. Declare specific runtime configurations for dev/prod
@@ -97,19 +100,12 @@ public class Application {
 
           container.accessLogConfig().apply(server);
           container.metricsConfig().apply(server);
-        };
-
-    // 3. Declare specific route registries for dev/prod
-    // TODO: migrate endpoint declarations to use apiBuilder()
-    BiConsumer<Javalin, DependencyContainer> routeRegistries =
-        (server, container) -> {
-          container.systemRoutes().register(server);
-          container.userRoutes().register(server);
-          container.authRoutes().register(server);
           container.schedulerConfig().apply(server);
+
+          container.jwtMiddleware().apply(server);
         };
 
-    return buildApplication(config, clock, startupConfig, runtimeConfigs, routeRegistries);
+    return buildApplication(config, clock, startupConfig, runtimeConfigs);
   }
 
   /**
@@ -121,17 +117,15 @@ public class Application {
    *
    * @param config application configuration
    * @param clock clock to use (must not be null)
-   * @param startupConfigs applied inside the {@code JavalinConfig} lambda, before server creation
+   * @param startupConfigs applied inside the {@link JavalinConfig} lambda, before server creation
    * @param runtimeConfigs applied after server creation, for runtime wiring
-   * @param routeRegistries applied after server creation, for route registration
-   * @return a fully assembled {@code Application}
+   * @return a fully assembled {@link Application}
    */
   public static Application buildApplication(
       ApplicationConfiguration config,
       Clock clock,
       BiConsumer<JavalinConfig, DependencyContainer> startupConfigs,
-      BiConsumer<Javalin, DependencyContainer> runtimeConfigs,
-      BiConsumer<Javalin, DependencyContainer> routeRegistries) {
+      BiConsumer<Javalin, DependencyContainer> runtimeConfigs) {
     Objects.requireNonNull(
         clock,
         "Clock must not be null. If you don't need a specific clock, use buildClock() instead.");
@@ -157,7 +151,6 @@ public class Application {
     server.after(ctx -> RequestContext.clear());
 
     if (runtimeConfigs != null) runtimeConfigs.accept(server, container);
-    if (routeRegistries != null) routeRegistries.accept(server, container);
 
     return new Application(server, container.persistenceManager(), config);
   }

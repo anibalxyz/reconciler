@@ -19,6 +19,7 @@ import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
 import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -62,14 +63,16 @@ public class JwtMiddlewareIntegrationTest {
   }
 
   private static Application createApplication() {
-    BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
-        (server, container) -> {
-          container.userRoutes().register(server);
-          container.authRoutes().register(server);
+    BiConsumer<JavalinConfig, DependencyContainer> startupConfigs =
+        (cfg, container) -> {
+          container.userRoutes().apply(cfg);
+          container.authRoutes().apply(cfg);
         };
+    BiConsumer<Javalin, DependencyContainer> runtimeConfigs =
+        (server, container) -> container.jwtMiddleware().apply(server);
 
     return Application.buildApplication(
-        Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);
+        Constants.APP_CONFIG, testClock, startupConfigs, runtimeConfigs);
   }
 
   @AfterAll

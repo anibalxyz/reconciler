@@ -20,7 +20,7 @@ public class SwaggerConfig implements StartupConfig {
 
   private final ServerEnvironment env;
 
-  public SwaggerConfig( ServerEnvironment env) {
+  public SwaggerConfig(ServerEnvironment env) {
     this.env = env;
   }
 
@@ -80,7 +80,7 @@ systems. Built with clean architecture principles, domain-driven design, and com
         .withInfo(
             info ->
                 info.title("Reconciler API")
-                    .version("0.2.0") // TODO: use env var
+                    .version("0.0.0")
                     .description(infoDescription)
                     // .termsOfService
                     // ("https://github.com/anibalxyz/reconciler/blob/main/README.md")

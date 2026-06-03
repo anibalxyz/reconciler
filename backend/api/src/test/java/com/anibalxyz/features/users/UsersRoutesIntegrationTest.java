@@ -32,7 +32,7 @@ import com.anibalxyz.shared.HttpRequest;
 // TODO: update to 'tools.jackson' once Javalin updated to v7
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.BadRequestResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -78,11 +78,10 @@ public class UsersRoutesIntegrationTest {
   }
 
   private static Application createApplication() {
-    BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
-        (server, container) -> container.userRoutes().register(server);
+    BiConsumer<JavalinConfig, DependencyContainer> startupConfigs =
+        (config, container) -> container.userRoutes().apply(config);
 
-    return Application.buildApplication(
-        Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);
+    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfigs, null);
   }
 
   @AfterAll

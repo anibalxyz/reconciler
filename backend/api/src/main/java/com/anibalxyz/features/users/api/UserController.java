@@ -85,7 +85,7 @@ public class UserController implements UserApi {
    * @throws BadRequestResponse if the ID is missing or not a valid integer.
    */
   private int getParamId(Context ctx) throws BadRequestResponse {
-    // TODO: migrate to a personalized error (at the moment this is a edge case so it does not
+    // TODO: migrate to a personalized error (at the moment this is an edge case so it does not
     //       matter)
     return ctx.pathParamAsClass("id", Integer.class)
         .getOrThrow(e -> new BadRequestResponse("Invalid ID format. Must be a number."));

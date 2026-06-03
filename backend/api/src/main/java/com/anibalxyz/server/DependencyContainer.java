@@ -50,6 +50,8 @@ public final class DependencyContainer {
   private final AccessLogConfig accessLogConfig;
   private final MetricsConfig metricsConfig;
 
+  private final JwtMiddleware jwtMiddleware;
+
   private final SystemRoutes systemRoutes;
   private final UserRoutes userRoutes;
   private final AuthRoutes authRoutes;
@@ -95,13 +97,13 @@ public final class DependencyContainer {
     SystemController systemController = new SystemController(persistenceManager);
 
     // Middlewares
-    JwtMiddleware jwtMiddleware = new JwtMiddleware(jwtService);
+    jwtMiddleware = new JwtMiddleware(jwtService);
 
     // 6. Routes and Events
     // Routes
     systemRoutes = new SystemRoutes(systemController);
     userRoutes = new UserRoutes(userController);
-    authRoutes = new AuthRoutes(authController, jwtMiddleware);
+    authRoutes = new AuthRoutes(authController);
 
     // Events
     schedulerConfig = new SchedulerConfig(refreshTokenService);
@@ -137,6 +139,10 @@ public final class DependencyContainer {
 
   public MetricsConfig metricsConfig() {
     return metricsConfig;
+  }
+
+  public JwtMiddleware jwtMiddleware() {
+    return jwtMiddleware;
   }
 
   public SystemRoutes systemRoutes() {
