@@ -21,6 +21,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,30 +94,28 @@ public class Application {
 
     // 2. Declare specific runtime configurations for dev/prod
     // TODO: move to a separate file, e.g. RedirectRoutes within features.common
-    Consumer<DependencyContainer> runtimeConfigs =
-        container -> {
+    BiConsumer<Javalin, DependencyContainer> runtimeConfigs =
+        (server, container) -> {
           if (config.env().SWAGGER_ENABLED()) {
-            container.server().get("/", ctx -> ctx.redirect("/swagger"));
-            container.server().get("/api", ctx -> ctx.redirect("/swagger"));
+            server.get("/", ctx -> ctx.redirect("/swagger"));
+            server.get("/api", ctx -> ctx.redirect("/swagger"));
 
-            container
-                .server()
-                .after("/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
+            server.after(
+                "/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
           }
 
-          new AccessLogConfig().apply(container.server());
-          new MetricsConfig(prometheusMeterRegistry).apply(container.server());
+          new AccessLogConfig().apply(server);
+          new MetricsConfig(prometheusMeterRegistry).apply(server);
         };
 
     // 3. Declare specific route registries for dev/prod
     // TODO: migrate endpoint declarations to use apiBuilder()
-    Consumer<DependencyContainer> routeRegistries =
-        container -> {
-          new SystemRoutes(container.systemController()).register(container.server());
-          new UserRoutes(container.userController()).register(container.server());
-          new AuthRoutes(container.authController(), container.jwtMiddleware())
-              .register(container.server());
-          new SchedulerConfig(container.refreshTokenService()).apply(container.server());
+    BiConsumer<Javalin, DependencyContainer> routeRegistries =
+        (server, container) -> {
+          new SystemRoutes(container.systemController()).register(server);
+          new UserRoutes(container.userController()).register(server);
+          new AuthRoutes(container.authController(), container.jwtMiddleware()).register(server);
+          new SchedulerConfig(container.refreshTokenService()).apply(server);
         };
 
     Clock clock = buildClock(config.env());
@@ -140,8 +139,8 @@ public class Application {
       ApplicationConfiguration config,
       Clock clock,
       Consumer<JavalinConfig> customStartupConfigs,
-      Consumer<DependencyContainer> customRuntimeConfigs,
-      Consumer<DependencyContainer> customRoutesRegistries) {
+      BiConsumer<Javalin, DependencyContainer> customRuntimeConfigs,
+      BiConsumer<Javalin, DependencyContainer> customRoutesRegistries) {
     clock = clock != null ? clock : buildClock(config.env());
 
     PersistenceManager persistenceManager = new PersistenceManager(config.database());
@@ -155,11 +154,7 @@ public class Application {
 
     DependencyContainer container =
         new DependencyContainer(
-            server,
-            config.env(),
-            new JavalinContextEntityManagerProvider(),
-            persistenceManager,
-            clock);
+            config.env(), new JavalinContextEntityManagerProvider(), persistenceManager, clock);
 
     new LifecycleConfig(persistenceManager).apply(server);
     new ExceptionsConfig().apply(server);
@@ -172,8 +167,8 @@ public class Application {
     //       accepts Consumers from each module.
     server.after(ctx -> RequestContext.clear());
 
-    if (customRuntimeConfigs != null) customRuntimeConfigs.accept(container);
-    if (customRoutesRegistries != null) customRoutesRegistries.accept(container);
+    if (customRuntimeConfigs != null) customRuntimeConfigs.accept(server, container);
+    if (customRoutesRegistries != null) customRoutesRegistries.accept(server, container);
 
     return new Application(server, persistenceManager, config);
   }

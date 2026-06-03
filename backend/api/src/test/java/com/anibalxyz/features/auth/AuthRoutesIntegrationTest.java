@@ -30,6 +30,7 @@ import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
 import com.anibalxyz.shared.MutableClock;
+import io.javalin.Javalin;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -37,7 +38,7 @@ import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.*;
@@ -80,10 +81,9 @@ public class AuthRoutesIntegrationTest {
 
   private static Application createApplication() {
     // JwtMiddleware registered internally but unused -> will change once decoupled
-    Consumer<DependencyContainer> customRoutesRegistries =
-        container -> {
-          new AuthRoutes(container.authController(), container.jwtMiddleware())
-              .register(container.server());
+    BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
+        (server, container) -> {
+          new AuthRoutes(container.authController(), container.jwtMiddleware()).register(server);
         };
 
     return Application.buildApplication(

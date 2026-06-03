@@ -20,12 +20,13 @@ import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
+import io.javalin.Javalin;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.*;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.AfterAll;
@@ -63,11 +64,10 @@ public class JwtMiddlewareIntegrationTest {
   }
 
   private static Application createApplication() {
-    Consumer<DependencyContainer> customRoutesRegistries =
-        container -> {
-          new UserRoutes(container.userController()).register(container.server());
-          new AuthRoutes(container.authController(), container.jwtMiddleware())
-              .register(container.server());
+    BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
+        (server, container) -> {
+          new UserRoutes(container.userController()).register(server);
+          new AuthRoutes(container.authController(), container.jwtMiddleware()).register(server);
         };
 
     return Application.buildApplication(

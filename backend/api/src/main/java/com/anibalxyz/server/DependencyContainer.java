@@ -16,7 +16,6 @@ import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import io.javalin.Javalin;
 import java.time.Clock;
 
 /**
@@ -28,7 +27,6 @@ import java.time.Clock;
  * without a DI framework.
  */
 public class DependencyContainer {
-  private final Javalin server;
   private final UserController userController;
   private final AuthApi authController;
   private final SystemController systemController;
@@ -37,12 +35,10 @@ public class DependencyContainer {
   private final JwtMiddleware jwtMiddleware;
 
   public DependencyContainer(
-      Javalin server,
       AppEnvironmentSource env,
       EntityManagerProvider emProvider,
       PersistenceManager persistenceManager,
       Clock clock) {
-    this.server = server;
     UserRepository userRepository = new JpaUserRepository(emProvider);
     UserService userService = new UserService(env, userRepository);
     userController = new UserController(userService);
@@ -77,9 +73,5 @@ public class DependencyContainer {
 
   public RefreshTokenService refreshTokenService() {
     return refreshTokenService;
-  }
-
-  public Javalin server() {
-    return server;
   }
 }

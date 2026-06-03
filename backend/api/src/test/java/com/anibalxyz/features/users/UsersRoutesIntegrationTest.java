@@ -33,6 +33,7 @@ import com.anibalxyz.shared.HttpRequest;
 // TODO: update to 'tools.jackson' once Javalin updated to v7
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -41,7 +42,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.*;
@@ -78,8 +79,8 @@ public class UsersRoutesIntegrationTest {
   }
 
   private static Application createApplication() {
-    Consumer<DependencyContainer> customRoutesRegistries =
-        container -> new UserRoutes(container.userController()).register(container.server());
+    BiConsumer<Javalin, DependencyContainer> customRoutesRegistries =
+        (server, container) -> new UserRoutes(container.userController()).register(server);
 
     return Application.buildApplication(
         Constants.APP_CONFIG, testClock, null, null, customRoutesRegistries);
