@@ -53,7 +53,7 @@ public class ServerConfig implements StartupConfig {
 
   @Override
   public void apply(JavalinConfig javalinConfig) {
-    javalinConfig.useVirtualThreads = true;
+    javalinConfig.concurrency.useVirtualThreads = true;
     javalinConfig.router.ignoreTrailingSlashes = true;
     javalinConfig.jetty.modifyServer(server -> server.setStopTimeout(5_000)); // graceful shutdown
     javalinConfig.http.defaultContentType = "application/json; charset=utf-8";

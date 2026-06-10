@@ -15,7 +15,7 @@ public class UserRoutes implements StartupConfig {
 
   @Override
   public void apply(JavalinConfig cfg) {
-    cfg.router.apiBuilder(
+    cfg.routes.apiBuilder(
         () ->
             path(
                 "/api/users",

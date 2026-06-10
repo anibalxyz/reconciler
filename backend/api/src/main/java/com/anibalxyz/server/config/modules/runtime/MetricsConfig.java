@@ -1,6 +1,8 @@
 package com.anibalxyz.server.config.modules.runtime;
 
-import io.javalin.Javalin;
+import com.anibalxyz.server.config.modules.startup.StartupConfig;
+import io.javalin.config.JavalinConfig;
+import io.javalin.router.Endpoint;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
@@ -14,7 +16,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MetricsConfig implements RuntimeConfig {
+public class MetricsConfig implements StartupConfig {
 
   public static final String METRICS_PATH = "/internal/metrics";
   public static final String METRICS_TIMER_ATTR = "metrics_timer";
@@ -27,7 +29,7 @@ public class MetricsConfig implements RuntimeConfig {
 
   @Override
   @SuppressWarnings("resource") // JvmGcMetrics already closed
-  public void apply(Javalin server) {
+  public void apply(JavalinConfig cfg) {
     new ClassLoaderMetrics().bindTo(registry);
     new JvmMemoryMetrics().bindTo(registry);
     new JvmGcMetrics().bindTo(registry);
@@ -37,19 +39,19 @@ public class MetricsConfig implements RuntimeConfig {
     new LogbackMetrics().bindTo(registry);
     new FileDescriptorMetrics().bindTo(registry);
 
-    server.before(
+    cfg.routes.before(
         ctx -> {
           if (ctx.path().equals(METRICS_PATH) || ctx.path().startsWith("/webjars/")) return;
           ctx.attribute(METRICS_TIMER_ATTR, Timer.start(registry));
         });
 
-    server.after(
+    cfg.routes.after(
         ctx -> {
           Timer.Sample sample = ctx.attribute(METRICS_TIMER_ATTR);
           if (sample == null) return;
 
-          var path = ctx.endpointHandlerPath();
-          if (path.startsWith("No handler matched")) path = "/unmatched";
+          Endpoint endpoint = ctx.endpoints().matchedHttpEndpoint();
+          String path = endpoint == null ? "/unmatched" : endpoint.path;
           if (path.equals("/openapi") || path.equals("/swagger")) path = "/api-docs";
 
           sample.stop(
@@ -62,7 +64,7 @@ public class MetricsConfig implements RuntimeConfig {
                   .register(registry));
         });
 
-    server.get(
+    cfg.routes.get(
         METRICS_PATH,
         ctx -> {
           ctx.contentType("text/plain; version=0.0.4; charset=utf-8");

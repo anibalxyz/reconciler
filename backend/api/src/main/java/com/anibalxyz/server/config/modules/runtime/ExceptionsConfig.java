@@ -7,8 +7,9 @@ import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.server.api.LogEntry;
+import com.anibalxyz.server.config.modules.startup.StartupConfig;
 import com.anibalxyz.server.context.RequestContext;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpResponseException;
@@ -18,13 +19,13 @@ import org.slf4j.MDC;
 import org.slf4j.event.Level;
 
 // TODO: use a more semantic name for this class
-public class ExceptionsConfig implements RuntimeConfig {
+public class ExceptionsConfig implements StartupConfig {
 
   private static final Logger log = LoggerFactory.getLogger(ExceptionsConfig.class);
 
   @Override
-  public void apply(Javalin server) {
-    server.exception(
+  public void apply(JavalinConfig cfg) {
+    cfg.routes.exception(
         FailureSignal.class,
         (e, ctx) -> {
           ErrorResult result = ErrorMapper.map(e.getError());
@@ -37,9 +38,9 @@ public class ExceptionsConfig implements RuntimeConfig {
 
     // Force Javalin's built-in exceptions to pass through our centralized mapper.
     // Will be obsolete when fully migrated to custom exceptions.
-    server.exception(HttpResponseException.class, this::handleException);
+    cfg.routes.exception(HttpResponseException.class, this::handleException);
 
-    server.exception(
+    cfg.routes.exception(
         Exception.class,
         (e, ctx) -> {
           // Avoid interfering with CORS preflight requests; let the CORS plugin

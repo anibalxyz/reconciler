@@ -81,7 +81,7 @@ public class UsersRoutesIntegrationTest {
     BiConsumer<JavalinConfig, DependencyContainer> startupConfigs =
         (config, container) -> container.userRoutes().apply(config);
 
-    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfigs, null);
+    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfigs);
   }
 
   @AfterAll

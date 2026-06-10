@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
-import io.javalin.openapi.plugin.DefinitionConfiguration;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
+import io.javalin.openapi.schema.OpenApiSchemaBuilder;
 
 /**
  * Configuration for OpenAPI documentation and Swagger UI integration.
@@ -55,10 +55,7 @@ public class SwaggerConfig implements StartupConfig {
 
   public void registerSwaggerPlugin(JavalinConfig javalinConfig) {
     javalinConfig.registerPlugin(
-        new SwaggerPlugin(
-            swaggerConfig -> {
-              swaggerConfig.setUiPath("/swagger");
-            }));
+        new SwaggerPlugin(swaggerConfig -> swaggerConfig.withUiPath("/swagger")));
   }
 
   private void registerOpenApiPlugin(JavalinConfig javalinConfig) {
@@ -67,17 +64,18 @@ public class SwaggerConfig implements StartupConfig {
             openApiConfig ->
                 openApiConfig
                     .withDocumentationPath("/openapi")
-                    .withDefinitionConfiguration(this::definitionConfiguration)));
+                    .withDefinitionConfiguration(this::definitionConfiguration)
+                    .withDefinitionProcessor(this::definitionProcessor)));
   }
 
-  private void definitionConfiguration(String version, DefinitionConfiguration definition) {
+  private void definitionConfiguration(String version, OpenApiSchemaBuilder definition) {
     String infoDescription =
 """
 Financial transaction reconciliation API for teams to reconcile transactions between bank statements and internal
 systems. Built with clean architecture principles, domain-driven design, and comprehensive testing strategies.
 """;
     definition
-        .withInfo(
+        .info(
             info ->
                 info.title("Reconciler API")
                     .version("0.0.0")
@@ -89,29 +87,30 @@ systems. Built with clean architecture principles, domain-driven design, and com
                         "MIT License",
                         "https://github.com/anibalxyz/reconciler/blob/main/LICENSE",
                         "MIT"))
-        .withSecurity(openApiSecurity -> openApiSecurity.withBearerAuth("bearerAuth"))
-        .withDefinitionProcessor(this::definitionProcessor);
+        .withBearerAuth("bearerAuth");
+
     setServers(definition);
   }
 
-  private void setServers(DefinitionConfiguration definition) {
+  private void setServers(OpenApiSchemaBuilder definition) {
     if (env.APP_ENV() == AppEnv.PROD) {
-      definition.withServer(
-          server -> server.description("Production Server").url(env.API_PUBLIC_URL()));
+      definition.server(
+          openApiServer ->
+              openApiServer.description("Production Server").url(env.API_PUBLIC_URL()));
     } else {
       definition
-          .withServer(
+          .server(
               server ->
                   server
                       .description("API PREFIX only - proxied by frontend (the most comfortable)")
                       .url("/api"))
-          .withServer(
+          .server(
               server ->
                   server
                       .description(
                           "API URL - direct-to-backend url but needs proper CORS configuration (/health does not work)")
                       .url(env.API_URL()))
-          .withServer(
+          .server(
               server ->
                   server
                       .description(
