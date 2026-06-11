@@ -1,8 +1,6 @@
 package com.anibalxyz.server.config.modules.startup;
 
 import com.anibalxyz.server.config.AppEnv;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.openapi.plugin.OpenApiPlugin;
@@ -65,7 +63,8 @@ public class SwaggerConfig implements StartupConfig {
                 openApiConfig
                     .withDocumentationPath("/openapi")
                     .withDefinitionConfiguration(this::definitionConfiguration)
-                    .withDefinitionProcessor(this::definitionProcessor)));
+            //                    .withDefinitionProcessor(this::definitionProcessor)
+            ));
   }
 
   private void definitionConfiguration(String version, OpenApiSchemaBuilder definition) {
@@ -118,7 +117,8 @@ systems. Built with clean architecture principles, domain-driven design, and com
                       .url(env.SERVER_URL()));
     }
   }
-
+  /*
+  // TODO: uncomment once Javalin OpenAPI plugin uses jackson v3
   private String definitionProcessor(ObjectNode content) {
     ObjectNode externalDocs = content.objectNode();
     externalDocs.set("description", new TextNode("Project Repository and Documentation"));
@@ -153,5 +153,5 @@ systems. Built with clean architecture principles, domain-driven design, and com
     content.set("tags", tagsArray);
 
     return content.toPrettyString();
-  }
+  } */
 }
