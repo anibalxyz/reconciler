@@ -29,9 +29,6 @@ import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
-// TODO: update to 'tools.jackson' once Javalin updated to v7
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.BadRequestResponse;
 import jakarta.persistence.EntityManager;
@@ -49,8 +46,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 @DisplayName("Tests for UserRoutes")
 public class UsersRoutesIntegrationTest {
@@ -81,7 +80,7 @@ public class UsersRoutesIntegrationTest {
     BiConsumer<JavalinConfig, DependencyContainer> startupConfigs =
         (config, container) -> container.userRoutes().apply(config);
 
-    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfigs, null);
+    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfigs);
   }
 
   @AfterAll
@@ -175,7 +174,7 @@ public class UsersRoutesIntegrationTest {
                       "email":
                   }
                   """;
-      ErrorResult expectedResult = InfrastructureErrorMapper.map(new JsonParseException(""));
+      ErrorResult expectedResult = InfrastructureErrorMapper.map(new StreamReadException(""));
 
       Response response =
           method.equals("POST")

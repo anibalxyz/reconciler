@@ -16,7 +16,8 @@
         <jetbrains.annotations.version>26.1.0</jetbrains.annotations.version>
         <postgresql.version>42.7.11</postgresql.version>
         <jackson.version>3.1.3</jackson.version>
-        <javalin.version>6.7.0</javalin.version>
+        <jackson2.version>2.22.0</jackson2.version>
+        <javalin.version>7.2.2</javalin.version>
         <jakarta-persistence.version>3.2.0</jakarta-persistence.version>
         <hibernate.version>7.4.0.Final</hibernate.version>
         <jbcrypt.version>0.4</jbcrypt.version>
@@ -135,6 +136,21 @@
         </plugins>
     </build>
 
+    <!-- TODO: remove once Javalin OpenAPI plugin uses jackson v3
+      NOTE: runtime scope excludes jackson 2 from compile, preventing accidental imports in production code.
+            Jackson 2 is still available at runtime for the plugin internal use, and in test classpath. -->
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson2.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
 
         <!-- Annotations -->
@@ -162,13 +178,6 @@
             <version>${jackson.version}</version>
         </dependency>
 
-        <!-- TODO: remove to 'tools.jackson' once Javalin updated to v7 -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.21.3</version>
-        </dependency>
-
         <!-- Web Framework -->
 
         <dependency>
@@ -183,6 +192,7 @@
             <artifactId>javalin-openapi-plugin</artifactId>
             <version>${javalin.version}</version>
         </dependency>
+
         <dependency>
             <groupId>io.javalin.community.openapi</groupId>
             <artifactId>javalin-swagger-plugin</artifactId>

@@ -78,34 +78,28 @@ public class Application {
         (javalinConfig, container) -> {
           if (config.env().SWAGGER_ENABLED()) {
             container.swaggerConfig().apply(javalinConfig);
+
+            // TODO: move to a separate file, e.g. RedirectRoutes within features.common
+            javalinConfig.routes.get("/", ctx -> ctx.redirect("/swagger"));
+            javalinConfig.routes.get("/api", ctx -> ctx.redirect("/swagger"));
+
+            javalinConfig.routes.after(
+                "/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
           }
           javalinConfig.registerPlugin(container.micrometerPlugin());
 
           container.systemRoutes().apply(javalinConfig);
           container.userRoutes().apply(javalinConfig);
           container.authRoutes().apply(javalinConfig);
+
+          container.accessLogConfig().apply(javalinConfig);
+          container.metricsConfig().apply(javalinConfig);
+          container.schedulerConfig().apply(javalinConfig);
+
+          container.jwtMiddleware().apply(javalinConfig);
         };
 
-    // 2. Declare specific runtime configurations for dev/prod
-    // TODO: move to a separate file, e.g. RedirectRoutes within features.common
-    BiConsumer<Javalin, DependencyContainer> runtimeConfigs =
-        (server, container) -> {
-          if (config.env().SWAGGER_ENABLED()) {
-            server.get("/", ctx -> ctx.redirect("/swagger"));
-            server.get("/api", ctx -> ctx.redirect("/swagger"));
-
-            server.after(
-                "/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
-          }
-
-          container.accessLogConfig().apply(server);
-          container.metricsConfig().apply(server);
-          container.schedulerConfig().apply(server);
-
-          container.jwtMiddleware().apply(server);
-        };
-
-    return buildApplication(config, clock, startupConfig, runtimeConfigs);
+    return buildApplication(config, clock, startupConfig);
   }
 
   /**
@@ -118,14 +112,12 @@ public class Application {
    * @param config application configuration
    * @param clock clock to use (must not be null)
    * @param startupConfigs applied inside the {@link JavalinConfig} lambda, before server creation
-   * @param runtimeConfigs applied after server creation, for runtime wiring
    * @return a fully assembled {@link Application}
    */
   public static Application buildApplication(
       ApplicationConfiguration config,
       Clock clock,
-      BiConsumer<JavalinConfig, DependencyContainer> startupConfigs,
-      BiConsumer<Javalin, DependencyContainer> runtimeConfigs) {
+      BiConsumer<JavalinConfig, DependencyContainer> startupConfigs) {
     Objects.requireNonNull(
         clock,
         "Clock must not be null. If you don't need a specific clock, use buildClock() instead.");
@@ -136,21 +128,20 @@ public class Application {
         javalinConfig -> {
           container.serverConfig().apply(javalinConfig);
           if (startupConfigs != null) startupConfigs.accept(javalinConfig, container);
+
+          container.lifecycleConfig().apply(javalinConfig);
+          container.exceptionsConfig().apply(javalinConfig);
+
+          // TODO: Refactor request lifecycle management.
+          //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the
+          //       absolute last operation in the 'after' hook chain. Scattered 'before/after' hooks
+          //       across modules (Lifecycle, Metrics, AccessLog) make execution order
+          //       non-deterministic.
+          //       Planned improvement: Centralize all hooks into a single Orchestrator/Config that
+          //       accepts Consumers from each module.
+          javalinConfig.routes.after(ctx -> RequestContext.clear());
         };
     Javalin server = Javalin.create(finalStartupConfig);
-
-    container.lifecycleConfig().apply(server);
-    container.exceptionsConfig().apply(server);
-    // TODO: Refactor request lifecycle management.
-    //       Current temporal fix: RequestContext.clear() is moved here to ensure it's the absolute
-    //       last operation in the 'after' hook chain.
-    //       Scattered 'before/after' hooks across modules (Lifecycle, Metrics, AccessLog) make
-    //       execution order non-deterministic.
-    //       Planned improvement: Centralize all hooks into a single Orchestrator/Config that
-    //       accepts Consumers from each module.
-    server.after(ctx -> RequestContext.clear());
-
-    if (runtimeConfigs != null) runtimeConfigs.accept(server, container);
 
     return new Application(server, container.persistenceManager(), config);
   }

@@ -16,6 +16,6 @@ public class SystemRoutes implements StartupConfig {
 
   @Override
   public void apply(JavalinConfig cfg) {
-    cfg.router.apiBuilder(() -> path("/health", () -> get(systemApi::healthCheck, Role.GUEST)));
+    cfg.routes.apiBuilder(() -> path("/health", () -> get(systemApi::healthCheck, Role.GUEST)));
   }
 }

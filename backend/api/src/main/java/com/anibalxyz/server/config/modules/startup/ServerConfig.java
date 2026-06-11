@@ -1,10 +1,11 @@
 package com.anibalxyz.server.config.modules.startup;
 
-import com.fasterxml.jackson.databind.SerializationFeature;
 import io.javalin.config.JavalinConfig;
-import io.javalin.json.JavalinJackson;
+import io.javalin.json.JavalinJackson3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.cfg.DateTimeFeature;
 
 /**
  * This class is responsible for setting up essential server features like JSON serialization (with
@@ -30,9 +31,12 @@ public class ServerConfig implements StartupConfig {
 
   private static void configureJsonMapper(JavalinConfig config) {
     config.jsonMapper(
-        new JavalinJackson()
+        new JavalinJackson3()
             .updateMapper(
-                mapper -> mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)));
+                builder ->
+                    builder
+                        .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                        .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)));
   }
 
   private static void configureCors(JavalinConfig config, String[] hosts) {
@@ -53,7 +57,7 @@ public class ServerConfig implements StartupConfig {
 
   @Override
   public void apply(JavalinConfig javalinConfig) {
-    javalinConfig.useVirtualThreads = true;
+    javalinConfig.concurrency.useVirtualThreads = true;
     javalinConfig.router.ignoreTrailingSlashes = true;
     javalinConfig.jetty.modifyServer(server -> server.setStopTimeout(5_000)); // graceful shutdown
     javalinConfig.http.defaultContentType = "application/json; charset=utf-8";

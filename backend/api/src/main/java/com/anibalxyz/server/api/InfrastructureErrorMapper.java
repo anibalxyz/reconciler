@@ -2,14 +2,14 @@ package com.anibalxyz.server.api;
 
 import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.router.EndpointNotFound;
 import java.util.List;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 // TODO: implement exception handling for io.jsonwebtoken
 // TODO: implement mapper for UnhandledErrorException and UnreachableCodeException
@@ -40,7 +40,7 @@ public class InfrastructureErrorMapper {
             switch (e) {
               case UnrecognizedPropertyException ex ->
                   base.detail("Unrecognized property: '" + ex.getPropertyName() + "'");
-              case JsonParseException ignored -> base.detail("Malformed JSON in request body");
+              case StreamReadException ignored -> base.detail("Malformed JSON in request body");
               case MismatchedInputException ignored -> base.detail("Missing or empty request body");
               case BadRequestResponse ex -> base.detail(ex.getMessage());
               default -> null;

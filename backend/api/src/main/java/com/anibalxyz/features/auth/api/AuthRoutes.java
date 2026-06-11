@@ -14,7 +14,7 @@ public class AuthRoutes implements StartupConfig {
   }
 
   public void apply(JavalinConfig cfg) {
-    cfg.router.apiBuilder(
+    cfg.routes.apiBuilder(
         () ->
             path(
                 "/api/auth",

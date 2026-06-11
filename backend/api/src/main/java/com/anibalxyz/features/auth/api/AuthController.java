@@ -98,14 +98,13 @@ public class AuthController implements AuthApi {
         new Cookie(
             REFRESH_TOKEN_COOKIE,
             refreshToken,
-            env.AUTH_COOKIE_PATH(), //
+            env.AUTH_COOKIE_PATH(),
             (int) maxAgeInSeconds,
             env.AUTH_COOKIE_SECURE(),
-            0,
-            true, // HttpOnly
-            null, // Comment
-            env.AUTH_COOKIE_DOMAIN(), // Domain
+            true,
+            env.AUTH_COOKIE_DOMAIN(),
             env.AUTH_COOKIE_SAMESITE());
+
     ctx.cookie(cookie);
   }
 }

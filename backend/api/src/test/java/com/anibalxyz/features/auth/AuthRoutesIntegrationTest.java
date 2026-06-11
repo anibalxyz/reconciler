@@ -82,7 +82,7 @@ public class AuthRoutesIntegrationTest {
     BiConsumer<JavalinConfig, DependencyContainer> startupConfig =
         (cfg, container) -> container.authRoutes().apply(cfg);
 
-    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfig, null);
+    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfig);
   }
 
   @AfterAll
@@ -168,7 +168,7 @@ public class AuthRoutesIntegrationTest {
       String setCookie = response.header("Set-Cookie");
       assertThat(setCookie).isNotNull();
       assertThat(setCookie).contains(REFRESH_TOKEN_COOKIE + "=");
-      assertThat(setCookie).contains("Max-Age=0");
+      assertThat(setCookie).contains("Expires=Thu, 01 Jan 1970");
 
       String refreshTokenCookie =
           getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
