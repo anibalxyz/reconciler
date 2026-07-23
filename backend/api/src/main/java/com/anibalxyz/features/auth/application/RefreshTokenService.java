@@ -1,9 +1,9 @@
 package com.anibalxyz.features.auth.application;
 
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.users.domain.User;
 import java.time.*;
 import java.util.Optional;

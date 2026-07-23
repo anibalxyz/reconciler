@@ -1,4 +1,4 @@
-package com.anibalxyz.features.common.application.exception;
+package com.anibalxyz.core.application.exception;
 
 public class FailureSignal extends RuntimeException {
   private final Object error;

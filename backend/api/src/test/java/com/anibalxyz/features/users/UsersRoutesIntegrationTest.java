@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
-import com.anibalxyz.features.common.application.ValidationNotification;
+import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;

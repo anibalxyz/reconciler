@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.features.common.Result;
-import com.anibalxyz.features.common.application.ValidationNotification;
-import com.anibalxyz.features.common.domain.error.DomainError;
-import com.anibalxyz.features.common.domain.error.ReasonedError;
+import com.anibalxyz.core.Result;
+import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.domain.error.DomainError;
+import com.anibalxyz.core.domain.error.ReasonedError;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;

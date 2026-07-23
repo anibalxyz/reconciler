@@ -3,10 +3,10 @@ package com.anibalxyz.features.users.api;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
-import com.anibalxyz.features.common.application.ValidationNotification;
-import com.anibalxyz.features.common.application.exception.FailureSignal;
+import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.application.UserService;

@@ -1,8 +1,8 @@
 package com.anibalxyz.features.users.application;
 
-import com.anibalxyz.features.common.Result;
-import com.anibalxyz.features.common.application.ValidationNotification;
-import com.anibalxyz.features.common.domain.error.DomainError;
+import com.anibalxyz.core.Result;
+import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.features.users.application.env.UsersEnvironment;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;

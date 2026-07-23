@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain;
 
 import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import java.util.Locale;
 import java.util.Objects;

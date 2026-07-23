@@ -1,4 +1,4 @@
-package com.anibalxyz.features.common;
+package com.anibalxyz.core;
 
 /**
  * Represents the result of an operation that can either succeed or fail.

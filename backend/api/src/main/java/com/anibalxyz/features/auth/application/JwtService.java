@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.application;
 
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
-import com.anibalxyz.features.common.Result;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
 import java.time.Clock;

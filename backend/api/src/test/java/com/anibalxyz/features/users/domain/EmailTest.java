@@ -2,7 +2,7 @@ package com.anibalxyz.features.users.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

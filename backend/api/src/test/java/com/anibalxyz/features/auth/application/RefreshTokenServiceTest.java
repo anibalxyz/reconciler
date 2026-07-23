@@ -9,7 +9,7 @@ import static org.mockito.Mockito.*;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.shared.Constants;
 import java.time.*;
 import java.time.temporal.ChronoUnit;

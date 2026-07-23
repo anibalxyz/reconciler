@@ -1,13 +1,13 @@
 package com.anibalxyz.features.auth.application;
 
+import com.anibalxyz.core.Result;
+import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.common.Result;
-import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;

@@ -3,7 +3,7 @@ package com.anibalxyz.features.auth.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.shared.Constants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;

@@ -1,5 +1,7 @@
 package com.anibalxyz.features.auth.api;
 
+import com.anibalxyz.core.Result;
+import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.api.env.AuthApiEnvironment;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
@@ -7,8 +9,6 @@ import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.RefreshTokenService;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
-import com.anibalxyz.features.common.Result;
-import com.anibalxyz.features.common.application.exception.FailureSignal;
 import io.javalin.http.*;
 import java.time.Clock;
 import org.slf4j.Logger;

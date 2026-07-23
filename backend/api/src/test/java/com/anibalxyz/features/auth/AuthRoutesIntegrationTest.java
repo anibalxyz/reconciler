@@ -16,7 +16,7 @@ import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.common.application.ValidationNotification;
+import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserDomainError;

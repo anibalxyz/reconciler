@@ -2,9 +2,9 @@ package com.anibalxyz.features.users.api;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.anibalxyz.features.common.application.ValidationNotification;
-import com.anibalxyz.features.common.domain.error.DomainError;
-import com.anibalxyz.features.common.domain.error.InvalidValueError;
+import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.domain.error.DomainError;
+import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.error.*;

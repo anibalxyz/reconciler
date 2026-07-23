@@ -3,9 +3,9 @@ package com.anibalxyz.server.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.anibalxyz.features.common.application.ValidationNotification;
-import com.anibalxyz.features.common.domain.error.DomainError;
-import com.anibalxyz.features.common.domain.error.InvalidValueError;
+import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.domain.error.DomainError;
+import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.server.exception.UnregisteredMapperException;

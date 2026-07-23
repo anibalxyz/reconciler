@@ -1,6 +1,6 @@
 package com.anibalxyz.features.users.infra;
 
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
 import com.anibalxyz.features.users.domain.PasswordHash;

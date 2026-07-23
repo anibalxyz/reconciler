@@ -1,7 +1,7 @@
-package com.anibalxyz.features.common.application;
+package com.anibalxyz.core.application;
 
-import com.anibalxyz.features.common.Notification;
-import com.anibalxyz.features.common.domain.error.DomainError;
+import com.anibalxyz.core.Notification;
+import com.anibalxyz.core.domain.error.DomainError;
 
 public class ValidationNotification<E extends DomainError>
     extends Notification<ValidationNotification.ErrorEntry<E>> {

@@ -4,7 +4,7 @@ import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
 import com.anibalxyz.shared.Constants;
