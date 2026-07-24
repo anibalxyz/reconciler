@@ -1,11 +1,9 @@
 package com.anibalxyz.features.users.infra;
 
-import com.anibalxyz.core.Result;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
 import com.anibalxyz.features.users.infra.exception.CorruptedEmail;
 import com.anibalxyz.features.users.infra.exception.CorruptedName;
 import com.anibalxyz.features.users.infra.exception.CorruptedPasswordHash;
@@ -68,23 +66,14 @@ public class UserEntity {
   }
 
   public User toDomain() throws CorruptedEmail, CorruptedName, CorruptedPasswordHash {
-    // NOTE: some branches will probably not be covered by the current acceptance tests.
+    // NOTE: some branches will probably not be covered by the current integration tests.
     //        Once unit tests are implemented, then full coverage will be possible
-    // NOTE: these validations are causing over 7s of delay in the current test suite (Apr 25, 2026)
-    Result<Email, ?> emailResult = Email.of(email);
-    if (emailResult.isFailure()) throw new CorruptedEmail(email, id);
-    Result<Name, ?> nameResult = Name.of(name);
-    if (nameResult.isFailure()) throw new CorruptedName(name, id);
-    Result<PasswordHash, InvalidPasswordHashError> passwordHashResult =
-        PasswordHash.of(passwordHash);
-    if (passwordHashResult.isFailure()) throw new CorruptedPasswordHash(passwordHash, id);
+    Email email = Email.of(this.email).orThrow(err -> new CorruptedEmail(this.email, id));
+    Name name = Name.of(this.name).orThrow(err -> new CorruptedName(this.name, id));
+    PasswordHash passwordHash =
+        PasswordHash.of(this.passwordHash)
+            .orThrow(err -> new CorruptedPasswordHash(this.passwordHash, id));
 
-    return new User(
-        id,
-        nameResult.getValue(),
-        emailResult.getValue(),
-        passwordHashResult.getValue(),
-        createdAt,
-        updatedAt);
+    return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 }

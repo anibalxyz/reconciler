@@ -21,6 +21,11 @@ public sealed interface Result<V, E> permits Result.Success, Result.Failure {
     return new Success<>(value);
   }
 
+  /** Creates a successful {@code Result} with no value. */
+  static <E> Result<Void, E> success() {
+    return success(null);
+  }
+
   /** Creates a failed {@code Result} with the given error. */
   static <V, E> Result<V, E> failure(E error) {
     return new Failure<>(error);
@@ -129,12 +134,10 @@ public sealed interface Result<V, E> permits Result.Success, Result.Failure {
    */
   default <U> U fold(
       Function<? super V, ? extends U> onSuccess, Function<? super E, ? extends U> onFailure) {
-    if (this instanceof Success<V, E>(V value)) {
-      return onSuccess.apply(value);
-    } else if (this instanceof Failure<V, E>(E error)) {
-      return onFailure.apply(error);
-    }
-    throw new IllegalStateException("Unknown Result state");
+    return switch (this) {
+      case Success<V, E>(V value) -> onSuccess.apply(value);
+      case Failure<V, E>(E error) -> onFailure.apply(error);
+    };
   }
 
   /** Represents a successful result containing a value. */

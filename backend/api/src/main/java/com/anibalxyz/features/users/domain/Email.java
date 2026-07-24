@@ -44,10 +44,7 @@ public final class Email {
    *     Result} with an {@link InvalidEmailError} if the value is invalid
    */
   public static Result<Email, InvalidEmailError> of(String value) {
-    Result<Void, InvalidEmailError> validationResult = validateRaw(value);
-    if (validationResult.isFailure()) return Result.failure(validationResult.getError());
-
-    return Result.success(new Email(normalize(value)));
+    return validateRaw(value).map(v -> new Email(normalize(value)));
   }
 
   // TODO: rename to validate()
@@ -56,7 +53,7 @@ public final class Email {
     if (value.isBlank()) return Result.failure(InvalidEmailError.blank());
     if (!hasValidFormat(value)) return Result.failure(InvalidEmailError.invalidFormat());
 
-    return Result.success(null);
+    return Result.success();
   }
 
   /**

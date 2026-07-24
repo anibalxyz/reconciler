@@ -1,7 +1,5 @@
 package com.anibalxyz.features.users.api;
 
-import com.anibalxyz.core.Result;
-import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
@@ -9,8 +7,6 @@ import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.features.users.domain.error.UserDomainError;
-import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import java.util.List;
@@ -34,26 +30,18 @@ public class UserController implements UserApi {
   @Override
   public void getUserById(Context ctx) throws BadRequestResponse {
     int id = getParamId(ctx);
-    Result<User, UserNotFoundError> result = userService.getUserById(id);
-    if (result.isFailure()) {
-      throw new FailureSignal(result.getError());
-    }
+    User user = userService.getUserById(id).orThrow(FailureSignal::new);
 
-    ctx.status(200).json(UserMapper.toDetailResponse(result.getValue()));
+    ctx.status(200).json(UserMapper.toDetailResponse(user));
   }
 
   @Override
   public void createUser(Context ctx) {
     UserCreateRequest request = ctx.bodyAsClass(UserCreateRequest.class);
 
-    Result<User, ValidationNotification<UserDomainError>> result =
-        userService.createUser(request.toCommand());
+    User user = userService.createUser(request.toCommand()).orThrow(FailureSignal::new);
 
-    if (result.isFailure()) {
-      throw new FailureSignal(result.getError());
-    }
-
-    ctx.status(201).json(UserMapper.toCreateResponse(result.getValue()));
+    ctx.status(201).json(UserMapper.toCreateResponse(user));
   }
 
   @Override
@@ -61,23 +49,16 @@ public class UserController implements UserApi {
     int id = getParamId(ctx);
 
     UserUpdateRequest userUpdateRequest = ctx.bodyAsClass(UserUpdateRequest.class);
-    Result<User, UserService.UpdateUserByIdError> result =
-        userService.updateUserById(id, userUpdateRequest.toCommand());
+    User user =
+        userService.updateUserById(id, userUpdateRequest.toCommand()).orThrow(FailureSignal::new);
 
-    if (result.isFailure()) {
-      throw new FailureSignal(result.getError());
-    }
-
-    ctx.status(200).json(UserMapper.toDetailResponse(result.getValue()));
+    ctx.status(200).json(UserMapper.toDetailResponse(user));
   }
 
   @Override
   public void deleteUserById(Context ctx) throws BadRequestResponse {
     int id = getParamId(ctx);
-    Result<Void, UserNotFoundError> result = userService.deleteUserById(id);
-    if (result.isFailure()) {
-      throw new FailureSignal(result.getError());
-    }
+    userService.deleteUserById(id).orThrow(FailureSignal::new);
     ctx.status(204);
   }
 

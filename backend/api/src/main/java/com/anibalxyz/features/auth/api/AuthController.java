@@ -1,6 +1,5 @@
 package com.anibalxyz.features.auth.api;
 
-import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.api.env.AuthApiEnvironment;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
@@ -38,12 +37,8 @@ public class AuthController implements AuthApi {
   @Override
   public void login(Context ctx) {
     LoginCommand command = ctx.bodyAsClass(LoginRequest.class).toCommand();
-    Result<AuthResult, AuthService.AuthenticateUserError> authResult =
-        authService.authenticateUser(command);
-    if (authResult.isFailure()) {
-      throw new FailureSignal(authResult.getError());
-    }
-    AuthResult authResultValue = authResult.getValue();
+    AuthResult authResultValue =
+        authService.authenticateUser(command).orThrow(FailureSignal::new);
 
     setRefreshTokenCookie(
         ctx,
@@ -72,14 +67,8 @@ public class AuthController implements AuthApi {
       throw new UnauthorizedResponse("Missing refresh token in cookie");
     }
 
-    Result<AuthResult, AuthService.RefreshTokensError> authResult =
-        authService.refreshTokens(refreshTokenFromCookie);
-
-    if (authResult.isFailure()) {
-      throw new FailureSignal(authResult.getError());
-    }
-
-    AuthResult authResultValue = authResult.getValue();
+    AuthResult authResultValue =
+        authService.refreshTokens(refreshTokenFromCookie).orThrow(FailureSignal::new);
 
     setRefreshTokenCookie(
         ctx,

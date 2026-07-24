@@ -38,40 +38,36 @@ public class UserService {
   //       I found it difficult to use, e.g. during tests. Consumer is not able to know the
   //       available errors just by reading the method signature -> it must read the method
   public Result<User, DomainError> getUserByEmail(String email) {
-    Result<Email, InvalidEmailError> result = Email.of(email);
-    if (result.isFailure()) {
-      return Result.failure(result.getError());
-    }
-
-    return userRepository
-        .findByEmail(result.getValue())
-        .map(Result::<User, DomainError>success)
-        .orElseGet(() -> Result.failure(UserNotFoundError.byEmail(email)));
+    return Email.of(email)
+        .<DomainError>mapError(err -> err)
+        .flatMap(
+            validEmail ->
+                userRepository
+                    .findByEmail(validEmail)
+                    .map(Result::<User, DomainError>success)
+                    .orElseGet(() -> Result.failure(UserNotFoundError.byEmail(email))));
   }
 
   public Result<User, ValidationNotification<UserDomainError>> createUser(
       CreateUserCommand command) {
     ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
 
-    Result<Name, InvalidNameError> nameResult = Name.of(command.name());
-    if (nameResult.isFailure()) {
-      notification.add("name", nameResult.getError());
-    }
+    Result<Name, InvalidNameError> nameResult =
+        Name.of(command.name()).onFailure(err -> notification.add("name", err));
 
-    Result<Email, InvalidEmailError> emailResult = Email.of(command.email());
-    if (emailResult.isFailure()) {
-      notification.add("email", emailResult.getError());
-    } else {
-      userRepository
-          .findByEmail(emailResult.getValue())
-          .ifPresent(user -> notification.add("email", new EmailAlreadyTakenError()));
-    }
+    Result<Email, InvalidEmailError> emailResult =
+        Email.of(command.email())
+            .onFailure(err -> notification.add("email", err))
+            .onSuccess(
+                validEmail ->
+                    userRepository
+                        .findByEmail(validEmail)
+                        .ifPresent(
+                            user -> notification.add("email", new EmailAlreadyTakenError())));
 
     Result<PasswordHash, InvalidPasswordError> passwordResult =
-        PasswordHash.generate(command.password(), env.BCRYPT_LOG_ROUNDS());
-    if (passwordResult.isFailure()) {
-      notification.add("password", passwordResult.getError());
-    }
+        PasswordHash.generate(command.password(), env.BCRYPT_LOG_ROUNDS())
+            .onFailure(err -> notification.add("password", err));
 
     if (notification.hasErrors()) {
       return Result.failure(notification);
@@ -84,7 +80,7 @@ public class UserService {
   }
 
   public Result<User, UpdateUserByIdError> updateUserById(Integer id, UpdateUserCommand command) {
-    // Fail-fast: avoids unnecessary expensive operations (e.g. bcrypt) when all fields are absent.
+    // Fail-fast: avoids unnecessary expensive operations (e.g., bcrypt) when all fields are absent.
     // Redundant with VO null checks, but the performance trade-off justifies it.
     if (!command.hasAtLeastOneField()) {
       return Result.failure(new UpdateUserByIdError.EmptyCommand());
@@ -99,34 +95,39 @@ public class UserService {
 
     ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
 
-    Result<Name, InvalidNameError> nameResult = Name.of(command.name());
-    if (nameResult.isSuccess()) {
-      user = user.withName(nameResult.getValue());
-    } else if (!(nameResult.getError().getReason() instanceof InvalidNameError.Reason.Absent)) {
-      notification.add("name", nameResult.getError());
-    }
-
-    Result<Email, InvalidEmailError> emailResult = Email.of(command.email());
-    if (emailResult.isSuccess()) {
-      Email newEmail = emailResult.getValue();
-      if (!newEmail.equals(user.email())) {
-        if (userRepository.findByEmail(newEmail).isPresent()) {
-          notification.add("email", new EmailAlreadyTakenError());
-        } else {
-          user = user.withEmail(newEmail);
+    switch (Name.of(command.name())) {
+      case Result.Failure(var err) -> {
+        if (!(err.getReason() instanceof InvalidNameError.Reason.Absent)) {
+          notification.add("name", err);
         }
       }
-    } else if (!(emailResult.getError().getReason() instanceof InvalidEmailError.Reason.Absent)) {
-      notification.add("email", emailResult.getError());
+      case Result.Success(var name) -> user = user.withName(name);
     }
 
-    Result<PasswordHash, InvalidPasswordError> passResult =
-        PasswordHash.generate(command.password(), env.BCRYPT_LOG_ROUNDS());
+    switch (Email.of(command.email())) {
+      case Result.Failure(var err) -> {
+        if (!(err.getReason() instanceof InvalidEmailError.Reason.Absent)) {
+          notification.add("email", err);
+        }
+      }
+      case Result.Success(var email) -> {
+        if (email.equals(user.email())) break;
 
-    if (passResult.isSuccess()) {
-      user = user.withPasswordHash(passResult.getValue());
-    } else if (!(passResult.getError().getReason() instanceof InvalidPasswordError.Reason.Absent)) {
-      notification.add("password", passResult.getError());
+        if (userRepository.findByEmail(email).isPresent()) {
+          notification.add("email", new EmailAlreadyTakenError());
+        } else {
+          user = user.withEmail(email);
+        }
+      }
+    }
+
+    switch (PasswordHash.generate(command.password(), env.BCRYPT_LOG_ROUNDS())) {
+      case Result.Failure(var err) -> {
+        if (!(err.getReason() instanceof InvalidPasswordError.Reason.Absent)) {
+          notification.add("password", err);
+        }
+      }
+      case Result.Success(var pass) -> user = user.withPasswordHash(pass);
     }
 
     if (notification.hasErrors()) {
@@ -145,7 +146,7 @@ public class UserService {
   public Result<Void, UserNotFoundError> deleteUserById(int id) {
     if (userRepository.deleteById(id)) {
       log.info("User deleted");
-      return Result.success(null);
+      return Result.success();
     }
     return Result.failure(UserNotFoundError.byId(id));
   }
