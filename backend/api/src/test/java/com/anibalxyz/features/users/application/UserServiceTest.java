@@ -6,16 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.core.domain.error.ReasonedError;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
-import com.anibalxyz.features.users.api.in.UserUpdateRequest;
+import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -48,9 +48,9 @@ public class UserServiceTest {
   private static User buildUser(int id, String email) {
     return new User(
         id,
-        Name.of("User").getValue(),
-        Email.of(email).getValue(),
-        PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS).getValue(),
+        ResultAsserts.success(Name.of("User")),
+        ResultAsserts.success(Email.of(email)),
+        ResultAsserts.success(PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS)),
         Instant.now(),
         Instant.now());
   }
@@ -100,10 +100,10 @@ public class UserServiceTest {
       User expected = buildUser(1, "user1@mail.com");
       when(userRepository.findById(expected.id())).thenReturn(Optional.of(expected));
 
-      Result<User, UserNotFoundError> result = userService.getUserById(expected.id());
+      var result = userService.getUserById(expected.id());
 
-      assertThat(result.isSuccess()).isTrue();
-      assertThat(result.getValue()).isEqualTo(expected);
+      User actual = ResultAsserts.success(result);
+      assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -112,10 +112,10 @@ public class UserServiceTest {
       User expected = buildUser(1, "user1@mail.com");
       when(userRepository.findByEmail(expected.email())).thenReturn(Optional.of(expected));
 
-      Result<User, DomainError> result = userService.getUserByEmail(expected.email().value());
+      var result = userService.getUserByEmail(expected.email().value());
 
-      assertThat(result.isSuccess()).isTrue();
-      assertThat(result.getValue()).isEqualTo(expected);
+      User actual = ResultAsserts.success(result);
+      assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -123,23 +123,21 @@ public class UserServiceTest {
     public void createUser_validData_returnCreatedUser() {
       UserCreateRequest request = new UserCreateRequest("User 1", "user1@mail.com", VALID_PASSWORD);
 
-      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(request.email()))))
           .thenReturn(Optional.empty());
       when(userRepository.save(
               argThat(
                   u ->
-                      u.name().equals(Name.of(request.name()).getValue())
-                          && u.email().equals(Email.of(request.email()).getValue())
+                      u.name().equals(ResultAsserts.success(Name.of(request.name())))
+                          && u.email().equals(ResultAsserts.success(Email.of(request.email())))
                           && u.passwordHash().matches(request.password()))))
           .thenAnswer(inv -> inv.getArgument(0));
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(request.toCommand());
 
-      assertThat(result.isSuccess()).isTrue();
-      User actual = result.getValue();
-      assertThat(actual.name()).isEqualTo(Name.of(request.name()).getValue());
-      assertThat(actual.email()).isEqualTo(Email.of(request.email()).getValue());
+      User actual = ResultAsserts.success(result);
+      assertThat(actual.name()).isEqualTo(ResultAsserts.success(Name.of(request.name())));
+      assertThat(actual.email()).isEqualTo(ResultAsserts.success(Email.of(request.email())));
       assertTrue(actual.passwordHash().matches(request.password()));
     }
 
@@ -147,35 +145,33 @@ public class UserServiceTest {
     @DisplayName("updateUserById: given a valid id and name, then return the updated user")
     public void updateUserById_validIdAndName_returnUpdatedUser() {
       User existing = buildUser(1, "previous@mail.com");
-      UserUpdateRequest request = new UserUpdateRequest("New Name", null, null);
-      User expected = existing.withName(Name.of(request.name()).getValue());
+      UpdateUserCommand command = new UpdateUserCommand("Valid Name", null, null);
+      User expected = existing.withName(ResultAsserts.success(Name.of(command.name())));
 
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
       when(userRepository.save(expected)).thenAnswer(inv -> inv.getArgument(0));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), request.toCommand());
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isSuccess()).isTrue();
-      assertThat(result.getValue()).isEqualTo(expected);
+      User actual = ResultAsserts.success(result);
+      assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("updateUserById: given a valid id and email, then return the updated user")
     public void updateUserById_validIdAndEmail_returnUpdatedUser() {
       User existing = buildUser(1, "previous@mail.com");
-      UserUpdateRequest request = new UserUpdateRequest(null, "new@mail.com", null);
-      User expected = existing.withEmail(Email.of(request.email()).getValue());
+      UpdateUserCommand command = new UpdateUserCommand(null, "new@mail.com", null);
+      User expected = existing.withEmail(ResultAsserts.success(Email.of(command.email())));
 
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
       when(userRepository.findByEmail(expected.email())).thenReturn(Optional.empty());
       when(userRepository.save(expected)).thenAnswer(inv -> inv.getArgument(0));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), request.toCommand());
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isSuccess()).isTrue();
-      assertThat(result.getValue()).isEqualTo(expected);
+      User actual = ResultAsserts.success(result);
+      assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -183,7 +179,7 @@ public class UserServiceTest {
     public void updateUserById_validIdAndPassword_returnUpdatedUser() {
       User existing = buildUser(1, "previous@mail.com");
       String newPassword = "new" + VALID_PASSWORD;
-      UserUpdateRequest request = new UserUpdateRequest(null, null, newPassword);
+      UpdateUserCommand command = new UpdateUserCommand(null, null, newPassword);
 
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
       when(userRepository.save(
@@ -194,11 +190,10 @@ public class UserServiceTest {
                           && u.passwordHash().matches(newPassword))))
           .thenAnswer(inv -> inv.getArgument(0));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), request.toCommand());
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isSuccess()).isTrue();
-      assertTrue(result.getValue().passwordHash().matches(newPassword));
+      User actual = ResultAsserts.success(result);
+      assertThat(actual.passwordHash().matches(newPassword)).isTrue();
     }
 
     @Test
@@ -206,16 +201,15 @@ public class UserServiceTest {
         "updateUserById: given an email already in use by the user, then return the unmodified user")
     public void updateUserById_emailAlreadyUsedByUser_returnUnmodifiedUser() {
       User existing = buildUser(1, "same@mail.com");
-      UserUpdateRequest request = new UserUpdateRequest(null, "same@mail.com", null);
+      UpdateUserCommand command = new UpdateUserCommand(null, "same@mail.com", null);
 
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
       when(userRepository.save(existing)).thenAnswer(inv -> inv.getArgument(0));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), request.toCommand());
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isSuccess()).isTrue();
-      assertThat(result.getValue()).isEqualTo(existing);
+      User user = ResultAsserts.success(result);
+      assertThat(user).isEqualTo(existing);
     }
 
     @Test
@@ -223,10 +217,9 @@ public class UserServiceTest {
     public void deleteUserById_existingId_returnSuccess() {
       when(userRepository.deleteById(1)).thenReturn(true);
 
-      Result<Void, UserNotFoundError> result = userService.deleteUserById(1);
+      var result = userService.deleteUserById(1);
 
-      assertThat(result.isSuccess()).isTrue();
-      assertThat(result.getValue()).isNull();
+      assertThat(ResultAsserts.success(result)).isNull();
     }
   }
 
@@ -240,10 +233,10 @@ public class UserServiceTest {
       int id = 999;
       when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-      Result<User, UserNotFoundError> result = userService.getUserById(id);
+      var result = userService.getUserById(id);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure)
           .isInstanceOf(UserNotFoundError.class)
           .extracting(ReasonedError::getReason)
           .isEqualTo(new UserNotFoundError.Reason.ById(id));
@@ -253,12 +246,13 @@ public class UserServiceTest {
     @DisplayName("getUserByEmail: given a non-existing email, then return UserNotFoundError")
     public void getUserByEmail_nonExistingEmail_returnUserNotFoundError() {
       String email = "non.existing@mail.com";
-      when(userRepository.findByEmail(Email.of(email).getValue())).thenReturn(Optional.empty());
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(email))))
+          .thenReturn(Optional.empty());
 
-      Result<User, DomainError> result = userService.getUserByEmail(email);
+      var result = userService.getUserByEmail(email);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure)
           .isInstanceOf(UserNotFoundError.class)
           .extracting(e -> ((UserNotFoundError) e).getReason())
           .isEqualTo(new UserNotFoundError.Reason.ByEmail(email));
@@ -268,10 +262,10 @@ public class UserServiceTest {
     @DisplayName(
         "getUserByEmail: given a blank email, then return InvalidEmailError with Blank reason")
     public void getUserByEmail_blankEmail_returnInvalidEmailErrorWithBlankReason() {
-      Result<User, DomainError> result = userService.getUserByEmail(" ");
+      var result = userService.getUserByEmail(" ");
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure)
           .isInstanceOf(InvalidEmailError.class)
           .extracting(e -> ((InvalidEmailError) e).getReason())
           .isInstanceOf(InvalidEmailError.Reason.Blank.class);
@@ -281,29 +275,26 @@ public class UserServiceTest {
     @DisplayName(
         "getUserByEmail: given an invalid email format, then return InvalidEmailError with InvalidFormat reason")
     public void getUserByEmail_invalidEmailFormat_returnInvalidEmailErrorWithInvalidFormatReason() {
-      Result<User, DomainError> result = userService.getUserByEmail("mailemail.com");
+      var result = userService.getUserByEmail("mailemail.com");
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      var err = ResultAsserts.failure(result);
+      assertThat(err)
           .isInstanceOf(InvalidEmailError.class)
           .extracting(e -> ((InvalidEmailError) e).getReason())
           .isEqualTo(new InvalidEmailError.Reason.InvalidFormat());
     }
 
-    // ── createUser ────────────────────────────────────────────────────────────
-
     @Test
     @DisplayName("createUser: given a missing name, then return Absent error on name")
     public void createUser_missingName_returnAbsentErrorOnName() {
-      UserCreateRequest request = new UserCreateRequest(null, "mail@email.com", VALID_PASSWORD);
-      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+      CreateUserCommand command = new CreateUserCommand(null, "mail@email.com", VALID_PASSWORD);
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
           .thenReturn(Optional.empty());
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError().getErrors())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("name");
@@ -317,15 +308,14 @@ public class UserServiceTest {
     @Test
     @DisplayName("createUser: given a blank name, then return Blank error on name")
     public void createUser_blankName_returnBlankErrorOnName() {
-      UserCreateRequest request = new UserCreateRequest(" ", "mail@email.com", VALID_PASSWORD);
-      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+      CreateUserCommand command = new CreateUserCommand(" ", "mail@email.com", VALID_PASSWORD);
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
           .thenReturn(Optional.empty());
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError().getErrors())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("name");
@@ -339,13 +329,12 @@ public class UserServiceTest {
     @Test
     @DisplayName("createUser: given a missing email, then return Absent error on email")
     public void createUser_missingEmail_returnAbsentErrorOnEmail() {
-      UserCreateRequest request = new UserCreateRequest("User", null, VALID_PASSWORD);
+      CreateUserCommand command = new CreateUserCommand("User", null, VALID_PASSWORD);
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError().getErrors())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("email");
@@ -359,13 +348,12 @@ public class UserServiceTest {
     @Test
     @DisplayName("createUser: given a blank email, then return Blank error on email")
     public void createUser_blankEmail_returnBlankErrorOnEmail() {
-      UserCreateRequest request = new UserCreateRequest("User", " ", VALID_PASSWORD);
+      CreateUserCommand command = new CreateUserCommand("User", " ", VALID_PASSWORD);
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError().getErrors())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("email");
@@ -379,15 +367,14 @@ public class UserServiceTest {
     @Test
     @DisplayName("createUser: given a missing password, then return Absent error on password")
     public void createUser_missingPassword_returnAbsentErrorOnPassword() {
-      UserCreateRequest request = new UserCreateRequest("User", "mail@email.com", null);
-      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+      CreateUserCommand command = new CreateUserCommand("User", "mail@email.com", null);
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
           .thenReturn(Optional.empty());
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError().getErrors())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("password");
@@ -401,15 +388,14 @@ public class UserServiceTest {
     @Test
     @DisplayName("createUser: given a blank password, then return Blank error on password")
     public void createUser_blankPassword_returnBlankErrorOnPassword() {
-      UserCreateRequest request = new UserCreateRequest("User", "mail@email.com", " ");
-      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+      CreateUserCommand command = new CreateUserCommand("User", "mail@email.com", " ");
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
           .thenReturn(Optional.empty());
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError().getErrors())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("password");
@@ -423,16 +409,15 @@ public class UserServiceTest {
     @Test
     @DisplayName("createUser: given an existing email, then return EmailAlreadyTakenError on email")
     public void createUser_existingEmail_returnEmailAlreadyTakenError() {
-      UserCreateRequest request = new UserCreateRequest("User 1", "user1@mail.com", VALID_PASSWORD);
-      User existing = buildUser(1, request.email());
-      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+      CreateUserCommand command = new CreateUserCommand("User 1", "user1@mail.com", VALID_PASSWORD);
+      User existing = buildUser(1, command.email());
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
           .thenReturn(Optional.of(existing));
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertHasFailureOn(result.getError(), "email", EmailAlreadyTakenError.class);
+      var failure = ResultAsserts.failure(result);
+      assertHasFailureOn(failure, "email", EmailAlreadyTakenError.class);
     }
 
     @ParameterizedTest
@@ -440,13 +425,12 @@ public class UserServiceTest {
     @DisplayName(
         "createUser: given an invalid email format, then return InvalidFormat error on email")
     public void createUser_invalidEmail_returnInvalidFormatErrorOnEmail(String email) {
-      UserCreateRequest request = new UserCreateRequest("User", email, VALID_PASSWORD);
+      CreateUserCommand command = new CreateUserCommand("User", email, VALID_PASSWORD);
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError().getErrors())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("email");
@@ -463,23 +447,20 @@ public class UserServiceTest {
     @DisplayName(
         "createUser: given an invalid password value, then return InvalidValue error on password")
     public void createUser_invalidPassword_returnInvalidValueErrorOnPassword(String password) {
-      UserCreateRequest request = new UserCreateRequest("User", "mail@email.com", password);
-      when(userRepository.findByEmail(Email.of(request.email()).getValue()))
+      CreateUserCommand command = new CreateUserCommand("User", "mail@email.com", password);
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
           .thenReturn(Optional.empty());
 
-      Result<User, ValidationNotification<UserDomainError>> result =
-          userService.createUser(request.toCommand());
+      var result = userService.createUser(command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError().getErrors())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("password");
                 assertThat(e.error()).isInstanceOf(InvalidPasswordError.class);
               });
     }
-
-    // ── updateUserById ────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("updateUserById: given a non-existing id, then return NotFound error")
@@ -488,11 +469,10 @@ public class UserServiceTest {
       UpdateUserCommand command = new UpdateUserCommand("New Name", null, null);
       when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(id, command);
+      var result = userService.updateUserById(id, command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure)
           .isInstanceOf(UserService.UpdateUserByIdError.NotFound.class)
           .extracting(e -> ((UserService.UpdateUserByIdError.NotFound) e).error().getReason())
           .isEqualTo(new UserNotFoundError.Reason.ById(id));
@@ -503,11 +483,10 @@ public class UserServiceTest {
     public void updateUserById_emptyCommand_returnEmptyCommandFailure() {
       UpdateUserCommand command = new UpdateUserCommand(null, null, null);
 
-      Result<User, UserService.UpdateUserByIdError> result = userService.updateUserById(1, command);
+      var result = userService.updateUserById(1, command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
-          .isInstanceOf(UserService.UpdateUserByIdError.EmptyCommand.class);
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure).isInstanceOf(UserService.UpdateUserByIdError.EmptyCommand.class);
     }
 
     @Test
@@ -517,16 +496,14 @@ public class UserServiceTest {
       UpdateUserCommand command = new UpdateUserCommand(" ", null, VALID_PASSWORD);
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), command);
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
-          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
-      ValidationNotification<UserDomainError> n =
-          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure).isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
 
-      assertThat(n.getErrors())
+      var notification =
+          ((UserService.UpdateUserByIdError.ValidationFailed) failure).notification();
+      assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("name");
@@ -544,16 +521,14 @@ public class UserServiceTest {
       UpdateUserCommand command = new UpdateUserCommand(null, " ", VALID_PASSWORD);
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), command);
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
-          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
-      ValidationNotification<UserDomainError> n =
-          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure).isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
 
-      assertThat(n.getErrors())
+      var notification =
+          ((UserService.UpdateUserByIdError.ValidationFailed) failure).notification();
+      assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("email");
@@ -571,16 +546,14 @@ public class UserServiceTest {
       UpdateUserCommand command = new UpdateUserCommand("New Name", null, " ");
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), command);
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
-          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
-      ValidationNotification<UserDomainError> n =
-          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure).isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
 
-      assertThat(n.getErrors())
+      var notification =
+          ((UserService.UpdateUserByIdError.ValidationFailed) failure).notification();
+      assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("password");
@@ -600,16 +573,14 @@ public class UserServiceTest {
       UpdateUserCommand command = new UpdateUserCommand(null, email, null);
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), command);
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
-          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
-      ValidationNotification<UserDomainError> n =
-          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure).isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
 
-      assertThat(n.getErrors())
+      var notification =
+          ((UserService.UpdateUserByIdError.ValidationFailed) failure).notification();
+      assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("email");
@@ -630,16 +601,14 @@ public class UserServiceTest {
       UpdateUserCommand command = new UpdateUserCommand(null, null, password);
       when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
 
-      Result<User, UserService.UpdateUserByIdError> result =
-          userService.updateUserById(existing.id(), command);
+      var result = userService.updateUserById(existing.id(), command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
-          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
-      ValidationNotification<UserDomainError> n =
-          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure).isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
 
-      assertThat(n.getErrors())
+      var notification =
+          ((UserService.UpdateUserByIdError.ValidationFailed) failure).notification();
+      assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
                 assertThat(e.field()).isEqualTo("password");
@@ -654,18 +623,17 @@ public class UserServiceTest {
       User existing = buildUser(2, "previous@mail.com");
       UpdateUserCommand command = new UpdateUserCommand(null, "taken@mail.com", null);
       when(userRepository.findById(1)).thenReturn(Optional.of(existing));
-      when(userRepository.findByEmail(Email.of(command.email()).getValue()))
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
           .thenReturn(Optional.of(existing));
 
-      Result<User, UserService.UpdateUserByIdError> result = userService.updateUserById(1, command);
+      var result = userService.updateUserById(1, command);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
-          .isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
-      ValidationNotification<UserDomainError> n =
-          ((UserService.UpdateUserByIdError.ValidationFailed) result.getError()).notification();
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure).isInstanceOf(UserService.UpdateUserByIdError.ValidationFailed.class);
 
-      assertHasFailureOn(n, "email", EmailAlreadyTakenError.class);
+      var notification =
+          ((UserService.UpdateUserByIdError.ValidationFailed) failure).notification();
+      assertHasFailureOn(notification, "email", EmailAlreadyTakenError.class);
     }
 
     @Test
@@ -674,10 +642,10 @@ public class UserServiceTest {
       int id = 999;
       when(userRepository.deleteById(id)).thenReturn(false);
 
-      Result<Void, UserNotFoundError> result = userService.deleteUserById(id);
+      var result = userService.deleteUserById(id);
 
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure)
           .isInstanceOf(UserNotFoundError.class)
           .extracting(ReasonedError::getReason)
           .isEqualTo(new UserNotFoundError.Reason.ById(id));

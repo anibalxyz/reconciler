@@ -76,7 +76,7 @@ public class UserService {
     log.info("User created");
     return Result.success(
         userRepository.save(
-            new User(nameResult.getValue(), emailResult.getValue(), passwordResult.getValue())));
+            new User(nameResult.unwrap(), emailResult.unwrap(), passwordResult.unwrap())));
   }
 
   public Result<User, UpdateUserByIdError> updateUserById(Integer id, UpdateUserCommand command) {

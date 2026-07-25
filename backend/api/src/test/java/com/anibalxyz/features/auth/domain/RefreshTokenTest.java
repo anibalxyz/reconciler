@@ -6,6 +6,7 @@ import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.shared.ResultAsserts;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,9 +24,9 @@ class RefreshTokenTest {
   private static User buildUser() {
     return new User(
         1,
-        Name.of("User").getValue(),
-        Email.of("user@example.com").getValue(),
-        PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS).getValue(),
+        ResultAsserts.success(Name.of("User")),
+        ResultAsserts.success(Email.of("user@example.com")),
+        ResultAsserts.success(PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS)),
         Instant.now(),
         Instant.now());
   }

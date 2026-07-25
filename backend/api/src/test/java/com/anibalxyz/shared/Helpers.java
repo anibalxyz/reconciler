@@ -81,10 +81,10 @@ public class Helpers {
         new JpaUserRepository(emp)
             .save(
                 new User(
-                    Name.of(name).getValue(),
-                    Email.of(email).getValue(),
-                    PasswordHash.generate(password, Constants.APP_ENV.BCRYPT_LOG_ROUNDS())
-                        .getValue()));
+                    ResultAsserts.success(Name.of(name)),
+                    ResultAsserts.success(Email.of(email)),
+                    ResultAsserts.success(
+                        PasswordHash.generate(password, Constants.APP_ENV.BCRYPT_LOG_ROUNDS()))));
 
     em.getTransaction().commit();
 

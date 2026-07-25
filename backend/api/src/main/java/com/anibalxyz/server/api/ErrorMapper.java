@@ -1,10 +1,10 @@
 package com.anibalxyz.server.api;
 
+import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.features.auth.api.AuthErrorMapper;
 import com.anibalxyz.features.common.api.ValidationErrorMapper;
 import com.anibalxyz.features.common.api.out.response.error.ErrorDetail;
-import com.anibalxyz.core.application.ValidationNotification;
-import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.features.users.api.UserErrorMapper;
 import com.anibalxyz.server.exception.UnregisteredMapperException;
 import java.util.List;

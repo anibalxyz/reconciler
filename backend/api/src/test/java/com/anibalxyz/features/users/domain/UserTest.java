@@ -5,6 +5,7 @@ import static com.anibalxyz.shared.Constants.Users.VALID_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,9 +29,9 @@ public class UserTest {
   public static void setup() {
     Constants.init();
     BCRYPT_LOG_ROUNDS = Constants.APP_ENV.BCRYPT_LOG_ROUNDS();
-    EMAIL = Email.of(VALID_EMAIL).getValue();
-    NAME = Name.of(VALID_NAME).getValue();
-    PASSWORD_HASH = PasswordHash.generate("password1234", BCRYPT_LOG_ROUNDS).getValue();
+    EMAIL = ResultAsserts.success(Email.of(VALID_EMAIL));
+    NAME = ResultAsserts.success(Name.of(VALID_NAME));
+    PASSWORD_HASH = ResultAsserts.success(PasswordHash.generate("password1234", BCRYPT_LOG_ROUNDS));
   }
 
   @BeforeEach
@@ -76,20 +77,20 @@ User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
         break;
 
       case "name":
-        Name newName = Name.of("New Name").getValue();
+        Name newName = ResultAsserts.success(Name.of("New Name"));
         userUsingWith = baseUser.withName(newName);
         userUsingConstructor = new User(ID, newName, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
         break;
 
       case "email":
-        Email newEmail = Email.of("new@mail.com").getValue();
+        Email newEmail = ResultAsserts.success(Email.of("new@mail.com"));
         userUsingWith = baseUser.withEmail(newEmail);
         userUsingConstructor = new User(ID, NAME, newEmail, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
         break;
 
       case "passwordHash":
         PasswordHash newPasswordHash =
-            PasswordHash.generate("newPassword1234", BCRYPT_LOG_ROUNDS).getValue();
+            ResultAsserts.success(PasswordHash.generate("newPassword1234", BCRYPT_LOG_ROUNDS));
         userUsingWith = baseUser.withPasswordHash(newPasswordHash);
         userUsingConstructor = new User(ID, NAME, EMAIL, newPasswordHash, TIMESTAMP, TIMESTAMP);
         break;

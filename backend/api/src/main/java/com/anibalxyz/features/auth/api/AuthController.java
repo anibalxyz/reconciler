@@ -37,8 +37,7 @@ public class AuthController implements AuthApi {
   @Override
   public void login(Context ctx) {
     LoginCommand command = ctx.bodyAsClass(LoginRequest.class).toCommand();
-    AuthResult authResultValue =
-        authService.authenticateUser(command).orThrow(FailureSignal::new);
+    AuthResult authResultValue = authService.authenticateUser(command).orThrow(FailureSignal::new);
 
     setRefreshTokenCookie(
         ctx,

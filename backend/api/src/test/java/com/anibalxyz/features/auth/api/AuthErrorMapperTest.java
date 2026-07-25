@@ -2,6 +2,9 @@ package com.anibalxyz.features.auth.api;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.domain.error.DomainError;
+import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.auth.api.out.AuthErrorCode;
 import com.anibalxyz.features.auth.application.AuthService;
 import com.anibalxyz.features.auth.application.JwtService;
@@ -10,9 +13,6 @@ import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.core.application.ValidationNotification;
-import com.anibalxyz.core.domain.error.DomainError;
-import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.exception.UnhandledErrorException;

@@ -6,18 +6,19 @@ import static com.anibalxyz.shared.Constants.Users.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.anibalxyz.core.Result;
+import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.core.Result;
-import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.*;
@@ -202,11 +203,12 @@ class AuthServiceTest {
 
       var result = authService.authenticateUser(command);
 
-      var validationFailedClass = AuthService.AuthenticateUserError.ValidationFailed.class;
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError()).isInstanceOf(validationFailedClass);
+      var failure = ResultAsserts.failure(result);
 
-      var errors = validationFailedClass.cast(result.getError()).notification().getErrors();
+      var validationFailedClass = AuthService.AuthenticateUserError.ValidationFailed.class;
+      assertThat(failure).isInstanceOf(validationFailedClass);
+
+      var errors = validationFailedClass.cast(failure).notification().getErrors();
       assertThat(errors.size()).isEqualTo(1);
       assertThat(errors.getFirst().field()).isEqualTo(field);
     }
@@ -218,11 +220,12 @@ class AuthServiceTest {
 
       var result = authService.authenticateUser(command);
 
-      var validationFailedClass = AuthService.AuthenticateUserError.ValidationFailed.class;
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError()).isInstanceOf(validationFailedClass);
+      var failure = ResultAsserts.failure(result);
 
-      var errors = validationFailedClass.cast(result.getError()).notification().getErrors();
+      var validationFailedClass = AuthService.AuthenticateUserError.ValidationFailed.class;
+      assertThat(failure).isInstanceOf(validationFailedClass);
+
+      var errors = validationFailedClass.cast(failure).notification().getErrors();
       assertThat(errors.size()).isEqualTo(2);
       assertThat(errors)
           .extracting(ValidationNotification.ErrorEntry::field)
@@ -240,8 +243,7 @@ class AuthServiceTest {
           new AuthService(env, clockOutsideWindow, userService, jwtService, refreshTokenService);
 
       var result = serviceOutsideWindow.authenticateUser(command);
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      assertThat(ResultAsserts.failure(result))
           .isInstanceOf(AuthService.AuthenticateUserError.MaintenanceWindow.class);
     }
 
@@ -256,8 +258,7 @@ class AuthServiceTest {
           .thenReturn(Result.failure(UserNotFoundError.byEmail(VALID_EMAIL)));
 
       var result = authService.authenticateUser(command);
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError()).isEqualTo(expectedError);
+      assertThat(ResultAsserts.failure(result)).isEqualTo(expectedError);
     }
 
     @Test
@@ -272,8 +273,7 @@ class AuthServiceTest {
       when(userService.getUserByEmail(command.email())).thenReturn(Result.success(user));
 
       var result = authService.authenticateUser(command);
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError()).isEqualTo(expectedError);
+      assertThat(ResultAsserts.failure(result)).isEqualTo(expectedError);
     }
 
     @Test
@@ -291,8 +291,8 @@ class AuthServiceTest {
           .thenReturn(expectedResult.refreshToken());
 
       var result = authService.authenticateUser(command);
-      assertThat(result.isSuccess()).isTrue();
-      assertThat(result.getValue()).isEqualTo(expectedResult);
+      AuthResult authResult = ResultAsserts.success(result);
+      assertThat(authResult).isEqualTo(expectedResult);
     }
   }
 
@@ -309,8 +309,7 @@ class AuthServiceTest {
           new AuthService(env, clockOutsideWindow, userService, jwtService, refreshTokenService);
 
       var result = serviceOutsideWindow.refreshTokens(VALID_REFRESH_TOKEN);
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      assertThat(ResultAsserts.failure(result))
           .isInstanceOf(AuthService.RefreshTokensError.MaintenanceWindow.class);
     }
 
@@ -323,11 +322,12 @@ class AuthServiceTest {
           .thenReturn(Result.failure(error));
 
       var result = authService.refreshTokens(VALID_REFRESH_TOKEN);
+      var failure = ResultAsserts.failure(result);
+
       var invalidTokenClass = AuthService.RefreshTokensError.InvalidToken.class;
-      assertThat(result.isFailure()).isTrue();
-      assertThat(result.getError())
+      assertThat(failure)
           .isInstanceOf(invalidTokenClass)
-          .extracting(e -> invalidTokenClass.cast(e).error())
+          .extracting(e -> (invalidTokenClass.cast(e).error()))
           .isEqualTo(error);
     }
 
@@ -345,9 +345,7 @@ class AuthServiceTest {
       when(jwtService.generateToken(expectedRefreshToken.user().id())).thenReturn(VALID_JWT);
 
       var result = authService.refreshTokens(currentRefreshToken.token());
-      assertThat(result.isSuccess()).isTrue();
-
-      AuthResult authResult = result.getValue();
+      AuthResult authResult = ResultAsserts.success(result);
       assertThat(authResult.accessToken()).isEqualTo(VALID_JWT);
       assertThat(authResult.refreshToken()).isEqualTo(expectedRefreshToken);
     }

@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.core.Result;
-import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.application.UserService;
@@ -18,6 +18,7 @@ import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.validation.Validator;
@@ -169,16 +170,16 @@ public class UserControllerTest {
           List.of(
               new User(
                   1,
-                  Name.of("John Doe").getValue(),
-                  Email.of("john.doe@example.com").getValue(),
-                  PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS).getValue(),
+                  ResultAsserts.success(Name.of("John Doe")),
+                  ResultAsserts.success(Email.of("john.doe@example.com")),
+                  ResultAsserts.success(PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS)),
                   instant,
                   instant),
               new User(
                   2,
-                  Name.of("Jane Smith").getValue(),
-                  Email.of("jane.smith@example.com").getValue(),
-                  PasswordHash.generate("87654321", BCRYPT_LOG_ROUNDS).getValue(),
+                  ResultAsserts.success(Name.of("Jane Smith")),
+                  ResultAsserts.success(Email.of("jane.smith@example.com")),
+                  ResultAsserts.success(PasswordHash.generate("87654321", BCRYPT_LOG_ROUNDS)),
                   instant,
                   instant));
 
@@ -212,9 +213,9 @@ public class UserControllerTest {
       User fakeUser =
           new User(
               id,
-              Name.of("John Doe").getValue(),
-              Email.of("johndoe@gmail.com").getValue(),
-              PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS).getValue(),
+              ResultAsserts.success(Name.of("John Doe")),
+              ResultAsserts.success(Email.of("johndoe@gmail.com")),
+              ResultAsserts.success(PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS)),
               instant,
               instant);
 
@@ -236,9 +237,9 @@ public class UserControllerTest {
       User fakeUser =
           new User(
               1,
-              Name.of(request.name()).getValue(),
-              Email.of(request.email()).getValue(),
-              PasswordHash.generate(request.password(), BCRYPT_LOG_ROUNDS).getValue(),
+              ResultAsserts.success(Name.of(request.name())),
+              ResultAsserts.success(Email.of(request.email())),
+              ResultAsserts.success(PasswordHash.generate(request.password(), BCRYPT_LOG_ROUNDS)),
               instant,
               instant);
 
@@ -264,9 +265,9 @@ public class UserControllerTest {
       User fakeUser =
           new User(
               id,
-              Name.of(request.name()).getValue(),
-              Email.of(request.email()).getValue(),
-              PasswordHash.generate(request.password(), BCRYPT_LOG_ROUNDS).getValue(),
+              ResultAsserts.success(Name.of(request.name())),
+              ResultAsserts.success(Email.of(request.email())),
+              ResultAsserts.success(PasswordHash.generate(request.password(), BCRYPT_LOG_ROUNDS)),
               instant,
               instant);
 

@@ -7,9 +7,9 @@ import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
-import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
@@ -29,6 +29,7 @@ import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
+import com.anibalxyz.shared.ResultAsserts;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.BadRequestResponse;
 import jakarta.persistence.EntityManager;
@@ -107,7 +108,7 @@ public class UsersRoutesIntegrationTest {
   class FailureScenarios {
     private static ErrorResult errorResultFromInvalidName(String name) {
       ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
-      correspondentError.add("name", Name.validate(name).getError());
+      correspondentError.add("name", ResultAsserts.failure(Name.validate(name)));
       return ErrorMapper.map(correspondentError);
     }
 
@@ -229,7 +230,8 @@ public class UsersRoutesIntegrationTest {
       ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
       assertThat(actual.instance()).isNotNull();
       assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
-      assertThat(userRepository.findByEmail(Email.of(requestBody.email()).getValue())).isEmpty();
+      assertThat(userRepository.findByEmail(ResultAsserts.success(Email.of(requestBody.email()))))
+          .isEmpty();
     }
 
     @Test
@@ -382,8 +384,7 @@ public class UsersRoutesIntegrationTest {
 
       assertNotNull(persisted);
       assertTrue(
-          PasswordHash.of(persisted.passwordHash().value())
-              .getValue()
+          ResultAsserts.success(PasswordHash.of(persisted.passwordHash().value()))
               .matches(requestBody.password()));
       assertThat(persisted.createdAt())
           .isCloseTo(persisted.updatedAt(), within(5, ChronoUnit.SECONDS));
@@ -402,7 +403,8 @@ public class UsersRoutesIntegrationTest {
         "PUT /users/{id}: given valid id and property, then return 200 and the updated user")
     public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp) {
       User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
-      PasswordHash prevPasswordHash = PasswordHash.of(user.passwordHash().value()).getValue();
+      PasswordHash prevPasswordHash =
+          ResultAsserts.success(PasswordHash.of(user.passwordHash().value()));
       Instant prevUpdatedAt = user.updatedAt();
 
       UserUpdateRequest request =
@@ -430,7 +432,8 @@ public class UsersRoutesIntegrationTest {
           assertThat(responseBody.email()).isEqualTo(request.email());
         }
         case "password" -> {
-          PasswordHash updatedHash = PasswordHash.of(updated.passwordHash().value()).getValue();
+          PasswordHash updatedHash =
+              ResultAsserts.success(PasswordHash.of(updated.passwordHash().value()));
           assertTrue(updatedHash.matches(request.password()));
           assertThat(updatedHash.value()).isNotEqualTo(prevPasswordHash.value());
         }

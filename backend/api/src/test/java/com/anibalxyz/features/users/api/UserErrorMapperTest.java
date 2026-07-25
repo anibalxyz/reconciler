@@ -10,6 +10,7 @@ import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
+import com.anibalxyz.shared.ResultAsserts;
 import org.junit.jupiter.api.*;
 
 @DisplayName("Tests for UserErrorMapper")
@@ -228,7 +229,8 @@ public class UserErrorMapperTest {
     @Test
     @DisplayName("given InvalidPasswordError TooShort, then does not throw any exception")
     public void givenInvalidPasswordTooShort_doesNotThrow() {
-      assertThatCode(() -> mapper.mapInvalidValue(PasswordHash.validate("a").getError()))
+      assertThatCode(
+              () -> mapper.mapInvalidValue(ResultAsserts.failure(PasswordHash.validate("a"))))
           .doesNotThrowAnyException();
     }
 
@@ -238,7 +240,7 @@ public class UserErrorMapperTest {
       assertThatCode(
               () ->
                   mapper.mapInvalidValue(
-                      PasswordHash.validate("tooLongPassword".repeat(50)).getError()))
+                      ResultAsserts.failure(PasswordHash.validate("tooLongPassword".repeat(50)))))
           .doesNotThrowAnyException();
     }
 

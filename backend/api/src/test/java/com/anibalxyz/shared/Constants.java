@@ -38,9 +38,10 @@ public class Constants {
     public static final User VALID_USER =
         new User(
             1,
-            Name.of(VALID_NAME).getValue(),
-            Email.of(VALID_EMAIL).getValue(),
-            PasswordHash.generate(VALID_PASSWORD, APP_ENV.BCRYPT_LOG_ROUNDS()).getValue(),
+            ResultAsserts.success(Name.of(VALID_NAME)),
+            ResultAsserts.success(Email.of(VALID_EMAIL)),
+            ResultAsserts.success(
+                PasswordHash.generate(VALID_PASSWORD, APP_ENV.BCRYPT_LOG_ROUNDS())),
             Instant.now(),
             Instant.now());
   }

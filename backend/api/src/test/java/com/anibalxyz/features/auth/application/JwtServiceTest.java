@@ -2,9 +2,10 @@ package com.anibalxyz.features.auth.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.core.Result;
+import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -55,8 +56,7 @@ class JwtServiceTest {
   @DisplayName("generateToken: given valid user ID, then return valid jwt")
   void generateToken_validUserId_returnValidJwt() {
     String jwt = jwtService.generateToken(USER_ID);
-    Result<Claims, JwtService.JwtValidationError> validationResult = jwtService.validateToken(jwt);
-    assertThat(validationResult.isSuccess()).isTrue();
+    ResultAsserts.success(jwtService.validateToken(jwt));
   }
 
   @Test
@@ -66,9 +66,9 @@ class JwtServiceTest {
 
     Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
 
-    assertThat(result.isSuccess()).isTrue();
-    assertThat(result.getValue().getSubject()).isEqualTo(String.valueOf(USER_ID));
-    assertThat(result.getValue().getIssuer()).isEqualTo(JWT_ISSUER);
+    Claims claims = ResultAsserts.success(result);
+    assertThat(claims.getSubject()).isEqualTo(String.valueOf(USER_ID));
+    assertThat(claims.getIssuer()).isEqualTo(JWT_ISSUER);
   }
 
   @Test
@@ -77,10 +77,9 @@ class JwtServiceTest {
     JwtService delayedService = new JwtService(env, Clock.offset(testClock, Duration.ofHours(-50)));
     String token = delayedService.generateToken(USER_ID);
 
-    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
+    var failure = ResultAsserts.failure(jwtService.validateToken(token));
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Expired.class);
+    assertThat(failure).isInstanceOf(JwtService.JwtValidationError.Expired.class);
   }
 
   @Test
@@ -89,20 +88,17 @@ class JwtServiceTest {
     JwtService delayedService = new JwtService(env, Clock.offset(testClock, Duration.ofHours(50)));
     String token = delayedService.generateToken(USER_ID);
 
-    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
+    var failure = ResultAsserts.failure(jwtService.validateToken(token));
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
+    assertThat(failure).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
   }
 
   @Test
   @DisplayName("validateToken: given malformed token, then return failure with Invalid reason")
   void validateToken_malformedToken_returnFailureWithInvalid() {
-    Result<Claims, JwtService.JwtValidationError> result =
-        jwtService.validateToken("this.is.not.a.valid.jwt...");
+    var failure = ResultAsserts.failure(jwtService.validateToken("this.is.not.a.valid.jwt..."));
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
+    assertThat(failure).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
   }
 
   @Test
@@ -118,10 +114,9 @@ class JwtServiceTest {
 
     // Token signed with differentKey, validated by jwtService (which uses JWT_KEY)
     String token = serviceWithDifferentKey.generateToken(USER_ID);
-    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
+    var failure = ResultAsserts.failure(jwtService.validateToken(token));
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
+    assertThat(failure).isInstanceOf(JwtService.JwtValidationError.Invalid.class);
   }
 
   @ParameterizedTest
@@ -130,10 +125,9 @@ class JwtServiceTest {
   @DisplayName(
       "validateToken: given null, empty or blank token, then return failure with Missing reason")
   void validateToken_nullOrBlankToken_returnFailureWithMissing(String token) {
-    Result<Claims, JwtService.JwtValidationError> result = jwtService.validateToken(token);
+    var failure = ResultAsserts.failure(jwtService.validateToken(token));
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError()).isInstanceOf(JwtService.JwtValidationError.Missing.class);
+    assertThat(failure).isInstanceOf(JwtService.JwtValidationError.Missing.class);
   }
 
   private record JwtEnvironmentStub(
