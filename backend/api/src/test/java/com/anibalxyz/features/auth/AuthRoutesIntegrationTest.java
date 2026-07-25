@@ -7,6 +7,7 @@ import static com.anibalxyz.shared.Helpers.cleanDatabase;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthService;
@@ -16,7 +17,6 @@ import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
@@ -29,6 +29,7 @@ import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
 import com.anibalxyz.shared.MutableClock;
+import com.anibalxyz.shared.ResultAsserts;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
@@ -104,10 +105,7 @@ public class AuthRoutesIntegrationTest {
   }
 
   private static void validateJwt(String accessToken, Integer id) {
-    var jwtValidation = jwtService.validateToken(accessToken);
-    assertThat(jwtValidation.isSuccess()).isTrue();
-
-    var jwt = jwtValidation.getValue();
+    var jwt = ResultAsserts.success(jwtService.validateToken(accessToken));
     assertThat(jwt.getSubject()).isEqualTo(id.toString());
     assertThat(jwt.getIssuedAt()).isEqualTo(testClock.instant());
     assertThat(jwt.getIssuer()).isEqualTo(env.JWT_ISSUER());
@@ -119,10 +117,9 @@ public class AuthRoutesIntegrationTest {
 
   public static void validateRefreshToken(String token, Integer id) {
     assertThat(token).isNotNull();
-
-    var refreshTokenData = refreshTokenService.verifyRefreshToken(token, testClock.instant());
-    assertThat(refreshTokenData.isSuccess()).isTrue();
-    assertThat(refreshTokenData.getValue().user().id()).isEqualTo(id);
+    var result = refreshTokenService.verifyRefreshToken(token, testClock.instant());
+    var refreshToken = ResultAsserts.success(result);
+    assertThat(refreshToken.user().id()).isEqualTo(id);
   }
 
   @BeforeEach
@@ -189,7 +186,7 @@ public class AuthRoutesIntegrationTest {
       LoginRequest loginRequest = new LoginRequest(invalidEmail, VALID_PASSWORD);
 
       ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
-      notification.add("email", Email.validateRaw(invalidEmail).getError());
+      notification.add("email", ResultAsserts.failure(Email.validateRaw(invalidEmail)));
 
       ErrorResult expectedResult =
           ErrorMapper.map(new AuthService.AuthenticateUserError.ValidationFailed(notification));

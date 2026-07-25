@@ -1,8 +1,8 @@
 package com.anibalxyz.features.users.domain.error;
 
-import com.anibalxyz.features.common.domain.error.DomainErrorReason;
-import com.anibalxyz.features.common.domain.error.EntityNotFoundError;
-import com.anibalxyz.features.common.domain.error.ReasonedError;
+import com.anibalxyz.core.domain.error.DomainErrorReason;
+import com.anibalxyz.core.domain.error.EntityNotFoundError;
+import com.anibalxyz.core.domain.error.ReasonedError;
 
 public final class UserNotFoundError extends ReasonedError<UserNotFoundError.Reason>
     implements EntityNotFoundError, UserDomainError {

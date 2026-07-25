@@ -4,10 +4,10 @@ import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
 import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -47,10 +47,8 @@ public class PasswordHashTest {
       })
   @DisplayName("constructor: given a valid hash, then create a PasswordHash object")
   public void constructor_validHash_createsPasswordHashObject(String saltAndHashPart) {
-    String validHash = HASH_PREFIX + saltAndHashPart;
-    Result<PasswordHash, InvalidPasswordHashError> result = PasswordHash.of(validHash);
-    assertThat(result.isSuccess()).isTrue();
-    assertThat(result.getValue().value()).isEqualTo(validHash);
+    PasswordHash hash = ResultAsserts.success(PasswordHash.of(HASH_PREFIX + saltAndHashPart));
+    assertThat(hash.value()).isEqualTo(HASH_PREFIX + saltAndHashPart);
   }
 
   @ParameterizedTest
@@ -58,9 +56,8 @@ public class PasswordHashTest {
   @MethodSource("provideInvalidHashes")
   @DisplayName("of: given an invalid hash, then throw InvalidPasswordHashException")
   public void of_invalidHash_throwInvalidPasswordHashException(String invalidHash) {
-    Result<PasswordHash, InvalidPasswordHashError> result = PasswordHash.of(invalidHash);
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError()).isInstanceOf(InvalidPasswordHashError.class);
+    var failure = ResultAsserts.failure(PasswordHash.of(invalidHash));
+    assertThat(failure).isInstanceOf(InvalidPasswordHashError.class);
   }
 
   @ParameterizedTest
@@ -75,11 +72,10 @@ public class PasswordHashTest {
       })
   @DisplayName("generate: given a valid raw password, then return a valid PasswordHash object")
   public void generate_validRawPassword_returnPasswordHashObject(String rawPassword) {
-    Result<PasswordHash, InvalidPasswordError> passwordHash =
-        PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
+    var result = PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
 
-    assertThat(passwordHash.isSuccess()).isTrue();
-    assertThat(passwordHash.getValue().value()).startsWith(HASH_PREFIX).hasSize(60);
+    PasswordHash passwordHash = ResultAsserts.success(result);
+    assertThat(passwordHash.value()).startsWith(HASH_PREFIX).hasSize(60);
   }
 
   @ParameterizedTest
@@ -87,22 +83,19 @@ public class PasswordHashTest {
   @DisplayName(
       "generate: given a  blank password, then return InvalidPasswordError with Blank reason")
   public void generate_blankPassword_returnInvalidPasswordErrorWithBlankReason(String rawPassword) {
-    Result<PasswordHash, InvalidPasswordError> result =
-        PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
+    var result = PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError().getReason()).isInstanceOf(InvalidPasswordError.Reason.Blank.class);
+    assertThat(ResultAsserts.failure(result).getReason())
+        .isInstanceOf(InvalidPasswordError.Reason.Blank.class);
   }
 
   @Test
   @DisplayName(
       "generate: given an absent password, then return InvalidPasswordError with Absent reason")
   public void generate_absentPassword_returnInvalidPasswordErrorWithAbsentReason() {
-    Result<PasswordHash, InvalidPasswordError> result =
-        PasswordHash.generate(null, BCRYPT_LOG_ROUNDS);
+    var result = PasswordHash.generate(null, BCRYPT_LOG_ROUNDS);
 
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError().getReason())
+    assertThat(ResultAsserts.failure(result).getReason())
         .isInstanceOf(InvalidPasswordError.Reason.Absent.class);
   }
 
@@ -110,10 +103,8 @@ public class PasswordHashTest {
   @DisplayName(
       "generate: given a too short password, then return InvalidPasswordError with TooShort reason")
   public void generate_tooShortPassword_returnInvalidPasswordErrorWithTooShortReason() {
-    Result<PasswordHash, InvalidPasswordError> result =
-        PasswordHash.generate("short", BCRYPT_LOG_ROUNDS);
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError().getReason())
+    var result = PasswordHash.generate("short", BCRYPT_LOG_ROUNDS);
+    assertThat(ResultAsserts.failure(result).getReason())
         .isInstanceOf(InvalidPasswordError.Reason.TooShort.class);
   }
 
@@ -121,10 +112,8 @@ public class PasswordHashTest {
   @DisplayName(
       "generate: given a too long password, then return InvalidPasswordError with TooLong reason")
   public void generate_tooLongPassword_returnInvalidPasswordErrorWithTooLongReason() {
-    Result<PasswordHash, InvalidPasswordError> result =
-        PasswordHash.generate("l".repeat(73), BCRYPT_LOG_ROUNDS);
-    assertThat(result.isFailure()).isTrue();
-    assertThat(result.getError().getReason())
+    var result = PasswordHash.generate("l".repeat(73), BCRYPT_LOG_ROUNDS);
+    assertThat(ResultAsserts.failure(result).getReason())
         .isInstanceOf(InvalidPasswordError.Reason.TooLong.class);
   }
 
@@ -140,30 +129,27 @@ public class PasswordHashTest {
       })
   @DisplayName("matches: given a matching raw password, then return true")
   public void matches_givenMatchingRawPassword_returnTrue(String rawPassword) {
-    Result<PasswordHash, InvalidPasswordError> passwordHash =
-        PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
+    var result = PasswordHash.generate(rawPassword, BCRYPT_LOG_ROUNDS);
 
-    assertThat(passwordHash.isSuccess()).isTrue();
-    assertTrue(passwordHash.getValue().matches(rawPassword));
+    PasswordHash passwordHash = ResultAsserts.success(result);
+    assertTrue(passwordHash.matches(rawPassword));
   }
 
   @Test
   @DisplayName("matches: given a non-matching raw password, then return false")
   public void matches_givenNonMatchingRawPassword_returnFalse() {
-    Result<PasswordHash, InvalidPasswordError> passwordHash =
-        PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS);
+    var result = PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS);
 
-    assertThat(passwordHash.isSuccess()).isTrue();
-    assertFalse(passwordHash.getValue().matches("wrong-password"));
+    PasswordHash passwordHash = ResultAsserts.success(result);
+    assertFalse(passwordHash.matches("wrong-password"));
   }
 
   @Test
   @DisplayName("toString: given any PasswordHash object, then return an asterisks string")
   public void toString_anyPasswordHash_returnAsterisksString() {
-    Result<PasswordHash, InvalidPasswordError> passwordHash =
-        PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS);
+    var result = PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS);
 
-    assertThat(passwordHash.isSuccess()).isTrue();
-    assertThat(passwordHash.getValue().toString()).isEqualTo("********");
+    PasswordHash passwordHash = ResultAsserts.success(result);
+    assertThat(passwordHash.toString()).isEqualTo("********");
   }
 }

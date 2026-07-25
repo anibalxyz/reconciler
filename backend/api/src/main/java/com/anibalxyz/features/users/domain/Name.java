@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain;
 
 import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.users.domain.error.InvalidNameError;
 import java.util.Objects;
 
@@ -13,17 +13,14 @@ public final class Name {
   }
 
   public static Result<Name, InvalidNameError> of(String value) {
-    Result<Void, InvalidNameError> validationResult = validate(value);
-    if (validationResult.isFailure()) return Result.failure(validationResult.getError());
-
-    return Result.success(new Name(value));
+    return validate(value).map(v -> new Name(value));
   }
 
   public static Result<Void, InvalidNameError> validate(String value) {
     if (value == null) return Result.failure(InvalidNameError.absent());
     if (value.isBlank()) return Result.failure(InvalidNameError.blank());
 
-    return Result.success(null);
+    return Result.success();
   }
 
   public String value() {

@@ -1,7 +1,7 @@
 package com.anibalxyz.server.api;
 
+import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.features.common.api.out.response.error.ErrorDetail;
-import com.anibalxyz.features.common.domain.error.DomainError;
 
 public interface FeatureErrorMapper {
   boolean supports(Object error);

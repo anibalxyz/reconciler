@@ -1,4 +1,4 @@
-package com.anibalxyz.features.common.domain.error;
+package com.anibalxyz.core.domain.error;
 
 /**
  * Specialized domain error that encapsulates a specific failure reason.

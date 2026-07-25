@@ -7,6 +7,7 @@ import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
 import java.time.Instant;
 import org.junit.jupiter.api.*;
 
@@ -23,9 +24,9 @@ public class UserMapperTest {
     user =
         new User(
             1,
-            Name.of("John Doe").getValue(),
-            Email.of("john@mail.com").getValue(),
-            PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS).getValue(),
+            ResultAsserts.success(Name.of("John Doe")),
+            ResultAsserts.success(Email.of("john@mail.com")),
+            ResultAsserts.success(PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS)),
             Instant.now(),
             Instant.now());
   }

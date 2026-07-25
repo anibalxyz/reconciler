@@ -1,4 +1,4 @@
-package com.anibalxyz.features.common;
+package com.anibalxyz.core;
 
 import java.util.ArrayList;
 import java.util.List;

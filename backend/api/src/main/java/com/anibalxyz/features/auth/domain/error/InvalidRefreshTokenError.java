@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.domain.error;
 
-import com.anibalxyz.features.common.domain.error.DomainErrorReason;
-import com.anibalxyz.features.common.domain.error.ReasonedError;
+import com.anibalxyz.core.domain.error.DomainErrorReason;
+import com.anibalxyz.core.domain.error.ReasonedError;
 
 public final class InvalidRefreshTokenError extends ReasonedError<InvalidRefreshTokenError.Reason>
     implements AuthDomainError.InvalidValueError {

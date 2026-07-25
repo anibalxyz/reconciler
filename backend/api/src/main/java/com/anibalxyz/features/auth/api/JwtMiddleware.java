@@ -1,9 +1,8 @@
 package com.anibalxyz.features.auth.api;
 
+import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.application.JwtService;
-import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.features.common.application.exception.FailureSignal;
 import com.anibalxyz.server.config.modules.startup.StartupConfig;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.config.JavalinConfig;
@@ -11,7 +10,6 @@ import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.security.RouteRole;
-import io.jsonwebtoken.Claims;
 import java.util.Set;
 
 public class JwtMiddleware implements StartupConfig {
@@ -59,15 +57,14 @@ public class JwtMiddleware implements StartupConfig {
 
     String token = authHeader.substring(BEARER_PREFIX.length());
 
-    Result<Claims, JwtService.JwtValidationError> validationResult =
-        jwtService.validateToken(token);
-
-    if (validationResult.isFailure()) {
-      throw new FailureSignal(validationResult.getError());
-    }
-
-    int userId = Integer.parseInt(validationResult.getValue().getSubject());
-    RequestContext.setUserId(userId);
-    ctx.attribute(JWT_USER_ID, userId);
+    jwtService
+        .validateToken(token)
+        .onSuccess(
+            claims -> {
+              int userId = Integer.parseInt(claims.getSubject());
+              RequestContext.setUserId(userId);
+              ctx.attribute(JWT_USER_ID, userId);
+            })
+        .orThrow(FailureSignal::new);
   }
 }

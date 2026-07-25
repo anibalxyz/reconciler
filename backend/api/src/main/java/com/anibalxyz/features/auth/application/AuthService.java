@@ -1,19 +1,17 @@
 package com.anibalxyz.features.auth.application;
 
+import com.anibalxyz.core.Result;
+import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.common.Result;
-import com.anibalxyz.features.common.application.ValidationNotification;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.features.users.domain.error.InvalidEmailError;
-import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.context.RequestContext;
 import java.time.*;
@@ -88,12 +86,8 @@ public class AuthService {
   public Result<AuthResult, AuthenticateUserError> authenticateUser(LoginCommand command) {
     ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
 
-    Result<Void, InvalidEmailError> emailValidation = Email.validateRaw(command.email());
-    if (emailValidation.isFailure()) notification.add("email", emailValidation.getError());
-
-    Result<Void, InvalidPasswordError> passwordValidation =
-        PasswordHash.validate(command.password());
-    if (passwordValidation.isFailure()) notification.add("password", passwordValidation.getError());
+    Email.validateRaw(command.email()).onFailure(err -> notification.add("email", err));
+    PasswordHash.validate(command.password()).onFailure(err -> notification.add("password", err));
 
     if (notification.hasErrors()) {
       return Result.failure(new AuthenticateUserError.ValidationFailed(notification));
@@ -104,27 +98,30 @@ public class AuthService {
       return Result.failure(new AuthenticateUserError.MaintenanceWindow(blocked.get()));
     }
 
-    Result<User, ?> userResult = userService.getUserByEmail(command.email());
-    if (userResult.isFailure()) {
-      return Result.failure(
-          new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
-    }
+    var userResult = userService.getUserByEmail(command.email());
 
-    User user = userResult.getValue();
-    if (!user.passwordHash().matches(command.password())) {
-      return Result.failure(
-          new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
-    }
+    return switch (userResult) {
+      case Result.Failure(var ignored) ->
+          Result.failure(
+              new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
+      case Result.Success(User user) -> {
+        if (!user.passwordHash().matches(command.password())) {
+          yield Result.failure(
+              new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
+        }
 
-    RequestContext.setUserId(user.id());
+        RequestContext.setUserId(user.id());
 
-    String accessToken = jwtService.generateToken(user.id());
-    RefreshToken refreshToken =
-        refreshTokenService.createRefreshToken(
-            user,
-            calculateExpiryDate(ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS()));
-    log.info("User authenticated");
-    return Result.success(new AuthResult(accessToken, refreshToken));
+        String accessToken = jwtService.generateToken(user.id());
+        RefreshToken refreshToken =
+            refreshTokenService.createRefreshToken(
+                user,
+                calculateExpiryDate(
+                    ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS()));
+        log.info("User authenticated");
+        yield Result.success(new AuthResult(accessToken, refreshToken));
+      }
+    };
   }
 
   public Result<AuthResult, RefreshTokensError> refreshTokens(String refreshTokenString) {
@@ -133,19 +130,21 @@ public class AuthService {
       return Result.failure(new RefreshTokensError.MaintenanceWindow(blocked.get()));
     }
 
-    Result<RefreshToken, InvalidRefreshTokenError> rotationResult =
+    var rotationResult =
         refreshTokenService.verifyAndRotate(
             refreshTokenString,
             clock.instant(),
             calculateExpiryDate(ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS()));
-    if (rotationResult.isFailure()) {
-      return Result.failure(new RefreshTokensError.InvalidToken(rotationResult.getError()));
-    }
 
-    RefreshToken newRefreshToken = rotationResult.getValue();
-    String newAccessToken = jwtService.generateToken(newRefreshToken.user().id());
-    log.info("Tokens refreshed");
-    return Result.success(new AuthResult(newAccessToken, newRefreshToken));
+    return switch (rotationResult) {
+      case Result.Failure(var invalidRefreshTokenError) ->
+          Result.failure(new RefreshTokensError.InvalidToken(invalidRefreshTokenError));
+      case Result.Success(var newRefreshToken) -> {
+        String newAccessToken = jwtService.generateToken(newRefreshToken.user().id());
+        log.info("Tokens refreshed");
+        yield Result.success(new AuthResult(newAccessToken, newRefreshToken));
+      }
+    };
   }
 
   public sealed interface AuthenticateUserError {

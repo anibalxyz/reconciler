@@ -2,7 +2,7 @@ package com.anibalxyz.server.config.modules.runtime;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.features.common.application.exception.FailureSignal;
+import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;

@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+import com.anibalxyz.core.Result;
+import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthService;
@@ -16,9 +18,8 @@ import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.common.Result;
-import com.anibalxyz.features.common.application.exception.FailureSignal;
 import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.http.UnauthorizedResponse;
@@ -148,16 +149,17 @@ public class AuthControllerTest {
       LoginRequest request = new LoginRequest("", "");
 
       when(ctx.bodyAsClass(LoginRequest.class)).thenReturn(request);
-      Result<AuthResult, AuthService.AuthenticateUserError> someFailure =
+      Result<AuthResult, AuthService.AuthenticateUserError> failedResult =
           Result.failure(
               new AuthService.AuthenticateUserError.InvalidCredentials(
                   new InvalidCredentialsError()));
-      when(authService.authenticateUser(request.toCommand())).thenReturn(someFailure);
+      when(authService.authenticateUser(request.toCommand())).thenReturn(failedResult);
 
+      var failure = ResultAsserts.failure(failedResult);
       assertThatThrownBy(() -> authController.login(ctx))
           .isInstanceOf(FailureSignal.class)
           .extracting(fs -> ((FailureSignal) fs).getError())
-          .isInstanceOf(someFailure.getError().getClass());
+          .isEqualTo(failure);
     }
 
     @ParameterizedTest
@@ -176,15 +178,16 @@ public class AuthControllerTest {
         "refresh: given service result is failure, then throw FailureSignal with its error")
     public void refresh_serviceReturnsRefreshTokensError_throwFailureSignal() {
       when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
-      Result<AuthResult, AuthService.RefreshTokensError> someFailure =
+      Result<AuthResult, AuthService.RefreshTokensError> failedResult =
           Result.failure(
               new AuthService.RefreshTokensError.InvalidToken(InvalidRefreshTokenError.notFound()));
-      when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(someFailure);
+      when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(failedResult);
 
+      var failure = ResultAsserts.failure(failedResult);
       assertThatThrownBy(() -> authController.refresh(ctx))
           .isInstanceOf(FailureSignal.class)
           .extracting(fs -> ((FailureSignal) fs).getError())
-          .isInstanceOf(someFailure.getError().getClass());
+          .isEqualTo(failure);
     }
   }
 }

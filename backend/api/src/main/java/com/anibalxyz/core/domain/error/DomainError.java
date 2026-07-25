@@ -1,6 +1,6 @@
-package com.anibalxyz.features.common.domain.error;
+package com.anibalxyz.core.domain.error;
 
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 
 /**
  * Marker interface for all domain-specific errors.

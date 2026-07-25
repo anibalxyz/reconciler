@@ -1,9 +1,9 @@
 package com.anibalxyz.features.auth.application;
 
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.common.Result;
 import com.anibalxyz.features.users.domain.User;
 import java.time.*;
 import java.util.Optional;
@@ -27,14 +27,9 @@ public class RefreshTokenService {
 
   public Result<RefreshToken, InvalidRefreshTokenError> verifyAndRotate(
       String token, Instant now, Instant expiryDate) {
-    Result<RefreshToken, InvalidRefreshTokenError> verifyResult = verifyRefreshToken(token, now);
-    if (verifyResult.isFailure()) {
-      return Result.failure(verifyResult.getError());
-    }
-
-    RefreshToken oldToken = verifyResult.getValue();
-    refreshTokenRepository.save(oldToken.withRevoked(true));
-    return Result.success(createRefreshToken(oldToken.user(), expiryDate));
+    return verifyRefreshToken(token, now)
+        .onSuccess(oldToken -> refreshTokenRepository.save(oldToken.withRevoked(true)))
+        .map(oldToken -> createRefreshToken(oldToken.user(), expiryDate));
   }
 
   public Result<RefreshToken, InvalidRefreshTokenError> verifyRefreshToken(

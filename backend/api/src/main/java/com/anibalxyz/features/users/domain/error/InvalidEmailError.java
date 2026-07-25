@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain.error;
 
-import com.anibalxyz.features.common.domain.error.DomainErrorReason;
-import com.anibalxyz.features.common.domain.error.ReasonedError;
+import com.anibalxyz.core.domain.error.DomainErrorReason;
+import com.anibalxyz.core.domain.error.ReasonedError;
 
 /**
  * Domain error representing an invalid email value.

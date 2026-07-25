@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain;
 
 import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.features.common.Result;
+import com.anibalxyz.core.Result;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
 import java.util.Objects;
@@ -14,7 +14,7 @@ import org.mindrot.jbcrypt.BCrypt;
  *
  * <p>This class encapsulates the logic for creating, validating, and verifying password hashes
  * using the BCrypt algorithm. It ensures that plain-text passwords are never stored or passed
- * around the domain, and prevents accidental logging of the hash value.
+ * around the domain and prevents accidental logging of the hash value.
  *
  * <p>Plain-text passwords are validated and hashed via {@link #generate(String, int)}, which
  * returns a {@link Result} to allow callers to handle validation failures without catching
@@ -35,9 +35,9 @@ public class PasswordHash {
   }
 
   /**
-   * Factory method for existing hashes (e.g., from database).
+   * Factory method for existing hashes (e.g., from the database).
    *
-   * @return success with {@link PasswordHash}, or failure if format is invalid.
+   * @return success with {@link PasswordHash}, or failure if the format is invalid.
    */
   public static Result<PasswordHash, InvalidPasswordHashError> of(String hash) {
     return isValidHash(hash)
@@ -57,10 +57,7 @@ public class PasswordHash {
    *     an {@link InvalidPasswordError} if validation fails
    */
   public static Result<PasswordHash, InvalidPasswordError> generate(String raw, int saltRounds) {
-    Result<Void, InvalidPasswordError> validationResult = validate(raw);
-    if (validationResult.isFailure()) return Result.failure(validationResult.getError());
-
-    return Result.success(new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(saltRounds))));
+    return validate(raw).map(v -> new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(saltRounds))));
   }
 
   public static Result<Void, InvalidPasswordError> validate(String raw) {
@@ -69,7 +66,7 @@ public class PasswordHash {
     if (raw.length() < MIN_LENGTH) return Result.failure(InvalidPasswordError.tooShort(MIN_LENGTH));
     if (raw.length() > MAX_LENGTH) return Result.failure(InvalidPasswordError.tooLong(MAX_LENGTH));
 
-    return Result.success(null);
+    return Result.success();
   }
 
   /** Validates if a string conforms to the BCrypt hash format. */
