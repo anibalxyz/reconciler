@@ -383,9 +383,7 @@ public class UsersRoutesIntegrationTest {
       User persisted = em.find(UserEntity.class, responseBody.id()).toDomain();
 
       assertNotNull(persisted);
-      assertTrue(
-          ResultAsserts.success(PasswordHash.of(persisted.passwordHash().value()))
-              .matches(requestBody.password()));
+      assertThat(persisted.passwordMatches(requestBody.password())).isTrue();
       assertThat(persisted.createdAt())
           .isCloseTo(persisted.updatedAt(), within(5, ChronoUnit.SECONDS));
       assertThat(persisted.id()).isEqualTo(responseBody.id()).isPositive();
@@ -403,8 +401,6 @@ public class UsersRoutesIntegrationTest {
         "PUT /users/{id}: given valid id and property, then return 200 and the updated user")
     public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp) {
       User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
-      PasswordHash prevPasswordHash =
-          ResultAsserts.success(PasswordHash.of(user.passwordHash().value()));
       Instant prevUpdatedAt = user.updatedAt();
 
       UserUpdateRequest request =
@@ -432,10 +428,7 @@ public class UsersRoutesIntegrationTest {
           assertThat(responseBody.email()).isEqualTo(request.email());
         }
         case "password" -> {
-          PasswordHash updatedHash =
-              ResultAsserts.success(PasswordHash.of(updated.passwordHash().value()));
-          assertTrue(updatedHash.matches(request.password()));
-          assertThat(updatedHash.value()).isNotEqualTo(prevPasswordHash.value());
+          assertTrue(updated.passwordMatches(request.password()));
         }
       }
 

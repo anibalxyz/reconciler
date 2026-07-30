@@ -168,14 +168,14 @@ public class UserControllerTest {
       Instant instant = Instant.now();
       List<User> fakeUsers =
           List.of(
-              new User(
+              User.reconstitute(
                   1,
                   ResultAsserts.success(Name.of("John Doe")),
                   ResultAsserts.success(Email.of("john.doe@example.com")),
                   ResultAsserts.success(PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS)),
                   instant,
                   instant),
-              new User(
+              User.reconstitute(
                   2,
                   ResultAsserts.success(Name.of("Jane Smith")),
                   ResultAsserts.success(Email.of("jane.smith@example.com")),
@@ -211,7 +211,7 @@ public class UserControllerTest {
       Instant instant = Instant.now();
       int id = 1;
       User fakeUser =
-          new User(
+          User.reconstitute(
               id,
               ResultAsserts.success(Name.of("John Doe")),
               ResultAsserts.success(Email.of("johndoe@gmail.com")),
@@ -235,7 +235,7 @@ public class UserControllerTest {
       UserCreateRequest request =
           new UserCreateRequest("John Doe", "johndoe@gmail.com", "12345678");
       User fakeUser =
-          new User(
+          User.reconstitute(
               1,
               ResultAsserts.success(Name.of(request.name())),
               ResultAsserts.success(Email.of(request.email())),
@@ -263,7 +263,7 @@ public class UserControllerTest {
 
       Instant instant = Instant.now();
       User fakeUser =
-          new User(
+          User.reconstitute(
               id,
               ResultAsserts.success(Name.of(request.name())),
               ResultAsserts.success(Email.of(request.email())),

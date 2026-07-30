@@ -6,6 +6,7 @@ import com.anibalxyz.features.users.domain.error.InvalidNameError;
 import java.util.Objects;
 
 public final class Name {
+  public static final int MAX_LENGTH = 100;
   private final String value;
 
   private Name(String value) {

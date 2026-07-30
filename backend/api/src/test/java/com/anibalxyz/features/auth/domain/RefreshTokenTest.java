@@ -22,7 +22,7 @@ class RefreshTokenTest {
   private static final Instant FUTURE = NOW.plusSeconds(60);
 
   private static User buildUser() {
-    return new User(
+    return User.reconstitute(
         1,
         ResultAsserts.success(Name.of("User")),
         ResultAsserts.success(Email.of("user@example.com")),

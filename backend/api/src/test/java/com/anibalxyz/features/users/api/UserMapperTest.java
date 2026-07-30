@@ -22,7 +22,7 @@ public class UserMapperTest {
     Constants.init();
     BCRYPT_LOG_ROUNDS = Constants.APP_ENV.BCRYPT_LOG_ROUNDS();
     user =
-        new User(
+        User.reconstitute(
             1,
             ResultAsserts.success(Name.of("John Doe")),
             ResultAsserts.success(Email.of("john@mail.com")),

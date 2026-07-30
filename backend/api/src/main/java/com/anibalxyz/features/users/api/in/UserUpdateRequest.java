@@ -2,15 +2,15 @@ package com.anibalxyz.features.users.api.in;
 
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;
 import com.anibalxyz.features.users.domain.Email;
+import com.anibalxyz.features.users.domain.Name;
 import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
 import io.javalin.openapi.OpenApiExample;
 import io.javalin.openapi.OpenApiIgnore;
 import io.javalin.openapi.OpenApiStringValidation;
 
 public record UserUpdateRequest(
     @OpenApiExample("John Doe")
-        @OpenApiStringValidation(minLength = "1", maxLength = "" + User.NAME_MAX_LENGTH)
+        @OpenApiStringValidation(minLength = "1", maxLength = "" + Name.MAX_LENGTH)
         String name,
     @OpenApiExample("john.doe@example.com")
         @OpenApiStringValidation(

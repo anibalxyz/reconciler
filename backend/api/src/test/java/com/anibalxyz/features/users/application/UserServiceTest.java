@@ -46,7 +46,7 @@ public class UserServiceTest {
   }
 
   private static User buildUser(int id, String email) {
-    return new User(
+    return User.reconstitute(
         id,
         ResultAsserts.success(Name.of("User")),
         ResultAsserts.success(Email.of(email)),
@@ -130,7 +130,7 @@ public class UserServiceTest {
                   u ->
                       u.name().equals(ResultAsserts.success(Name.of(request.name())))
                           && u.email().equals(ResultAsserts.success(Email.of(request.email())))
-                          && u.passwordHash().matches(request.password()))))
+                          && u.passwordMatches(request.password()))))
           .thenAnswer(inv -> inv.getArgument(0));
 
       var result = userService.createUser(request.toCommand());
@@ -138,7 +138,7 @@ public class UserServiceTest {
       User actual = ResultAsserts.success(result);
       assertThat(actual.name()).isEqualTo(ResultAsserts.success(Name.of(request.name())));
       assertThat(actual.email()).isEqualTo(ResultAsserts.success(Email.of(request.email())));
-      assertTrue(actual.passwordHash().matches(request.password()));
+      assertTrue(actual.passwordMatches(request.password()));
     }
 
     @Test
@@ -187,13 +187,13 @@ public class UserServiceTest {
                   u ->
                       u.id().equals(existing.id())
                           && u.email().equals(existing.email())
-                          && u.passwordHash().matches(newPassword))))
+                          && u.passwordMatches(newPassword))))
           .thenAnswer(inv -> inv.getArgument(0));
 
       var result = userService.updateUserById(existing.id(), command);
 
       User actual = ResultAsserts.success(result);
-      assertThat(actual.passwordHash().matches(newPassword)).isTrue();
+      assertThat(actual.passwordMatches(newPassword)).isTrue();
     }
 
     @Test

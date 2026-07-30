@@ -11,8 +11,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for User Domain Object")
 public class UserTest {
@@ -36,81 +34,59 @@ public class UserTest {
 
   @BeforeEach
   void setUp() {
-    baseUser = new User(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+    baseUser = User.reconstitute(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
   }
 
   @Test
-  @DisplayName(
-      "constructor: given name, email and passwordHash, then creates user with null id and timestamps")
-  public void partialConstructor_createsUserWithNullIdAndTimestamps() {
-    User actual = new User(NAME, EMAIL, PASSWORD_HASH);
-    User expected = new User(null, NAME, EMAIL, PASSWORD_HASH, null, null);
-    assertThat(actual).isEqualTo(expected);
+  @DisplayName("equals: given same reference, then return true")
+  void equals_sameReference_returnsTrue() {
+    assertThat(baseUser).isEqualTo(baseUser);
   }
 
   @Test
-  @DisplayName("toString: given a User object, then it should return its string representation")
-  public void toString_userObject_returnStringRepresentation() {
-    String expected =
-"""
-User(id=%s, name=%s, email=%s, passwordHash=%s, createdAt=%s, updatedAt=%s)"""
-            .formatted(ID, NAME.value(), EMAIL.value(), PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
-    String actual = baseUser.toString();
+  @DisplayName("equals: given same id, then return true regardless of other fields")
+  void equals_sameId_returnsTrueRegardlessOfOtherFields() {
+    Email otherEmail = ResultAsserts.success(Email.of("other@mail.com"));
+    Name otherName = ResultAsserts.success(Name.of("Other Name"));
+    Instant later = TIMESTAMP.plusSeconds(60);
 
-    assertThat(actual).isEqualTo(expected);
+    User sameIdDifferentFields =
+        User.reconstitute(ID, otherName, otherEmail, PASSWORD_HASH, later, later);
+
+    assertThat(baseUser).isEqualTo(sameIdDifferentFields);
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"id", "name", "email", "passwordHash", "createdAt", "updatedAt"})
-  @DisplayName(
-      "with-methods: given a User, then they should create a new instance with the updated value")
-  public void withMethods_createNewInstanceWithUpdatedValue(String propName) {
+  @Test
+  @DisplayName("equals: given different id, then return false")
+  void equals_differentId_returnsFalse() {
+    User otherIdUser = User.reconstitute(ID + 1, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
 
-    User userUsingWith;
-    User userUsingConstructor;
+    assertThat(baseUser).isNotEqualTo(otherIdUser);
+  }
 
-    switch (propName) {
-      case "id":
-        int newId = 2;
-        userUsingWith = baseUser.withId(newId);
-        userUsingConstructor = new User(newId, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
-        break;
+  @Test
+  @DisplayName("equals: given two transient users with identical fields, then return false")
+  void equals_twoTransientUsers_returnsFalseEvenWithIdenticalFields() {
+    User transient1 = User.create(NAME, EMAIL, PASSWORD_HASH);
+    User transient2 = User.create(NAME, EMAIL, PASSWORD_HASH);
 
-      case "name":
-        Name newName = ResultAsserts.success(Name.of("New Name"));
-        userUsingWith = baseUser.withName(newName);
-        userUsingConstructor = new User(ID, newName, EMAIL, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
-        break;
+    assertThat(transient1).isNotEqualTo(transient2);
+  }
 
-      case "email":
-        Email newEmail = ResultAsserts.success(Email.of("new@mail.com"));
-        userUsingWith = baseUser.withEmail(newEmail);
-        userUsingConstructor = new User(ID, NAME, newEmail, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
-        break;
+  @Test
+  @DisplayName("equals: given null or a different type, then return false")
+  void equals_nullOrDifferentType_returnsFalse() {
+    assertThat(baseUser).isNotEqualTo(null);
+    assertThat(baseUser).isNotEqualTo("not a user");
+  }
 
-      case "passwordHash":
-        PasswordHash newPasswordHash =
-            ResultAsserts.success(PasswordHash.generate("newPassword1234", BCRYPT_LOG_ROUNDS));
-        userUsingWith = baseUser.withPasswordHash(newPasswordHash);
-        userUsingConstructor = new User(ID, NAME, EMAIL, newPasswordHash, TIMESTAMP, TIMESTAMP);
-        break;
+  @Test
+  @DisplayName("hashCode: given same id, then return same hash code regardless of other fields")
+  void hashCode_sameId_returnsSameHashCode() {
+    Email otherEmail = ResultAsserts.success(Email.of("other@mail.com"));
+    User sameIdDifferentFields =
+        User.reconstitute(ID, NAME, otherEmail, PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
 
-      case "createdAt":
-        Instant newCreatedAt = TIMESTAMP.minusSeconds(60 * 60 * 24);
-        userUsingWith = baseUser.withCreatedAt(newCreatedAt);
-        userUsingConstructor = new User(ID, NAME, EMAIL, PASSWORD_HASH, newCreatedAt, TIMESTAMP);
-        break;
-
-      case "updatedAt":
-        Instant newUpdatedAt = TIMESTAMP.plusSeconds(60 * 60 * 24);
-        userUsingWith = baseUser.withUpdatedAt(newUpdatedAt);
-        userUsingConstructor = new User(ID, NAME, EMAIL, PASSWORD_HASH, TIMESTAMP, newUpdatedAt);
-        break;
-
-      default:
-        throw new IllegalArgumentException("Invalid Property Name");
-    }
-
-    assertThat(userUsingWith).isEqualTo(userUsingConstructor);
+    assertThat(baseUser.hashCode()).isEqualTo(sameIdDifferentFields.hashCode());
   }
 }

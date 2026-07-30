@@ -80,7 +80,7 @@ public class Helpers {
     User saved =
         new JpaUserRepository(emp)
             .save(
-                new User(
+                User.create(
                     ResultAsserts.success(Name.of(name)),
                     ResultAsserts.success(Email.of(email)),
                     ResultAsserts.success(

@@ -105,7 +105,7 @@ public class AuthService {
           Result.failure(
               new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
       case Result.Success(User user) -> {
-        if (!user.passwordHash().matches(command.password())) {
+        if (!user.passwordMatches(command.password())) {
           yield Result.failure(
               new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
         }

@@ -36,7 +36,7 @@ public class Constants {
     public static final String VALID_PASSWORD = "V4L|D_Passw0Rd";
 
     public static final User VALID_USER =
-        new User(
+        User.reconstitute(
             1,
             ResultAsserts.success(Name.of(VALID_NAME)),
             ResultAsserts.success(Email.of(VALID_EMAIL)),

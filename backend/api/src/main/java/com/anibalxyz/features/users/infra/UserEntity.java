@@ -74,6 +74,6 @@ public class UserEntity {
         PasswordHash.of(this.passwordHash)
             .orThrow(err -> new CorruptedPasswordHash(this.passwordHash, id));
 
-    return new User(id, name, email, passwordHash, createdAt, updatedAt);
+    return User.reconstitute(id, name, email, passwordHash, createdAt, updatedAt);
   }
 }

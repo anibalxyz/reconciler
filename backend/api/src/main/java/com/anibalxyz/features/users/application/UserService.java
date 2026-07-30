@@ -76,7 +76,7 @@ public class UserService {
     log.info("User created");
     return Result.success(
         userRepository.save(
-            new User(nameResult.unwrap(), emailResult.unwrap(), passwordResult.unwrap())));
+            User.create(nameResult.unwrap(), emailResult.unwrap(), passwordResult.unwrap())));
   }
 
   public Result<User, UpdateUserByIdError> updateUserById(Integer id, UpdateUserCommand command) {
@@ -111,7 +111,7 @@ public class UserService {
         }
       }
       case Result.Success(var email) -> {
-        if (email.equals(user.email())) break;
+        if (user.email().equals(email)) break;
 
         if (userRepository.findByEmail(email).isPresent()) {
           notification.add("email", new EmailAlreadyTakenError());
