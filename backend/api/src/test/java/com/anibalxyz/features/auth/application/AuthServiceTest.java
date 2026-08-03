@@ -14,7 +14,7 @@ import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.GetUserByEmail;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.shared.Constants;
@@ -39,7 +39,7 @@ class AuthServiceTest {
   private static final AuthEnvironmentStub env = new AuthEnvironmentStub(DURATION);
   private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZONE);
 
-  @Mock private UserService userService;
+  @Mock private GetUserByEmail getUserByEmail;
   @Mock private JwtService jwtService;
   @Mock private RefreshTokenService refreshTokenService;
   private AuthService authService;
@@ -51,11 +51,11 @@ class AuthServiceTest {
 
   @BeforeEach
   void di() {
-    authService = new AuthService(env, clock, userService, jwtService, refreshTokenService);
+    authService = new AuthService(env, clock, getUserByEmail, jwtService, refreshTokenService);
   }
 
-  private RefreshToken buildRefreshToken(Instant expiryDate, boolean revoked) {
-    return new RefreshToken(1L, VALID_REFRESH_TOKEN, VALID_USER, expiryDate, revoked);
+  private RefreshToken buildRefreshToken(Instant expiryDate) {
+    return new RefreshToken(1L, VALID_REFRESH_TOKEN, VALID_USER, expiryDate, false);
   }
 
   private record AuthEnvironmentStub(Duration JWT_REFRESH_EXPIRATION_TIME_DAYS)
@@ -197,8 +197,8 @@ class AuthServiceTest {
     @ValueSource(strings = {"password", "email"})
     @DisplayName("given there is a field error, then return ValidationFailed error")
     void fieldError_returnValidationFailed(String field) {
-      String email = field.equals("email") ? " " : VALID_EMAIL;
-      String password = field.equals("password") ? " " : VALID_PASSWORD;
+      String email = field.equals("email") ? " " : VALID_EMAIL_STRING;
+      String password = field.equals("password") ? " " : VALID_PASSWORD_STRING;
       LoginCommand command = new LoginCommand(email, password);
 
       var result = authService.authenticateUser(command);
@@ -235,12 +235,12 @@ class AuthServiceTest {
     @Test
     @DisplayName("given valid command but outside time window, then return MaintenanceWindow error")
     void validCommandOutsideWindow_returnMaintenanceWindow() {
-      LoginCommand command = new LoginCommand(VALID_EMAIL, VALID_PASSWORD);
+      LoginCommand command = new LoginCommand(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       Clock clockOutsideWindow =
           Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
       var serviceOutsideWindow =
-          new AuthService(env, clockOutsideWindow, userService, jwtService, refreshTokenService);
+          new AuthService(env, clockOutsideWindow, getUserByEmail, jwtService, refreshTokenService);
 
       var result = serviceOutsideWindow.authenticateUser(command);
       assertThat(ResultAsserts.failure(result))
@@ -250,12 +250,12 @@ class AuthServiceTest {
     @Test
     @DisplayName("given user not found, then return InvalidCredentials error")
     void userByEmailNotFound_returnInvalidCredentials() {
-      LoginCommand command = new LoginCommand(VALID_EMAIL, VALID_PASSWORD);
+      LoginCommand command = new LoginCommand(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
       var expectedError =
           new AuthService.AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError());
 
-      when(userService.getUserByEmail(command.email()))
-          .thenReturn(Result.failure(UserNotFoundError.byEmail(VALID_EMAIL)));
+      when(getUserByEmail.execute(command.email()))
+          .thenReturn(Result.failure(UserNotFoundError.byEmail(VALID_EMAIL_STRING)));
 
       var result = authService.authenticateUser(command);
       assertThat(ResultAsserts.failure(result)).isEqualTo(expectedError);
@@ -264,13 +264,13 @@ class AuthServiceTest {
     @Test
     @DisplayName("given password is incorrect, then return InvalidCredentials error")
     void passwordIsIncorrect_returnInvalidCredentials() {
-      User user = VALID_USER; // its password equals VALID_PASSWORD
-      String differentPassword = VALID_PASSWORD + "makeItDifferent";
+      User user = VALID_USER;
+      String differentPassword = VALID_PASSWORD_STRING + "makeItDifferent";
       LoginCommand command = new LoginCommand(user.email().value(), differentPassword);
       var expectedError =
           new AuthService.AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError());
 
-      when(userService.getUserByEmail(command.email())).thenReturn(Result.success(user));
+      when(getUserByEmail.execute(command.email())).thenReturn(Result.success(user));
 
       var result = authService.authenticateUser(command);
       assertThat(ResultAsserts.failure(result)).isEqualTo(expectedError);
@@ -279,13 +279,13 @@ class AuthServiceTest {
     @Test
     @DisplayName("given valid command, then return AuthResult")
     void validCommand_returnAuthResult() {
-      User user = VALID_USER; // its password equals VALID_PASSWORD
-      LoginCommand command = new LoginCommand(VALID_EMAIL, VALID_PASSWORD);
+      User user = VALID_USER;
+      LoginCommand command = new LoginCommand(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
       Instant expiryDate = AuthService.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
-      RefreshToken refreshToken = buildRefreshToken(expiryDate, false);
+      RefreshToken refreshToken = buildRefreshToken(expiryDate);
       AuthResult expectedResult = new AuthResult(VALID_JWT, refreshToken);
 
-      when(userService.getUserByEmail(command.email())).thenReturn(Result.success(user));
+      when(getUserByEmail.execute(command.email())).thenReturn(Result.success(user));
       when(jwtService.generateToken(user.id())).thenReturn(expectedResult.accessToken());
       when(refreshTokenService.createRefreshToken(user, expiryDate))
           .thenReturn(expectedResult.refreshToken());
@@ -306,7 +306,7 @@ class AuthServiceTest {
       Clock clockOutsideWindow =
           Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
       var serviceOutsideWindow =
-          new AuthService(env, clockOutsideWindow, userService, jwtService, refreshTokenService);
+          new AuthService(env, clockOutsideWindow, getUserByEmail, jwtService, refreshTokenService);
 
       var result = serviceOutsideWindow.refreshTokens(VALID_REFRESH_TOKEN);
       assertThat(ResultAsserts.failure(result))
@@ -336,8 +336,8 @@ class AuthServiceTest {
     void validRefreshToken_returnAuthResult() {
       var expiryDate = AuthService.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
       RefreshToken currentRefreshToken =
-          buildRefreshToken(clock.instant().plus(1, ChronoUnit.DAYS), false);
-      RefreshToken expectedRefreshToken = buildRefreshToken(expiryDate, false);
+          buildRefreshToken(clock.instant().plus(1, ChronoUnit.DAYS));
+      RefreshToken expectedRefreshToken = buildRefreshToken(expiryDate);
 
       when(refreshTokenService.verifyAndRotate(
               currentRefreshToken.token(), clock.instant(), expiryDate))

@@ -1,0 +1,255 @@
+package com.anibalxyz.features.users.application;
+
+import static com.anibalxyz.shared.Constants.Users.*;
+import static com.anibalxyz.shared.NotificationAssert.assertThatNotification;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.when;
+
+import com.anibalxyz.features.users.api.in.UserCreateRequest;
+import com.anibalxyz.features.users.application.in.CreateUserCommand;
+import com.anibalxyz.features.users.domain.*;
+import com.anibalxyz.features.users.domain.error.*;
+import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.ResultAsserts;
+import java.util.Optional;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+public class CreateUserTest {
+  @Mock private UserRepository userRepository;
+
+  private CreateUser createUser;
+
+  @BeforeAll
+  public static void setup() {
+    Constants.init();
+  }
+
+  @BeforeEach
+  void di() {
+    CreateUser.Env env = Constants.APP_ENV;
+    createUser = new CreateUser(env, userRepository);
+  }
+
+  @Nested
+  @DisplayName("Success Scenarios")
+  class Success {
+
+    @Test
+    @DisplayName("createUser: given valid data, then return the created user")
+    public void createUser_validData_returnCreatedUser() {
+      UserCreateRequest request =
+          new UserCreateRequest("User 1", "user1@mail.com", VALID_PASSWORD_STRING);
+
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(request.email()))))
+          .thenReturn(Optional.empty());
+      when(userRepository.save(
+              argThat(
+                  u ->
+                      u.name().equals(ResultAsserts.success(Name.of(request.name())))
+                          && u.email().equals(ResultAsserts.success(Email.of(request.email())))
+                          && u.passwordMatches(request.password()))))
+          .thenAnswer(inv -> inv.getArgument(0));
+
+      var result = createUser.execute(request.toCommand());
+
+      User actual = ResultAsserts.success(result);
+      assertThat(actual.name()).isEqualTo(ResultAsserts.success(Name.of(request.name())));
+      assertThat(actual.email()).isEqualTo(ResultAsserts.success(Email.of(request.email())));
+      assertTrue(actual.passwordMatches(request.password()));
+    }
+  }
+
+  @Nested
+  @DisplayName("Failure Scenarios")
+  class Failure {
+
+    @Test
+    @DisplayName("createUser: given a missing name, then return Absent error on name")
+    public void createUser_missingName_returnAbsentErrorOnName() {
+      CreateUserCommand command =
+          new CreateUserCommand(null, "mail@email.com", VALID_PASSWORD_STRING);
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
+          .thenReturn(Optional.empty());
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("name");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidNameError.class)
+                    .extracting(err -> ((InvalidNameError) err).getReason())
+                    .isInstanceOf(InvalidNameError.Reason.Absent.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a blank name, then return Blank error on name")
+    public void createUser_blankName_returnBlankErrorOnName() {
+      CreateUserCommand command =
+          new CreateUserCommand(" ", "mail@email.com", VALID_PASSWORD_STRING);
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
+          .thenReturn(Optional.empty());
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("name");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidNameError.class)
+                    .extracting(err -> ((InvalidNameError) err).getReason())
+                    .isInstanceOf(InvalidNameError.Reason.Blank.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a missing email, then return Absent error on email")
+    public void createUser_missingEmail_returnAbsentErrorOnEmail() {
+      CreateUserCommand command = new CreateUserCommand("User", null, VALID_PASSWORD_STRING);
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("email");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidEmailError.class)
+                    .extracting(err -> ((InvalidEmailError) err).getReason())
+                    .isInstanceOf(InvalidEmailError.Reason.Absent.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a blank email, then return Blank error on email")
+    public void createUser_blankEmail_returnBlankErrorOnEmail() {
+      CreateUserCommand command = new CreateUserCommand("User", " ", VALID_PASSWORD_STRING);
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("email");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidEmailError.class)
+                    .extracting(err -> ((InvalidEmailError) err).getReason())
+                    .isInstanceOf(InvalidEmailError.Reason.Blank.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a missing password, then return Absent error on password")
+    public void createUser_missingPassword_returnAbsentErrorOnPassword() {
+      CreateUserCommand command = new CreateUserCommand("User", "mail@email.com", null);
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
+          .thenReturn(Optional.empty());
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("password");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidPasswordError.class)
+                    .extracting(err -> ((InvalidPasswordError) err).getReason())
+                    .isInstanceOf(InvalidPasswordError.Reason.Absent.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given a blank password, then return Blank error on password")
+    public void createUser_blankPassword_returnBlankErrorOnPassword() {
+      CreateUserCommand command = new CreateUserCommand("User", "mail@email.com", " ");
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
+          .thenReturn(Optional.empty());
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("password");
+                assertThat(e.error())
+                    .isInstanceOf(InvalidPasswordError.class)
+                    .extracting(err -> ((InvalidPasswordError) err).getReason())
+                    .isInstanceOf(InvalidPasswordError.Reason.Blank.class);
+              });
+    }
+
+    @Test
+    @DisplayName("createUser: given an existing email, then return EmailAlreadyTakenError on email")
+    public void createUser_existingEmail_returnEmailAlreadyTakenError() {
+      CreateUserCommand command =
+          new CreateUserCommand("User 1", VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
+      User existing = buildUser(1, command.email());
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
+          .thenReturn(Optional.of(existing));
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThatNotification(failure).hasErrorOn("email", EmailAlreadyTakenError.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"some@mail", "some-mail.com", "@mail.com"})
+    @DisplayName(
+        "createUser: given an invalid email format, then return InvalidFormat error on email")
+    public void createUser_invalidEmail_returnInvalidFormatErrorOnEmail(String email) {
+      CreateUserCommand command = new CreateUserCommand("User", email, VALID_PASSWORD_STRING);
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("email");
+                assertThat(e.error()).isInstanceOf(InvalidEmailError.class);
+              });
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "short",
+          "long-72-chars-12345678901234567890123456789012345678901234567890123456789"
+        })
+    @DisplayName(
+        "createUser: given an invalid password value, then return InvalidValue error on password")
+    public void createUser_invalidPassword_returnInvalidValueErrorOnPassword(String password) {
+      CreateUserCommand command = new CreateUserCommand("User", "mail@email.com", password);
+      when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
+          .thenReturn(Optional.empty());
+
+      var result = createUser.execute(command);
+
+      var failure = ResultAsserts.failure(result);
+      assertThat(failure.getErrors())
+          .satisfiesExactly(
+              e -> {
+                assertThat(e.field()).isEqualTo("password");
+                assertThat(e.error()).isInstanceOf(InvalidPasswordError.class);
+              });
+    }
+  }
+}

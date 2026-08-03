@@ -1,6 +1,6 @@
 package com.anibalxyz.shared;
 
-import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD;
+import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.users.domain.Email;
@@ -94,6 +94,6 @@ public class Helpers {
   }
 
   public static UserEntity persistUser(EntityManager em, String name, String email) {
-    return persistUser(em, name, email, VALID_PASSWORD);
+    return persistUser(em, name, email, VALID_PASSWORD_STRING);
   }
 }

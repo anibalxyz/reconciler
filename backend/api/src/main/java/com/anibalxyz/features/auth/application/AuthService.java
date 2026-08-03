@@ -8,7 +8,7 @@ import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.GetUserByEmail;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
@@ -25,19 +25,19 @@ public class AuthService {
   private static final Logger log = LoggerFactory.getLogger(AuthService.class);
   private final AuthEnvironment env;
   private final Clock clock;
-  private final UserService userService;
+  private final GetUserByEmail getUserByEmail;
   private final JwtService jwtService;
   private final RefreshTokenService refreshTokenService;
 
   public AuthService(
       AuthEnvironment env,
       Clock clock,
-      UserService userService,
+      GetUserByEmail getUserByEmail,
       JwtService jwtService,
       RefreshTokenService refreshTokenService) {
     this.env = env;
     this.clock = clock;
-    this.userService = userService;
+    this.getUserByEmail = getUserByEmail;
     this.jwtService = jwtService;
     this.refreshTokenService = refreshTokenService;
   }
@@ -98,7 +98,7 @@ public class AuthService {
       return Result.failure(new AuthenticateUserError.MaintenanceWindow(blocked.get()));
     }
 
-    var userResult = userService.getUserByEmail(command.email());
+    var userResult = getUserByEmail.execute(command.email());
 
     return switch (userResult) {
       case Result.Failure(var ignored) ->

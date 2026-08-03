@@ -15,7 +15,7 @@ import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
-import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.EmailAlreadyTakenError;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
@@ -220,7 +220,8 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("POST /users: given an invalid property, then return 400 validation error")
     public void POST_users_invalidProperty_return400ValidationError() {
-      UserCreateRequest requestBody = new UserCreateRequest(null, VALID_EMAIL, VALID_PASSWORD);
+      UserCreateRequest requestBody =
+          new UserCreateRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -237,7 +238,8 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("POST /users: given a missing property, then return 400 Bad Request")
     public void POST_users_missingProperty_return400() {
-      UserCreateRequest requestBody = new UserCreateRequest(null, VALID_EMAIL, VALID_PASSWORD);
+      UserCreateRequest requestBody =
+          new UserCreateRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -254,10 +256,10 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("POST /users: given an already taken email, then return 400 validation error")
     public void POST_users_alreadyTakenEmail_return400() {
-      String existingEmail = "existing." + VALID_EMAIL;
-      persistUser(em, "existing." + VALID_NAME, existingEmail);
+      String existingEmail = "existing." + VALID_EMAIL_STRING;
+      persistUser(em, "existing." + VALID_NAME_STRING, existingEmail);
       UserCreateRequest requestBody =
-          new UserCreateRequest(VALID_NAME, existingEmail, VALID_PASSWORD);
+          new UserCreateRequest(VALID_NAME_STRING, existingEmail, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
 
@@ -277,7 +279,7 @@ public class UsersRoutesIntegrationTest {
       UserUpdateRequest requestBody = new UserUpdateRequest(null, null, null);
 
       ErrorResult expectedResult =
-          ErrorMapper.map(new UserService.UpdateUserByIdError.EmptyCommand());
+          ErrorMapper.map(new UpdateUserById.UpdateUserByIdError.EmptyCommand());
 
       Response response = http.put("/users/" + user.id(), requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
@@ -292,8 +294,9 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("PUT /users/{id}: given an already taken email, then return 400 validation error")
     public void PUT_users_id_alreadyTakenEmail_return400() {
       User existingUser =
-          persistUser(em, "existing." + VALID_NAME, "existing." + VALID_EMAIL).toDomain();
-      User userToUpdate = persistUser(em, VALID_NAME, "update.me@mail.com").toDomain();
+          persistUser(em, "existing." + VALID_NAME_STRING, "existing." + VALID_EMAIL_STRING)
+              .toDomain();
+      User userToUpdate = persistUser(em, VALID_NAME_STRING, "update.me@mail.com").toDomain();
       UserUpdateRequest requestBody =
           new UserUpdateRequest(null, existingUser.email().value(), null);
 
@@ -311,8 +314,10 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("PUT /users/{id}: given an invalid property, then return 400 validation error")
     public void PUT_users_id_invalidProperty_return400ValidationError() {
-      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
-      UserCreateRequest requestBody = new UserCreateRequest("  ", VALID_EMAIL, VALID_PASSWORD);
+      User user =
+          persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
+      UserCreateRequest requestBody =
+          new UserCreateRequest("  ", VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -374,7 +379,7 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("POST /users: given valid user data, then return 201 and create the user")
     public void POST_users_validData_return201AndCreateUser() {
       UserCreateRequest requestBody =
-          new UserCreateRequest("New User", "new.user@mail.com", VALID_PASSWORD);
+          new UserCreateRequest("New User", "new.user@mail.com", VALID_PASSWORD_STRING);
 
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(201);
@@ -407,7 +412,7 @@ public class UsersRoutesIntegrationTest {
           new UserUpdateRequest(
               updatingProp.equals("name") ? "New User" : null,
               updatingProp.equals("email") ? "new.user@mail.com" : null,
-              updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD) : null);
+              updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD_STRING) : null);
 
       Response response = http.put("/users/" + user.id(), request);
       assertThat(response.code()).isEqualTo(200);

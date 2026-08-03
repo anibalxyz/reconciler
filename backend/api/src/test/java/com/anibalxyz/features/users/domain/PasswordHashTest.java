@@ -1,6 +1,6 @@
 package com.anibalxyz.features.users.domain;
 
-import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD;
+import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -125,7 +125,7 @@ public class PasswordHashTest {
         "mc28-941pa;lmdf1",
         "][123/132=asa\\dasd",
         "`/=`.0x3ri ,sd ,ac x.c",
-        VALID_PASSWORD
+        VALID_PASSWORD_STRING
       })
   @DisplayName("matches: given a matching raw password, then return true")
   public void matches_givenMatchingRawPassword_returnTrue(String rawPassword) {
@@ -138,7 +138,7 @@ public class PasswordHashTest {
   @Test
   @DisplayName("matches: given a non-matching raw password, then return false")
   public void matches_givenNonMatchingRawPassword_returnFalse() {
-    var result = PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS);
+    var result = PasswordHash.generate(VALID_PASSWORD_STRING, BCRYPT_LOG_ROUNDS);
 
     PasswordHash passwordHash = ResultAsserts.success(result);
     assertFalse(passwordHash.matches("wrong-password"));
@@ -147,7 +147,7 @@ public class PasswordHashTest {
   @Test
   @DisplayName("toString: given any PasswordHash object, then return an asterisks string")
   public void toString_anyPasswordHash_returnAsterisksString() {
-    var result = PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS);
+    var result = PasswordHash.generate(VALID_PASSWORD_STRING, BCRYPT_LOG_ROUNDS);
 
     PasswordHash passwordHash = ResultAsserts.success(result);
     assertThat(passwordHash.toString()).isEqualTo("********");

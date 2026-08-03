@@ -13,7 +13,7 @@ import com.anibalxyz.features.system.api.SystemController;
 import com.anibalxyz.features.system.api.SystemRoutes;
 import com.anibalxyz.features.users.api.UserController;
 import com.anibalxyz.features.users.api.UserRoutes;
-import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.*;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.persistence.EntityManagerProvider;
@@ -84,15 +84,23 @@ public final class DependencyContainer {
     RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
 
     // 4. Services
-    UserService userService = new UserService(env, userRepository);
+    // Use Cases (temporary)
+    GetAllUsers getAllUsers = new GetAllUsers(userRepository);
+    GetUserByEmail getUserByEmail = new GetUserByEmail(userRepository);
+    GetUserById getUserById = new GetUserById(userRepository);
+    CreateUser createUser = new CreateUser(env, userRepository);
+    UpdateUserById updateUserById = new UpdateUserById(env, userRepository);
+    DeleteUserById deleteUserById = new DeleteUserById(userRepository);
+
     RefreshTokenService refreshTokenService = new RefreshTokenService(refreshTokenRepository);
     JwtService jwtService = new JwtService(env, clock);
     AuthService authService =
-        new AuthService(env, clock, userService, jwtService, refreshTokenService);
+        new AuthService(env, clock, getUserByEmail, jwtService, refreshTokenService);
 
     // 5. Controllers and Middlewares
     // Controllers
-    UserController userController = new UserController(userService);
+    UserController userController =
+        new UserController(getAllUsers, getUserById, createUser, updateUserById, deleteUserById);
     AuthApi authController = new AuthController(env, authService, refreshTokenService, clock);
     SystemController systemController = new SystemController(persistenceManager);
 
