@@ -86,7 +86,7 @@ public class AuthService {
   public Result<AuthResult, AuthenticateUserError> authenticateUser(LoginCommand command) {
     ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
 
-    Email.validateRaw(command.email()).onFailure(err -> notification.add("email", err));
+    Email.validate(command.email()).onFailure(err -> notification.add("email", err));
     PasswordHash.validate(command.password()).onFailure(err -> notification.add("password", err));
 
     if (notification.hasErrors()) {

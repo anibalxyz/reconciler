@@ -43,13 +43,20 @@ public class EmailTest {
         "@example.com",
         "email.example.com",
         "email@example@com",
-        "lengthGT255qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqw@mail.com"
       })
   @DisplayName(
       "of: given an invalid email format, then return a failed Result with InvalidFormat reason")
   public void of_invalidEmailFormat_returnFailureWithInvalidFormat(String invalidEmailString) {
     var failure = ResultAsserts.failure(Email.of(invalidEmailString));
     assertThat(failure.getReason()).isInstanceOf(InvalidEmailError.Reason.InvalidFormat.class);
+  }
+
+  @Test
+  @DisplayName("of: given an email too long, then return a failed Result with TooLong reason")
+  public void of_tooLongEmail_returnFailureWithTooLong() {
+    String tooLongEmail = "l".repeat(247) + "@mail.com"; // 256 total -> "@mail.com"~9
+    var failure = ResultAsserts.failure(Email.of(tooLongEmail));
+    assertThat(failure.getReason()).isInstanceOf(InvalidEmailError.Reason.TooLong.class);
   }
 
   @Test

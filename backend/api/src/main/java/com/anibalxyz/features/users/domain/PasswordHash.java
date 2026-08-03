@@ -21,10 +21,8 @@ import org.mindrot.jbcrypt.BCrypt;
  * exceptions, enabling accumulation of multiple field errors.
  */
 public class PasswordHash {
-  // TODO: check if they are correct being public
   public static final int MIN_LENGTH = 8;
   public static final int MAX_LENGTH = 72;
-  // Could this vary in the future?
   private static final Pattern BCRYPT_PATTERN =
       Pattern.compile("\\A\\$2a\\$\\d\\d\\$[./0-9A-Za-z]{53}");
 

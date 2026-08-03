@@ -186,7 +186,7 @@ public class AuthRoutesIntegrationTest {
       LoginRequest loginRequest = new LoginRequest(invalidEmail, VALID_PASSWORD);
 
       ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
-      notification.add("email", ResultAsserts.failure(Email.validateRaw(invalidEmail)));
+      notification.add("email", ResultAsserts.failure(Email.validate(invalidEmail)));
 
       ErrorResult expectedResult =
           ErrorMapper.map(new AuthService.AuthenticateUserError.ValidationFailed(notification));

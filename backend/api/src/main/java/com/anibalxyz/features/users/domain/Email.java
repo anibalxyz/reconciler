@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
  * }</pre>
  */
 public final class Email {
-  // TODO: check if they are correct being public
   public static final String PATTERN = "^[\\w-.]+@[\\w-]+\\.[a-zA-Z]{2,}$";
   public static final int MAX_LENGTH = 255;
   private static final Pattern EMAIL_PATTERN = Pattern.compile(PATTERN);
@@ -44,13 +43,13 @@ public final class Email {
    *     Result} with an {@link InvalidEmailError} if the value is invalid
    */
   public static Result<Email, InvalidEmailError> of(String value) {
-    return validateRaw(value).map(v -> new Email(normalize(value)));
+    return validate(value).map(v -> new Email(normalize(value)));
   }
 
-  // TODO: rename to validate()
-  public static Result<Void, InvalidEmailError> validateRaw(String value) {
+  public static Result<Void, InvalidEmailError> validate(String value) {
     if (value == null) return Result.failure(InvalidEmailError.absent());
     if (value.isBlank()) return Result.failure(InvalidEmailError.blank());
+    if (value.length() > MAX_LENGTH) return Result.failure(InvalidEmailError.tooLong(MAX_LENGTH));
     if (!hasValidFormat(value)) return Result.failure(InvalidEmailError.invalidFormat());
 
     return Result.success();
@@ -64,9 +63,7 @@ public final class Email {
   }
 
   private static boolean hasValidFormat(String email) {
-    // Format and length are validated together for now — this may change in the future.
-    // TODO: basic validation first
-    return EMAIL_PATTERN.matcher(email).matches() && email.length() <= MAX_LENGTH;
+    return EMAIL_PATTERN.matcher(email).matches();
   }
 
   public String value() {

@@ -6,6 +6,7 @@ import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.server.exception.UnhandledErrorException;
@@ -209,6 +210,16 @@ public class UserErrorMapperTest {
     @DisplayName("given InvalidEmailError InvalidFormat, then does not throw any exception")
     public void givenInvalidEmailFormat_doesNotThrow() {
       assertThatCode(() -> mapper.mapInvalidValue(InvalidEmailError.invalidFormat()))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("given InvalidEmailError TooLong, then does not throw any exception")
+    public void givenInvalidEmailTooLong_doesNotThrow() {
+      assertThatCode(
+              () ->
+                  mapper.mapInvalidValue(
+                      ResultAsserts.failure(Email.of("tooLongEmail".repeat(50)))))
           .doesNotThrowAnyException();
     }
 
