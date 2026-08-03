@@ -7,6 +7,7 @@ import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.application.UserService;
 import com.anibalxyz.features.users.domain.Email;
+import com.anibalxyz.features.users.domain.Name;
 import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.server.exception.UnhandledErrorException;
@@ -193,6 +194,16 @@ public class UserErrorMapperTest {
     }
 
     @Test
+    @DisplayName("given InvalidNameError TooLong, then does not throw any exception")
+    public void givenInvalidNameTooLong_doesNotThrow() {
+      assertThatCode(
+              () ->
+                  mapper.mapInvalidValue(
+                      ResultAsserts.failure(Name.of("n".repeat(Name.MAX_LENGTH + 1)))))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
     @DisplayName("given InvalidEmailError Blank, then does not throw any exception")
     public void givenInvalidEmailBlank_doesNotThrow() {
       assertThatCode(() -> mapper.mapInvalidValue(InvalidEmailError.blank()))
@@ -219,7 +230,7 @@ public class UserErrorMapperTest {
       assertThatCode(
               () ->
                   mapper.mapInvalidValue(
-                      ResultAsserts.failure(Email.of("tooLongEmail".repeat(50)))))
+                      ResultAsserts.failure(Email.of("e".repeat(Email.MAX_LENGTH + 1)))))
           .doesNotThrowAnyException();
     }
 
@@ -251,7 +262,8 @@ public class UserErrorMapperTest {
       assertThatCode(
               () ->
                   mapper.mapInvalidValue(
-                      ResultAsserts.failure(PasswordHash.validate("tooLongPassword".repeat(50)))))
+                      ResultAsserts.failure(
+                          PasswordHash.validate("p".repeat(PasswordHash.MAX_LENGTH + 1)))))
           .doesNotThrowAnyException();
     }
 

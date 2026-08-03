@@ -21,6 +21,10 @@ public final class InvalidNameError extends ReasonedError<InvalidNameError.Reaso
     super(reason);
   }
 
+  public static InvalidNameError tooLong(int maxLength) {
+    return new InvalidNameError(new Reason.TooLong(maxLength));
+  }
+
   public static InvalidNameError blank() {
     return new InvalidNameError(new Reason.Blank());
   }
@@ -30,6 +34,8 @@ public final class InvalidNameError extends ReasonedError<InvalidNameError.Reaso
   }
 
   public sealed interface Reason extends DomainErrorReason {
+    record TooLong(int maxLength) implements Reason {}
+
     record Blank() implements Reason {}
 
     record Absent() implements Reason {}

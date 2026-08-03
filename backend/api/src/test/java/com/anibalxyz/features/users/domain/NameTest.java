@@ -34,4 +34,12 @@ public class NameTest {
     var failure = ResultAsserts.failure(Name.of(null));
     assertThat(failure.getReason()).isInstanceOf(InvalidNameError.Reason.Absent.class);
   }
+
+  @Test
+  @DisplayName("of: given a name too long, then return a failed Result with TooLong reason")
+  public void of_tooLongName_returnFailureWithTooLong() {
+    String tooLongName = "n".repeat(Name.MAX_LENGTH + 1);
+    var failure = ResultAsserts.failure(Name.of(tooLongName));
+    assertThat(failure.getReason()).isInstanceOf(InvalidNameError.Reason.TooLong.class);
+  }
 }

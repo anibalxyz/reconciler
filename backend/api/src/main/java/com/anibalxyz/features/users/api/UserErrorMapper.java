@@ -85,6 +85,11 @@ public class UserErrorMapper implements FeatureErrorMapper {
       return switch (ive) {
         case InvalidNameError e ->
             switch (e.getReason()) {
+              case InvalidNameError.Reason.TooLong r ->
+                  new ErrorDetail(ValidationErrorCode.TOO_LONG)
+                      .with("title", ValidationErrorCode.TOO_LONG.title())
+                      .with("detail", "Cannot exceed " + r.maxLength() + " characters")
+                      .with("maxLength", r.maxLength());
               case InvalidNameError.Reason.Blank ignored ->
                   new ErrorDetail(ValidationErrorCode.BLANK_FIELD)
                       .with("title", ValidationErrorCode.BLANK_FIELD.title());

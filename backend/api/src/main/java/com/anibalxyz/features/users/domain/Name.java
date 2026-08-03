@@ -19,6 +19,7 @@ public final class Name {
 
   public static Result<Void, InvalidNameError> validate(String value) {
     if (value == null) return Result.failure(InvalidNameError.absent());
+    if (value.length() > MAX_LENGTH) return Result.failure(InvalidNameError.tooLong(MAX_LENGTH));
     if (value.isBlank()) return Result.failure(InvalidNameError.blank());
 
     return Result.success();
