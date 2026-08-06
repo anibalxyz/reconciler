@@ -3,10 +3,7 @@ package com.anibalxyz.shared;
 import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 
 import com.anibalxyz.features.auth.domain.RefreshToken;
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
@@ -40,9 +37,10 @@ public class Constants {
 
     public static final Name VALID_NAME = ResultAsserts.success(Name.of(VALID_NAME_STRING));
     public static final Email VALID_EMAIL = ResultAsserts.success(Email.of(VALID_EMAIL_STRING));
-    public static final PasswordHash VALID_PASSWORD =
-        ResultAsserts.success(
-            PasswordHash.generate(VALID_PASSWORD_STRING, APP_ENV.BCRYPT_LOG_ROUNDS()));
+    public static final Password VALID_PASSWORD =
+        ResultAsserts.success(Password.of(VALID_PASSWORD_STRING));
+    public static final PasswordHash VALID_PASSWORD_HASH =
+        PasswordHash.of(VALID_PASSWORD, APP_ENV.BCRYPT_LOG_ROUNDS());
 
     /**
      * A pre-built user whose credentials match the VALID_* constants:
@@ -63,14 +61,14 @@ public class Constants {
           id,
           VALID_NAME,
           ResultAsserts.success(Email.of(email)),
-          VALID_PASSWORD,
+          VALID_PASSWORD_HASH,
           Instant.now(),
           Instant.now());
     }
 
     public static User buildUser(int id) {
       return User.reconstitute(
-          id, VALID_NAME, VALID_EMAIL, VALID_PASSWORD, Instant.now(), Instant.now());
+          id, VALID_NAME, VALID_EMAIL, VALID_PASSWORD_HASH, Instant.now(), Instant.now());
     }
   }
 

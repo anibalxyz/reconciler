@@ -35,18 +35,18 @@ public class CreateUser {
                         .ifPresent(
                             user -> notification.add("email", new EmailAlreadyTakenError())));
 
-    Result<PasswordHash, InvalidPasswordError> passwordResult =
-        PasswordHash.generate(command.password(), env.BCRYPT_LOG_ROUNDS())
-            .onFailure(err -> notification.add("password", err));
+    Result<Password, InvalidPasswordError> passwordResult =
+        Password.of(command.password()).onFailure(err -> notification.add("password", err));
 
     if (notification.hasErrors()) {
       return Result.failure(notification);
     }
 
+    PasswordHash password = PasswordHash.of(passwordResult.unwrap(), env.BCRYPT_LOG_ROUNDS());
+
     log.info("User created");
     return Result.success(
-        userRepository.save(
-            User.create(nameResult.unwrap(), emailResult.unwrap(), passwordResult.unwrap())));
+        userRepository.save(User.create(nameResult.unwrap(), emailResult.unwrap(), password)));
   }
 
   public interface Env {

@@ -114,8 +114,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "updateUserById: given the service returns UpdateUserByIdError, then throw FailureSignal")
+    @DisplayName("updateUserById: given the service returns Error, then throw FailureSignal")
     public void updateUserById_serviceReturnsUpdateUserByIdError_throwFailureSignal() {
       UserUpdateRequest request = mock(UserUpdateRequest.class);
       UpdateUserCommand command = mock(UpdateUserCommand.class);
@@ -124,12 +123,12 @@ public class UserControllerTest {
 
       when(ctx.bodyAsClass(UserUpdateRequest.class)).thenReturn(request);
       when(updateUserById.execute(1, command))
-          .thenReturn(Result.failure(new UpdateUserById.UpdateUserByIdError.EmptyCommand()));
+          .thenReturn(Result.failure(new UpdateUserById.Error.EmptyCommand()));
 
       assertThatThrownBy(() -> userController.updateUserById(ctx))
           .isInstanceOf(FailureSignal.class)
           .extracting(fs -> ((FailureSignal) fs).getError())
-          .isInstanceOf(UpdateUserById.UpdateUserByIdError.class);
+          .isInstanceOf(UpdateUserById.Error.class);
     }
 
     @Test

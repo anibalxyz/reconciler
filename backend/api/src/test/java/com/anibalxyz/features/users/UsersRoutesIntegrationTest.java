@@ -106,20 +106,6 @@ public class UsersRoutesIntegrationTest {
   @Nested
   @DisplayName("Failure Scenarios")
   class FailureScenarios {
-    private static ErrorResult errorResultFromInvalidName(String name) {
-      ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
-      correspondentError.add("name", ResultAsserts.failure(Name.validate(name)));
-      return ErrorMapper.map(correspondentError);
-    }
-
-    private static ErrorResult errorResultFromAlreadyTakenEmail() {
-      ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
-      correspondentError.add("email", new EmailAlreadyTakenError());
-      return ErrorMapper.map(correspondentError);
-    }
-
-    // --> ANY tests will normally use GET as a lightweight example
-
     @Test
     @DisplayName("ANY /users/{id}: given an invalid id format, then return 400 Bad Request")
     public void ANY_users_id_invalidIdFormat_return400() {
@@ -163,6 +149,8 @@ public class UsersRoutesIntegrationTest {
       assertThat(actualResponse.instance()).isNotNull();
       assertThat(actualResponse.instance(null)).isEqualTo(expectedResult.response());
     }
+
+    // --> ANY tests will normally use GET as a lightweight example
 
     @ParameterizedTest
     @ValueSource(strings = {"POST", "PUT"})
@@ -235,6 +223,12 @@ public class UsersRoutesIntegrationTest {
           .isEmpty();
     }
 
+    private static ErrorResult errorResultFromInvalidName(String name) {
+      ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
+      correspondentError.add("name", ResultAsserts.failure(Name.validate(name)));
+      return ErrorMapper.map(correspondentError);
+    }
+
     @Test
     @DisplayName("POST /users: given a missing property, then return 400 Bad Request")
     public void POST_users_missingProperty_return400() {
@@ -272,14 +266,19 @@ public class UsersRoutesIntegrationTest {
       assertThat(userRepository.findAll()).hasSize(1);
     }
 
+    private static ErrorResult errorResultFromAlreadyTakenEmail() {
+      ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
+      correspondentError.add("email", new EmailAlreadyTakenError());
+      return ErrorMapper.map(correspondentError);
+    }
+
     @Test
     @DisplayName("PUT /users/{id}: given no properties provided, then return 400 Bad Request")
     public void PUT_users_id_noPropertiesProvided_return400() {
       User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
       UserUpdateRequest requestBody = new UserUpdateRequest(null, null, null);
 
-      ErrorResult expectedResult =
-          ErrorMapper.map(new UpdateUserById.UpdateUserByIdError.EmptyCommand());
+      ErrorResult expectedResult = ErrorMapper.map(new UpdateUserById.Error.EmptyCommand());
 
       Response response = http.put("/users/" + user.id(), requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);

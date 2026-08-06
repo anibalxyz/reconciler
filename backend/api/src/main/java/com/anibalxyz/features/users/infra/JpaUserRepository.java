@@ -17,16 +17,16 @@ public class JpaUserRepository implements UserRepository {
     this.provider = provider;
   }
 
-  private EntityManager em() {
-    return provider.get();
-  }
-
   @Override
   @SuppressWarnings("resource")
   public List<User> findAll() {
     List<UserEntity> userEntityList =
         em().createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
     return userEntityList.stream().map(UserEntity::toDomain).toList();
+  }
+
+  private EntityManager em() {
+    return provider.get();
   }
 
   @Override

@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.features.users.application.UpdateUserById.UpdateUserByIdError;
+import com.anibalxyz.features.users.application.UpdateUserById.Error;
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
@@ -55,8 +55,8 @@ public class UpdateUserByIdTest {
 
       var failure = ResultAsserts.failure(result);
       assertThat(failure)
-          .isInstanceOf(UpdateUserByIdError.NotFound.class)
-          .extracting(e -> ((UpdateUserByIdError.NotFound) e).error().getReason())
+          .isInstanceOf(UpdateUserById.Error.NotFound.class)
+          .extracting(e -> ((UpdateUserById.Error.NotFound) e).error().getReason())
           .isEqualTo(new UserNotFoundError.Reason.ById(id));
     }
 
@@ -68,7 +68,7 @@ public class UpdateUserByIdTest {
       var result = updateUserById.execute(1, command);
 
       var failure = ResultAsserts.failure(result);
-      assertThat(failure).isInstanceOf(UpdateUserByIdError.EmptyCommand.class);
+      assertThat(failure).isInstanceOf(UpdateUserById.Error.EmptyCommand.class);
     }
 
     @Test
@@ -81,9 +81,9 @@ public class UpdateUserByIdTest {
       var result = updateUserById.execute(existing.id(), command);
 
       var failure = ResultAsserts.failure(result);
-      assertThat(failure).isInstanceOf(UpdateUserByIdError.ValidationFailed.class);
+      assertThat(failure).isInstanceOf(UpdateUserById.Error.ValidationFailed.class);
 
-      var notification = ((UpdateUserByIdError.ValidationFailed) failure).notification();
+      var notification = ((Error.ValidationFailed) failure).notification();
       assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
@@ -105,9 +105,9 @@ public class UpdateUserByIdTest {
       var result = updateUserById.execute(existing.id(), command);
 
       var failure = ResultAsserts.failure(result);
-      assertThat(failure).isInstanceOf(UpdateUserByIdError.ValidationFailed.class);
+      assertThat(failure).isInstanceOf(Error.ValidationFailed.class);
 
-      var notification = ((UpdateUserByIdError.ValidationFailed) failure).notification();
+      var notification = ((Error.ValidationFailed) failure).notification();
       assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
@@ -129,9 +129,9 @@ public class UpdateUserByIdTest {
       var result = updateUserById.execute(existing.id(), command);
 
       var failure = ResultAsserts.failure(result);
-      assertThat(failure).isInstanceOf(UpdateUserByIdError.ValidationFailed.class);
+      assertThat(failure).isInstanceOf(UpdateUserById.Error.ValidationFailed.class);
 
-      var notification = ((UpdateUserByIdError.ValidationFailed) failure).notification();
+      var notification = ((Error.ValidationFailed) failure).notification();
       assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
@@ -155,9 +155,9 @@ public class UpdateUserByIdTest {
       var result = updateUserById.execute(existing.id(), command);
 
       var failure = ResultAsserts.failure(result);
-      assertThat(failure).isInstanceOf(UpdateUserByIdError.ValidationFailed.class);
+      assertThat(failure).isInstanceOf(Error.ValidationFailed.class);
 
-      var notification = ((UpdateUserByIdError.ValidationFailed) failure).notification();
+      var notification = ((Error.ValidationFailed) failure).notification();
       assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
@@ -182,9 +182,9 @@ public class UpdateUserByIdTest {
       var result = updateUserById.execute(existing.id(), command);
 
       var failure = ResultAsserts.failure(result);
-      assertThat(failure).isInstanceOf(UpdateUserByIdError.ValidationFailed.class);
+      assertThat(failure).isInstanceOf(Error.ValidationFailed.class);
 
-      var notification = ((UpdateUserByIdError.ValidationFailed) failure).notification();
+      var notification = ((Error.ValidationFailed) failure).notification();
       assertThat(notification.getErrors())
           .satisfiesExactly(
               e -> {
@@ -207,9 +207,9 @@ public class UpdateUserByIdTest {
       var result = updateUserById.execute(existing.id(), command);
 
       var failure = ResultAsserts.failure(result);
-      assertThat(failure).isInstanceOf(UpdateUserByIdError.ValidationFailed.class);
+      assertThat(failure).isInstanceOf(Error.ValidationFailed.class);
 
-      var notification = ((UpdateUserByIdError.ValidationFailed) failure).notification();
+      var notification = ((UpdateUserById.Error.ValidationFailed) failure).notification();
       assertThatNotification(notification).hasErrorOn("email", EmailAlreadyTakenError.class);
     }
   }

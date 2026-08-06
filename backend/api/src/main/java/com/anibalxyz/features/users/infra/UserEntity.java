@@ -71,7 +71,7 @@ public class UserEntity {
     Email email = Email.of(this.email).orThrow(err -> new CorruptedEmail(this.email, id));
     Name name = Name.of(this.name).orThrow(err -> new CorruptedName(this.name, id));
     PasswordHash passwordHash =
-        PasswordHash.of(this.passwordHash)
+        PasswordHash.reconstitute(this.passwordHash)
             .orThrow(err -> new CorruptedPasswordHash(this.passwordHash, id));
 
     return User.reconstitute(id, name, email, passwordHash, createdAt, updatedAt);

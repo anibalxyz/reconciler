@@ -19,6 +19,34 @@ import com.anibalxyz.server.exception.UnreachableCodeException;
 
 public class UserErrorMapper implements FeatureErrorMapper {
 
+  @Override
+  public boolean supports(Object error) {
+    return error instanceof UserDomainError || error instanceof UpdateUserById.Error;
+  }
+
+  @Override
+  public ErrorResult map(Object error) {
+    return switch (error) {
+      case UpdateUserById.Error e -> mapUpdateUserByIdError(e);
+      case UserNotFoundError e -> mapUserNotFoundError(e);
+      default -> throw new UnhandledErrorException(error);
+    };
+  }
+
+  public ErrorResult mapUpdateUserByIdError(UpdateUserById.Error error) {
+    return switch (error) {
+      case UpdateUserById.Error.EmptyCommand ignored ->
+          new ErrorResult(
+              400,
+              new ErrorResponse(ValidationErrorCode.VALIDATION_ERROR)
+                  .detail("At least one field (name, email, password) must be provided"),
+              LogEntry.debug("Update user with no fields provided"));
+      case UpdateUserById.Error.NotFound e -> mapUserNotFoundError(e.error());
+      case UpdateUserById.Error.ValidationFailed e ->
+          ValidationErrorMapper.map(e.notification(), this::mapFieldError);
+    };
+  }
+
   public ErrorResult mapUserNotFoundError(UserNotFoundError error) {
     ErrorResponse base = new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND);
     return switch (error.getReason()) {
@@ -29,34 +57,6 @@ public class UserErrorMapper implements FeatureErrorMapper {
               LogEntry.debug("User not found", kv("user_nf_id", r.id())));
       case UserNotFoundError.Reason.ByEmail r ->
           throw UnreachableCodeException.of(r, "no endpoint exposes email-based user lookups");
-    };
-  }
-
-  public ErrorResult mapUpdateUserByIdError(UpdateUserById.UpdateUserByIdError error) {
-    return switch (error) {
-      case UpdateUserById.UpdateUserByIdError.EmptyCommand ignored ->
-          new ErrorResult(
-              400,
-              new ErrorResponse(ValidationErrorCode.VALIDATION_ERROR)
-                  .detail("At least one field (name, email, password) must be provided"),
-              LogEntry.debug("Update user with no fields provided"));
-      case UpdateUserById.UpdateUserByIdError.NotFound e -> mapUserNotFoundError(e.error());
-      case UpdateUserById.UpdateUserByIdError.ValidationFailed e ->
-          ValidationErrorMapper.map(e.notification(), this::mapFieldError);
-    };
-  }
-
-  @Override
-  public boolean supports(Object error) {
-    return error instanceof UserDomainError || error instanceof UpdateUserById.UpdateUserByIdError;
-  }
-
-  @Override
-  public ErrorResult map(Object error) {
-    return switch (error) {
-      case UpdateUserById.UpdateUserByIdError e -> mapUpdateUserByIdError(e);
-      case UserNotFoundError e -> mapUserNotFoundError(e);
-      default -> throw new UnhandledErrorException(error);
     };
   }
 

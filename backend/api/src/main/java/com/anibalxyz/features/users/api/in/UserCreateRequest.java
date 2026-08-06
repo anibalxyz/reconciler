@@ -3,7 +3,7 @@ package com.anibalxyz.features.users.api.in;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
+import com.anibalxyz.features.users.domain.Password;
 import io.javalin.openapi.OpenApiExample;
 import io.javalin.openapi.OpenApiIgnore;
 import io.javalin.openapi.OpenApiRequired;
@@ -24,8 +24,8 @@ public record UserCreateRequest(
     @OpenApiExample("strong-password-123")
         @OpenApiRequired
         @OpenApiStringValidation(
-            minLength = "" + PasswordHash.MIN_LENGTH,
-            maxLength = "" + PasswordHash.MAX_LENGTH)
+            minLength = "" + Password.MIN_LENGTH,
+            maxLength = "" + Password.MAX_LENGTH)
         String password) {
 
   // NOTE: utility method. May be from a common interface (e.g. Request)

@@ -10,7 +10,7 @@ import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.users.application.GetUserByEmail;
 import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.PasswordHash;
+import com.anibalxyz.features.users.domain.Password;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.context.RequestContext;
@@ -87,7 +87,7 @@ public class AuthService {
     ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
 
     Email.validate(command.email()).onFailure(err -> notification.add("email", err));
-    PasswordHash.validate(command.password()).onFailure(err -> notification.add("password", err));
+    Password.validate(command.password()).onFailure(err -> notification.add("password", err));
 
     if (notification.hasErrors()) {
       return Result.failure(new AuthenticateUserError.ValidationFailed(notification));

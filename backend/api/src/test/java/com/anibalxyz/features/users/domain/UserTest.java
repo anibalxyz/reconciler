@@ -37,7 +37,7 @@ public class UserTest {
     Instant later = TIMESTAMP.plusSeconds(60);
 
     User sameIdDifferentFields =
-        User.reconstitute(ID, otherName, otherEmail, VALID_PASSWORD, later, later);
+        User.reconstitute(ID, otherName, otherEmail, VALID_PASSWORD_HASH, later, later);
 
     assertThat(baseUser).isEqualTo(sameIdDifferentFields);
   }
@@ -53,10 +53,18 @@ public class UserTest {
   @Test
   @DisplayName("equals: given two transient users with identical fields, then return false")
   void equals_twoTransientUsers_returnsFalseEvenWithIdenticalFields() {
-    User transient1 = User.create(VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
-    User transient2 = User.create(VALID_NAME, VALID_EMAIL, VALID_PASSWORD);
+    User transient1 = User.create(VALID_NAME, VALID_EMAIL, VALID_PASSWORD_HASH);
+    User transient2 = User.create(VALID_NAME, VALID_EMAIL, VALID_PASSWORD_HASH);
 
     assertThat(transient1).isNotEqualTo(transient2);
+  }
+
+  @Test
+  @DisplayName("equals: given a persistent user and a transient user, then return false")
+  void equals_persistentVsTransient_returnsFalse() {
+    User transientUser = User.create(VALID_NAME, VALID_EMAIL, VALID_PASSWORD_HASH);
+
+    assertThat(baseUser).isNotEqualTo(transientUser);
   }
 
   @Test
@@ -67,11 +75,19 @@ public class UserTest {
   }
 
   @Test
+  @DisplayName("hashCode: given a transient user, then return zero")
+  void hashCode_transientUser_returnsZero() {
+    User transientUser = User.create(VALID_NAME, VALID_EMAIL, VALID_PASSWORD_HASH);
+
+    assertThat(transientUser.hashCode()).isZero();
+  }
+
+  @Test
   @DisplayName("hashCode: given same id, then return same hash code regardless of other fields")
   void hashCode_sameId_returnsSameHashCode() {
     Email otherEmail = ResultAsserts.success(Email.of("other" + baseUser.email().value()));
     User sameIdDifferentFields =
-        User.reconstitute(ID, VALID_NAME, otherEmail, VALID_PASSWORD, TIMESTAMP, TIMESTAMP);
+        User.reconstitute(ID, VALID_NAME, otherEmail, VALID_PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
 
     assertThat(baseUser.hashCode()).isEqualTo(sameIdDifferentFields.hashCode());
   }

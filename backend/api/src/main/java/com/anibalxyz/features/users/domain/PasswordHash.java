@@ -2,7 +2,6 @@ package com.anibalxyz.features.users.domain;
 
 import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.core.Result;
-import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -10,19 +9,13 @@ import org.jetbrains.annotations.NotNull;
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
- * Represents a hashed password as an immutable value object.
+ * A hashed password as an immutable value object.
  *
- * <p>This class encapsulates the logic for creating, validating, and verifying password hashes
- * using the BCrypt algorithm. It ensures that plain-text passwords are never stored or passed
- * around the domain and prevents accidental logging of the hash value.
- *
- * <p>Plain-text passwords are validated and hashed via {@link #generate(String, int)}, which
- * returns a {@link Result} to allow callers to handle validation failures without catching
- * exceptions, enabling accumulation of multiple field errors.
+ * <p>Owns the BCrypt hash: produced from an already-validated password via {@link #of(Password,
+ * int)} and rebuilt from persistence via {@link #reconstitute(String)}. Raw password
+ * formatting/validation lives in {@link Password}.
  */
 public class PasswordHash {
-  public static final int MIN_LENGTH = 8;
-  public static final int MAX_LENGTH = 72;
   private static final Pattern BCRYPT_PATTERN =
       Pattern.compile("\\A\\$2a\\$\\d\\d\\$[./0-9A-Za-z]{53}");
 
@@ -37,48 +30,35 @@ public class PasswordHash {
    *
    * @return success with {@link PasswordHash}, or failure if the format is invalid.
    */
-  public static Result<PasswordHash, InvalidPasswordHashError> of(String hash) {
-    return isValidHash(hash)
+  public static Result<PasswordHash, InvalidPasswordHashError> reconstitute(String hash) {
+    return isValid(hash)
         ? Result.success(new PasswordHash(hash))
         : Result.failure(new InvalidPasswordHashError());
   }
 
   /**
-   * Creates a new {@code PasswordHash} from a plain-text password.
-   *
-   * <p>Validates the password against complexity requirements, then salts and hashes it using
-   * BCrypt.
-   *
-   * @param raw the plain-text password to hash
-   * @param saltRounds the log2 of the number of BCrypt hashing rounds
-   * @return a successful {@code Result} with the hashed password, or a failed {@code Result} with
-   *     an {@link InvalidPasswordError} if validation fails
+   * @return {@code true} if {@code hash} conforms to the BCrypt hash format.
    */
-  public static Result<PasswordHash, InvalidPasswordError> generate(String raw, int saltRounds) {
-    return validate(raw).map(v -> new PasswordHash(BCrypt.hashpw(raw, BCrypt.gensalt(saltRounds))));
-  }
-
-  public static Result<Void, InvalidPasswordError> validate(String raw) {
-    if (raw == null) return Result.failure(InvalidPasswordError.absent());
-    if (raw.isBlank()) return Result.failure(InvalidPasswordError.blank());
-    if (raw.length() < MIN_LENGTH) return Result.failure(InvalidPasswordError.tooShort(MIN_LENGTH));
-    if (raw.length() > MAX_LENGTH) return Result.failure(InvalidPasswordError.tooLong(MAX_LENGTH));
-
-    return Result.success();
-  }
-
-  /** Validates if a string conforms to the BCrypt hash format. */
-  public static boolean isValidHash(String hash) {
+  public static boolean isValid(String hash) {
     return hash != null && BCRYPT_PATTERN.matcher(hash).matches();
   }
 
-  /** Verifies a plain-text password against the stored hash. */
-  public boolean matches(String raw) {
-    return BCrypt.checkpw(raw, value);
+  /**
+   * Hashes the already-validated password using BCrypt.
+   *
+   * @param password the validated raw password
+   * @param saltRounds the log2 of the number of BCrypt hashing rounds
+   * @return the corresponding {@code PasswordHash}
+   */
+  public static PasswordHash of(Password password, int saltRounds) {
+    return new PasswordHash(BCrypt.hashpw(password.value(), BCrypt.gensalt(saltRounds)));
   }
 
-  public String value() {
-    return value;
+  /**
+   * @return {@code true} if plain-text {@code password} matches the stored hash.
+   */
+  public boolean matches(String password) {
+    return BCrypt.checkpw(password, value);
   }
 
   @Override
@@ -93,6 +73,10 @@ public class PasswordHash {
     if (this == o) return true;
     if (!(o instanceof PasswordHash other)) return false;
     return Objects.equals(value, other.value());
+  }
+
+  public String value() {
+    return value;
   }
 
   /**

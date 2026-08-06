@@ -8,7 +8,7 @@ import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
+import com.anibalxyz.features.users.domain.Password;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
@@ -53,10 +53,7 @@ public class UserErrorMapperTest {
     @Test
     @DisplayName("given EmptyCommand, then does not throw any exception")
     public void givenEmptyCommand_doesNotThrow() {
-      assertThatCode(
-              () ->
-                  mapper.mapUpdateUserByIdError(
-                      new UpdateUserById.UpdateUserByIdError.EmptyCommand()))
+      assertThatCode(() -> mapper.mapUpdateUserByIdError(new UpdateUserById.Error.EmptyCommand()))
           .doesNotThrowAnyException();
     }
 
@@ -67,7 +64,7 @@ public class UserErrorMapperTest {
       assertThatCode(
               () ->
                   mapper.mapUpdateUserByIdError(
-                      new UpdateUserById.UpdateUserByIdError.NotFound(userNotFoundError)))
+                      new UpdateUserById.Error.NotFound(userNotFoundError)))
           .doesNotThrowAnyException();
     }
 
@@ -80,7 +77,7 @@ public class UserErrorMapperTest {
       assertThatCode(
               () ->
                   mapper.mapUpdateUserByIdError(
-                      new UpdateUserById.UpdateUserByIdError.ValidationFailed(notification)))
+                      new UpdateUserById.Error.ValidationFailed(notification)))
           .doesNotThrowAnyException();
     }
   }
@@ -96,9 +93,9 @@ public class UserErrorMapperTest {
     }
 
     @Test
-    @DisplayName("given an UpdateUserByIdError, then return true")
+    @DisplayName("given an Error, then return true")
     public void givenUpdateUserByIdError_returnTrue() {
-      assertThat(mapper.supports(new UpdateUserById.UpdateUserByIdError.EmptyCommand())).isTrue();
+      assertThat(mapper.supports(new UpdateUserById.Error.EmptyCommand())).isTrue();
     }
 
     @Test
@@ -113,9 +110,9 @@ public class UserErrorMapperTest {
   class Map {
 
     @Test
-    @DisplayName("given an UpdateUserByIdError, then does not throw any exception")
+    @DisplayName("given an Error, then does not throw any exception")
     public void givenUpdateUserByIdError_doesNotThrow() {
-      assertThatCode(() -> mapper.map(new UpdateUserById.UpdateUserByIdError.EmptyCommand()))
+      assertThatCode(() -> mapper.map(new UpdateUserById.Error.EmptyCommand()))
           .doesNotThrowAnyException();
     }
 
@@ -252,8 +249,7 @@ public class UserErrorMapperTest {
     @Test
     @DisplayName("given InvalidPasswordError TooShort, then does not throw any exception")
     public void givenInvalidPasswordTooShort_doesNotThrow() {
-      assertThatCode(
-              () -> mapper.mapInvalidValue(ResultAsserts.failure(PasswordHash.validate("a"))))
+      assertThatCode(() -> mapper.mapInvalidValue(ResultAsserts.failure(Password.validate("a"))))
           .doesNotThrowAnyException();
     }
 
@@ -264,7 +260,7 @@ public class UserErrorMapperTest {
               () ->
                   mapper.mapInvalidValue(
                       ResultAsserts.failure(
-                          PasswordHash.validate("p".repeat(PasswordHash.MAX_LENGTH + 1)))))
+                          Password.validate("p".repeat(Password.MAX_LENGTH + 1)))))
           .doesNotThrowAnyException();
     }
 

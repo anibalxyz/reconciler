@@ -3,10 +3,7 @@ package com.anibalxyz.shared;
 import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.persistence.EntityManagerProvider;
@@ -72,6 +69,10 @@ public class Helpers {
     return s.substring(0, 1).toUpperCase() + s.substring(1);
   }
 
+  public static UserEntity persistUser(EntityManager em, String name, String email) {
+    return persistUser(em, name, email, VALID_PASSWORD_STRING);
+  }
+
   public static UserEntity persistUser(
       EntityManager em, String name, String email, String password) {
     em.getTransaction().begin();
@@ -83,17 +84,14 @@ public class Helpers {
                 User.create(
                     ResultAsserts.success(Name.of(name)),
                     ResultAsserts.success(Email.of(email)),
-                    ResultAsserts.success(
-                        PasswordHash.generate(password, Constants.APP_ENV.BCRYPT_LOG_ROUNDS()))));
+                    PasswordHash.of(
+                        ResultAsserts.success(Password.of(password)),
+                        Constants.APP_ENV.BCRYPT_LOG_ROUNDS())));
 
     em.getTransaction().commit();
 
     UserEntity entity = em.find(UserEntity.class, saved.id());
     em.refresh(entity);
     return entity;
-  }
-
-  public static UserEntity persistUser(EntityManager em, String name, String email) {
-    return persistUser(em, name, email, VALID_PASSWORD_STRING);
   }
 }

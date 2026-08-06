@@ -12,19 +12,6 @@ import java.util.regex.Pattern;
  *
  * <p>Instances can only be created via {@link #of(String)}, which validates and normalizes the
  * value before constructing the object.
- *
- * <p>Usage example:
- *
- * <pre>{@code
- * Result<Email, InvalidEmailError> result = Email.of("user@example.com");
- *
- * if (result.isFailure()) {
- *     // handle invalid email
- * }
- * // use valid email
- * Email email = result.getValue();
- *
- * }</pre>
  */
 public final class Email {
   public static final String PATTERN = "^[\\w-.]+@[\\w-]+\\.[a-zA-Z]{2,}$";
@@ -55,19 +42,15 @@ public final class Email {
     return Result.success();
   }
 
+  private static boolean hasValidFormat(String email) {
+    return EMAIL_PATTERN.matcher(email).matches();
+  }
+
   /**
    * @return normalized email string by converting it to lowercase and trimming whitespace.
    */
   public static String normalize(String email) {
     return email.toLowerCase(Locale.ROOT).trim();
-  }
-
-  private static boolean hasValidFormat(String email) {
-    return EMAIL_PATTERN.matcher(email).matches();
-  }
-
-  public String value() {
-    return value;
   }
 
   @Override
@@ -82,6 +65,10 @@ public final class Email {
     if (this == o) return true;
     if (!(o instanceof Email other)) return false;
     return Objects.equals(value, other.value());
+  }
+
+  public String value() {
+    return value;
   }
 
   @Override

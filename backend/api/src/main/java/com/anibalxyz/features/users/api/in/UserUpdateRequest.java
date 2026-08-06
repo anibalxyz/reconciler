@@ -3,7 +3,7 @@ package com.anibalxyz.features.users.api.in;
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
+import com.anibalxyz.features.users.domain.Password;
 import io.javalin.openapi.OpenApiExample;
 import io.javalin.openapi.OpenApiIgnore;
 import io.javalin.openapi.OpenApiStringValidation;
@@ -20,8 +20,8 @@ public record UserUpdateRequest(
         String email,
     @OpenApiExample("a-new-strong-password-456")
         @OpenApiStringValidation(
-            minLength = "" + PasswordHash.MIN_LENGTH,
-            maxLength = "" + PasswordHash.MAX_LENGTH)
+            minLength = "" + Password.MIN_LENGTH,
+            maxLength = "" + Password.MAX_LENGTH)
         String password) {
   @OpenApiIgnore
   public UpdateUserCommand toCommand() {
