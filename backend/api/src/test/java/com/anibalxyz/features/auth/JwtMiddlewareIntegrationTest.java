@@ -92,7 +92,7 @@ public class JwtMiddlewareIntegrationTest {
   }
 
   private String loginUser(String email) {
-    LoginRequest loginRequest = new LoginRequest(email, VALID_PASSWORD);
+    LoginRequest loginRequest = new LoginRequest(email, VALID_PASSWORD_STRING);
     Response loginResponse = http.post("/auth/login", loginRequest);
     AuthResponse authResponse = http.parseBody(loginResponse, AuthResponse.class);
     return authResponse.accessToken();
@@ -113,7 +113,8 @@ public class JwtMiddlewareIntegrationTest {
     @Test
     @DisplayName("ANY /*: given valid JWT, then authorize user")
     void ANY_endpoint_validJwt_authorizeUser() {
-      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      User user =
+          persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
       String validJwt = loginUser(user.email().value());
 
       Map<String, String> headers = authenticationHeaders(validJwt);
@@ -171,7 +172,8 @@ public class JwtMiddlewareIntegrationTest {
     @Test
     @DisplayName("GET /users: given expired JWT, then return 401 Auth")
     void GET_users_expiredJwt_return401Unauthorized() {
-      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      User user =
+          persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
       long jwtAccessExpirationTimeMinutes = Constants.APP_ENV.JWT_ACCESS_EXPIRATION_TIME_MINUTES();
       long justExpiredTime = jwtAccessExpirationTimeMinutes + 1;
       Clock clockInThePast = Clock.offset(testClock, Duration.ofMinutes(-justExpiredTime));

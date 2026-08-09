@@ -8,9 +8,9 @@ import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.GetUserByEmail;
 import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.PasswordHash;
+import com.anibalxyz.features.users.domain.Password;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.context.RequestContext;
@@ -25,19 +25,19 @@ public class AuthService {
   private static final Logger log = LoggerFactory.getLogger(AuthService.class);
   private final AuthEnvironment env;
   private final Clock clock;
-  private final UserService userService;
+  private final GetUserByEmail getUserByEmail;
   private final JwtService jwtService;
   private final RefreshTokenService refreshTokenService;
 
   public AuthService(
       AuthEnvironment env,
       Clock clock,
-      UserService userService,
+      GetUserByEmail getUserByEmail,
       JwtService jwtService,
       RefreshTokenService refreshTokenService) {
     this.env = env;
     this.clock = clock;
-    this.userService = userService;
+    this.getUserByEmail = getUserByEmail;
     this.jwtService = jwtService;
     this.refreshTokenService = refreshTokenService;
   }
@@ -86,8 +86,8 @@ public class AuthService {
   public Result<AuthResult, AuthenticateUserError> authenticateUser(LoginCommand command) {
     ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
 
-    Email.validateRaw(command.email()).onFailure(err -> notification.add("email", err));
-    PasswordHash.validate(command.password()).onFailure(err -> notification.add("password", err));
+    Email.validate(command.email()).onFailure(err -> notification.add("email", err));
+    Password.validate(command.password()).onFailure(err -> notification.add("password", err));
 
     if (notification.hasErrors()) {
       return Result.failure(new AuthenticateUserError.ValidationFailed(notification));
@@ -98,14 +98,14 @@ public class AuthService {
       return Result.failure(new AuthenticateUserError.MaintenanceWindow(blocked.get()));
     }
 
-    var userResult = userService.getUserByEmail(command.email());
+    var userResult = getUserByEmail.execute(command.email());
 
     return switch (userResult) {
       case Result.Failure(var ignored) ->
           Result.failure(
               new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
       case Result.Success(User user) -> {
-        if (!user.passwordHash().matches(command.password())) {
+        if (!user.passwordMatches(command.password())) {
           yield Result.failure(
               new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
         }

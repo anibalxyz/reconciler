@@ -12,22 +12,8 @@ import java.util.regex.Pattern;
  *
  * <p>Instances can only be created via {@link #of(String)}, which validates and normalizes the
  * value before constructing the object.
- *
- * <p>Usage example:
- *
- * <pre>{@code
- * Result<Email, InvalidEmailError> result = Email.of("user@example.com");
- *
- * if (result.isFailure()) {
- *     // handle invalid email
- * }
- * // use valid email
- * Email email = result.getValue();
- *
- * }</pre>
  */
 public final class Email {
-  // TODO: check if they are correct being public
   public static final String PATTERN = "^[\\w-.]+@[\\w-]+\\.[a-zA-Z]{2,}$";
   public static final int MAX_LENGTH = 255;
   private static final Pattern EMAIL_PATTERN = Pattern.compile(PATTERN);
@@ -44,16 +30,20 @@ public final class Email {
    *     Result} with an {@link InvalidEmailError} if the value is invalid
    */
   public static Result<Email, InvalidEmailError> of(String value) {
-    return validateRaw(value).map(v -> new Email(normalize(value)));
+    return validate(value).map(v -> new Email(normalize(value)));
   }
 
-  // TODO: rename to validate()
-  public static Result<Void, InvalidEmailError> validateRaw(String value) {
+  public static Result<Void, InvalidEmailError> validate(String value) {
     if (value == null) return Result.failure(InvalidEmailError.absent());
     if (value.isBlank()) return Result.failure(InvalidEmailError.blank());
+    if (value.length() > MAX_LENGTH) return Result.failure(InvalidEmailError.tooLong(MAX_LENGTH));
     if (!hasValidFormat(value)) return Result.failure(InvalidEmailError.invalidFormat());
 
     return Result.success();
+  }
+
+  private static boolean hasValidFormat(String email) {
+    return EMAIL_PATTERN.matcher(email).matches();
   }
 
   /**
@@ -61,16 +51,6 @@ public final class Email {
    */
   public static String normalize(String email) {
     return email.toLowerCase(Locale.ROOT).trim();
-  }
-
-  private static boolean hasValidFormat(String email) {
-    // Format and length are validated together for now — this may change in the future.
-    // TODO: basic validation first
-    return EMAIL_PATTERN.matcher(email).matches() && email.length() <= MAX_LENGTH;
-  }
-
-  public String value() {
-    return value;
   }
 
   @Override
@@ -85,6 +65,10 @@ public final class Email {
     if (this == o) return true;
     if (!(o instanceof Email other)) return false;
     return Objects.equals(value, other.value());
+  }
+
+  public String value() {
+    return value;
   }
 
   @Override

@@ -183,10 +183,10 @@ public class AuthRoutesIntegrationTest {
     @DisplayName("given validation failed, then respond with 400 validation error")
     void validationFailed_respond400ValidationError() {
       String invalidEmail = "invalid email";
-      LoginRequest loginRequest = new LoginRequest(invalidEmail, VALID_PASSWORD);
+      LoginRequest loginRequest = new LoginRequest(invalidEmail, VALID_PASSWORD_STRING);
 
       ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
-      notification.add("email", ResultAsserts.failure(Email.validateRaw(invalidEmail)));
+      notification.add("email", ResultAsserts.failure(Email.validate(invalidEmail)));
 
       ErrorResult expectedResult =
           ErrorMapper.map(new AuthService.AuthenticateUserError.ValidationFailed(notification));
@@ -203,7 +203,7 @@ public class AuthRoutesIntegrationTest {
     @DisplayName("given outside maintenance window, respond with 503 Unavailable Server")
     void outsideMaintenanceWindow_respond503UnavailableServer() {
       testClock.resetTo(SATURDAY_MIDDAY);
-      LoginRequest loginRequest = new LoginRequest(VALID_EMAIL, VALID_PASSWORD);
+      LoginRequest loginRequest = new LoginRequest(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult =
           ErrorMapper.map(
@@ -220,9 +220,10 @@ public class AuthRoutesIntegrationTest {
     @Test
     @DisplayName("given invalid credentials, respond with 401 Auth")
     void invalidCredentials_respond401Unauthorized() {
-      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
+      User user =
+          persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
       LoginRequest loginRequest =
-          new LoginRequest("different" + user.email().value(), VALID_PASSWORD);
+          new LoginRequest("different" + user.email().value(), VALID_PASSWORD_STRING);
       ErrorResult expectedResult =
           ErrorMapper.map(
               new AuthService.AuthenticateUserError.InvalidCredentials(
@@ -239,8 +240,9 @@ public class AuthRoutesIntegrationTest {
     @Test
     @DisplayName("given valid credentials, respond 200 with refresh and access tokens")
     void validCredentials_respond200WithTokens() {
-      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
-      LoginRequest loginRequest = new LoginRequest(user.email().value(), VALID_PASSWORD);
+      User user =
+          persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
+      LoginRequest loginRequest = new LoginRequest(user.email().value(), VALID_PASSWORD_STRING);
 
       Response loginResponse = http.post("/auth/login", loginRequest);
       assertThat(loginResponse.code()).isEqualTo(200);
@@ -327,8 +329,9 @@ public class AuthRoutesIntegrationTest {
     @Test
     @DisplayName("given valid refresh token, then respond with 200 with refreshed tokens")
     void validRefreshToken_respond200WithRefreshedTokens() {
-      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
-      LoginResult expectedResult = loginUser(user.email().value(), VALID_PASSWORD);
+      User user =
+          persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
+      LoginResult expectedResult = loginUser(user.email().value(), VALID_PASSWORD_STRING);
 
       Map<String, String> cookie =
           Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + expectedResult.refreshToken);

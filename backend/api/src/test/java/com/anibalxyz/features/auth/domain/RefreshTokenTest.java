@@ -1,39 +1,24 @@
 package com.anibalxyz.features.auth.domain;
 
+import static com.anibalxyz.shared.Constants.Auth.buildToken;
+import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.Constants;
 import java.time.Instant;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class RefreshTokenTest {
 
-  private static final int BCRYPT_LOG_ROUNDS = 4;
-  private static final String VALID_PASSWORD = "validPassword123";
-  // This is the correct way of testing time-based code
-  // TODO: look for clock-dependant code tests and use this approach
   private static final Instant NOW = Instant.parse("2025-01-01T12:00:00Z");
   private static final Instant PAST = NOW.minusSeconds(60);
   private static final Instant FUTURE = NOW.plusSeconds(60);
 
-  private static User buildUser() {
-    return new User(
-        1,
-        ResultAsserts.success(Name.of("User")),
-        ResultAsserts.success(Email.of("user@example.com")),
-        ResultAsserts.success(PasswordHash.generate(VALID_PASSWORD, BCRYPT_LOG_ROUNDS)),
-        Instant.now(),
-        Instant.now());
-  }
-
-  // TODO: may be refactored to Helpers
-  private static RefreshToken buildToken(Instant expiryDate) {
-    return new RefreshToken(1L, "token-value", buildUser(), expiryDate, false);
+  @BeforeAll
+  static void init() {
+    Constants.init();
   }
 
   @Test
@@ -98,7 +83,7 @@ class RefreshTokenTest {
   @Test
   @DisplayName("withRevoked: given revoked is true, then return new instance with revoked false")
   void withRevoked_revokedTrue_returnNewInstanceWithRevokedFalse() {
-    RefreshToken original = new RefreshToken(1L, "token-value", buildUser(), FUTURE, true);
+    RefreshToken original = new RefreshToken(1L, "token-value", VALID_USER, FUTURE, true);
     RefreshToken unrevoked = original.withRevoked(false);
 
     assertThat(unrevoked.revoked()).isFalse();

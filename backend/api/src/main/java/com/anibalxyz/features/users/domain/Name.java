@@ -6,6 +6,7 @@ import com.anibalxyz.features.users.domain.error.InvalidNameError;
 import java.util.Objects;
 
 public final class Name {
+  public static final int MAX_LENGTH = 100;
   private final String value;
 
   private Name(String value) {
@@ -18,6 +19,7 @@ public final class Name {
 
   public static Result<Void, InvalidNameError> validate(String value) {
     if (value == null) return Result.failure(InvalidNameError.absent());
+    if (value.length() > MAX_LENGTH) return Result.failure(InvalidNameError.tooLong(MAX_LENGTH));
     if (value.isBlank()) return Result.failure(InvalidNameError.blank());
 
     return Result.success();

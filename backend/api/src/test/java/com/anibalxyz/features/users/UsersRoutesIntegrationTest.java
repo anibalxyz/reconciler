@@ -15,7 +15,7 @@ import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
 import com.anibalxyz.features.users.api.out.UserCreateResponse;
 import com.anibalxyz.features.users.api.out.UserDetailResponse;
-import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.EmailAlreadyTakenError;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
@@ -106,20 +106,6 @@ public class UsersRoutesIntegrationTest {
   @Nested
   @DisplayName("Failure Scenarios")
   class FailureScenarios {
-    private static ErrorResult errorResultFromInvalidName(String name) {
-      ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
-      correspondentError.add("name", ResultAsserts.failure(Name.validate(name)));
-      return ErrorMapper.map(correspondentError);
-    }
-
-    private static ErrorResult errorResultFromAlreadyTakenEmail() {
-      ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
-      correspondentError.add("email", new EmailAlreadyTakenError());
-      return ErrorMapper.map(correspondentError);
-    }
-
-    // --> ANY tests will normally use GET as a lightweight example
-
     @Test
     @DisplayName("ANY /users/{id}: given an invalid id format, then return 400 Bad Request")
     public void ANY_users_id_invalidIdFormat_return400() {
@@ -163,6 +149,8 @@ public class UsersRoutesIntegrationTest {
       assertThat(actualResponse.instance()).isNotNull();
       assertThat(actualResponse.instance(null)).isEqualTo(expectedResult.response());
     }
+
+    // --> ANY tests will normally use GET as a lightweight example
 
     @ParameterizedTest
     @ValueSource(strings = {"POST", "PUT"})
@@ -220,7 +208,8 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("POST /users: given an invalid property, then return 400 validation error")
     public void POST_users_invalidProperty_return400ValidationError() {
-      UserCreateRequest requestBody = new UserCreateRequest(null, VALID_EMAIL, VALID_PASSWORD);
+      UserCreateRequest requestBody =
+          new UserCreateRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -234,10 +223,17 @@ public class UsersRoutesIntegrationTest {
           .isEmpty();
     }
 
+    private static ErrorResult errorResultFromInvalidName(String name) {
+      ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
+      correspondentError.add("name", ResultAsserts.failure(Name.validate(name)));
+      return ErrorMapper.map(correspondentError);
+    }
+
     @Test
     @DisplayName("POST /users: given a missing property, then return 400 Bad Request")
     public void POST_users_missingProperty_return400() {
-      UserCreateRequest requestBody = new UserCreateRequest(null, VALID_EMAIL, VALID_PASSWORD);
+      UserCreateRequest requestBody =
+          new UserCreateRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -254,10 +250,10 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("POST /users: given an already taken email, then return 400 validation error")
     public void POST_users_alreadyTakenEmail_return400() {
-      String existingEmail = "existing." + VALID_EMAIL;
-      persistUser(em, "existing." + VALID_NAME, existingEmail);
+      String existingEmail = "existing." + VALID_EMAIL_STRING;
+      persistUser(em, "existing." + VALID_NAME_STRING, existingEmail);
       UserCreateRequest requestBody =
-          new UserCreateRequest(VALID_NAME, existingEmail, VALID_PASSWORD);
+          new UserCreateRequest(VALID_NAME_STRING, existingEmail, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
 
@@ -270,14 +266,19 @@ public class UsersRoutesIntegrationTest {
       assertThat(userRepository.findAll()).hasSize(1);
     }
 
+    private static ErrorResult errorResultFromAlreadyTakenEmail() {
+      ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();
+      correspondentError.add("email", new EmailAlreadyTakenError());
+      return ErrorMapper.map(correspondentError);
+    }
+
     @Test
     @DisplayName("PUT /users/{id}: given no properties provided, then return 400 Bad Request")
     public void PUT_users_id_noPropertiesProvided_return400() {
       User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
       UserUpdateRequest requestBody = new UserUpdateRequest(null, null, null);
 
-      ErrorResult expectedResult =
-          ErrorMapper.map(new UserService.UpdateUserByIdError.EmptyCommand());
+      ErrorResult expectedResult = ErrorMapper.map(new UpdateUserById.Error.EmptyCommand());
 
       Response response = http.put("/users/" + user.id(), requestBody);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
@@ -292,8 +293,9 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("PUT /users/{id}: given an already taken email, then return 400 validation error")
     public void PUT_users_id_alreadyTakenEmail_return400() {
       User existingUser =
-          persistUser(em, "existing." + VALID_NAME, "existing." + VALID_EMAIL).toDomain();
-      User userToUpdate = persistUser(em, VALID_NAME, "update.me@mail.com").toDomain();
+          persistUser(em, "existing." + VALID_NAME_STRING, "existing." + VALID_EMAIL_STRING)
+              .toDomain();
+      User userToUpdate = persistUser(em, VALID_NAME_STRING, "update.me@mail.com").toDomain();
       UserUpdateRequest requestBody =
           new UserUpdateRequest(null, existingUser.email().value(), null);
 
@@ -311,8 +313,10 @@ public class UsersRoutesIntegrationTest {
     @Test
     @DisplayName("PUT /users/{id}: given an invalid property, then return 400 validation error")
     public void PUT_users_id_invalidProperty_return400ValidationError() {
-      User user = persistUser(em, VALID_NAME, VALID_EMAIL, VALID_PASSWORD).toDomain();
-      UserCreateRequest requestBody = new UserCreateRequest("  ", VALID_EMAIL, VALID_PASSWORD);
+      User user =
+          persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
+      UserCreateRequest requestBody =
+          new UserCreateRequest("  ", VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -374,7 +378,7 @@ public class UsersRoutesIntegrationTest {
     @DisplayName("POST /users: given valid user data, then return 201 and create the user")
     public void POST_users_validData_return201AndCreateUser() {
       UserCreateRequest requestBody =
-          new UserCreateRequest("New User", "new.user@mail.com", VALID_PASSWORD);
+          new UserCreateRequest("New User", "new.user@mail.com", VALID_PASSWORD_STRING);
 
       Response response = http.post("/users", requestBody);
       assertThat(response.code()).isEqualTo(201);
@@ -383,9 +387,7 @@ public class UsersRoutesIntegrationTest {
       User persisted = em.find(UserEntity.class, responseBody.id()).toDomain();
 
       assertNotNull(persisted);
-      assertTrue(
-          ResultAsserts.success(PasswordHash.of(persisted.passwordHash().value()))
-              .matches(requestBody.password()));
+      assertThat(persisted.passwordMatches(requestBody.password())).isTrue();
       assertThat(persisted.createdAt())
           .isCloseTo(persisted.updatedAt(), within(5, ChronoUnit.SECONDS));
       assertThat(persisted.id()).isEqualTo(responseBody.id()).isPositive();
@@ -403,15 +405,13 @@ public class UsersRoutesIntegrationTest {
         "PUT /users/{id}: given valid id and property, then return 200 and the updated user")
     public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp) {
       User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
-      PasswordHash prevPasswordHash =
-          ResultAsserts.success(PasswordHash.of(user.passwordHash().value()));
       Instant prevUpdatedAt = user.updatedAt();
 
       UserUpdateRequest request =
           new UserUpdateRequest(
               updatingProp.equals("name") ? "New User" : null,
               updatingProp.equals("email") ? "new.user@mail.com" : null,
-              updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD) : null);
+              updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD_STRING) : null);
 
       Response response = http.put("/users/" + user.id(), request);
       assertThat(response.code()).isEqualTo(200);
@@ -432,10 +432,7 @@ public class UsersRoutesIntegrationTest {
           assertThat(responseBody.email()).isEqualTo(request.email());
         }
         case "password" -> {
-          PasswordHash updatedHash =
-              ResultAsserts.success(PasswordHash.of(updated.passwordHash().value()));
-          assertTrue(updatedHash.matches(request.password()));
-          assertThat(updatedHash.value()).isNotEqualTo(prevPasswordHash.value());
+          assertTrue(updated.passwordMatches(request.password()));
         }
       }
 

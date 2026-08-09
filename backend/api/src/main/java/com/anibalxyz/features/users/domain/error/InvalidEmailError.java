@@ -25,6 +25,10 @@ public final class InvalidEmailError extends ReasonedError<InvalidEmailError.Rea
     return new InvalidEmailError(new Reason.InvalidFormat());
   }
 
+  public static InvalidEmailError tooLong(int maxLength) {
+    return new InvalidEmailError(new Reason.TooLong(maxLength));
+  }
+
   public static InvalidEmailError blank() {
     return new InvalidEmailError(new Reason.Blank());
   }
@@ -35,6 +39,8 @@ public final class InvalidEmailError extends ReasonedError<InvalidEmailError.Rea
 
   public sealed interface Reason extends DomainErrorReason {
     record InvalidFormat() implements Reason {}
+
+    record TooLong(int maxLength) implements Reason {}
 
     record Blank() implements Reason {}
 

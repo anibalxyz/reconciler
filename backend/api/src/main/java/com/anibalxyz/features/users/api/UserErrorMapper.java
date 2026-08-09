@@ -9,7 +9,7 @@ import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
 import com.anibalxyz.features.common.api.out.code.ValidationErrorCode;
 import com.anibalxyz.features.common.api.out.response.error.ErrorDetail;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.FeatureErrorMapper;
@@ -18,6 +18,34 @@ import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
 
 public class UserErrorMapper implements FeatureErrorMapper {
+
+  @Override
+  public boolean supports(Object error) {
+    return error instanceof UserDomainError || error instanceof UpdateUserById.Error;
+  }
+
+  @Override
+  public ErrorResult map(Object error) {
+    return switch (error) {
+      case UpdateUserById.Error e -> mapUpdateUserByIdError(e);
+      case UserNotFoundError e -> mapUserNotFoundError(e);
+      default -> throw new UnhandledErrorException(error);
+    };
+  }
+
+  public ErrorResult mapUpdateUserByIdError(UpdateUserById.Error error) {
+    return switch (error) {
+      case UpdateUserById.Error.EmptyCommand ignored ->
+          new ErrorResult(
+              400,
+              new ErrorResponse(ValidationErrorCode.VALIDATION_ERROR)
+                  .detail("At least one field (name, email, password) must be provided"),
+              LogEntry.debug("Update user with no fields provided"));
+      case UpdateUserById.Error.NotFound e -> mapUserNotFoundError(e.error());
+      case UpdateUserById.Error.ValidationFailed e ->
+          ValidationErrorMapper.map(e.notification(), this::mapFieldError);
+    };
+  }
 
   public ErrorResult mapUserNotFoundError(UserNotFoundError error) {
     ErrorResponse base = new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND);
@@ -29,34 +57,6 @@ public class UserErrorMapper implements FeatureErrorMapper {
               LogEntry.debug("User not found", kv("user_nf_id", r.id())));
       case UserNotFoundError.Reason.ByEmail r ->
           throw UnreachableCodeException.of(r, "no endpoint exposes email-based user lookups");
-    };
-  }
-
-  public ErrorResult mapUpdateUserByIdError(UserService.UpdateUserByIdError error) {
-    return switch (error) {
-      case UserService.UpdateUserByIdError.EmptyCommand ignored ->
-          new ErrorResult(
-              400,
-              new ErrorResponse(ValidationErrorCode.VALIDATION_ERROR)
-                  .detail("At least one field (name, email, password) must be provided"),
-              LogEntry.debug("Update user with no fields provided"));
-      case UserService.UpdateUserByIdError.NotFound e -> mapUserNotFoundError(e.error());
-      case UserService.UpdateUserByIdError.ValidationFailed e ->
-          ValidationErrorMapper.map(e.notification(), this::mapFieldError);
-    };
-  }
-
-  @Override
-  public boolean supports(Object error) {
-    return error instanceof UserDomainError || error instanceof UserService.UpdateUserByIdError;
-  }
-
-  @Override
-  public ErrorResult map(Object error) {
-    return switch (error) {
-      case UserService.UpdateUserByIdError e -> mapUpdateUserByIdError(e);
-      case UserNotFoundError e -> mapUserNotFoundError(e);
-      default -> throw new UnhandledErrorException(error);
     };
   }
 
@@ -85,6 +85,11 @@ public class UserErrorMapper implements FeatureErrorMapper {
       return switch (ive) {
         case InvalidNameError e ->
             switch (e.getReason()) {
+              case InvalidNameError.Reason.TooLong r ->
+                  new ErrorDetail(ValidationErrorCode.TOO_LONG)
+                      .with("title", ValidationErrorCode.TOO_LONG.title())
+                      .with("detail", "Cannot exceed " + r.maxLength() + " characters")
+                      .with("maxLength", r.maxLength());
               case InvalidNameError.Reason.Blank ignored ->
                   new ErrorDetail(ValidationErrorCode.BLANK_FIELD)
                       .with("title", ValidationErrorCode.BLANK_FIELD.title());
@@ -103,6 +108,11 @@ public class UserErrorMapper implements FeatureErrorMapper {
               case InvalidEmailError.Reason.Absent ignored ->
                   new ErrorDetail(ValidationErrorCode.REQUIRED_FIELD)
                       .with("title", ValidationErrorCode.REQUIRED_FIELD.title());
+              case InvalidEmailError.Reason.TooLong r ->
+                  new ErrorDetail(ValidationErrorCode.TOO_LONG)
+                      .with("title", ValidationErrorCode.TOO_LONG.title())
+                      .with("detail", "Cannot exceed " + r.maxLength() + " characters")
+                      .with("maxLength", r.maxLength());
             };
         case InvalidPasswordError e ->
             switch (e.getReason()) {

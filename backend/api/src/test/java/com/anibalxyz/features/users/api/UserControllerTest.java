@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.api;
 
+import static com.anibalxyz.shared.Constants.Users.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -9,20 +10,19 @@ import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.users.api.in.UserCreateRequest;
 import com.anibalxyz.features.users.api.in.UserUpdateRequest;
-import com.anibalxyz.features.users.application.UserService;
+import com.anibalxyz.features.users.application.CreateUser;
+import com.anibalxyz.features.users.application.DeleteUserById;
+import com.anibalxyz.features.users.application.GetAllUsers;
+import com.anibalxyz.features.users.application.GetUserById;
+import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.shared.Constants;
-import com.anibalxyz.shared.ResultAsserts;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.validation.Validator;
-import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,10 +34,15 @@ import org.mockito.stubbing.OngoingStubbing;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for UserController")
 public class UserControllerTest {
+  @Mock private GetAllUsers getAllUsers;
 
-  private static int BCRYPT_LOG_ROUNDS;
+  @Mock private GetUserById getUserById;
 
-  @Mock private UserService userService;
+  @Mock private CreateUser createUser;
+
+  @Mock private UpdateUserById updateUserById;
+
+  @Mock private DeleteUserById deleteUserById;
 
   @Mock private Context ctx;
 
@@ -46,7 +51,6 @@ public class UserControllerTest {
   @BeforeAll
   public static void setup() {
     Constants.init();
-    BCRYPT_LOG_ROUNDS = Constants.APP_ENV.BCRYPT_LOG_ROUNDS();
   }
 
   @SuppressWarnings("unchecked")
@@ -65,7 +69,7 @@ public class UserControllerTest {
     public void getUserById_serviceReturnsUserNotFoundError_throwFailureSignal() {
       int nonExistingId = 999;
       whenGettingPathParamId().thenReturn(nonExistingId);
-      when(userService.getUserById(nonExistingId))
+      when(getUserById.execute(nonExistingId))
           .thenReturn(Result.failure(UserNotFoundError.byId(nonExistingId)));
 
       assertThatThrownBy(() -> userController.getUserById(ctx))
@@ -92,8 +96,7 @@ public class UserControllerTest {
       when(request.toCommand()).thenReturn(command);
 
       when(ctx.bodyAsClass(UserCreateRequest.class)).thenReturn(request);
-      when(userService.createUser(command))
-          .thenReturn(Result.failure(new ValidationNotification<>()));
+      when(createUser.execute(command)).thenReturn(Result.failure(new ValidationNotification<>()));
 
       assertThatThrownBy(() -> userController.createUser(ctx))
           .isInstanceOf(FailureSignal.class)
@@ -111,8 +114,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName(
-        "updateUserById: given the service returns UpdateUserByIdError, then throw FailureSignal")
+    @DisplayName("updateUserById: given the service returns Error, then throw FailureSignal")
     public void updateUserById_serviceReturnsUpdateUserByIdError_throwFailureSignal() {
       UserUpdateRequest request = mock(UserUpdateRequest.class);
       UpdateUserCommand command = mock(UpdateUserCommand.class);
@@ -120,13 +122,13 @@ public class UserControllerTest {
       whenGettingPathParamId().thenReturn(1);
 
       when(ctx.bodyAsClass(UserUpdateRequest.class)).thenReturn(request);
-      when(userService.updateUserById(1, command))
-          .thenReturn(Result.failure(new UserService.UpdateUserByIdError.EmptyCommand()));
+      when(updateUserById.execute(1, command))
+          .thenReturn(Result.failure(new UpdateUserById.Error.EmptyCommand()));
 
       assertThatThrownBy(() -> userController.updateUserById(ctx))
           .isInstanceOf(FailureSignal.class)
           .extracting(fs -> ((FailureSignal) fs).getError())
-          .isInstanceOf(UserService.UpdateUserByIdError.class);
+          .isInstanceOf(UpdateUserById.Error.class);
     }
 
     @Test
@@ -144,7 +146,7 @@ public class UserControllerTest {
     public void deleteUserById_serviceReturnsUserNotFoundError_throwFailureSignal() {
       int nonExistingId = 999;
       whenGettingPathParamId().thenReturn(nonExistingId);
-      when(userService.deleteUserById(nonExistingId))
+      when(deleteUserById.execute(nonExistingId))
           .thenReturn(Result.failure(UserNotFoundError.byId(nonExistingId)));
 
       assertThatThrownBy(() -> userController.deleteUserById(ctx))
@@ -165,25 +167,9 @@ public class UserControllerTest {
     @Test
     @DisplayName("getAllUsers: given there are users, then respond 200 with users list")
     public void getAllUsers_thereAreUsers_respond200WithUsersList() {
-      Instant instant = Instant.now();
-      List<User> fakeUsers =
-          List.of(
-              new User(
-                  1,
-                  ResultAsserts.success(Name.of("John Doe")),
-                  ResultAsserts.success(Email.of("john.doe@example.com")),
-                  ResultAsserts.success(PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS)),
-                  instant,
-                  instant),
-              new User(
-                  2,
-                  ResultAsserts.success(Name.of("Jane Smith")),
-                  ResultAsserts.success(Email.of("jane.smith@example.com")),
-                  ResultAsserts.success(PasswordHash.generate("87654321", BCRYPT_LOG_ROUNDS)),
-                  instant,
-                  instant));
+      List<User> fakeUsers = List.of(buildUser(1), buildUser(2));
 
-      when(userService.getAllUsers()).thenReturn(fakeUsers);
+      when(getAllUsers.execute()).thenReturn(fakeUsers);
       userController.getAllUsers(ctx);
 
       verify(ctx).status(200);
@@ -198,7 +184,7 @@ public class UserControllerTest {
     public void getAllUsers_thereAreNoUsers_respond200WithEmptyList() {
       List<User> fakeUsers = List.of();
 
-      when(userService.getAllUsers()).thenReturn(fakeUsers);
+      when(getAllUsers.execute()).thenReturn(fakeUsers);
       userController.getAllUsers(ctx);
 
       verify(ctx).status(200);
@@ -208,19 +194,10 @@ public class UserControllerTest {
     @Test
     @DisplayName("getUserById: given the service returns User, then return 200 with User")
     public void getUserById_serviceReturnsUser_respond200WithUser() {
-      Instant instant = Instant.now();
-      int id = 1;
-      User fakeUser =
-          new User(
-              id,
-              ResultAsserts.success(Name.of("John Doe")),
-              ResultAsserts.success(Email.of("johndoe@gmail.com")),
-              ResultAsserts.success(PasswordHash.generate("12345678", BCRYPT_LOG_ROUNDS)),
-              instant,
-              instant);
+      User fakeUser = VALID_USER;
 
-      whenGettingPathParamId().thenReturn(id);
-      when(userService.getUserById(id)).thenReturn(Result.success(fakeUser));
+      whenGettingPathParamId().thenReturn(fakeUser.id());
+      when(getUserById.execute(fakeUser.id())).thenReturn(Result.success(fakeUser));
 
       userController.getUserById(ctx);
 
@@ -231,26 +208,18 @@ public class UserControllerTest {
     @Test
     @DisplayName("createUser: given the service returns User, then respond 201 with new user")
     public void createUser_serviceReturnsUser_respond201WithNewUser() {
-      Instant instant = Instant.now();
+      User user = VALID_USER;
       UserCreateRequest request =
-          new UserCreateRequest("John Doe", "johndoe@gmail.com", "12345678");
-      User fakeUser =
-          new User(
-              1,
-              ResultAsserts.success(Name.of(request.name())),
-              ResultAsserts.success(Email.of(request.email())),
-              ResultAsserts.success(PasswordHash.generate(request.password(), BCRYPT_LOG_ROUNDS)),
-              instant,
-              instant);
+          new UserCreateRequest(user.name().value(), user.email().value(), VALID_PASSWORD_STRING);
 
       when(ctx.bodyAsClass(UserCreateRequest.class)).thenReturn(request);
 
-      when(userService.createUser(request.toCommand())).thenReturn(Result.success(fakeUser));
+      when(createUser.execute(request.toCommand())).thenReturn(Result.success(user));
 
       userController.createUser(ctx);
 
       verify(ctx).status(201);
-      verify(ctx).json(UserMapper.toCreateResponse(fakeUser));
+      verify(ctx).json(UserMapper.toCreateResponse(user));
     }
 
     @Test
@@ -258,22 +227,13 @@ public class UserControllerTest {
         "updateUserById: given the service returns User, then respond 200 with updated user")
     public void updateUserById_serviceReturnsUser_respond200WithUpdatedUser() {
       UserUpdateRequest request =
-          new UserUpdateRequest("John Doe", "john@mail.com", "password12345678");
-      int id = 1;
+          new UserUpdateRequest(VALID_EMAIL_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
-      Instant instant = Instant.now();
-      User fakeUser =
-          new User(
-              id,
-              ResultAsserts.success(Name.of(request.name())),
-              ResultAsserts.success(Email.of(request.email())),
-              ResultAsserts.success(PasswordHash.generate(request.password(), BCRYPT_LOG_ROUNDS)),
-              instant,
-              instant);
+      User fakeUser = VALID_USER;
 
-      whenGettingPathParamId().thenReturn(id);
+      whenGettingPathParamId().thenReturn(fakeUser.id());
       when(ctx.bodyAsClass(UserUpdateRequest.class)).thenReturn(request);
-      when(userService.updateUserById(id, request.toCommand()))
+      when(updateUserById.execute(fakeUser.id(), request.toCommand()))
           .thenReturn(Result.success(fakeUser));
 
       userController.updateUserById(ctx);
@@ -287,7 +247,7 @@ public class UserControllerTest {
     public void deleteUserById_serviceReturnsSuccess_respond204NoContent() {
       int validId = 1;
       whenGettingPathParamId().thenReturn(validId);
-      when(userService.deleteUserById(validId)).thenReturn(Result.success(null));
+      when(deleteUserById.execute(validId)).thenReturn(Result.success(null));
 
       userController.deleteUserById(ctx);
 

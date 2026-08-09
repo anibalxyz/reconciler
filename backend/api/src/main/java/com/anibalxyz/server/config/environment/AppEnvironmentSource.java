@@ -3,7 +3,8 @@ package com.anibalxyz.server.config.environment;
 import com.anibalxyz.features.auth.api.env.AuthApiEnvironment;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
-import com.anibalxyz.features.users.application.env.UsersEnvironment;
+import com.anibalxyz.features.users.application.CreateUser;
+import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.modules.startup.ServerEnvironment;
 import io.javalin.http.SameSite;
@@ -40,7 +41,8 @@ public record AppEnvironmentSource(
     SameSite AUTH_COOKIE_SAMESITE,
     String AUTH_COOKIE_PATH,
     Boolean SWAGGER_ENABLED)
-    implements UsersEnvironment,
+    implements UpdateUserById.Env,
+        CreateUser.Env,
         ServerEnvironment,
         JwtEnvironment,
         AuthApiEnvironment,
