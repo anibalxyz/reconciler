@@ -3,14 +3,29 @@ package com.anibalxyz.features.users.api;
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 import com.anibalxyz.features.common.api.Role;
+import com.anibalxyz.features.users.api.handlers.*;
+import com.anibalxyz.features.users.api.openapi.*;
 import com.anibalxyz.server.config.modules.startup.StartupConfig;
 import io.javalin.config.JavalinConfig;
 
 public class UserRoutes implements StartupConfig {
-  private final UserApi userApi;
+  private final GetAllUsersHandler getAllUsersHandler;
+  private final GetUserByIdHandler getUserByIdHandler;
+  private final CreateUserHandler createUserHandler;
+  private final UpdateUserByIdHandler updateUserByIdHandler;
+  private final DeleteUserByIdHandler deleteUserByIdHandler;
 
-  public UserRoutes(UserApi userApi) {
-    this.userApi = userApi;
+  public UserRoutes(
+      GetAllUsersHandler getAllUsersHandler,
+      GetUserByIdHandler getUserByIdHandler,
+      CreateUserHandler createUserHandler,
+      UpdateUserByIdHandler updateUserByIdHandler,
+      DeleteUserByIdHandler deleteUserByIdHandler) {
+    this.getAllUsersHandler = getAllUsersHandler;
+    this.getUserByIdHandler = getUserByIdHandler;
+    this.createUserHandler = createUserHandler;
+    this.updateUserByIdHandler = updateUserByIdHandler;
+    this.deleteUserByIdHandler = deleteUserByIdHandler;
   }
 
   @Override
@@ -20,14 +35,14 @@ public class UserRoutes implements StartupConfig {
             path(
                 "/api/users",
                 () -> {
-                  get(userApi::getAllUsers, Role.AUTHENTICATED);
-                  post(userApi::createUser, Role.GUEST);
+                  get(getAllUsersHandler, Role.AUTHENTICATED);
+                  post(createUserHandler, Role.GUEST);
                   path(
                       "/{id}",
                       () -> {
-                        get(userApi::getUserById, Role.AUTHENTICATED);
-                        put(userApi::updateUserById, Role.AUTHENTICATED);
-                        delete(userApi::deleteUserById, Role.AUTHENTICATED);
+                        get(getUserByIdHandler, Role.AUTHENTICATED);
+                        put(updateUserByIdHandler, Role.AUTHENTICATED);
+                        delete(deleteUserByIdHandler, Role.AUTHENTICATED);
                       });
                 }));
   }

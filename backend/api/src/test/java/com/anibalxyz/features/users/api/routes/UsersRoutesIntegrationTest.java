@@ -1,4 +1,4 @@
-package com.anibalxyz.features.users;
+package com.anibalxyz.features.users.api.routes;
 
 import static com.anibalxyz.shared.Constants.Users.*;
 import static com.anibalxyz.shared.Helpers.*;
