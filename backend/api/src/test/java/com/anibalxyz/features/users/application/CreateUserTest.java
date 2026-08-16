@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.features.users.api.in.UserCreateRequest;
+import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.*;
@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tests for CreateUser service")
 public class CreateUserTest {
   @Mock private UserRepository userRepository;
 
@@ -45,8 +46,8 @@ public class CreateUserTest {
     @Test
     @DisplayName("createUser: given valid data, then return the created user")
     public void createUser_validData_returnCreatedUser() {
-      UserCreateRequest request =
-          new UserCreateRequest("User 1", "user1@mail.com", VALID_PASSWORD_STRING);
+      CreateUserRequest request =
+          new CreateUserRequest("User 1", "user1@mail.com", VALID_PASSWORD_STRING);
 
       when(userRepository.findByEmail(ResultAsserts.success(Email.of(request.email()))))
           .thenReturn(Optional.empty());

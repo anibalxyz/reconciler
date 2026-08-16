@@ -9,8 +9,7 @@ import io.javalin.openapi.OpenApiName;
 import java.time.Instant;
 import java.util.List;
 
-// TODO: improve semantics
-public record UserDetailResponse(
+public record DetailedUserResponse(
     @OpenApiExample("1") int id,
     @OpenApiExample("John Doe") String name,
     @OpenApiExample("john.doe@example.com") String email,
@@ -20,14 +19,14 @@ public record UserDetailResponse(
 
   @JsonPropertyOrder({"data", "meta"})
   @OpenApiName("UserDetailResponseCollection")
-  public static class Collection extends CollectionResponse<UserDetailResponse> {
-    public Collection(List<UserDetailResponse> data, ResponseMeta meta) {
+  public static class Collection extends CollectionResponse<DetailedUserResponse> {
+    public Collection(List<DetailedUserResponse> data, ResponseMeta meta) {
       super(data, meta);
     }
 
     @Override
     @OpenApiName("data")
-    public List<UserDetailResponse> data() {
+    public List<DetailedUserResponse> data() {
       return super.data();
     }
 

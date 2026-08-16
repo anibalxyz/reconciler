@@ -1,0 +1,75 @@
+package com.anibalxyz.features.users.api.handlers;
+
+import static com.anibalxyz.shared.Constants.Users.VALID_USER;
+import static com.anibalxyz.shared.Helpers.stubStatusChaining;
+import static com.anibalxyz.shared.Helpers.whenGettingPathParamId;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.anibalxyz.core.Result;
+import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.features.users.api.UserMapper;
+import com.anibalxyz.features.users.application.GetUserById;
+import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.error.UserNotFoundError;
+import com.anibalxyz.shared.Constants;
+import io.javalin.http.BadRequestResponse;
+import io.javalin.http.Context;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("Tests for GetUserByIdHandler")
+public class GetUserByIdHandlerTest {
+  @Mock private GetUserById getUserById;
+  @Mock private Context ctx;
+  @InjectMocks private GetUserByIdHandler getUserByIdHandler;
+
+  @BeforeAll
+  public static void setup() {
+    Constants.init();
+  }
+
+  @Test
+  @DisplayName("getUserById: given the service returns UserNotFoundError, then throw FailureSignal")
+  public void getUserById_serviceReturnsUserNotFoundError_throwFailureSignal() {
+    int nonExistingId = 999;
+    whenGettingPathParamId(ctx).thenReturn(nonExistingId);
+    when(getUserById.execute(nonExistingId))
+        .thenReturn(Result.failure(UserNotFoundError.byId(nonExistingId)));
+
+    assertThatThrownBy(() -> getUserByIdHandler.handle(ctx))
+        .isInstanceOf(FailureSignal.class)
+        .extracting(e -> ((FailureSignal) e).getError())
+        .isInstanceOf(UserNotFoundError.class);
+  }
+
+  @Test
+  @DisplayName("getUserById: given an invalid id, then throw BadRequestResponse")
+  public void getUserById_invalidId_throwBadRequestResponse() {
+    whenGettingPathParamId(ctx).thenThrow(new BadRequestResponse());
+
+    assertThatThrownBy(() -> getUserByIdHandler.handle(ctx)).isInstanceOf(BadRequestResponse.class);
+  }
+
+  @Test
+  @DisplayName("getUserById: given the service returns User, then return 200 with User")
+  public void getUserById_serviceReturnsUser_respond200WithUser() {
+    User fakeUser = VALID_USER;
+
+    stubStatusChaining(ctx);
+    whenGettingPathParamId(ctx).thenReturn(fakeUser.id());
+    when(getUserById.execute(fakeUser.id())).thenReturn(Result.success(fakeUser));
+
+    getUserByIdHandler.handle(ctx);
+
+    verify(ctx).status(200);
+    verify(ctx).json(UserMapper.toDetailResponse(fakeUser));
+  }
+}

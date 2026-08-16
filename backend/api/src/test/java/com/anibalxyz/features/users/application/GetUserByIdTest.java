@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tests for GetUserById service")
 public class GetUserByIdTest {
   @Mock private UserRepository userRepository;
 

@@ -11,8 +11,9 @@ import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
 import com.anibalxyz.features.system.api.SystemController;
 import com.anibalxyz.features.system.api.SystemRoutes;
-import com.anibalxyz.features.users.api.UserController;
 import com.anibalxyz.features.users.api.UserRoutes;
+import com.anibalxyz.features.users.api.handlers.*;
+import com.anibalxyz.features.users.api.openapi.*;
 import com.anibalxyz.features.users.application.*;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
@@ -97,10 +98,14 @@ public final class DependencyContainer {
     AuthService authService =
         new AuthService(env, clock, getUserByEmail, jwtService, refreshTokenService);
 
-    // 5. Controllers and Middlewares
-    // Controllers
-    UserController userController =
-        new UserController(getAllUsers, getUserById, createUser, updateUserById, deleteUserById);
+    // 5. Handlers and Middlewares
+    // Handlers
+    GetAllUsersHandler getAllUsersHandler = new GetAllUsersHandler(getAllUsers);
+    GetUserByIdHandler getUserByIdHandler = new GetUserByIdHandler(getUserById);
+    CreateUserHandler createUserHandler = new CreateUserHandler(createUser);
+    UpdateUserByIdHandler updateUserByIdHandler = new UpdateUserByIdHandler(updateUserById);
+    DeleteUserByIdHandler deleteUserByIdHandler = new DeleteUserByIdHandler(deleteUserById);
+
     AuthApi authController = new AuthController(env, authService, refreshTokenService, clock);
     SystemController systemController = new SystemController(persistenceManager);
 
@@ -110,7 +115,13 @@ public final class DependencyContainer {
     // 6. Routes and Events
     // Routes
     systemRoutes = new SystemRoutes(systemController);
-    userRoutes = new UserRoutes(userController);
+    userRoutes =
+        new UserRoutes(
+            getAllUsersHandler,
+            getUserByIdHandler,
+            createUserHandler,
+            updateUserByIdHandler,
+            deleteUserByIdHandler);
     authRoutes = new AuthRoutes(authController);
 
     // Events

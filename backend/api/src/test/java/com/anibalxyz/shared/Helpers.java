@@ -9,8 +9,10 @@ import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
+import io.javalin.validation.Validator;
 import jakarta.persistence.EntityManager;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.OngoingStubbing;
 
 /**
  * Utility class providing helper methods for mocking, capturing arguments, and managing the
@@ -42,6 +44,17 @@ public class Helpers {
     ArgumentCaptor<Cookie> captor = ArgumentCaptor.forClass(Cookie.class);
     verify(ctx).cookie(captor.capture());
     return captor.getValue();
+  }
+
+  @SuppressWarnings("unchecked")
+  public static OngoingStubbing<Integer> whenGettingPathParamId(Context ctx) {
+    Validator<Integer> mockValidator = (Validator<Integer>) mock(Validator.class);
+    when(ctx.pathParamAsClass("id", Integer.class)).thenReturn(mockValidator);
+    return when(mockValidator.getOrThrow(any()));
+  }
+
+  public static void stubStatusChaining(Context ctx) {
+    when(ctx.status(anyInt())).thenReturn(ctx);
   }
 
   /** Cleans all data from the public schema of the database by truncating all tables. */

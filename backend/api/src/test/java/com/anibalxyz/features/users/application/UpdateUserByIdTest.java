@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tests for UpdateUserById service")
 public class UpdateUserByIdTest {
   @Mock private UserRepository userRepository;
 
