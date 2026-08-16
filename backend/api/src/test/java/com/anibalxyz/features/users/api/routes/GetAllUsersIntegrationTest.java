@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.users.api.UserMapper;
-import com.anibalxyz.features.users.api.out.UserDetailResponse;
+import com.anibalxyz.features.users.api.out.DetailedUserResponse;
 import com.anibalxyz.features.users.infra.UserEntity;
 import java.util.List;
 import okhttp3.Response;
@@ -23,13 +23,13 @@ public class GetAllUsersIntegrationTest extends BaseUsersIntegrationTest {
         List.of(
             persistUser(em, "Name", "name@mail.com"),
             persistUser(em, "Alfredo", "alfredo@mail.com"));
-    CollectionResponse<UserDetailResponse> expected =
+    CollectionResponse<DetailedUserResponse> expected =
         CollectionResponse.ofSinglePage(
             persisted.stream().map(u -> UserMapper.toDetailResponse(u.toDomain())).toList());
 
     Response response = http.get("/users");
     assertThat(response.code()).isEqualTo(200);
-    CollectionResponse<UserDetailResponse> actual =
+    CollectionResponse<DetailedUserResponse> actual =
         http.parseBody(response, new TypeReference<>() {});
     assertThat(actual).isEqualTo(expected);
   }
@@ -39,7 +39,7 @@ public class GetAllUsersIntegrationTest extends BaseUsersIntegrationTest {
   public void GET_users_noUsersExist_return200AndEmptyList() {
     Response response = http.get("/users");
     assertThat(response.code()).isEqualTo(200);
-    CollectionResponse<UserDetailResponse> actual =
+    CollectionResponse<DetailedUserResponse> actual =
         http.parseBody(response, new TypeReference<>() {});
     assertThat(actual.data()).isEmpty();
   }

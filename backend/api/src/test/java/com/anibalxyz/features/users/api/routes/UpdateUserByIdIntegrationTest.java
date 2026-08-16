@@ -8,9 +8,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.users.api.in.UserCreateRequest;
-import com.anibalxyz.features.users.api.in.UserUpdateRequest;
-import com.anibalxyz.features.users.api.out.UserDetailResponse;
+import com.anibalxyz.features.users.api.in.CreateUserRequest;
+import com.anibalxyz.features.users.api.in.UpdateUserRequest;
+import com.anibalxyz.features.users.api.out.DetailedUserResponse;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
@@ -32,7 +32,7 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
   @DisplayName("PUT /users/{id}: given no properties provided, then return 400 Bad Request")
   public void PUT_users_id_noPropertiesProvided_return400() {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
-    UserUpdateRequest requestBody = new UserUpdateRequest(null, null, null);
+    UpdateUserRequest requestBody = new UpdateUserRequest(null, null, null);
 
     ErrorResult expectedResult = ErrorMapper.map(new UpdateUserById.Error.EmptyCommand());
 
@@ -52,7 +52,7 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
         persistUser(em, "existing." + VALID_NAME_STRING, "existing." + VALID_EMAIL_STRING)
             .toDomain();
     User userToUpdate = persistUser(em, VALID_NAME_STRING, "update.me@mail.com").toDomain();
-    UserUpdateRequest requestBody = new UserUpdateRequest(null, existingUser.email().value(), null);
+    UpdateUserRequest requestBody = new UpdateUserRequest(null, existingUser.email().value(), null);
 
     ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
 
@@ -70,8 +70,8 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
   public void PUT_users_id_invalidProperty_return400ValidationError() {
     User user =
         persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
-    UserCreateRequest requestBody =
-        new UserCreateRequest("  ", VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
+    CreateUserRequest requestBody =
+        new CreateUserRequest("  ", VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
     ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -91,8 +91,8 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
     Instant prevUpdatedAt = user.updatedAt();
 
-    UserUpdateRequest request =
-        new UserUpdateRequest(
+    UpdateUserRequest request =
+        new UpdateUserRequest(
             updatingProp.equals("name") ? "New User" : null,
             updatingProp.equals("email") ? "new.user@mail.com" : null,
             updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD_STRING) : null);
@@ -104,7 +104,7 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
     em.refresh(updatedEntity);
     User updated = updatedEntity.toDomain();
 
-    UserDetailResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+    DetailedUserResponse responseBody = http.parseBody(response, new TypeReference<>() {});
 
     switch (updatingProp) {
       case "name" -> {

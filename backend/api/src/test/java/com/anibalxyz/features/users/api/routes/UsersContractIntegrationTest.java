@@ -3,7 +3,7 @@ package com.anibalxyz.features.users.api.routes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.users.api.in.UserUpdateRequest;
+import com.anibalxyz.features.users.api.in.UpdateUserRequest;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
@@ -57,7 +57,7 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
           case "PUT" ->
               http.put(
                   "/users/" + nonExistingId,
-                  new UserUpdateRequest("Name", "email@mail.com", "1234"));
+                  new UpdateUserRequest("Name", "email@mail.com", "1234"));
           case "DELETE" -> http.delete("/users/" + nonExistingId);
           default -> throw new IllegalArgumentException("Method not supported");
         };

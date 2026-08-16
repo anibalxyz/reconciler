@@ -2,7 +2,7 @@ package com.anibalxyz.features.users.api.openapi;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponseExamples;
-import com.anibalxyz.features.users.api.out.UserDetailResponse;
+import com.anibalxyz.features.users.api.out.DetailedUserResponse;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
 
@@ -27,7 +27,7 @@ public interface GetUserByIdEndpoint {
         @OpenApiResponse(
             status = "200",
             description = "Successfully retrieved the user.",
-            content = @OpenApiContent(from = UserDetailResponse.class)),
+            content = @OpenApiContent(from = DetailedUserResponse.class)),
         @OpenApiResponse(
             status = "401",
             description = "Authentication information is missing or invalid.",

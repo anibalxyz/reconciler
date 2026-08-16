@@ -11,7 +11,7 @@ import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.UserMapper;
-import com.anibalxyz.features.users.api.in.UserCreateRequest;
+import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.application.CreateUser;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.domain.User;
@@ -41,11 +41,11 @@ public class CreateUserHandlerTest {
   @DisplayName(
       "createUser: given the service returns ValidationNotification, then throw FailureSignal")
   public void createUser_serviceReturnsValidationNotification_throwFailureSignal() {
-    UserCreateRequest request = mock(UserCreateRequest.class);
+    CreateUserRequest request = mock(CreateUserRequest.class);
     CreateUserCommand command = mock(CreateUserCommand.class);
     when(request.toCommand()).thenReturn(command);
 
-    when(ctx.bodyAsClass(UserCreateRequest.class)).thenReturn(request);
+    when(ctx.bodyAsClass(CreateUserRequest.class)).thenReturn(request);
     when(createUser.execute(command)).thenReturn(Result.failure(new ValidationNotification<>()));
 
     assertThatThrownBy(() -> createUserHandler.handle(ctx))
@@ -58,11 +58,11 @@ public class CreateUserHandlerTest {
   @DisplayName("createUser: given the service returns User, then respond 201 with new user")
   public void createUser_serviceReturnsUser_respond201WithNewUser() {
     User user = VALID_USER;
-    UserCreateRequest request =
-        new UserCreateRequest(user.name().value(), user.email().value(), VALID_PASSWORD_STRING);
+    CreateUserRequest request =
+        new CreateUserRequest(user.name().value(), user.email().value(), VALID_PASSWORD_STRING);
 
     stubStatusChaining(ctx);
-    when(ctx.bodyAsClass(UserCreateRequest.class)).thenReturn(request);
+    when(ctx.bodyAsClass(CreateUserRequest.class)).thenReturn(request);
     when(createUser.execute(request.toCommand())).thenReturn(Result.success(user));
 
     createUserHandler.handle(ctx);

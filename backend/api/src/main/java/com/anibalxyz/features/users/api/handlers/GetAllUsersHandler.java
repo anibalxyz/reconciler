@@ -3,7 +3,7 @@ package com.anibalxyz.features.users.api.handlers;
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.openapi.GetAllUsersEndpoint;
-import com.anibalxyz.features.users.api.out.UserDetailResponse;
+import com.anibalxyz.features.users.api.out.DetailedUserResponse;
 import com.anibalxyz.features.users.application.GetAllUsers;
 import com.anibalxyz.features.users.domain.User;
 import io.javalin.http.Context;
@@ -20,11 +20,11 @@ public class GetAllUsersHandler implements Handler, GetAllUsersEndpoint {
 
   @Override
   public void handle(@NotNull Context ctx) {
-      List<User> users = getAllUsers.execute();
-      List<UserDetailResponse> usersList = users.stream().map(UserMapper::toDetailResponse).toList();
-      CollectionResponse<UserDetailResponse> response = CollectionResponse.ofSinglePage(usersList);
+    List<User> users = getAllUsers.execute();
+    List<DetailedUserResponse> usersList =
+        users.stream().map(UserMapper::toDetailResponse).toList();
+    CollectionResponse<DetailedUserResponse> response = CollectionResponse.ofSinglePage(usersList);
 
-      ctx.status(200).json(response);
+    ctx.status(200).json(response);
   }
-
 }

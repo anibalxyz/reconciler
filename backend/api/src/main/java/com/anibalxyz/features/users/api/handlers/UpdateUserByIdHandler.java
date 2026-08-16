@@ -4,7 +4,7 @@ import static com.anibalxyz.features.common.api.Utils.getParamId;
 
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.UserMapper;
-import com.anibalxyz.features.users.api.in.UserUpdateRequest;
+import com.anibalxyz.features.users.api.in.UpdateUserRequest;
 import com.anibalxyz.features.users.api.openapi.UpdateUserByIdEndpoint;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.User;
@@ -23,9 +23,9 @@ public class UpdateUserByIdHandler implements Handler, UpdateUserByIdEndpoint {
   public void handle(@NotNull Context ctx) {
     int id = getParamId(ctx);
 
-    UserUpdateRequest userUpdateRequest = ctx.bodyAsClass(UserUpdateRequest.class);
+    UpdateUserRequest updateUserRequest = ctx.bodyAsClass(UpdateUserRequest.class);
     User user =
-        updateUserById.execute(id, userUpdateRequest.toCommand()).orThrow(FailureSignal::new);
+        updateUserById.execute(id, updateUserRequest.toCommand()).orThrow(FailureSignal::new);
 
     ctx.status(200).json(UserMapper.toDetailResponse(user));
   }

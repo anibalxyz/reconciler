@@ -2,7 +2,7 @@ package com.anibalxyz.features.users.api.handlers;
 
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.UserMapper;
-import com.anibalxyz.features.users.api.in.UserCreateRequest;
+import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.api.openapi.CreateUserEndpoint;
 import com.anibalxyz.features.users.application.CreateUser;
 import com.anibalxyz.features.users.domain.User;
@@ -19,7 +19,7 @@ public class CreateUserHandler implements Handler, CreateUserEndpoint {
 
   @Override
   public void handle(@NotNull Context ctx) {
-    UserCreateRequest request = ctx.bodyAsClass(UserCreateRequest.class);
+    CreateUserRequest request = ctx.bodyAsClass(CreateUserRequest.class);
 
     User user = createUser.execute(request.toCommand()).orThrow(FailureSignal::new);
 

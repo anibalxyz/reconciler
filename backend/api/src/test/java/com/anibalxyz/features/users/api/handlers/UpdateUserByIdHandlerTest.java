@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.UserMapper;
-import com.anibalxyz.features.users.api.in.UserUpdateRequest;
+import com.anibalxyz.features.users.api.in.UpdateUserRequest;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;
 import com.anibalxyz.features.users.domain.User;
@@ -49,12 +49,12 @@ public class UpdateUserByIdHandlerTest {
   @Test
   @DisplayName("updateUserById: given the service returns Error, then throw FailureSignal")
   public void updateUserById_serviceReturnsUpdateUserByIdError_throwFailureSignal() {
-    UserUpdateRequest request = mock(UserUpdateRequest.class);
+    UpdateUserRequest request = mock(UpdateUserRequest.class);
     UpdateUserCommand command = mock(UpdateUserCommand.class);
     when(request.toCommand()).thenReturn(command);
     whenGettingPathParamId(ctx).thenReturn(1);
 
-    when(ctx.bodyAsClass(UserUpdateRequest.class)).thenReturn(request);
+    when(ctx.bodyAsClass(UpdateUserRequest.class)).thenReturn(request);
     when(updateUserById.execute(1, command))
         .thenReturn(Result.failure(new UpdateUserById.Error.EmptyCommand()));
 
@@ -67,15 +67,15 @@ public class UpdateUserByIdHandlerTest {
   @Test
   @DisplayName("updateUserById: given the service returns User, then respond 200 with updated user")
   public void updateUserById_serviceReturnsUser_respond200WithUpdatedUser() {
-    UserUpdateRequest request =
-        new UserUpdateRequest(VALID_EMAIL_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
+    UpdateUserRequest request =
+        new UpdateUserRequest(VALID_EMAIL_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
     User fakeUser = VALID_USER;
 
     stubStatusChaining(ctx);
     whenGettingPathParamId(ctx).thenReturn(fakeUser.id());
     stubStatusChaining(ctx);
-    when(ctx.bodyAsClass(UserUpdateRequest.class)).thenReturn(request);
+    when(ctx.bodyAsClass(UpdateUserRequest.class)).thenReturn(request);
     when(updateUserById.execute(fakeUser.id(), request.toCommand()))
         .thenReturn(Result.success(fakeUser));
 

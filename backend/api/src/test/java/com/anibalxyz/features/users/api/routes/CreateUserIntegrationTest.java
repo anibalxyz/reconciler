@@ -9,8 +9,8 @@ import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.users.api.in.UserCreateRequest;
-import com.anibalxyz.features.users.api.out.UserCreateResponse;
+import com.anibalxyz.features.users.api.in.CreateUserRequest;
+import com.anibalxyz.features.users.api.out.CreateUserResponse;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.infra.UserEntity;
@@ -28,8 +28,8 @@ public class CreateUserIntegrationTest extends BaseUsersIntegrationTest {
   @Test
   @DisplayName("POST /users: given an invalid property, then return 400 validation error")
   public void POST_users_invalidProperty_return400ValidationError() {
-    UserCreateRequest requestBody =
-        new UserCreateRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
+    CreateUserRequest requestBody =
+        new CreateUserRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
     ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -46,8 +46,8 @@ public class CreateUserIntegrationTest extends BaseUsersIntegrationTest {
   @Test
   @DisplayName("POST /users: given a missing property, then return 400 Bad Request")
   public void POST_users_missingProperty_return400() {
-    UserCreateRequest requestBody =
-        new UserCreateRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
+    CreateUserRequest requestBody =
+        new CreateUserRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
     ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
@@ -66,8 +66,8 @@ public class CreateUserIntegrationTest extends BaseUsersIntegrationTest {
   public void POST_users_alreadyTakenEmail_return400() {
     String existingEmail = "existing." + VALID_EMAIL_STRING;
     persistUser(em, "existing." + VALID_NAME_STRING, existingEmail);
-    UserCreateRequest requestBody =
-        new UserCreateRequest(VALID_NAME_STRING, existingEmail, VALID_PASSWORD_STRING);
+    CreateUserRequest requestBody =
+        new CreateUserRequest(VALID_NAME_STRING, existingEmail, VALID_PASSWORD_STRING);
 
     ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
 
@@ -83,13 +83,13 @@ public class CreateUserIntegrationTest extends BaseUsersIntegrationTest {
   @Test
   @DisplayName("POST /users: given valid user data, then return 201 and create the user")
   public void POST_users_validData_return201AndCreateUser() {
-    UserCreateRequest requestBody =
-        new UserCreateRequest("New User", "new.user@mail.com", VALID_PASSWORD_STRING);
+    CreateUserRequest requestBody =
+        new CreateUserRequest("New User", "new.user@mail.com", VALID_PASSWORD_STRING);
 
     Response response = http.post("/users", requestBody);
     assertThat(response.code()).isEqualTo(201);
 
-    UserCreateResponse responseBody = http.parseBody(response, new TypeReference<>() {});
+    CreateUserResponse responseBody = http.parseBody(response, new TypeReference<>() {});
     User persisted = em.find(UserEntity.class, responseBody.id()).toDomain();
 
     assertNotNull(persisted);
