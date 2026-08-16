@@ -19,7 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Tests for GetUserByEmail Use Case")
+@DisplayName("Tests for GetUserByEmail service")
 public class GetUserByEmailTest {
   @Mock private UserRepository userRepository;
 
