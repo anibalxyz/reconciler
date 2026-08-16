@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.api.routes;
 
+import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
@@ -32,7 +33,7 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
         InfrastructureErrorMapper.map(
             new BadRequestResponse("Invalid ID format. Must be a number."));
 
-    Response response = http.get("/users/abc");
+    Response response = http.get("/users/abc", createJwtHeader(validJwt));
     assertThat(400).isEqualTo(response.code()).isEqualTo(expectedResult.status());
 
     ErrorResponse expected = expectedResult.response();
@@ -53,12 +54,13 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
 
     Response response =
         switch (method) {
-          case "GET" -> http.get("/users/" + nonExistingId);
+          case "GET" -> http.get("/users/" + nonExistingId, createJwtHeader(validJwt));
           case "PUT" ->
               http.put(
                   "/users/" + nonExistingId,
-                  new UpdateUserRequest("Name", "email@mail.com", "1234"));
-          case "DELETE" -> http.delete("/users/" + nonExistingId);
+                  new UpdateUserRequest("Name", "email@mail.com", "1234"),
+                  createJwtHeader(validJwt));
+          case "DELETE" -> http.delete("/users/" + nonExistingId, createJwtHeader(validJwt));
           default -> throw new IllegalArgumentException("Method not supported");
         };
 
@@ -85,7 +87,7 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
     Response response =
         method.equals("POST")
             ? http.post("/users", malformedJson)
-            : http.put("/users/1", malformedJson);
+            : http.put("/users/1", malformedJson, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(400);
 
     ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
@@ -110,7 +112,7 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
     Response response =
         method.equals("POST")
             ? http.post("/users", requestBody)
-            : http.put("/users/1", requestBody);
+            : http.put("/users/1", requestBody, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
     ErrorResponse actual = http.parseBody(response, ErrorResponse.class);

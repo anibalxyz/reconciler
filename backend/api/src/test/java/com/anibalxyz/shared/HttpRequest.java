@@ -24,14 +24,6 @@ public class HttpRequest {
     this.baseUrl = baseUrl;
   }
 
-  private Response executeRequest(Request request) {
-    try {
-      return client.newCall(request).execute();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   public Response get(String path) {
     return get(path, Map.of());
   }
@@ -42,10 +34,12 @@ public class HttpRequest {
     return executeRequest(requestBuilder.build());
   }
 
-  private RequestBody createJsonRequestBody(Object body) {
-    String jsonBody =
-        body.getClass().equals(String.class) ? (String) body : mapper.writeValueAsString(body);
-    return okhttp3.RequestBody.create(jsonBody, okhttp3.MediaType.get("application/json"));
+  private Response executeRequest(Request request) {
+    try {
+      return client.newCall(request).execute();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public Response post(String path, @NotNull Object body) {
@@ -59,15 +53,31 @@ public class HttpRequest {
     return executeRequest(requestBuilder.build());
   }
 
+  private RequestBody createJsonRequestBody(Object body) {
+    String jsonBody =
+        body.getClass().equals(String.class) ? (String) body : mapper.writeValueAsString(body);
+    return okhttp3.RequestBody.create(jsonBody, okhttp3.MediaType.get("application/json"));
+  }
+
   public Response put(String path, Object body) {
-    Request request =
-        new Request.Builder().url(baseUrl + path).put(createJsonRequestBody(body)).build();
-    return executeRequest(request);
+    return put(path, body, Map.of());
+  }
+
+  public Response put(String path, Object body, Map<String, String> headers) {
+    Request.Builder requestBuilder =
+        new Request.Builder().url(baseUrl + path).put(createJsonRequestBody(body));
+    headers.forEach(requestBuilder::addHeader);
+    return executeRequest(requestBuilder.build());
   }
 
   public Response delete(String path) {
-    Request request = new Request.Builder().url(baseUrl + path).delete().build();
-    return executeRequest(request);
+    return delete(path, Map.of());
+  }
+
+  public Response delete(String path, Map<String, String> headers) {
+    Request.Builder requestBuilder = new Request.Builder().url(baseUrl + path).delete();
+    headers.forEach(requestBuilder::addHeader);
+    return executeRequest(requestBuilder.build());
   }
 
   public <T> T parseBody(Response response, TypeReference<T> typeRef) {

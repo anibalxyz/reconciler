@@ -1,8 +1,7 @@
 package com.anibalxyz.features.auth;
 
 import static com.anibalxyz.shared.Constants.Users.*;
-import static com.anibalxyz.shared.Helpers.cleanDatabase;
-import static com.anibalxyz.shared.Helpers.persistUser;
+import static com.anibalxyz.shared.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.auth.api.JwtMiddleware;
@@ -12,19 +11,16 @@ import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.server.Application;
-import com.anibalxyz.server.DependencyContainer;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
-import io.javalin.config.JavalinConfig;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.*;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.AfterAll;
@@ -51,7 +47,7 @@ public class JwtMiddlewareIntegrationTest {
   @BeforeAll
   public static void setup() {
     Constants.init();
-    app = createApplication();
+    app = Application.create(Constants.APP_CONFIG, testClock);
     app.start(0);
 
     String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
@@ -59,17 +55,6 @@ public class JwtMiddlewareIntegrationTest {
     ObjectMapper objectMapper = new ObjectMapper();
 
     http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
-  }
-
-  private static Application createApplication() {
-    BiConsumer<JavalinConfig, DependencyContainer> startupConfigs =
-        (cfg, container) -> {
-          container.userRoutes().apply(cfg);
-          container.authRoutes().apply(cfg);
-          container.jwtMiddleware().apply(cfg);
-        };
-
-    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfigs);
   }
 
   @AfterAll
@@ -98,11 +83,6 @@ public class JwtMiddlewareIntegrationTest {
     return authResponse.accessToken();
   }
 
-  private Map<String, String> authenticationHeaders(String jwt) {
-    return Map.of(
-        JwtMiddleware.AUTHORIZATION_HEADER, JwtMiddleware.BEARER_PREFIX + (jwt == null ? "" : jwt));
-  }
-
   // NOTE: `ANY_endpoint` tests refer to any *protected* endpoint.
   //       With the current implementation (Apr 13/2026), that means it has a required role != GUEST
 
@@ -117,7 +97,7 @@ public class JwtMiddlewareIntegrationTest {
           persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
       String validJwt = loginUser(user.email().value());
 
-      Map<String, String> headers = authenticationHeaders(validJwt);
+      Map<String, String> headers = createJwtHeader(validJwt);
       Response response = http.get("/users", headers);
       assertThat(response.code()).isEqualTo(200);
     }
@@ -160,7 +140,7 @@ public class JwtMiddlewareIntegrationTest {
     void GET_users_invalidJwt_return401Unauthorized() {
       ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Invalid());
 
-      Map<String, String> headers = authenticationHeaders("invalid-token");
+      Map<String, String> headers = createJwtHeader("invalid-token");
       Response response = http.get("/users/", headers);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
@@ -182,7 +162,7 @@ public class JwtMiddlewareIntegrationTest {
 
       ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Expired());
 
-      Map<String, String> headers = authenticationHeaders(expiredJwt);
+      Map<String, String> headers = createJwtHeader(expiredJwt);
       Response response = http.get("/users/", headers);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 

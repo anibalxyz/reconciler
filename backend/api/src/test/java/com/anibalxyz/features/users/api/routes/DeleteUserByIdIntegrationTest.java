@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.api.routes;
 
+import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,7 +17,7 @@ public class DeleteUserByIdIntegrationTest extends BaseUsersIntegrationTest {
   public void DELETE_users_id_existingId_return204() {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
 
-    try (Response response = http.delete("/users/" + user.id())) {
+    try (Response response = http.delete("/users/" + user.id(), createJwtHeader(validJwt))) {
       assertThat(response.code()).isEqualTo(204);
     }
 

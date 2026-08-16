@@ -3,6 +3,7 @@ package com.anibalxyz.features.users.api.routes;
 import static com.anibalxyz.shared.Constants.Users.*;
 import static com.anibalxyz.shared.Constants.Users.VALID_EMAIL_STRING;
 import static com.anibalxyz.shared.Constants.Users.VALID_NAME_STRING;
+import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,7 +37,7 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
 
     ErrorResult expectedResult = ErrorMapper.map(new UpdateUserById.Error.EmptyCommand());
 
-    Response response = http.put("/users/" + user.id(), requestBody);
+    Response response = http.put("/users/" + user.id(), requestBody, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
     assertThat(userRepository.findById(user.id()).orElseThrow()).isEqualTo(user);
@@ -56,7 +57,8 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
 
     ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
 
-    Response response = http.put("/users/" + userToUpdate.id(), requestBody);
+    Response response =
+        http.put("/users/" + userToUpdate.id(), requestBody, createJwtHeader(validJwt));
     assertThat(400).isEqualTo(response.code()).isEqualTo(expectedResult.status());
     assertThat(userRepository.findById(userToUpdate.id()).orElseThrow().email().value())
         .isEqualTo(userToUpdate.email().value());
@@ -75,7 +77,7 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
 
     ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
-    Response response = http.put("/users/" + user.id(), requestBody);
+    Response response = http.put("/users/" + user.id(), requestBody, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
     ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
@@ -97,7 +99,7 @@ public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
             updatingProp.equals("email") ? "new.user@mail.com" : null,
             updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD_STRING) : null);
 
-    Response response = http.put("/users/" + user.id(), request);
+    Response response = http.put("/users/" + user.id(), request, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(200);
 
     UserEntity updatedEntity = em.find(UserEntity.class, user.id());

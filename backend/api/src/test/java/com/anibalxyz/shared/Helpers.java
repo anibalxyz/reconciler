@@ -3,6 +3,7 @@ package com.anibalxyz.shared;
 import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static org.mockito.Mockito.*;
 
+import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.features.users.infra.UserEntity;
@@ -11,6 +12,7 @@ import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.validation.Validator;
 import jakarta.persistence.EntityManager;
+import java.util.Map;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.OngoingStubbing;
 
@@ -106,5 +108,10 @@ public class Helpers {
     UserEntity entity = em.find(UserEntity.class, saved.id());
     em.refresh(entity);
     return entity;
+  }
+
+  public static Map<String, String> createJwtHeader(String jwt) {
+    return Map.of(
+        JwtMiddleware.AUTHORIZATION_HEADER, JwtMiddleware.BEARER_PREFIX + (jwt == null ? "" : jwt));
   }
 }

@@ -21,7 +21,6 @@ import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.Application;
-import com.anibalxyz.server.DependencyContainer;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
@@ -30,7 +29,6 @@ import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.HttpRequest;
 import com.anibalxyz.shared.MutableClock;
 import com.anibalxyz.shared.ResultAsserts;
-import io.javalin.config.JavalinConfig;
 import io.javalin.http.UnauthorizedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -38,7 +36,6 @@ import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.*;
@@ -66,7 +63,7 @@ public class AuthRoutesIntegrationTest {
   @BeforeAll
   public static void setup() {
     Constants.init();
-    app = createApplication();
+    app = Application.create(Constants.APP_CONFIG, testClock);
     app.start(0);
 
     String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
@@ -79,29 +76,9 @@ public class AuthRoutesIntegrationTest {
     env = Constants.APP_CONFIG.env();
   }
 
-  private static Application createApplication() {
-    BiConsumer<JavalinConfig, DependencyContainer> startupConfig =
-        (cfg, container) -> container.authRoutes().apply(cfg);
-
-    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfig);
-  }
-
   @AfterAll
   public static void shutdown() {
     app.stop();
-  }
-
-  private static String getValueFromCookie(String cookie, String key) {
-    if (cookie == null) {
-      return null;
-    }
-    for (String cookiePart : cookie.split(";")) {
-      String[] parts = cookiePart.trim().split("=");
-      if (parts.length > 0 && parts[0].equals(key)) {
-        return parts.length > 1 ? parts[1] : "";
-      }
-    }
-    return null;
   }
 
   private static void validateJwt(String accessToken, Integer id) {
@@ -154,6 +131,19 @@ public class AuthRoutesIntegrationTest {
     return new LoginResult(
         authResponse.accessToken(),
         getValueFromCookie(loginResponse.header("Set-Cookie"), REFRESH_TOKEN_COOKIE));
+  }
+
+  private static String getValueFromCookie(String cookie, String key) {
+    if (cookie == null) {
+      return null;
+    }
+    for (String cookiePart : cookie.split(";")) {
+      String[] parts = cookiePart.trim().split("=");
+      if (parts.length > 0 && parts[0].equals(key)) {
+        return parts.length > 1 ? parts[1] : "";
+      }
+    }
+    return null;
   }
 
   @Test

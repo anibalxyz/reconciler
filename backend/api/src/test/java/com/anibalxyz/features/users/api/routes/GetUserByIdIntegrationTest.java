@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.api.routes;
 
+import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,7 +21,7 @@ public class GetUserByIdIntegrationTest extends BaseUsersIntegrationTest {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
     DetailedUserResponse expected = UserMapper.toDetailResponse(user);
 
-    Response response = http.get("/users/" + user.id());
+    Response response = http.get("/users/" + user.id(), createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(200);
     assertThat(http.parseBody(response, new TypeReference<DetailedUserResponse>() {}))
         .isEqualTo(expected);
