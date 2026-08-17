@@ -18,4 +18,10 @@ public class SystemRoutes implements StartupConfig {
   public void apply(JavalinConfig cfg) {
     cfg.routes.apiBuilder(() -> path("/health", () -> get(systemApi::healthCheck, Role.GUEST)));
   }
+
+  /** Assumes that SwaggerConfig has been applied */
+  public void applyRedirects(JavalinConfig cfg) {
+    cfg.routes.get("/", ctx -> ctx.redirect("/swagger"));
+    cfg.routes.get("/api", ctx -> ctx.redirect("/swagger"));
+  }
 }

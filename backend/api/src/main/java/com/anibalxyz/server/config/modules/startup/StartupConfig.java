@@ -10,5 +10,5 @@ import io.javalin.config.JavalinConfig;
  */
 public interface StartupConfig {
   /** Applies the startup configuration logic to the Javalin configuration. */
-  public abstract void apply(JavalinConfig javalinConfig);
+  void apply(JavalinConfig javalinConfig);
 }

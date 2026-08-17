@@ -6,7 +6,6 @@ import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
@@ -72,13 +71,7 @@ public class Application {
 
       if (config.env().SWAGGER_ENABLED()) {
         container.swaggerConfig().apply(javalinConfig);
-
-        // TODO: move to a separate file, e.g. RedirectRoutes within features.common
-        javalinConfig.routes.get("/", ctx -> ctx.redirect("/swagger"));
-        javalinConfig.routes.get("/api", ctx -> ctx.redirect("/swagger"));
-
-        javalinConfig.routes.after(
-            "/swagger", ctx -> SwaggerConfig.swaggerPatch(ctx, config.env().APP_ENV()));
+        container.systemRoutes().applyRedirects(javalinConfig);
       }
       javalinConfig.registerPlugin(container.micrometerPlugin());
 

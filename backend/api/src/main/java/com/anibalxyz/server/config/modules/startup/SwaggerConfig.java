@@ -22,7 +22,7 @@ public class SwaggerConfig implements StartupConfig {
     this.env = env;
   }
 
-  public static void swaggerPatch(Context ctx, AppEnv env) {
+  private static void swaggerPatch(Context ctx, AppEnv env) {
     String html = ctx.result();
     if (html == null) return;
     String credentialsOption = env == AppEnv.PROD ? "same-origin" : "include";
@@ -49,6 +49,7 @@ public class SwaggerConfig implements StartupConfig {
   public void apply(JavalinConfig javalinConfig) {
     registerOpenApiPlugin(javalinConfig);
     registerSwaggerPlugin(javalinConfig);
+    javalinConfig.routes.after("/swagger", ctx -> swaggerPatch(ctx, env.APP_ENV()));
   }
 
   public void registerSwaggerPlugin(JavalinConfig javalinConfig) {
