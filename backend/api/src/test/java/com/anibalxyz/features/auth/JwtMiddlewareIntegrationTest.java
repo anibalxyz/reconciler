@@ -10,71 +10,23 @@ import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.server.Application;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
-import com.anibalxyz.shared.HttpRequest;
+import com.anibalxyz.shared.IntegrationTest;
 import io.javalin.http.UnauthorizedResponse;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import java.time.*;
 import java.util.Map;
-import okhttp3.OkHttpClient;
 import okhttp3.Response;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import tools.jackson.databind.ObjectMapper;
 
 @DisplayName("Tests for JwtMiddleware")
-public class JwtMiddlewareIntegrationTest {
-  private static final ZonedDateTime FIXED_NOW =
-      LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
-  private static final Clock testClock = Clock.fixed(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
-  private static Application app;
-  private static EntityManagerFactory emf;
-  private static HttpRequest http;
-  private EntityManager em;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-    app = Application.create(Constants.APP_CONFIG, testClock);
-    app.start(0);
-
-    String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
-    emf = app.persistenceManager().emf();
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
-  }
-
-  @AfterAll
-  public static void shutdown() {
-    app.stop();
-  }
-
-  @BeforeEach
-  public void openEntityManager() {
-    em = emf.createEntityManager();
-
-    cleanDatabase(em);
-  }
-
-  @AfterEach
-  public void closeEntityManager() {
-    if (em.isOpen()) {
-      em.close();
-    }
-  }
+public class JwtMiddlewareIntegrationTest extends IntegrationTest {
 
   private String loginUser(String email) {
     LoginRequest loginRequest = new LoginRequest(email, VALID_PASSWORD_STRING);

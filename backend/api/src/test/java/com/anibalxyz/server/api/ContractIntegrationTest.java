@@ -1,18 +1,21 @@
-package com.anibalxyz.features.users.api.routes;
+package com.anibalxyz.server.api;
 
 import static com.anibalxyz.shared.Helpers.createJwtHeader;
+import static com.anibalxyz.shared.Helpers.createValidJwt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.api.in.UpdateUserRequest;
+import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
-import com.anibalxyz.server.api.ErrorMapper;
-import com.anibalxyz.server.api.ErrorResult;
-import com.anibalxyz.server.api.InfrastructureErrorMapper;
+import com.anibalxyz.features.users.infra.JpaUserRepository;
+import com.anibalxyz.shared.IntegrationTest;
 import io.javalin.http.BadRequestResponse;
 import java.util.HashMap;
 import java.util.Map;
 import okhttp3.Response;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,11 +24,21 @@ import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
-/*
- * TODO: move to a global test class
- * */
-@DisplayName("Tests for contract of /users")
-public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
+@DisplayName("Tests for endpoints' contracts")
+public class ContractIntegrationTest extends IntegrationTest {
+  protected static String validJwt;
+  protected UserRepository userRepository;
+
+  @BeforeAll
+  public static void setup() {
+    validJwt = createValidJwt(app.config().env(), testClock, 1);
+  }
+
+  @BeforeEach
+  public void deps() {
+    userRepository = new JpaUserRepository(() -> em);
+  }
+
   @Test
   @DisplayName("ANY /users/{id}: given an invalid id format, then return 400 Bad Request")
   public void ANY_users_id_invalidIdFormat_return400() {

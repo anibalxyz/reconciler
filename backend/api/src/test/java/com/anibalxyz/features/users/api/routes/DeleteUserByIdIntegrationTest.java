@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests for DELETE /users/{id}")
 public class DeleteUserByIdIntegrationTest extends BaseUsersIntegrationTest {
-
   @Test
   @DisplayName("DELETE /users/{id}: given an existing id, then return 204 and delete the user")
   public void DELETE_users_id_existingId_return204() {
