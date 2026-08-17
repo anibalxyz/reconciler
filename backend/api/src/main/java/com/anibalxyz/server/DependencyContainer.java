@@ -78,7 +78,7 @@ public final class DependencyContainer {
     lifecycleConfig = new LifecycleConfig(persistenceManager);
     exceptionsConfig = new ExceptionsConfig();
     accessLogConfig = new AccessLogConfig();
-    metricsConfig = new MetricsConfig(prometheusMeterRegistry);
+    metricsConfig = new MetricsConfig(micrometerPlugin, prometheusMeterRegistry);
 
     // 3. Repositories
     UserRepository userRepository = new JpaUserRepository(emProvider);

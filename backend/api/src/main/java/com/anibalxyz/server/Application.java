@@ -73,7 +73,6 @@ public class Application {
         container.swaggerConfig().apply(javalinConfig);
         container.systemRoutes().applyRedirects(javalinConfig);
       }
-      javalinConfig.registerPlugin(container.micrometerPlugin());
 
       container.systemRoutes().apply(javalinConfig);
       container.userRoutes().apply(javalinConfig);

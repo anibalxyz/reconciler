@@ -2,6 +2,7 @@ package com.anibalxyz.server.config.modules.runtime;
 
 import com.anibalxyz.server.config.modules.startup.StartupConfig;
 import io.javalin.config.JavalinConfig;
+import io.javalin.micrometer.MicrometerPlugin;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
@@ -23,9 +24,11 @@ public class MetricsConfig implements StartupConfig {
 
   public static final String METRICS_PATH = "/internal/metrics";
   private static final Logger log = LoggerFactory.getLogger(MetricsConfig.class);
+  private final MicrometerPlugin plugin;
   private final PrometheusMeterRegistry registry;
 
-  public MetricsConfig(PrometheusMeterRegistry registry) {
+  public MetricsConfig(MicrometerPlugin plugin, PrometheusMeterRegistry registry) {
+    this.plugin = plugin;
     this.registry = registry;
   }
 
@@ -92,13 +95,19 @@ public class MetricsConfig implements StartupConfig {
         });
   }
 
+  private void registerPlugin(JavalinConfig cfg) {
+    cfg.registerPlugin(plugin);
+  }
+
   @Override
   public void apply(JavalinConfig cfg) {
-    bindMetrics(registry);
-    registerEndpoint(cfg, registry);
     configPercentile(registry.config());
     configCollapsed(registry.config());
     configExcluded(registry.config());
+    bindMetrics(registry);
+    registerEndpoint(cfg, registry);
+
+    registerPlugin(cfg);
 
     log.info("Metrics endpoint registered at {}", METRICS_PATH);
   }
