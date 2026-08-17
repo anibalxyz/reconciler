@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.api;
 
-import static com.anibalxyz.shared.Constants.Auth.VALID_JWT;
-import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.shared.Constants.Auth.VALID_JWT_STRING;
+import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN_STRING;
 import static com.anibalxyz.shared.Constants.Users.*;
 import static com.anibalxyz.shared.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,7 +74,7 @@ public class AuthControllerTest {
 
       RefreshToken dummyRefreshToken =
           new RefreshToken(1L, "d-token", null, FIXED_NOW.toInstant(), false);
-      AuthResult dummyAuthResult = new AuthResult(VALID_JWT, dummyRefreshToken);
+      AuthResult dummyAuthResult = new AuthResult(VALID_JWT_STRING, dummyRefreshToken);
       when(authService.authenticateUser(request.toCommand()))
           .thenReturn(Result.success(dummyAuthResult));
 
@@ -93,11 +93,11 @@ public class AuthControllerTest {
     @Test
     @DisplayName("logout: given existing refresh token, then clear cookie and revoke token")
     void logout_existingRefreshToken_clearCookieAndRevokeToken() {
-      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
+      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN_STRING);
 
       authController.logout(ctx);
 
-      verify(refreshTokenService).revokeToken(VALID_REFRESH_TOKEN);
+      verify(refreshTokenService).revokeToken(VALID_REFRESH_TOKEN_STRING);
       verify(ctx).status(204);
 
       Cookie cookie = capturedCookie(ctx);
@@ -114,15 +114,16 @@ public class AuthControllerTest {
       RefreshToken validRefreshToken =
           new RefreshToken(
               1L,
-              VALID_REFRESH_TOKEN,
+              VALID_REFRESH_TOKEN_STRING,
               VALID_USER,
               FIXED_NOW.toInstant().plus(2, ChronoUnit.DAYS),
               false);
-      AuthResult result = new AuthResult(VALID_JWT, validRefreshToken);
+      AuthResult result = new AuthResult(VALID_JWT_STRING, validRefreshToken);
       AuthResponse expectedResponse = new AuthResponse(result.accessToken());
 
-      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
-      when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(Result.success(result));
+      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN_STRING);
+      when(authService.refreshTokens(VALID_REFRESH_TOKEN_STRING))
+          .thenReturn(Result.success(result));
 
       authController.refresh(ctx);
 
@@ -177,11 +178,11 @@ public class AuthControllerTest {
     @DisplayName(
         "refresh: given service result is failure, then throw FailureSignal with its error")
     public void refresh_serviceReturnsRefreshTokensError_throwFailureSignal() {
-      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN);
+      when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_TOKEN_STRING);
       Result<AuthResult, AuthService.RefreshTokensError> failedResult =
           Result.failure(
               new AuthService.RefreshTokensError.InvalidToken(InvalidRefreshTokenError.notFound()));
-      when(authService.refreshTokens(VALID_REFRESH_TOKEN)).thenReturn(failedResult);
+      when(authService.refreshTokens(VALID_REFRESH_TOKEN_STRING)).thenReturn(failedResult);
 
       var failure = ResultAsserts.failure(failedResult);
       assertThatThrownBy(() -> authController.refresh(ctx))

@@ -1,6 +1,5 @@
 package com.anibalxyz.features.users.api.routes;
 
-import static com.anibalxyz.shared.Helpers.createValidJwt;
 
 import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.users.domain.*;
@@ -14,13 +13,7 @@ import com.anibalxyz.shared.ResultAsserts;
 import org.junit.jupiter.api.*;
 
 public abstract class BaseUsersIntegrationTest extends IntegrationTest {
-  protected static String validJwt;
   protected UserRepository userRepository;
-
-  @BeforeAll
-  public static void setup() {
-    validJwt = createValidJwt(app.config().env(), testClock, 1);
-  }
 
   protected static ErrorResult errorResultFromAlreadyTakenEmail() {
     ValidationNotification<UserDomainError> correspondentError = new ValidationNotification<>();

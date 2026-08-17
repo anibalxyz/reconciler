@@ -1,6 +1,8 @@
 package com.anibalxyz.shared;
 
+import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 import static com.anibalxyz.shared.Helpers.cleanDatabase;
+import static com.anibalxyz.shared.Helpers.createValidJwt;
 
 import com.anibalxyz.server.Application;
 import jakarta.persistence.EntityManager;
@@ -22,6 +24,7 @@ public abstract class IntegrationTest {
       new MutableClock(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
   protected static HttpRequest http;
   protected static Application app;
+  protected static String validJwt;
   private static EntityManagerFactory emf;
   protected EntityManager em;
 
@@ -39,6 +42,8 @@ public abstract class IntegrationTest {
     ObjectMapper objectMapper = new ObjectMapper();
 
     http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
+
+    validJwt = createValidJwt(app.config().env(), testClock, VALID_USER.id());
 
     Runtime.getRuntime().addShutdownHook(new Thread(app::stop));
   }

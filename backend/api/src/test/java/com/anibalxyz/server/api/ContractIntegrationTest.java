@@ -1,7 +1,6 @@
 package com.anibalxyz.server.api;
 
 import static com.anibalxyz.shared.Helpers.createJwtHeader;
-import static com.anibalxyz.shared.Helpers.createValidJwt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
@@ -14,7 +13,6 @@ import io.javalin.http.BadRequestResponse;
 import java.util.HashMap;
 import java.util.Map;
 import okhttp3.Response;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,13 +24,7 @@ import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 @DisplayName("Tests for endpoints' contracts")
 public class ContractIntegrationTest extends IntegrationTest {
-  protected static String validJwt;
   protected UserRepository userRepository;
-
-  @BeforeAll
-  public static void setup() {
-    validJwt = createValidJwt(app.config().env(), testClock, 1);
-  }
 
   @BeforeEach
   public void deps() {

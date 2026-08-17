@@ -73,10 +73,11 @@ public class Constants {
   }
 
   public static final class Auth {
-    // TODO: generate a really valid one at startup
-    public static final String VALID_JWT =
+    /** Opaque string. Just a valid JWT _format_ */
+    public static final String VALID_JWT_STRING =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
-    public static final String VALID_REFRESH_TOKEN = "e4192c47-9649-48be-9f88-523240f45b6e";
+
+    public static final String VALID_REFRESH_TOKEN_STRING = "e4192c47-9649-48be-9f88-523240f45b6e";
 
     public static RefreshToken buildToken(Instant expiryDate) {
       return new RefreshToken(1L, "token-value", VALID_USER, expiryDate, false);
