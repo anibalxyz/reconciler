@@ -23,7 +23,7 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 @DisplayName("Tests for endpoints' contracts")
-public class ContractIntegrationTest extends IntegrationTest {
+public class ContractIT extends IntegrationTest {
   protected UserRepository userRepository;
 
   @BeforeEach

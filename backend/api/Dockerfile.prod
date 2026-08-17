@@ -8,18 +8,18 @@ COPY pom.xml .
 # Pre-download all required dependencies and plugins for offline builds
 # Does not compile the code; prepares for `mvn package` without internet
 # -B: batch mode (non-interactive)
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -Pdist -B
 
 COPY src ./src
 
-# Compile and package the app, skipping tests (none implemented yet)
-RUN mvn clean package -DskipTests -B
+# Compile and package the app, skipping tests
+RUN mvn clean package -DskipTests -Pdist -B
 
 # Runtime stage: minimal image to run the compiled JAR
 FROM eclipse-temurin:21-jdk
 
 WORKDIR /app
 
-COPY --from=build /app/target/app-jar-with-dependencies.jar app.jar
+COPY --from=build /app/target/reconciler.jar reconciler.jar
 
-ENTRYPOINT ["sh", "-c", "echo 'Waiting for DB to be ready...' >&2 && sleep 3 && exec java -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "echo 'Waiting for DB to be ready...' >&2 && sleep 3 && exec java -jar reconciler.jar"]

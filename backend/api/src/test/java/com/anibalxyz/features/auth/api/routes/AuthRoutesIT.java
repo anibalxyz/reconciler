@@ -1,4 +1,4 @@
-package com.anibalxyz.features.auth;
+package com.anibalxyz.features.auth.api.routes;
 
 import static com.anibalxyz.features.auth.api.AuthController.REFRESH_TOKEN_COOKIE;
 import static com.anibalxyz.shared.Constants.APP_CONFIG;
@@ -35,7 +35,7 @@ import okhttp3.Response;
 import org.junit.jupiter.api.*;
 
 @DisplayName("Tests for AuthRoutes")
-public class AuthRoutesIntegrationTest extends IntegrationTest {
+public class AuthRoutesIT extends IntegrationTest {
   private static final Instant SATURDAY_MIDDAY =
       FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.SATURDAY)).with(LocalTime.NOON).toInstant();
   private static final Instant MAINTENANCE_START =

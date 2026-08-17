@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.core.type.TypeReference;
 
 @DisplayName("Tests for GET /users")
-public class GetAllUsersIntegrationTest extends BaseUsersIntegrationTest {
+public class GetAllUsersIT extends UsersIT {
 
   @Test
   @DisplayName("GET /users: given users exist, then return 200 and the list of users")

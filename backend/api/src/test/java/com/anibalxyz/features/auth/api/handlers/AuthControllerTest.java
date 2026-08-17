@@ -1,4 +1,4 @@
-package com.anibalxyz.features.auth.api;
+package com.anibalxyz.features.auth.api.handlers;
 
 import static com.anibalxyz.shared.Constants.Auth.VALID_JWT_STRING;
 import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN_STRING;
@@ -10,6 +10,7 @@ import static org.mockito.Mockito.*;
 
 import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.features.auth.api.AuthController;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthService;

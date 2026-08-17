@@ -11,7 +11,7 @@ import com.anibalxyz.shared.IntegrationTest;
 import com.anibalxyz.shared.ResultAsserts;
 import org.junit.jupiter.api.*;
 
-public abstract class BaseUsersIntegrationTest extends IntegrationTest {
+public abstract class UsersIT extends IntegrationTest {
   protected UserRepository userRepository;
 
   protected static ErrorResult errorResultFromAlreadyTakenEmail() {

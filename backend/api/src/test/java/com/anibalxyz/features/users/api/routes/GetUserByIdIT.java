@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.core.type.TypeReference;
 
 @DisplayName("Tests for GET /users/{id}")
-public class GetUserByIdIntegrationTest extends BaseUsersIntegrationTest {
+public class GetUserByIdIT extends UsersIT {
 
   @Test
   @DisplayName("GET /users/{id}: given an existing user id, then return 200 and the user data")

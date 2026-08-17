@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests for DELETE /users/{id}")
-public class DeleteUserByIdIntegrationTest extends BaseUsersIntegrationTest {
+public class DeleteUserByIdIT extends UsersIT {
   @Test
   @DisplayName("DELETE /users/{id}: given an existing id, then return 204 and delete the user")
   public void DELETE_users_id_existingId_return204() {

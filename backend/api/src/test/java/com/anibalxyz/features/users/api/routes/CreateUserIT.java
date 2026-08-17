@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.core.type.TypeReference;
 
 @DisplayName("Tests for POST /users")
-public class CreateUserIntegrationTest extends BaseUsersIntegrationTest {
+public class CreateUserIT extends UsersIT {
 
   @Test
   @DisplayName("POST /users: given an invalid property, then return 400 validation error")

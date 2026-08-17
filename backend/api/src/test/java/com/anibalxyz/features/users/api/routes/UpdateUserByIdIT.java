@@ -27,7 +27,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.core.type.TypeReference;
 
 @DisplayName("Tests for PUT /users/{id}")
-public class UpdateUserByIdIntegrationTest extends BaseUsersIntegrationTest {
+public class UpdateUserByIdIT extends UsersIT {
 
   @Test
   @DisplayName("PUT /users/{id}: given no properties provided, then return 400 Bad Request")

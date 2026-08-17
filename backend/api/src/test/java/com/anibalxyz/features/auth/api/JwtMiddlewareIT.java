@@ -1,10 +1,9 @@
-package com.anibalxyz.features.auth;
+package com.anibalxyz.features.auth.api;
 
 import static com.anibalxyz.shared.Constants.Users.*;
 import static com.anibalxyz.shared.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
@@ -26,7 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for JwtMiddleware")
-public class JwtMiddlewareIntegrationTest extends IntegrationTest {
+public class JwtMiddlewareIT extends IntegrationTest {
 
   private String loginUser(String email) {
     LoginRequest loginRequest = new LoginRequest(email, VALID_PASSWORD_STRING);
