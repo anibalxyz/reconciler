@@ -17,8 +17,8 @@ import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.users.application.GetUserByEmail;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.*;
@@ -30,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for AuthService")
-class AuthServiceTest {
+class AuthServiceTest extends UnitTest {
   private static final Instant FIXED_INSTANT = Instant.parse("2025-01-01T12:00:00Z");
   private static final ZoneId ZONE = ZoneId.of("America/Montevideo");
   private static final ZonedDateTime SATURDAY_MORNING =
@@ -44,13 +44,8 @@ class AuthServiceTest {
   @Mock private RefreshTokenService refreshTokenService;
   private AuthService authService;
 
-  @BeforeAll
-  static void init() {
-    Constants.init();
-  }
-
   @BeforeEach
-  void di() {
+  void deps() {
     authService = new AuthService(env, clock, getUserByEmail, jwtService, refreshTokenService);
   }
 

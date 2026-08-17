@@ -1,6 +1,5 @@
 package com.anibalxyz.features.users.api.routes;
 
-
 import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.EmailAlreadyTakenError;

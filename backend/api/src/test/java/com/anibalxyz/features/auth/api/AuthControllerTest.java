@@ -20,6 +20,7 @@ import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.http.UnauthorizedResponse;
@@ -35,7 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for AuthController")
-public class AuthControllerTest {
+public class AuthControllerTest extends UnitTest {
   private static final ZonedDateTime FIXED_NOW =
       LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
   private static final Clock testClock = Clock.fixed(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
@@ -46,13 +47,8 @@ public class AuthControllerTest {
 
   @InjectMocks private AuthController authController;
 
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
-
   @BeforeEach
-  public void di() {
+  public void deps() {
     authController =
         new AuthController(Constants.APP_CONFIG.env(), authService, refreshTokenService, testClock);
   }

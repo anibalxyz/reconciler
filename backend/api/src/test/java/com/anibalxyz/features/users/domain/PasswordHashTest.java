@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -17,14 +18,12 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for PasswordHash VO")
-public class PasswordHashTest {
+public class PasswordHashTest extends UnitTest {
   public static int BCRYPT_LOG_ROUNDS;
-
   private static String HASH_PREFIX;
 
   @BeforeAll
   public static void setup() {
-    Constants.init();
     BCRYPT_LOG_ROUNDS = Constants.APP_ENV.BCRYPT_LOG_ROUNDS();
     HASH_PREFIX = String.format("$2a$%02d$", BCRYPT_LOG_ROUNDS);
   }

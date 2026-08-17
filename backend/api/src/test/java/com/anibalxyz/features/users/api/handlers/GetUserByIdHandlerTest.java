@@ -13,10 +13,9 @@ import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.application.GetUserById;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
-import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,15 +25,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetUserByIdHandler")
-public class GetUserByIdHandlerTest {
+public class GetUserByIdHandlerTest extends UnitTest {
   @Mock private GetUserById getUserById;
   @Mock private Context ctx;
   @InjectMocks private GetUserByIdHandler getUserByIdHandler;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("getUserById: given the service returns UserNotFoundError, then throw FailureSignal")

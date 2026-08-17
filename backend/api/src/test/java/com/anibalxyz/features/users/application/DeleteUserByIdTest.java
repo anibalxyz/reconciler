@@ -6,9 +6,8 @@ import static org.mockito.Mockito.when;
 import com.anibalxyz.core.domain.error.ReasonedError;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
-import org.junit.jupiter.api.BeforeAll;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,15 +17,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for DeleteUserById service")
-public class DeleteUserByIdTest {
+public class DeleteUserByIdTest extends UnitTest {
   @Mock private UserRepository userRepository;
 
   @InjectMocks private DeleteUserById deleteUserById;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("deleteUserById: given an existing id, then return success")

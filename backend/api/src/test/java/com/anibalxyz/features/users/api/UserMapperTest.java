@@ -6,16 +6,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.anibalxyz.features.users.api.out.CreateUserResponse;
 import com.anibalxyz.features.users.api.out.DetailedUserResponse;
 import com.anibalxyz.features.users.domain.*;
-import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.*;
 
 @DisplayName("Tests for UserMapper")
-public class UserMapperTest {
+public class UserMapperTest extends UnitTest {
   private static User user;
 
   @BeforeAll
   public static void setup() {
-    Constants.init();
     user = VALID_USER;
   }
 

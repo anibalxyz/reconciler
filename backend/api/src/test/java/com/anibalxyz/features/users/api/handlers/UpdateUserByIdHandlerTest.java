@@ -14,10 +14,9 @@ import com.anibalxyz.features.users.api.in.UpdateUserRequest;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.application.in.UpdateUserCommand;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,15 +26,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for UpdateUserByIdHandler")
-public class UpdateUserByIdHandlerTest {
+public class UpdateUserByIdHandlerTest extends UnitTest {
   @Mock private UpdateUserById updateUserById;
   @Mock private Context ctx;
   @InjectMocks private UpdateUserByIdHandler updateUserByIdHandler;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("updateUserById: given an invalid id, then throw BadRequestResponse")

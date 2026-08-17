@@ -9,10 +9,9 @@ import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.users.application.DeleteUserById;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
-import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,15 +21,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for DeleteUserByIdHandler")
-public class DeleteUserByIdHandlerTest {
+public class DeleteUserByIdHandlerTest extends UnitTest {
   @Mock private DeleteUserById deleteUserById;
   @Mock private Context ctx;
   @InjectMocks private DeleteUserByIdHandler deleteUserByIdHandler;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("deleteUserById: given an invalid id, then throw BadRequestResponse")

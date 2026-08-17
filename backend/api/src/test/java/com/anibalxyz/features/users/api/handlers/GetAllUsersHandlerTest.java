@@ -9,10 +9,9 @@ import com.anibalxyz.features.common.api.out.response.success.CollectionResponse
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.application.GetAllUsers;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.Context;
 import java.util.List;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,15 +21,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetAllUsersHandler")
-public class GetAllUsersHandlerTest {
+public class GetAllUsersHandlerTest extends UnitTest {
   @Mock private GetAllUsers getAllUsers;
   @Mock private Context ctx;
   @InjectMocks private GetAllUsersHandler getAllUsersHandler;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("getAllUsers: given there are users, then respond 200 with users list")

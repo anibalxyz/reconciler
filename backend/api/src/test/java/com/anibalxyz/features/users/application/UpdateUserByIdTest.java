@@ -15,6 +15,7 @@ import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,18 +26,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for UpdateUserById service")
-public class UpdateUserByIdTest {
+public class UpdateUserByIdTest extends UnitTest {
   @Mock private UserRepository userRepository;
 
   private UpdateUserById updateUserById;
 
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
-
   @BeforeEach
-  void di() {
+  void deps() {
     UpdateUserById.Env env = Constants.APP_ENV;
     updateUserById = new UpdateUserById(env, userRepository);
   }

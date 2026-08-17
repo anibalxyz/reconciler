@@ -9,8 +9,8 @@ import static org.mockito.Mockito.*;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -23,20 +23,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for RefreshTokenService")
-class RefreshTokenServiceTest {
+class RefreshTokenServiceTest extends UnitTest {
   private static final Duration EXPIRATION = Duration.ofDays(7);
   private static final Instant FIXED_NOW =
       LocalDateTime.of(2025, 11, 25, 10, 0).toInstant(ZoneOffset.UTC);
   @Mock private RefreshTokenRepository refreshTokenRepository;
   private RefreshTokenService refreshTokenService;
 
-  @BeforeAll
-  static void init() {
-    Constants.init();
-  }
-
   @BeforeEach
-  void di() {
+  void deps() {
     refreshTokenService = new RefreshTokenService(refreshTokenRepository);
   }
 

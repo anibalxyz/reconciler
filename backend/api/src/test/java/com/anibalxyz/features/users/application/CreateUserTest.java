@@ -13,6 +13,7 @@ import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,18 +24,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for CreateUser service")
-public class CreateUserTest {
+public class CreateUserTest extends UnitTest {
   @Mock private UserRepository userRepository;
 
   private CreateUser createUser;
 
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
-
   @BeforeEach
-  void di() {
+  void deps() {
     CreateUser.Env env = Constants.APP_ENV;
     createUser = new CreateUser(env, userRepository);
   }

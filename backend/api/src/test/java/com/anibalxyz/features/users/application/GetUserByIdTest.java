@@ -8,10 +8,9 @@ import com.anibalxyz.core.domain.error.ReasonedError;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,15 +20,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetUserById service")
-public class GetUserByIdTest {
+public class GetUserByIdTest extends UnitTest {
   @Mock private UserRepository userRepository;
 
   @InjectMocks private GetUserById getUserById;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("getUserById: given an existing id, then return the correct user")

@@ -7,10 +7,9 @@ import static org.mockito.Mockito.when;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,15 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetUserByEmail service")
-public class GetUserByEmailTest {
+public class GetUserByEmailTest extends UnitTest {
   @Mock private UserRepository userRepository;
 
   @InjectMocks private GetUserByEmail getUserByEmail;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("getUserByEmail: given an existing email, then return the correct user")

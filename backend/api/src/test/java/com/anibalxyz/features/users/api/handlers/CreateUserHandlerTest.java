@@ -15,9 +15,8 @@ import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.application.CreateUser;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.Context;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,15 +26,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for CreateUserHandler")
-public class CreateUserHandlerTest {
+public class CreateUserHandlerTest extends UnitTest {
   @Mock private CreateUser createUser;
   @Mock private Context ctx;
   @InjectMocks private CreateUserHandler createUserHandler;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName(
