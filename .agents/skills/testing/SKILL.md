@@ -5,33 +5,56 @@ description: Run and write tests for the reconciler project. Use when running te
 
 ## Test framework
 
-- **JUnit** (6.1.0) — test framework and runner
-- **Mockito** (5.23.0) — inline mockmaker (configured via surefire/failsafe argLine)
-- **AssertJ** (3.27.7) — fluent assertions
-- **OkHttp** (5.3.2) — HTTP client for integration tests
-- **JaCoCo** (0.8.14) — coverage at `verify` phase (surefire + failsafe)
+- **JUnit** — test framework and runner
+- **Mockito** — inline mockmaker
+- **AssertJ** — fluent assertions
+- **OkHttp** — HTTP client for integration tests
+- **JaCoCo** — opt-in coverage via the `coverage` profile (surefire + failsafe)
 
 ## Run tests
 
-```bash
-cli compose test
-```
+Two ways to run the backend suite; pick by what matters for the moment:
 
-This is the canonical test command. It always works regardless of environment state:
+### Docker: `cli compose test`
+
+The canonical command: always works regardless of environment state.
 
 1. Builds the API test Docker image
 2. Starts `db` + `flyway`
-3. Runs `mvn verify` in the API container (surefire + failsafe + jacoco)
+3. Runs `mvn verify` in the API container (surefire + failsafe)
 4. Tears down non-DB services
 5. Restores your previous app env
 
-Running `mvn verify` directly from the host also works if the test DB is already running, either from a previous `cli compose test` run or started manually.
-A local run is currently the only way to access coverage reports (see [Coverage](#coverage) below).
-Use the CLI when you need a clean full lifecycle; use a local run when you need results with coverage.
+**Pros**: one command, hermetic. The DB is always brought up with migrations, so you know the full suite ran against a known state.
+**Cons**: slowest feedback loop; no coverage, no test subsets.
+
+### Local: plain `mvn` from `backend/api/`
+
+Needs the test DB running only when integration tests run.
+
+| Command                 | Runs                                 | Needs DB |
+| ----------------------- | ------------------------------------ | -------- |
+| `mvn test`              | unit tests only                      | no       |
+| `mvn verify`            | unit + integration                   | yes      |
+| `mvn verify -Pcoverage` | unit + integration + coverage report | yes      |
+
+**Pros**: fastest iteration; granular control (unit-only without a DB, coverage or not, single-test reruns with `-Dtest=EmailTest`).
+**Cons**: remember to launch the test DB.
 
 **No frontend tests exist currently.** CI only lints, type-checks, and formats-check the frontend.
 
 ## Test naming
+
+### Class and file naming
+
+- **Unit tests**: `<Subject>Test`, extending `UnitTest`.
+  Subject is the unit under test: `EmailTest`, `AuthServiceTest`, `CreateUserHandlerTest`
+- **Integration tests**: `<Action>IT`, extending `IntegrationTest`.
+  Named after the action or route group, not the HTTP method: `CreateUserIT`, `GetAllUsersIT`, `AuthRoutesIT`, `UsersIT`
+- The `Test` / `IT` suffix is how surefire and failsafe pick up each suite
+- Tests mirror the production structure
+
+### Method names
 
 Format: `<subject>_<givenClause>_<thenClause>`
 
@@ -80,4 +103,14 @@ If the naming convention above does not fit the test case, ask the user for guid
 
 ## Coverage
 
-JaCoCo generates coverage reports at the `verify` phase. Reports are available in `backend/api/target/site/jacoco/`. Currently the report is only accessible when tests are run from the host. A Docker volume to expose it from the test container is planned.
+Opt-in via the `coverage` profile and **local-only**.
+
+From `backend/api/`:
+
+| Command                           | Runs               | Needs DB | Produces                                                 |
+| --------------------------------- | ------------------ | -------- | -------------------------------------------------------- |
+| `mvn verify -Pcoverage`           | unit + integration | yes      | HTML report in `target/site/jacoco/` (open `index.html`) |
+| `mvn test -Pcoverage`             | unit only          | no       | `target/jacoco.exec`, no HTML report                     |
+| `mvn verify` / `cli compose test` | unit + integration | yes      | no coverage                                              |
+
+The report always covers unit and integration tests together.
