@@ -85,8 +85,6 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-
-
         </plugins>
     </build>
 
@@ -183,7 +181,7 @@
     </dependencyManagement>
 
     <dependencies>
-
+        
         <!-- Annotations -->
 
         <dependency>
@@ -370,5 +368,4 @@
         </dependency>
 
     </dependencies>
-
 </project>

@@ -5,8 +5,10 @@ import static com.anibalxyz.shared.Helpers.cleanDatabase;
 import static com.anibalxyz.shared.Helpers.createValidJwt;
 
 import com.anibalxyz.server.Application;
+import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -16,6 +18,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Base class for HTTP integration tests.
+ *
+ * <p>Starts a single {@link Application} instance shared across all subclasses, wired via {@link
+ * Application#create(ApplicationConfiguration, Clock)}. Subclasses inherit an {@link HttpRequest}
+ * client bound to the running server, a {@link MutableClock} reset to {@link #FIXED_NOW} before
+ * each test, a fresh {@link EntityManager} with the database truncated before each test, and a
+ * {@link #validJwt} valid for {@link Constants.Users#VALID_USER}.
+ */
 public abstract class IntegrationTest {
   // Tuesday 10:00
   protected static final ZonedDateTime FIXED_NOW =

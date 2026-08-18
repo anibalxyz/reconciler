@@ -19,9 +19,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Top-level assembly orchestrator for the application.
  *
- * <p>Creates the {@link DependencyContainer}, configures and starts the Javalin server, and wires
- * all configs, plugins, routes, and middlewares. Provides {@link #create} as a convenience for
- * DEV/PROD and {@link #create} as a low-level entry point for testing and custom assembly.
+ * <p>Created via one of the {@link #create} factories, wired by {@link DependencyContainer}, and
+ * booted by {@code com.anibalxyz.Main}. {@code create} does not start the server; call {@link
+ * #start(int)} explicitly.
+ *
+ * <p>Use {@link #create(ApplicationConfiguration)} for DEV/PROD and {@link
+ * #create(ApplicationConfiguration, Clock)} for tests and custom assembly.
  */
 public class Application {
   private static final Logger log = LoggerFactory.getLogger(Application.class);
@@ -37,19 +40,23 @@ public class Application {
   }
 
   /**
-   * Convenience factory for {@link AppEnv#DEV} and {@link AppEnv#PROD} environments.
-   *
-   * @param config application configuration
-   * @return a fully assembled {@link Application}
+   * Convenience factory for {@link AppEnv#DEV} and {@link AppEnv#PROD}: delegates to {@link
+   * #create(ApplicationConfiguration, Clock)} with {@link #buildClock(AppEnvironmentSource)}}.
    */
   public static Application create(ApplicationConfiguration config) {
     return create(config, buildClock(config.env()));
   }
 
   /**
-   * Low-level assembly method that wires the full application.
+   * Creates a fully assembled {@link Application} with an explicitly provided clock.
    *
-   * <p>TODO: Document this method.
+   * <p>Builds the {@link DependencyContainer} for {@code config}, then configures a {@link Javalin}
+   * server via {@link #setupJavalinConfig}.
+   *
+   * @param config application configuration
+   * @param clock clock used by the application and its dependencies; must not be null
+   * @return a fully assembled {@link Application}
+   * @throws NullPointerException if {@code clock} is null
    */
   public static Application create(ApplicationConfiguration config, Clock clock) {
     Objects.requireNonNull(
@@ -64,6 +71,14 @@ public class Application {
     return new Application(server, container.persistenceManager(), config);
   }
 
+  /**
+   * Builds the {@link JavalinConfig} setup function applying the startup modules owned by the
+   * {@code container}: server settings, feature routes, integrations, and middlewares.
+   *
+   * @param config application configuration
+   * @param container assembled dependency graph providing the startup modules
+   * @return a consumer applying the startup sequence to a {@link JavalinConfig}
+   */
   private static Consumer<JavalinConfig> setupJavalinConfig(
       ApplicationConfiguration config, DependencyContainer container) {
     return javalinConfig -> {
@@ -98,6 +113,14 @@ public class Application {
     };
   }
 
+  /**
+   * Resolves the {@link Clock} to use for a given environment: system clock in the configured
+   * timezone for {@link AppEnv#PROD}, a fixed clock at {@code SYSTEM_TIME_OVERRIDE} if set, or the
+   * system clock in America/Montevideo otherwise.
+   *
+   * @param env environment configuration
+   * @return the resolved clock
+   */
   public static Clock buildClock(AppEnvironmentSource env) {
     if (env.APP_ENV() == AppEnv.PROD) {
       return Clock.system(env.SYSTEM_TIMEZONE());
