@@ -3,15 +3,15 @@ package com.anibalxyz.features.users.domain;
 import static com.anibalxyz.shared.Constants.Users.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests for User Domain Object")
-public class UserTest {
+public class UserTest extends UnitTest {
   private static final int ID = 1;
   private static final Instant TIMESTAMP = Instant.now();
 
@@ -19,7 +19,6 @@ public class UserTest {
 
   @BeforeAll
   public static void setup() {
-    Constants.init();
     baseUser = VALID_USER;
   }
 

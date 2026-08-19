@@ -1,9 +1,10 @@
-package com.anibalxyz.features.auth;
+package com.anibalxyz.features.auth.api.routes;
 
 import static com.anibalxyz.features.auth.api.AuthController.REFRESH_TOKEN_COOKIE;
-import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN;
+import static com.anibalxyz.shared.Constants.APP_CONFIG;
+import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN_STRING;
 import static com.anibalxyz.shared.Constants.Users.*;
-import static com.anibalxyz.shared.Helpers.cleanDatabase;
+import static com.anibalxyz.shared.Helpers.getValueFromCookie;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,99 +21,44 @@ import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
-import com.anibalxyz.server.Application;
-import com.anibalxyz.server.DependencyContainer;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
-import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.shared.Constants;
-import com.anibalxyz.shared.HttpRequest;
-import com.anibalxyz.shared.MutableClock;
+import com.anibalxyz.shared.IntegrationTest;
 import com.anibalxyz.shared.ResultAsserts;
-import io.javalin.config.JavalinConfig;
 import io.javalin.http.UnauthorizedResponse;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.junit.jupiter.api.*;
-import tools.jackson.databind.ObjectMapper;
 
 @DisplayName("Tests for AuthRoutes")
-public class AuthRoutesIntegrationTest {
-  // Tuesday 10:00
-  private static final ZonedDateTime FIXED_NOW =
-      LocalDateTime.of(2026, 4, 21, 10, 0).atZone(ZoneId.of("America/Montevideo"));
-  private static final MutableClock testClock =
-      new MutableClock(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
+public class AuthRoutesIT extends IntegrationTest {
   private static final Instant SATURDAY_MIDDAY =
       FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.SATURDAY)).with(LocalTime.NOON).toInstant();
   private static final Instant MAINTENANCE_START =
       FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).with(LocalTime.of(8, 0)).toInstant();
-  private static Application app;
-  private static EntityManagerFactory emf;
-  private static HttpRequest http;
   private static JwtService jwtService;
-  private static AppEnvironmentSource env;
   private static RefreshTokenService refreshTokenService;
-  private EntityManager em;
 
   @BeforeAll
   public static void setup() {
-    Constants.init();
-    app = createApplication();
-    app.start(0);
-
-    String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
-    emf = app.persistenceManager().emf();
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
-
-    jwtService = new JwtService(Constants.APP_CONFIG.env(), testClock);
-    env = Constants.APP_CONFIG.env();
-  }
-
-  private static Application createApplication() {
-    BiConsumer<JavalinConfig, DependencyContainer> startupConfig =
-        (cfg, container) -> container.authRoutes().apply(cfg);
-
-    return Application.buildApplication(Constants.APP_CONFIG, testClock, startupConfig);
-  }
-
-  @AfterAll
-  public static void shutdown() {
-    app.stop();
-  }
-
-  private static String getValueFromCookie(String cookie, String key) {
-    if (cookie == null) {
-      return null;
-    }
-    for (String cookiePart : cookie.split(";")) {
-      String[] parts = cookiePart.trim().split("=");
-      if (parts.length > 0 && parts[0].equals(key)) {
-        return parts.length > 1 ? parts[1] : "";
-      }
-    }
-    return null;
+    jwtService = new JwtService(APP_CONFIG.env(), testClock);
   }
 
   private static void validateJwt(String accessToken, Integer id) {
     var jwt = ResultAsserts.success(jwtService.validateToken(accessToken));
     assertThat(jwt.getSubject()).isEqualTo(id.toString());
     assertThat(jwt.getIssuedAt()).isEqualTo(testClock.instant());
-    assertThat(jwt.getIssuer()).isEqualTo(env.JWT_ISSUER());
+    assertThat(jwt.getIssuer()).isEqualTo(APP_CONFIG.env().JWT_ISSUER());
     assertThat(jwt.getExpiration())
         .isEqualTo(
             Date.from(
-                testClock.instant().plusSeconds(env.JWT_ACCESS_EXPIRATION_TIME_MINUTES() * 60)));
+                testClock
+                    .instant()
+                    .plusSeconds(APP_CONFIG.env().JWT_ACCESS_EXPIRATION_TIME_MINUTES() * 60)));
   }
 
   public static void validateRefreshToken(String token, Integer id) {
@@ -123,27 +69,9 @@ public class AuthRoutesIntegrationTest {
   }
 
   @BeforeEach
-  public void openEntityManager() {
-    em = emf.createEntityManager();
-    cleanDatabase(em);
-  }
-
-  @BeforeEach
-  public void di() {
+  public void deps() {
     var refreshTokenRepository = new JpaRefreshTokenRepository(() -> em);
     refreshTokenService = new RefreshTokenService(refreshTokenRepository);
-  }
-
-  @BeforeEach
-  public void resetClock() {
-    testClock.resetTo(FIXED_NOW.toInstant());
-  }
-
-  @AfterEach
-  public void closeEntityManager() {
-    if (em.isOpen()) {
-      em.close();
-    }
   }
 
   private LoginResult loginUser(String email, String password) {
@@ -290,7 +218,7 @@ public class AuthRoutesIntegrationTest {
               new AuthService.AuthenticateUserError.MaintenanceWindow(MAINTENANCE_START));
 
       Map<String, String> cookie =
-          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_TOKEN);
+          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_TOKEN_STRING);
       Response response = http.post("/auth/refresh", "", cookie);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(503);
 
@@ -312,7 +240,7 @@ public class AuthRoutesIntegrationTest {
 
       // it is called "VALID" referring to the format, but is not a real value
       Map<String, String> cookie =
-          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_TOKEN);
+          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_TOKEN_STRING);
 
       Response response = http.post("/auth/refresh", "", cookie);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);

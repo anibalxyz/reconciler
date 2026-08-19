@@ -4,22 +4,16 @@ import static com.anibalxyz.shared.Constants.Auth.buildToken;
 import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.UnitTest;
 import java.time.Instant;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class RefreshTokenTest {
+class RefreshTokenTest extends UnitTest {
 
   private static final Instant NOW = Instant.parse("2025-01-01T12:00:00Z");
   private static final Instant PAST = NOW.minusSeconds(60);
   private static final Instant FUTURE = NOW.plusSeconds(60);
-
-  @BeforeAll
-  static void init() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("isExpired: given expiry date is in the future, then return false")

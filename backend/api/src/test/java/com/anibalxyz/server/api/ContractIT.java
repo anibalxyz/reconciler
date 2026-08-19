@@ -1,17 +1,19 @@
-package com.anibalxyz.features.users.api.routes;
+package com.anibalxyz.server.api;
 
+import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.api.in.UpdateUserRequest;
+import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
-import com.anibalxyz.server.api.ErrorMapper;
-import com.anibalxyz.server.api.ErrorResult;
-import com.anibalxyz.server.api.InfrastructureErrorMapper;
+import com.anibalxyz.features.users.infra.JpaUserRepository;
+import com.anibalxyz.shared.IntegrationTest;
 import io.javalin.http.BadRequestResponse;
 import java.util.HashMap;
 import java.util.Map;
 import okhttp3.Response;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,11 +22,15 @@ import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
-/*
- * TODO: move to a global test class
- * */
-@DisplayName("Tests for contract of /users")
-public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
+@DisplayName("Tests for endpoints' contracts")
+public class ContractIT extends IntegrationTest {
+  protected UserRepository userRepository;
+
+  @BeforeEach
+  public void deps() {
+    userRepository = new JpaUserRepository(() -> em);
+  }
+
   @Test
   @DisplayName("ANY /users/{id}: given an invalid id format, then return 400 Bad Request")
   public void ANY_users_id_invalidIdFormat_return400() {
@@ -32,7 +38,7 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
         InfrastructureErrorMapper.map(
             new BadRequestResponse("Invalid ID format. Must be a number."));
 
-    Response response = http.get("/users/abc");
+    Response response = http.get("/users/abc", createJwtHeader(validJwt));
     assertThat(400).isEqualTo(response.code()).isEqualTo(expectedResult.status());
 
     ErrorResponse expected = expectedResult.response();
@@ -53,12 +59,13 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
 
     Response response =
         switch (method) {
-          case "GET" -> http.get("/users/" + nonExistingId);
+          case "GET" -> http.get("/users/" + nonExistingId, createJwtHeader(validJwt));
           case "PUT" ->
               http.put(
                   "/users/" + nonExistingId,
-                  new UpdateUserRequest("Name", "email@mail.com", "1234"));
-          case "DELETE" -> http.delete("/users/" + nonExistingId);
+                  new UpdateUserRequest("Name", "email@mail.com", "1234"),
+                  createJwtHeader(validJwt));
+          case "DELETE" -> http.delete("/users/" + nonExistingId, createJwtHeader(validJwt));
           default -> throw new IllegalArgumentException("Method not supported");
         };
 
@@ -85,7 +92,7 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
     Response response =
         method.equals("POST")
             ? http.post("/users", malformedJson)
-            : http.put("/users/1", malformedJson);
+            : http.put("/users/1", malformedJson, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(400);
 
     ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
@@ -110,7 +117,7 @@ public class UsersContractIntegrationTest extends BaseUsersIntegrationTest {
     Response response =
         method.equals("POST")
             ? http.post("/users", requestBody)
-            : http.put("/users/1", requestBody);
+            : http.put("/users/1", requestBody, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
     ErrorResponse actual = http.parseBody(response, ErrorResponse.class);

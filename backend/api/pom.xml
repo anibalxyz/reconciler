@@ -30,58 +30,27 @@
         <mockito.version>5.23.0</mockito.version>
         <assertj.version>3.27.7</assertj.version>
         <okhttp.version>5.3.2</okhttp.version>
+        <jjwt.version>0.13.0</jjwt.version>
 
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
-        <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
-        <jjwt.version>0.13.0</jjwt.version>
+        <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
+        <jacoco.version>0.8.14</jacoco.version>
+        <jacocoArgLine/>
+        <mockito.agent>
+            -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar=inline
+        </mockito.agent>
+        <test.argLine>-Xshare:off ${mockito.agent}</test.argLine>
     </properties>
 
     <build>
-        <finalName>app</finalName>
+        <finalName>reconciler</finalName>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven-assembly-plugin.version}</version>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.anibalxyz.Main</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Configures JVM arguments for tests:
-                  - `@{argLine}`: Injects JaCoCo agent for code coverage.
-                  - `-javaagent...`: Loads Mockito agent to fix warnings.
-                  - `––add-opens...`: Allows Mockito's internal machinery to access JDK internals
-                  - `-Xshare:off`: Disables class sharing to fix an OpenJDK VM warning.
-             -->
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>
-                        @{argLine}
-                        -Xshare:off
-                        --add-opens=java.base/java.lang=ALL-UNNAMED
-                        -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar=inline
-                    </argLine>
+                    <argLine>@{jacocoArgLine} ${test.argLine}</argLine>
                 </configuration>
             </plugin>
 
@@ -90,13 +59,16 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>
-                        @{argLine}
-                        -Xshare:off
-                        --add-opens=java.base/java.lang=ALL-UNNAMED
-                        -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar=inline
-                    </argLine>
+                    <argLine>@{jacocoArgLine} ${test.argLine}</argLine>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -113,33 +85,90 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.14</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>dist</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>${maven-shade-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                                    <filters>
+                                        <filter>
+                                            <artifact>*:*</artifact>
+                                            <excludes>
+                                                <exclude>module-info.class</exclude>
+                                                <exclude>META-INF/versions/*/module-info.class</exclude>
+                                                <exclude>META-INF/MANIFEST.MF</exclude>
+                                                <exclude>META-INF/*.SF</exclude>
+                                                <exclude>META-INF/*.DSA</exclude>
+                                                <exclude>META-INF/*.RSA</exclude>
+                                                <exclude>META-INF/*LICENSE*</exclude>
+                                                <exclude>META-INF/NOTICE*</exclude>
+                                            </excludes>
+                                        </filter>
+                                    </filters>
+                                    <transformers>
+                                        <transformer
+                                                implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                        <transformer
+                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                            <mainClass>com.anibalxyz.Main</mainClass>
+                                        </transformer>
+                                    </transformers>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <propertyName>jacocoArgLine</propertyName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>report</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <!-- TODO: remove once Javalin OpenAPI plugin uses jackson v3
       NOTE: runtime scope excludes jackson 2 from compile, preventing accidental imports in production code.
             Jackson 2 is still available at runtime for the plugin internal use, and in test classpath. -->
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -152,7 +181,7 @@
     </dependencyManagement>
 
     <dependencies>
-
+        
         <!-- Annotations -->
 
         <dependency>
@@ -339,5 +368,4 @@
         </dependency>
 
     </dependencies>
-
 </project>

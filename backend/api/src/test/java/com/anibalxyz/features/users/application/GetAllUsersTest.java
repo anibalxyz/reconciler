@@ -6,9 +6,8 @@ import static org.mockito.Mockito.when;
 
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.UserRepository;
-import com.anibalxyz.shared.Constants;
+import com.anibalxyz.shared.UnitTest;
 import java.util.List;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,15 +17,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetAllUsers service")
-public class GetAllUsersTest {
+public class GetAllUsersTest extends UnitTest {
   @Mock private UserRepository userRepository;
 
   @InjectMocks private GetAllUsers getAllUsers;
-
-  @BeforeAll
-  public static void setup() {
-    Constants.init();
-  }
 
   @Test
   @DisplayName("getAllUsers: given users exist, then return a list of all users")

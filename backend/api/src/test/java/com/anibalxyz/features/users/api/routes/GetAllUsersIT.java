@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.api.routes;
 
+import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.core.type.TypeReference;
 
 @DisplayName("Tests for GET /users")
-public class GetAllUsersIntegrationTest extends BaseUsersIntegrationTest {
+public class GetAllUsersIT extends UsersIT {
 
   @Test
   @DisplayName("GET /users: given users exist, then return 200 and the list of users")
@@ -27,7 +28,7 @@ public class GetAllUsersIntegrationTest extends BaseUsersIntegrationTest {
         CollectionResponse.ofSinglePage(
             persisted.stream().map(u -> UserMapper.toDetailResponse(u.toDomain())).toList());
 
-    Response response = http.get("/users");
+    Response response = http.get("/users", createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(200);
     CollectionResponse<DetailedUserResponse> actual =
         http.parseBody(response, new TypeReference<>() {});
@@ -37,7 +38,7 @@ public class GetAllUsersIntegrationTest extends BaseUsersIntegrationTest {
   @Test
   @DisplayName("GET /users: given no users exist, then return 200 and an empty list")
   public void GET_users_noUsersExist_return200AndEmptyList() {
-    Response response = http.get("/users");
+    Response response = http.get("/users", createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(200);
     CollectionResponse<DetailedUserResponse> actual =
         http.parseBody(response, new TypeReference<>() {});

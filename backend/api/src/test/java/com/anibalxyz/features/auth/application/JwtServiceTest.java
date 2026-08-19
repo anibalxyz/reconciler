@@ -4,14 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.core.Result;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.time.*;
 import javax.crypto.SecretKey;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @DisplayName("Tests for JwtService")
 @ExtendWith(MockitoExtension.class)
-class JwtServiceTest {
+class JwtServiceTest extends UnitTest {
   private static final ZonedDateTime FIXED_NOW =
       LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
   private static final Clock testClock = Clock.fixed(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
@@ -41,11 +40,6 @@ class JwtServiceTest {
   }
 
   private JwtService jwtService;
-
-  @BeforeAll
-  static void init() {
-    Constants.init();
-  }
 
   @BeforeEach
   void setup() {

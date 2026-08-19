@@ -3,6 +3,9 @@ package com.anibalxyz.shared;
 import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static org.mockito.Mockito.*;
 
+import com.anibalxyz.features.auth.api.JwtMiddleware;
+import com.anibalxyz.features.auth.application.JwtService;
+import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.features.users.infra.UserEntity;
@@ -11,6 +14,8 @@ import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.validation.Validator;
 import jakarta.persistence.EntityManager;
+import java.time.Clock;
+import java.util.Map;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.OngoingStubbing;
 
@@ -106,5 +111,28 @@ public class Helpers {
     UserEntity entity = em.find(UserEntity.class, saved.id());
     em.refresh(entity);
     return entity;
+  }
+
+  public static String getValueFromCookie(String cookie, String key) {
+    if (cookie == null) {
+      return null;
+    }
+    for (String cookiePart : cookie.split(";")) {
+      String[] parts = cookiePart.trim().split("=");
+      if (parts.length > 0 && parts[0].equals(key)) {
+        return parts.length > 1 ? parts[1] : "";
+      }
+    }
+    return null;
+  }
+
+  public static String createValidJwt(JwtEnvironment env, Clock clock, int userId) {
+    var jwtService = new JwtService(env, clock);
+    return jwtService.generateToken(userId);
+  }
+
+  public static Map<String, String> createJwtHeader(String jwt) {
+    return Map.of(
+        JwtMiddleware.AUTHORIZATION_HEADER, JwtMiddleware.BEARER_PREFIX + (jwt == null ? "" : jwt));
   }
 }
