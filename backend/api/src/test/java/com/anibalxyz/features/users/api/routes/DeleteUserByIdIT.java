@@ -15,12 +15,13 @@ public class DeleteUserByIdIT extends UsersIT {
   @DisplayName("DELETE /users/{id}: given an existing id, then return 204 and delete the user")
   public void DELETE_users_id_existingId_return204() {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
+    Integer userId = user.id().value();
 
-    try (Response response = http.delete("/users/" + user.id(), createJwtHeader(validJwt))) {
+    try (Response response = http.delete("/users/" + userId, createJwtHeader(validJwt))) {
       assertThat(response.code()).isEqualTo(204);
     }
 
     em.clear();
-    assertThat(userRepository.findById(user.id())).isEmpty();
+    assertThat(userRepository.findById(userId)).isEmpty();
   }
 }

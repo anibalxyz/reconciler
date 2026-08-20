@@ -58,8 +58,8 @@ public class GetUserByIdHandlerTest extends UnitTest {
     User fakeUser = VALID_USER;
 
     stubStatusChaining(ctx);
-    whenGettingPathParamId(ctx).thenReturn(fakeUser.id());
-    when(getUserById.execute(fakeUser.id())).thenReturn(Result.success(fakeUser));
+    whenGettingPathParamId(ctx).thenReturn(fakeUser.id().value());
+    when(getUserById.execute(fakeUser.id().value())).thenReturn(Result.success(fakeUser));
 
     getUserByIdHandler.handle(ctx);
 

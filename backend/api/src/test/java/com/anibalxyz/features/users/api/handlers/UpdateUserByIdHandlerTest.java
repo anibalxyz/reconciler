@@ -67,10 +67,10 @@ public class UpdateUserByIdHandlerTest extends UnitTest {
     User fakeUser = VALID_USER;
 
     stubStatusChaining(ctx);
-    whenGettingPathParamId(ctx).thenReturn(fakeUser.id());
+    whenGettingPathParamId(ctx).thenReturn(fakeUser.id().value());
     stubStatusChaining(ctx);
     when(ctx.bodyAsClass(UpdateUserRequest.class)).thenReturn(request);
-    when(updateUserById.execute(fakeUser.id(), request.toCommand()))
+    when(updateUserById.execute(fakeUser.id().value(), request.toCommand()))
         .thenReturn(Result.success(fakeUser));
 
     updateUserByIdHandler.handle(ctx);

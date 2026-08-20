@@ -43,13 +43,7 @@ public class Constants {
         PasswordHash.of(VALID_PASSWORD, APP_ENV.BCRYPT_LOG_ROUNDS());
 
     /**
-     * A pre-built user whose credentials match the VALID_* constants:
-     *
-     * <p>name = VALID_NAME,
-     *
-     * <p>email = VALID_EMAIL,
-     *
-     * <p>password hash = hash of VALID_PASSWORD_STRING.
+     * A pre-built user whose credentials match the VALID_* constants
      *
      * <p>Ideal for tests that need a user whose password is known since the plaintext cannot be
      * read back from the entity.
@@ -58,7 +52,7 @@ public class Constants {
 
     public static User buildUser(int id, String email) {
       return User.reconstitute(
-          id,
+          new UserId(id),
           VALID_NAME,
           ResultAsserts.success(Email.of(email)),
           VALID_PASSWORD_HASH,
@@ -68,7 +62,12 @@ public class Constants {
 
     public static User buildUser(int id) {
       return User.reconstitute(
-          id, VALID_NAME, VALID_EMAIL, VALID_PASSWORD_HASH, Instant.now(), Instant.now());
+          new UserId(id),
+          VALID_NAME,
+          VALID_EMAIL,
+          VALID_PASSWORD_HASH,
+          Instant.now(),
+          Instant.now());
     }
   }
 

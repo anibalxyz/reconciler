@@ -1,9 +1,6 @@
 package com.anibalxyz.features.users.infra;
 
-import com.anibalxyz.features.users.domain.Email;
-import com.anibalxyz.features.users.domain.Name;
-import com.anibalxyz.features.users.domain.PasswordHash;
-import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.infra.exception.CorruptedEmail;
 import com.anibalxyz.features.users.infra.exception.CorruptedName;
 import com.anibalxyz.features.users.infra.exception.CorruptedPasswordHash;
@@ -57,7 +54,7 @@ public class UserEntity {
 
   public static UserEntity fromDomain(User user) {
     return new UserEntity(
-        user.id(),
+        user.id() == null ? null : user.id().value(),
         user.name().value(),
         user.email().value(),
         user.passwordHash().value(),
@@ -68,11 +65,12 @@ public class UserEntity {
   public User toDomain() throws CorruptedEmail, CorruptedName, CorruptedPasswordHash {
     // NOTE: some branches will probably not be covered by the current integration tests.
     //        Once unit tests are implemented, then full coverage will be possible
-    Email email = Email.of(this.email).orThrow(err -> new CorruptedEmail(this.email, id));
-    Name name = Name.of(this.name).orThrow(err -> new CorruptedName(this.name, id));
+    UserId id = new UserId(this.id);
+    Email email = Email.of(this.email).orThrow(err -> new CorruptedEmail(this.email, id.value()));
+    Name name = Name.of(this.name).orThrow(err -> new CorruptedName(this.name, id.value()));
     PasswordHash passwordHash =
         PasswordHash.reconstitute(this.passwordHash)
-            .orThrow(err -> new CorruptedPasswordHash(this.passwordHash, id));
+            .orThrow(err -> new CorruptedPasswordHash(this.passwordHash, id.value()));
 
     return User.reconstitute(id, name, email, passwordHash, createdAt, updatedAt);
   }

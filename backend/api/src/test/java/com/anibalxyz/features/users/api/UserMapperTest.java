@@ -23,7 +23,7 @@ public class UserMapperTest extends UnitTest {
   public void toDetailResponse_mapsAllFieldsCorrectly() {
     DetailedUserResponse response = UserMapper.toDetailResponse(user);
 
-    assertThat(response.id()).isEqualTo(user.id());
+    assertThat(response.id()).isEqualTo(user.id().value());
     assertThat(response.name()).isEqualTo(user.name().value());
     assertThat(response.email()).isEqualTo(user.email().value());
     assertThat(response.createdAt()).isEqualTo(user.createdAt());
@@ -35,7 +35,7 @@ public class UserMapperTest extends UnitTest {
   public void toCreateResponse_mapsIdNameAndEmailCorrectly() {
     CreateUserResponse response = UserMapper.toCreateResponse(user);
 
-    assertThat(response.id()).isEqualTo(user.id());
+    assertThat(response.id()).isEqualTo(user.id().value());
     assertThat(response.name()).isEqualTo(user.name().value());
     assertThat(response.email()).isEqualTo(user.email().value());
   }

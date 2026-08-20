@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class User {
 
-  private final Integer id;
+  private final UserId id;
   private final Name name;
   private final Email email;
   private final PasswordHash passwordHash;
@@ -15,7 +15,7 @@ public class User {
 
   @ExcludeFromJacocoGenerated
   private User(
-      Integer id,
+      UserId id,
       Name name,
       Email email,
       PasswordHash passwordHash,
@@ -41,7 +41,7 @@ public class User {
 
   @ExcludeFromJacocoGenerated
   public static User reconstitute(
-      Integer id,
+      UserId id,
       Name name,
       Email email,
       PasswordHash passwordHash,
@@ -53,7 +53,7 @@ public class User {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
-  public Integer id() {
+  public UserId id() {
     return id;
   }
 

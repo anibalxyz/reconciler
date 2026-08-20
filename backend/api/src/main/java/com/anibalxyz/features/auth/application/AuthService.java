@@ -110,9 +110,9 @@ public class AuthService {
               new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
         }
 
-        RequestContext.setUserId(user.id());
+        RequestContext.setUserId(user.id().value());
 
-        String accessToken = jwtService.generateToken(user.id());
+        String accessToken = jwtService.generateToken(user.id().value());
         RefreshToken refreshToken =
             refreshTokenService.createRefreshToken(
                 user,
@@ -140,7 +140,7 @@ public class AuthService {
       case Result.Failure(var invalidRefreshTokenError) ->
           Result.failure(new RefreshTokensError.InvalidToken(invalidRefreshTokenError));
       case Result.Success(var newRefreshToken) -> {
-        String newAccessToken = jwtService.generateToken(newRefreshToken.user().id());
+        String newAccessToken = jwtService.generateToken(newRefreshToken.user().id().value());
         log.info("Tokens refreshed");
         yield Result.success(new AuthResult(newAccessToken, newRefreshToken));
       }

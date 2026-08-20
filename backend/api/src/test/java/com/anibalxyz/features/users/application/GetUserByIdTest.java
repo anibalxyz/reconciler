@@ -29,9 +29,9 @@ public class GetUserByIdTest extends UnitTest {
   @DisplayName("getUserById: given an existing id, then return the correct user")
   public void getUserById_existingId_returnUser() {
     User expected = VALID_USER;
-    when(userRepository.findById(expected.id())).thenReturn(Optional.of(expected));
+    when(userRepository.findById(expected.id().value())).thenReturn(Optional.of(expected));
 
-    var result = getUserById.execute(expected.id());
+    var result = getUserById.execute(expected.id().value());
 
     User actual = ResultAsserts.success(result);
     assertThat(actual).isEqualTo(expected);

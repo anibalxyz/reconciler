@@ -281,7 +281,7 @@ class AuthServiceTest extends UnitTest {
       AuthResult expectedResult = new AuthResult(VALID_JWT_STRING, refreshToken);
 
       when(getUserByEmail.execute(command.email())).thenReturn(Result.success(user));
-      when(jwtService.generateToken(user.id())).thenReturn(expectedResult.accessToken());
+      when(jwtService.generateToken(user.id().value())).thenReturn(expectedResult.accessToken());
       when(refreshTokenService.createRefreshToken(user, expiryDate))
           .thenReturn(expectedResult.refreshToken());
 
@@ -338,7 +338,8 @@ class AuthServiceTest extends UnitTest {
       when(refreshTokenService.verifyAndRotate(
               currentRefreshToken.token(), clock.instant(), expiryDate))
           .thenReturn(Result.success(expectedRefreshToken));
-      when(jwtService.generateToken(expectedRefreshToken.user().id())).thenReturn(VALID_JWT_STRING);
+      when(jwtService.generateToken(expectedRefreshToken.user().id().value()))
+          .thenReturn(VALID_JWT_STRING);
 
       var result = authService.refreshTokens(currentRefreshToken.token());
       AuthResult authResult = ResultAsserts.success(result);

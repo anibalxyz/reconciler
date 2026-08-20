@@ -65,7 +65,7 @@ public class AuthRoutesIT extends IntegrationTest {
     assertThat(token).isNotNull();
     var result = refreshTokenService.verifyRefreshToken(token, testClock.instant());
     var refreshToken = ResultAsserts.success(result);
-    assertThat(refreshToken.user().id()).isEqualTo(id);
+    assertThat(refreshToken.user().id().value()).isEqualTo(id);
   }
 
   @BeforeEach
@@ -176,11 +176,11 @@ public class AuthRoutesIT extends IntegrationTest {
       assertThat(loginResponse.code()).isEqualTo(200);
 
       AuthResponse authResponse = http.parseBody(loginResponse, AuthResponse.class);
-      validateJwt(authResponse.accessToken(), user.id());
+      validateJwt(authResponse.accessToken(), user.id().value());
 
       String refreshTokenCookie =
           getValueFromCookie(loginResponse.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
-      validateRefreshToken(refreshTokenCookie, user.id());
+      validateRefreshToken(refreshTokenCookie, user.id().value());
     }
   }
 
@@ -267,11 +267,11 @@ public class AuthRoutesIT extends IntegrationTest {
       assertThat(response.code()).isEqualTo(200);
 
       AuthResponse authResponse = http.parseBody(response, AuthResponse.class);
-      validateJwt(authResponse.accessToken(), user.id());
+      validateJwt(authResponse.accessToken(), user.id().value());
 
       String refreshTokenCookie =
           getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
-      validateRefreshToken(refreshTokenCookie, user.id());
+      validateRefreshToken(refreshTokenCookie, user.id().value());
     }
   }
 }

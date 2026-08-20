@@ -11,10 +11,14 @@ public class UserMapper {
 
   public static DetailedUserResponse toDetailResponse(User user) {
     return new DetailedUserResponse(
-        user.id(), user.name().value(), user.email().value(), user.createdAt(), user.updatedAt());
+        user.id().value(),
+        user.name().value(),
+        user.email().value(),
+        user.createdAt(),
+        user.updatedAt());
   }
 
   public static CreateUserResponse toCreateResponse(User user) {
-    return new CreateUserResponse(user.id(), user.name().value(), user.email().value());
+    return new CreateUserResponse(user.id().value(), user.name().value(), user.email().value());
   }
 }
