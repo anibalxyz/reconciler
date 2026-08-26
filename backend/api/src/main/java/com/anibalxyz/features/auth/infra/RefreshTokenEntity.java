@@ -1,6 +1,8 @@
 package com.anibalxyz.features.auth.infra;
 
 import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.auth.domain.TokenHash;
+import com.anibalxyz.features.users.domain.UserId;
 import com.anibalxyz.features.users.infra.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,8 +23,8 @@ public class RefreshTokenEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "token", nullable = false, unique = true)
-  private String token;
+  @Column(name = "token_hash", nullable = false, unique = true)
+  private byte[] tokenHash;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -36,17 +38,17 @@ public class RefreshTokenEntity {
 
   protected RefreshTokenEntity() {}
 
-  public static RefreshTokenEntity fromDomain(RefreshToken domain) {
-    var entity = new RefreshTokenEntity();
-    entity.id = domain.id();
-    entity.token = domain.token();
-    entity.user = UserEntity.fromDomain(domain.user());
-    entity.expiryDate = domain.expiryDate();
-    entity.revoked = domain.revoked();
-    return entity;
+  public RefreshTokenEntity(
+      Long id, byte[] tokenHash, UserEntity user, Instant expiryDate, boolean revoked) {
+    this.id = id;
+    this.tokenHash = tokenHash;
+    this.user = user;
+    this.expiryDate = expiryDate;
+    this.revoked = revoked;
   }
 
   public RefreshToken toDomain() {
-    return new RefreshToken(id, token, user.toDomain(), expiryDate, revoked);
+    return RefreshToken.reconstitute(
+        TokenHash.reconstitute(tokenHash), new UserId(user.id()), expiryDate, revoked);
   }
 }

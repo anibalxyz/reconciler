@@ -78,6 +78,11 @@ public class AuthErrorMapper implements FeatureErrorMapper {
               401,
               new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED),
               LogEntry.warn("Revoked refresh token used"));
+      case InvalidRefreshTokenError.Reason.Invalid ignored ->
+          new ErrorResult(
+              401,
+              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND),
+              LogEntry.warn("Invalid refresh token was used"));
     };
   }
 

@@ -2,7 +2,9 @@ package com.anibalxyz.shared;
 
 import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 
+import com.anibalxyz.features.auth.domain.RawToken;
 import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.auth.domain.TokenHash;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
@@ -76,10 +78,14 @@ public class Constants {
     public static final String VALID_JWT_STRING =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
 
-    public static final String VALID_REFRESH_TOKEN_STRING = "e4192c47-9649-48be-9f88-523240f45b6e";
+    public static final String VALID_REFRESH_RAW_TOKEN_STRING =
+        "e4192c47-9649-48be-9f88-523240f45b6e";
+    public static final RawToken VALID_REFRESH_RAW_TOKEN =
+        ResultAsserts.success(RawToken.of(VALID_REFRESH_RAW_TOKEN_STRING));
+    public static final TokenHash VALID_REFRESH_TOKEN_HASH = TokenHash.of(VALID_REFRESH_RAW_TOKEN);
 
-    public static RefreshToken buildToken(Instant expiryDate) {
-      return new RefreshToken(1L, "token-value", VALID_USER, expiryDate, false);
+    public static RefreshToken buildRefreshToken(Instant expiryDate) {
+      return RefreshToken.of(VALID_REFRESH_TOKEN_HASH, VALID_USER.id(), expiryDate);
     }
   }
 }

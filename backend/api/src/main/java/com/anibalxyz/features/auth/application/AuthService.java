@@ -5,13 +5,14 @@ import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
-import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.auth.domain.RawToken;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.users.application.GetUserByEmail;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Password;
 import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.UserId;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.context.RequestContext;
 import java.time.*;
@@ -110,16 +111,16 @@ public class AuthService {
               new AuthenticateUserError.InvalidCredentials(new InvalidCredentialsError()));
         }
 
-        RequestContext.setUserId(user.id().value());
+        UserId userId = user.id();
 
-        String accessToken = jwtService.generateToken(user.id().value());
-        RefreshToken refreshToken =
-            refreshTokenService.createRefreshToken(
-                user,
-                calculateExpiryDate(
-                    ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS()));
+        RequestContext.setUserId(userId.value());
+
+        String accessToken = jwtService.generateToken(userId.value());
+        Instant expiryDate =
+            calculateExpiryDate(ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
+        RawToken refreshToken = refreshTokenService.createRefreshToken(userId, expiryDate);
         log.info("User authenticated");
-        yield Result.success(new AuthResult(accessToken, refreshToken));
+        yield Result.success(new AuthResult(accessToken, refreshToken, expiryDate));
       }
     };
   }
@@ -130,19 +131,18 @@ public class AuthService {
       return Result.failure(new RefreshTokensError.MaintenanceWindow(blocked.get()));
     }
 
+    Instant expiryDate =
+        calculateExpiryDate(ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
     var rotationResult =
-        refreshTokenService.verifyAndRotate(
-            refreshTokenString,
-            clock.instant(),
-            calculateExpiryDate(ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS()));
+        refreshTokenService.verifyAndRotate(refreshTokenString, clock.instant(), expiryDate);
 
     return switch (rotationResult) {
       case Result.Failure(var invalidRefreshTokenError) ->
           Result.failure(new RefreshTokensError.InvalidToken(invalidRefreshTokenError));
-      case Result.Success(var newRefreshToken) -> {
-        String newAccessToken = jwtService.generateToken(newRefreshToken.user().id().value());
+      case Result.Success(var rotation) -> {
+        String newAccessToken = jwtService.generateToken(rotation.userId().value());
         log.info("Tokens refreshed");
-        yield Result.success(new AuthResult(newAccessToken, newRefreshToken));
+        yield Result.success(new AuthResult(newAccessToken, rotation.rawToken(), expiryDate));
       }
     };
   }

@@ -49,10 +49,6 @@ public class Password {
     return Objects.equals(value, other.value());
   }
 
-  public String value() {
-    return value;
-  }
-
   /**
    * @return a masked string to prevent accidental leaks in logs.
    */
@@ -60,5 +56,9 @@ public class Password {
   @Override
   public String toString() {
     return "********";
+  }
+
+  public String value() {
+    return value;
   }
 }

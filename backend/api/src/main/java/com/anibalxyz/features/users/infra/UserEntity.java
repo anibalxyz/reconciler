@@ -74,4 +74,8 @@ public class UserEntity {
 
     return User.reconstitute(id, name, email, passwordHash, createdAt, updatedAt);
   }
+
+  public Integer id() {
+    return id;
+  }
 }

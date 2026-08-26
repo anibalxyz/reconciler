@@ -1,7 +1,6 @@
 package com.anibalxyz.features.auth.application;
 
-import static com.anibalxyz.shared.Constants.Auth.VALID_JWT_STRING;
-import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN_STRING;
+import static com.anibalxyz.shared.Constants.Auth.*;
 import static com.anibalxyz.shared.Constants.Users.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -47,10 +46,6 @@ class AuthServiceTest extends UnitTest {
   @BeforeEach
   void deps() {
     authService = new AuthService(env, clock, getUserByEmail, jwtService, refreshTokenService);
-  }
-
-  private RefreshToken buildRefreshToken(Instant expiryDate) {
-    return new RefreshToken(1L, VALID_REFRESH_TOKEN_STRING, VALID_USER, expiryDate, false);
   }
 
   private record AuthEnvironmentStub(Duration JWT_REFRESH_EXPIRATION_TIME_DAYS)
@@ -277,12 +272,12 @@ class AuthServiceTest extends UnitTest {
       User user = VALID_USER;
       LoginCommand command = new LoginCommand(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
       Instant expiryDate = AuthService.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
-      RefreshToken refreshToken = buildRefreshToken(expiryDate);
-      AuthResult expectedResult = new AuthResult(VALID_JWT_STRING, refreshToken);
+      AuthResult expectedResult =
+          new AuthResult(VALID_JWT_STRING, VALID_REFRESH_RAW_TOKEN, expiryDate);
 
       when(getUserByEmail.execute(command.email())).thenReturn(Result.success(user));
       when(jwtService.generateToken(user.id().value())).thenReturn(expectedResult.accessToken());
-      when(refreshTokenService.createRefreshToken(user, expiryDate))
+      when(refreshTokenService.createRefreshToken(user.id(), expiryDate))
           .thenReturn(expectedResult.refreshToken());
 
       var result = authService.authenticateUser(command);
@@ -303,7 +298,7 @@ class AuthServiceTest extends UnitTest {
       var serviceOutsideWindow =
           new AuthService(env, clockOutsideWindow, getUserByEmail, jwtService, refreshTokenService);
 
-      var result = serviceOutsideWindow.refreshTokens(VALID_REFRESH_TOKEN_STRING);
+      var result = serviceOutsideWindow.refreshTokens(VALID_REFRESH_RAW_TOKEN_STRING);
       assertThat(ResultAsserts.failure(result))
           .isInstanceOf(AuthService.RefreshTokensError.MaintenanceWindow.class);
     }
@@ -314,10 +309,10 @@ class AuthServiceTest extends UnitTest {
       var expiryDate = AuthService.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
       var error = InvalidRefreshTokenError.notFound();
       when(refreshTokenService.verifyAndRotate(
-              VALID_REFRESH_TOKEN_STRING, clock.instant(), expiryDate))
+              VALID_REFRESH_RAW_TOKEN_STRING, clock.instant(), expiryDate))
           .thenReturn(Result.failure(error));
 
-      var result = authService.refreshTokens(VALID_REFRESH_TOKEN_STRING);
+      var result = authService.refreshTokens(VALID_REFRESH_RAW_TOKEN_STRING);
       var failure = ResultAsserts.failure(result);
 
       var invalidTokenClass = AuthService.RefreshTokensError.InvalidToken.class;
@@ -333,18 +328,20 @@ class AuthServiceTest extends UnitTest {
       var expiryDate = AuthService.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
       RefreshToken currentRefreshToken =
           buildRefreshToken(clock.instant().plus(1, ChronoUnit.DAYS));
-      RefreshToken expectedRefreshToken = buildRefreshToken(expiryDate);
 
       when(refreshTokenService.verifyAndRotate(
-              currentRefreshToken.token(), clock.instant(), expiryDate))
-          .thenReturn(Result.success(expectedRefreshToken));
-      when(jwtService.generateToken(expectedRefreshToken.user().id().value()))
+              VALID_REFRESH_RAW_TOKEN_STRING, clock.instant(), expiryDate))
+          .thenReturn(
+              Result.success(
+                  new RefreshTokenService.RotationResult(
+                      currentRefreshToken.userId(), VALID_REFRESH_RAW_TOKEN)));
+      when(jwtService.generateToken(currentRefreshToken.userId().value()))
           .thenReturn(VALID_JWT_STRING);
 
-      var result = authService.refreshTokens(currentRefreshToken.token());
+      var result = authService.refreshTokens(VALID_REFRESH_RAW_TOKEN_STRING);
       AuthResult authResult = ResultAsserts.success(result);
       assertThat(authResult.accessToken()).isEqualTo(VALID_JWT_STRING);
-      assertThat(authResult.refreshToken()).isEqualTo(expectedRefreshToken);
+      assertThat(authResult.refreshToken()).isEqualTo(VALID_REFRESH_RAW_TOKEN);
     }
   }
 }
