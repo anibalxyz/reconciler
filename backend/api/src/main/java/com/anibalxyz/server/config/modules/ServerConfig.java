@@ -1,5 +1,6 @@
-package com.anibalxyz.server.config.modules.startup;
+package com.anibalxyz.server.config.modules;
 
+import com.anibalxyz.server.config.AppEnv;
 import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson3;
 import org.slf4j.Logger;
@@ -15,9 +16,9 @@ import tools.jackson.databind.cfg.DateTimeFeature;
 public class ServerConfig implements StartupConfig {
 
   private static final Logger log = LoggerFactory.getLogger(ServerConfig.class);
-  private final ServerEnvironment env;
+  private final Env env;
 
-  public ServerConfig(ServerEnvironment env) {
+  public ServerConfig(Env env) {
     this.env = env;
   }
 
@@ -65,5 +66,19 @@ public class ServerConfig implements StartupConfig {
     configureCors(javalinConfig, env.CORS_ALLOWED_ORIGINS());
     configureJsonMapper(javalinConfig);
     overrideIpGetter(javalinConfig);
+  }
+
+  public interface Env {
+    AppEnv APP_ENV();
+
+    String API_URL();
+
+    String SERVER_URL();
+
+    String[] CORS_ALLOWED_ORIGINS();
+
+    String CONTACT_EMAIL();
+
+    String API_PUBLIC_URL();
   }
 }

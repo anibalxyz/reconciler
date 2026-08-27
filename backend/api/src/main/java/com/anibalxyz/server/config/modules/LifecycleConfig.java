@@ -1,7 +1,6 @@
-package com.anibalxyz.server.config.modules.runtime;
+package com.anibalxyz.server.config.modules;
 
 import com.anibalxyz.persistence.PersistenceManager;
-import com.anibalxyz.server.config.modules.startup.StartupConfig;
 import com.anibalxyz.server.context.ContextProvider;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.config.JavalinConfig;

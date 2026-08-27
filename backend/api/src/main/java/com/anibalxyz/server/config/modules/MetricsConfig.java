@@ -1,6 +1,5 @@
-package com.anibalxyz.server.config.modules.runtime;
+package com.anibalxyz.server.config.modules;
 
-import com.anibalxyz.server.config.modules.startup.StartupConfig;
 import io.javalin.config.JavalinConfig;
 import io.javalin.micrometer.MicrometerPlugin;
 import io.micrometer.core.instrument.Meter;

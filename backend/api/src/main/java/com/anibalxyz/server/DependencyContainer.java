@@ -9,11 +9,11 @@ import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.application.RefreshTokenService;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
+import com.anibalxyz.features.auth.infra.RefreshTokensCleanupScheduler;
 import com.anibalxyz.features.system.api.SystemController;
 import com.anibalxyz.features.system.api.SystemRoutes;
 import com.anibalxyz.features.users.api.UserRoutes;
 import com.anibalxyz.features.users.api.handlers.*;
-import com.anibalxyz.features.users.api.openapi.*;
 import com.anibalxyz.features.users.application.*;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
@@ -21,9 +21,12 @@ import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.runtime.*;
-import com.anibalxyz.server.config.modules.startup.ServerConfig;
-import com.anibalxyz.server.config.modules.startup.SwaggerConfig;
+import com.anibalxyz.server.config.modules.AccessLogConfig;
+import com.anibalxyz.server.config.modules.ExceptionsConfig;
+import com.anibalxyz.server.config.modules.LifecycleConfig;
+import com.anibalxyz.server.config.modules.MetricsConfig;
+import com.anibalxyz.server.config.modules.ServerConfig;
+import com.anibalxyz.server.config.modules.SwaggerConfig;
 import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
 import io.javalin.micrometer.MicrometerPlugin;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
@@ -57,7 +60,7 @@ public final class DependencyContainer {
   private final UserRoutes userRoutes;
   private final AuthRoutes authRoutes;
 
-  private final SchedulerConfig schedulerConfig;
+  private final RefreshTokensCleanupScheduler refreshTokensCleanupScheduler;
 
   public DependencyContainer(ApplicationConfiguration config, Clock clock) {
     // 1. Infrastructure
@@ -125,7 +128,7 @@ public final class DependencyContainer {
     authRoutes = new AuthRoutes(authController);
 
     // Events
-    schedulerConfig = new SchedulerConfig(refreshTokenService);
+    refreshTokensCleanupScheduler = new RefreshTokensCleanupScheduler(refreshTokenService);
   }
 
   public PersistenceManager persistenceManager() {
@@ -176,7 +179,7 @@ public final class DependencyContainer {
     return authRoutes;
   }
 
-  public SchedulerConfig schedulerConfig() {
-    return schedulerConfig;
+  public RefreshTokensCleanupScheduler schedulerConfig() {
+    return refreshTokensCleanupScheduler;
   }
 }

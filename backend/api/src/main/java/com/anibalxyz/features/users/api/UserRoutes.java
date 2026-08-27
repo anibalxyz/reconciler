@@ -4,8 +4,7 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 
 import com.anibalxyz.features.common.api.Role;
 import com.anibalxyz.features.users.api.handlers.*;
-import com.anibalxyz.features.users.api.openapi.*;
-import com.anibalxyz.server.config.modules.startup.StartupConfig;
+import com.anibalxyz.server.config.modules.StartupConfig;
 import io.javalin.config.JavalinConfig;
 
 public class UserRoutes implements StartupConfig {

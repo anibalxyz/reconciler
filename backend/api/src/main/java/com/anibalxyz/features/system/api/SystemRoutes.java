@@ -4,7 +4,7 @@ import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.modules.startup.StartupConfig;
+import com.anibalxyz.server.config.modules.StartupConfig;
 import io.javalin.config.JavalinConfig;
 
 public class SystemRoutes implements StartupConfig {
