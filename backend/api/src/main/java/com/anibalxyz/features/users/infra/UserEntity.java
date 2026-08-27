@@ -4,6 +4,7 @@ import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.infra.exception.CorruptedEmail;
 import com.anibalxyz.features.users.infra.exception.CorruptedName;
 import com.anibalxyz.features.users.infra.exception.CorruptedPasswordHash;
+import com.anibalxyz.features.users.infra.exception.CorruptedUserId;
 import jakarta.persistence.*;
 import java.time.Instant;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -65,12 +66,12 @@ public class UserEntity {
   public User toDomain() throws CorruptedEmail, CorruptedName, CorruptedPasswordHash {
     // NOTE: some branches will probably not be covered by the current integration tests.
     //        Once unit tests are implemented, then full coverage will be possible
-    UserId id = new UserId(this.id);
-    Email email = Email.of(this.email).orThrow(err -> new CorruptedEmail(this.email, id.value()));
-    Name name = Name.of(this.name).orThrow(err -> new CorruptedName(this.name, id.value()));
+    UserId id = UserId.of(this.id).orThrow(err -> new CorruptedUserId(this.id));
+    Email email = Email.of(this.email).orThrow(err -> new CorruptedEmail(this.email, this.id));
+    Name name = Name.of(this.name).orThrow(err -> new CorruptedName(this.name, this.id));
     PasswordHash passwordHash =
         PasswordHash.reconstitute(this.passwordHash)
-            .orThrow(err -> new CorruptedPasswordHash(this.passwordHash, id.value()));
+            .orThrow(err -> new CorruptedPasswordHash(this.passwordHash, this.id));
 
     return User.reconstitute(id, name, email, passwordHash, createdAt, updatedAt);
   }

@@ -4,6 +4,7 @@ import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.TokenHash;
 import com.anibalxyz.features.users.domain.UserId;
 import com.anibalxyz.features.users.infra.UserEntity;
+import com.anibalxyz.features.users.infra.exception.CorruptedUserId;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -48,7 +49,9 @@ public class RefreshTokenEntity {
   }
 
   public RefreshToken toDomain() {
+    UserId userId =
+        UserId.of(user.id()).orThrow(invalidUserIdError -> new CorruptedUserId(user.id()));
     return RefreshToken.reconstitute(
-        TokenHash.reconstitute(tokenHash), new UserId(user.id()), expiryDate, revoked);
+        TokenHash.reconstitute(tokenHash), userId, expiryDate, revoked);
   }
 }

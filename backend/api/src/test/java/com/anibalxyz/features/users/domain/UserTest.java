@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests for User Domain Object")
 public class UserTest extends UnitTest {
-  private static final int ID = 1;
   private static final Instant TIMESTAMP = Instant.now();
 
   private static User baseUser;
@@ -36,7 +35,7 @@ public class UserTest extends UnitTest {
     Instant later = TIMESTAMP.plusSeconds(60);
 
     User sameIdDifferentFields =
-        User.reconstitute(new UserId(ID), otherName, otherEmail, VALID_PASSWORD_HASH, later, later);
+        User.reconstitute(VALID_USER_ID, otherName, otherEmail, VALID_PASSWORD_HASH, later, later);
 
     assertThat(baseUser).isEqualTo(sameIdDifferentFields);
   }
@@ -87,7 +86,7 @@ public class UserTest extends UnitTest {
     Email otherEmail = ResultAsserts.success(Email.of("other" + baseUser.email().value()));
     User sameIdDifferentFields =
         User.reconstitute(
-            new UserId(ID), VALID_NAME, otherEmail, VALID_PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+            VALID_USER_ID, VALID_NAME, otherEmail, VALID_PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
 
     assertThat(baseUser.hashCode()).isEqualTo(sameIdDifferentFields.hashCode());
   }

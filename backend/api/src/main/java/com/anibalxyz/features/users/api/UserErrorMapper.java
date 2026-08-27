@@ -33,6 +33,26 @@ public class UserErrorMapper implements FeatureErrorMapper {
     };
   }
 
+  @Override
+  public boolean supportsFieldError(DomainError error) {
+    return error instanceof UserDomainError;
+  }
+
+  @Override
+  public ErrorDetail mapFieldError(DomainError error) {
+    if (error instanceof UserDomainError ude) {
+      return switch (ude) {
+        case UserDomainError.InvalidValueError ive -> mapInvalidValue(ive);
+        case EmailAlreadyTakenError ignored ->
+            new ErrorDetail(ValidationErrorCode.CONFLICT_FIELD)
+                .with("title", ValidationErrorCode.CONFLICT_FIELD.title());
+        case UserNotFoundError e ->
+            throw UnreachableCodeException.of(e, "not found errors are not field errors");
+      };
+    }
+    throw new UnhandledErrorException(error);
+  }
+
   public ErrorResult mapUpdateUserByIdError(UpdateUserById.Error error) {
     return switch (error) {
       case UpdateUserById.Error.EmptyCommand ignored ->
@@ -58,26 +78,6 @@ public class UserErrorMapper implements FeatureErrorMapper {
       case UserNotFoundError.Reason.ByEmail r ->
           throw UnreachableCodeException.of(r, "no endpoint exposes email-based user lookups");
     };
-  }
-
-  @Override
-  public boolean supportsFieldError(DomainError error) {
-    return error instanceof UserDomainError;
-  }
-
-  @Override
-  public ErrorDetail mapFieldError(DomainError error) {
-    if (error instanceof UserDomainError ude) {
-      return switch (ude) {
-        case UserDomainError.InvalidValueError ive -> mapInvalidValue(ive);
-        case EmailAlreadyTakenError ignored ->
-            new ErrorDetail(ValidationErrorCode.CONFLICT_FIELD)
-                .with("title", ValidationErrorCode.CONFLICT_FIELD.title());
-        case UserNotFoundError e ->
-            throw UnreachableCodeException.of(e, "not found errors are not field errors");
-      };
-    }
-    throw new UnhandledErrorException(error);
   }
 
   public ErrorDetail mapInvalidValue(InvalidValueError error) {
@@ -136,6 +136,9 @@ public class UserErrorMapper implements FeatureErrorMapper {
         case InvalidPasswordHashError e ->
             throw UnreachableCodeException.of(
                 e, "corrupted hash should be caught at infra layer before reaching the mapper");
+        case InvalidUserIdError invalidUserIdError ->
+            throw UnreachableCodeException.of(
+                invalidUserIdError, "user id errors are not field-level validation errors");
       };
     }
     throw new UnhandledErrorException(error);

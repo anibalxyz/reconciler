@@ -6,5 +6,9 @@ public sealed interface UserDomainError extends DomainError
     permits EmailAlreadyTakenError, UserDomainError.InvalidValueError, UserNotFoundError {
   sealed interface InvalidValueError
       extends com.anibalxyz.core.domain.error.InvalidValueError, UserDomainError
-      permits InvalidEmailError, InvalidNameError, InvalidPasswordError, InvalidPasswordHashError {}
+      permits InvalidEmailError,
+          InvalidNameError,
+          InvalidPasswordError,
+          InvalidPasswordHashError,
+          InvalidUserIdError {}
 }

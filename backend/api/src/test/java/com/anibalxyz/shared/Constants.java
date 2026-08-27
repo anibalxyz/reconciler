@@ -33,10 +33,12 @@ public class Constants {
   }
 
   public static final class Users {
+    public static final Integer VALID_USER_ID_INT = 1;
     public static final String VALID_NAME_STRING = "John Doe";
     public static final String VALID_EMAIL_STRING = "valid@email.com";
     public static final String VALID_PASSWORD_STRING = "V4L|D_Passw0Rd";
 
+    public static final UserId VALID_USER_ID = ResultAsserts.success(UserId.of(VALID_USER_ID_INT));
     public static final Name VALID_NAME = ResultAsserts.success(Name.of(VALID_NAME_STRING));
     public static final Email VALID_EMAIL = ResultAsserts.success(Email.of(VALID_EMAIL_STRING));
     public static final Password VALID_PASSWORD =
@@ -54,7 +56,7 @@ public class Constants {
 
     public static User buildUser(int id, String email) {
       return User.reconstitute(
-          new UserId(id),
+          ResultAsserts.success(UserId.of(id)),
           VALID_NAME,
           ResultAsserts.success(Email.of(email)),
           VALID_PASSWORD_HASH,
@@ -64,7 +66,7 @@ public class Constants {
 
     public static User buildUser(int id) {
       return User.reconstitute(
-          new UserId(id),
+          ResultAsserts.success(UserId.of(id)),
           VALID_NAME,
           VALID_EMAIL,
           VALID_PASSWORD_HASH,
