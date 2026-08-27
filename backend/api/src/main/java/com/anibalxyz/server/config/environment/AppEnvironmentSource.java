@@ -1,6 +1,8 @@
 package com.anibalxyz.server.config.environment;
 
 import com.anibalxyz.features.auth.api.env.AuthApiEnvironment;
+import com.anibalxyz.features.auth.application.AuthenticateUser;
+import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
 import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.users.application.CreateUser;
@@ -44,6 +46,8 @@ public record AppEnvironmentSource(
     implements UpdateUserById.Env,
         CreateUser.Env,
         ServerConfig.Env,
+        AuthenticateUser.Env,
+        RefreshTokens.Env,
         JwtEnvironment,
         AuthApiEnvironment,
         AuthEnvironment {

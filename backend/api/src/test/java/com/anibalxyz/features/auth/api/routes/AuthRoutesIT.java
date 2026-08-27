@@ -11,9 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
-import com.anibalxyz.features.auth.application.AuthService;
-import com.anibalxyz.features.auth.application.JwtService;
-import com.anibalxyz.features.auth.application.RefreshTokenService;
+import com.anibalxyz.features.auth.application.*;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
@@ -117,7 +115,7 @@ public class AuthRoutesIT extends IntegrationTest {
       notification.add("email", ResultAsserts.failure(Email.validate(invalidEmail)));
 
       ErrorResult expectedResult =
-          ErrorMapper.map(new AuthService.AuthenticateUserError.ValidationFailed(notification));
+          ErrorMapper.map(new AuthenticateUser.Error.ValidationFailed(notification));
 
       Response loginResponse = http.post("/auth/login", loginRequest);
       assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
@@ -134,8 +132,7 @@ public class AuthRoutesIT extends IntegrationTest {
       LoginRequest loginRequest = new LoginRequest(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
       ErrorResult expectedResult =
-          ErrorMapper.map(
-              new AuthService.AuthenticateUserError.MaintenanceWindow(MAINTENANCE_START));
+          ErrorMapper.map(new AuthenticateUser.Error.MaintenanceWindow(MAINTENANCE_START));
 
       Response loginResponse = http.post("/auth/login", loginRequest);
       assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(503);
@@ -154,8 +151,7 @@ public class AuthRoutesIT extends IntegrationTest {
           new LoginRequest("different" + user.email().value(), VALID_PASSWORD_STRING);
       ErrorResult expectedResult =
           ErrorMapper.map(
-              new AuthService.AuthenticateUserError.InvalidCredentials(
-                  new InvalidCredentialsError()));
+              new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError()));
 
       Response loginResponse = http.post("/auth/login", loginRequest);
       assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
@@ -214,8 +210,7 @@ public class AuthRoutesIT extends IntegrationTest {
     void outsideMaintenanceWindow_respond503UnavailableServer() {
       testClock.resetTo(SATURDAY_MIDDAY);
       ErrorResult expectedResult =
-          ErrorMapper.map(
-              new AuthService.AuthenticateUserError.MaintenanceWindow(MAINTENANCE_START));
+          ErrorMapper.map(new AuthenticateUser.Error.MaintenanceWindow(MAINTENANCE_START));
 
       Map<String, String> cookie =
           Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_RAW_TOKEN_STRING);
@@ -236,7 +231,7 @@ public class AuthRoutesIT extends IntegrationTest {
     void invalidRefreshToken_respond401Unauthorized() {
       ErrorResult expectedResult =
           ErrorMapper.map(
-              new AuthService.RefreshTokensError.InvalidToken(InvalidRefreshTokenError.notFound()));
+              new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.notFound()));
 
       // it is called "VALID" referring to the format, but is not a real value
       Map<String, String> cookie =

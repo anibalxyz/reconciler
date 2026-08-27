@@ -12,8 +12,9 @@ import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.api.AuthController;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
-import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.application.RefreshTokenService;
+import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
@@ -40,7 +41,8 @@ public class AuthControllerTest extends UnitTest {
       LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
   private static final Clock testClock = Clock.fixed(FIXED_NOW.toInstant(), FIXED_NOW.getZone());
 
-  @Mock private AuthService authService;
+  @Mock private AuthenticateUser authenticateUser;
+  @Mock private RefreshTokens refreshTokens;
   @Mock private RefreshTokenService refreshTokenService;
   @Mock private Context ctx;
 
@@ -49,7 +51,12 @@ public class AuthControllerTest extends UnitTest {
   @BeforeEach
   public void deps() {
     authController =
-        new AuthController(Constants.APP_CONFIG.env(), authService, refreshTokenService, testClock);
+        new AuthController(
+            Constants.APP_CONFIG.env(),
+            testClock,
+            authenticateUser,
+            refreshTokens,
+            refreshTokenService);
   }
 
   @Nested
@@ -69,7 +76,7 @@ public class AuthControllerTest extends UnitTest {
 
       AuthResult dummyAuthResult =
           new AuthResult(VALID_JWT_STRING, VALID_REFRESH_RAW_TOKEN, FIXED_NOW.toInstant());
-      when(authService.authenticateUser(request.toCommand()))
+      when(authenticateUser.execute(request.toCommand()))
           .thenReturn(Result.success(dummyAuthResult));
 
       authController.login(ctx);
@@ -114,7 +121,7 @@ public class AuthControllerTest extends UnitTest {
       AuthResponse expectedResponse = new AuthResponse(result.accessToken());
 
       when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_RAW_TOKEN_STRING);
-      when(authService.refreshTokens(VALID_REFRESH_RAW_TOKEN_STRING))
+      when(refreshTokens.execute(VALID_REFRESH_RAW_TOKEN_STRING))
           .thenReturn(Result.success(result));
 
       authController.refresh(ctx);
@@ -140,11 +147,10 @@ public class AuthControllerTest extends UnitTest {
       LoginRequest request = new LoginRequest("", "");
 
       when(ctx.bodyAsClass(LoginRequest.class)).thenReturn(request);
-      Result<AuthResult, AuthService.AuthenticateUserError> failedResult =
+      Result<AuthResult, AuthenticateUser.Error> failedResult =
           Result.failure(
-              new AuthService.AuthenticateUserError.InvalidCredentials(
-                  new InvalidCredentialsError()));
-      when(authService.authenticateUser(request.toCommand())).thenReturn(failedResult);
+              new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError()));
+      when(authenticateUser.execute(request.toCommand())).thenReturn(failedResult);
 
       var failure = ResultAsserts.failure(failedResult);
       assertThatThrownBy(() -> authController.login(ctx))
@@ -169,10 +175,10 @@ public class AuthControllerTest extends UnitTest {
         "refresh: given service result is failure, then throw FailureSignal with its error")
     public void refresh_serviceReturnsRefreshTokensError_throwFailureSignal() {
       when(ctx.cookie("refreshToken")).thenReturn(VALID_REFRESH_RAW_TOKEN_STRING);
-      Result<AuthResult, AuthService.RefreshTokensError> failedResult =
+      Result<AuthResult, RefreshTokens.Error> failedResult =
           Result.failure(
-              new AuthService.RefreshTokensError.InvalidToken(InvalidRefreshTokenError.notFound()));
-      when(authService.refreshTokens(VALID_REFRESH_RAW_TOKEN_STRING)).thenReturn(failedResult);
+              new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.notFound()));
+      when(refreshTokens.execute(VALID_REFRESH_RAW_TOKEN_STRING)).thenReturn(failedResult);
 
       var failure = ResultAsserts.failure(failedResult);
       assertThatThrownBy(() -> authController.refresh(ctx))

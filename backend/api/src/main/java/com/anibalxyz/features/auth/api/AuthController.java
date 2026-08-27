@@ -4,8 +4,9 @@ import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.api.env.AuthApiEnvironment;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
-import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.application.RefreshTokenService;
+import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import io.javalin.http.*;
@@ -18,19 +19,22 @@ public class AuthController implements AuthApi {
   public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
   private static final Logger log = LoggerFactory.getLogger(AuthController.class);
   private final AuthApiEnvironment env;
-  private final AuthService authService;
-  private final RefreshTokenService refreshTokenService;
   private final Clock clock;
+  private final AuthenticateUser authenticateUser;
+  private final RefreshTokens refreshTokens;
+  private final RefreshTokenService refreshTokenService;
 
   public AuthController(
       AuthApiEnvironment authApiEnvironment,
-      AuthService authService,
-      RefreshTokenService refreshTokenService,
-      Clock clock) {
+      Clock clock,
+      AuthenticateUser authenticateUser,
+      RefreshTokens refreshTokens,
+      RefreshTokenService refreshTokenService) {
     this.env = authApiEnvironment;
-    this.authService = authService;
-    this.refreshTokenService = refreshTokenService;
     this.clock = clock;
+    this.authenticateUser = authenticateUser;
+    this.refreshTokens = refreshTokens;
+    this.refreshTokenService = refreshTokenService;
   }
 
   public static long secondsUntilExpiry(Instant expiryDate, Instant now) {
@@ -40,7 +44,7 @@ public class AuthController implements AuthApi {
   @Override
   public void login(Context ctx) {
     LoginCommand command = ctx.bodyAsClass(LoginRequest.class).toCommand();
-    AuthResult authResult = authService.authenticateUser(command).orThrow(FailureSignal::new);
+    AuthResult authResult = authenticateUser.execute(command).orThrow(FailureSignal::new);
 
     setRefreshTokenCookie(
         ctx,
@@ -69,7 +73,7 @@ public class AuthController implements AuthApi {
     }
 
     AuthResult authResult =
-        authService.refreshTokens(refreshTokenFromCookie).orThrow(FailureSignal::new);
+        refreshTokens.execute(refreshTokenFromCookie).orThrow(FailureSignal::new);
 
     setRefreshTokenCookie(
         ctx,

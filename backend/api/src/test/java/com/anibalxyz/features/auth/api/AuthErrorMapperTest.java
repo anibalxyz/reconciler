@@ -6,8 +6,9 @@ import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.auth.api.out.AuthErrorCode;
-import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.application.JwtService;
+import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.domain.error.AuthDomainError;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
@@ -82,8 +83,7 @@ public class AuthErrorMapperTest {
     public void givenInvalidCredentials_delegatesToMapInvalidCredentialsError() {
       ErrorResult result =
           mapper.mapAuthenticateUserError(
-              new AuthService.AuthenticateUserError.InvalidCredentials(
-                  new InvalidCredentialsError()));
+              new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError()));
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
@@ -96,7 +96,7 @@ public class AuthErrorMapperTest {
       var availableFrom = java.time.Instant.parse("2025-06-02T08:00:00Z");
       ErrorResult result =
           mapper.mapAuthenticateUserError(
-              new AuthService.AuthenticateUserError.MaintenanceWindow(availableFrom));
+              new AuthenticateUser.Error.MaintenanceWindow(availableFrom));
 
       assertThat(result.status()).isEqualTo(503);
       assertThat(result.response())
@@ -111,7 +111,7 @@ public class AuthErrorMapperTest {
       ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
       ErrorResult result =
           mapper.mapAuthenticateUserError(
-              new AuthService.AuthenticateUserError.ValidationFailed(notification));
+              new AuthenticateUser.Error.ValidationFailed(notification));
 
       assertThat(result.status()).isEqualTo(400);
     }
@@ -127,7 +127,7 @@ public class AuthErrorMapperTest {
       var availableFrom = java.time.Instant.parse("2025-06-02T08:00:00Z");
       ErrorResult result =
           mapper.mapRefreshTokensError(
-              new AuthService.RefreshTokensError.MaintenanceWindow(availableFrom));
+              new RefreshTokens.Error.MaintenanceWindow(availableFrom));
 
       assertThat(result.status()).isEqualTo(503);
       assertThat(result.response())
@@ -141,7 +141,7 @@ public class AuthErrorMapperTest {
     public void givenInvalidToken_delegatesToMapInvalidRefreshTokenError() {
       InvalidRefreshTokenError tokenError = InvalidRefreshTokenError.notFound();
       ErrorResult result =
-          mapper.mapRefreshTokensError(new AuthService.RefreshTokensError.InvalidToken(tokenError));
+          mapper.mapRefreshTokensError(new RefreshTokens.Error.InvalidToken(tokenError));
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
@@ -201,22 +201,20 @@ public class AuthErrorMapperTest {
     }
 
     @Test
-    @DisplayName("given an AuthenticateUserError, then return true")
+    @DisplayName("given an Error, then return true")
     public void givenAuthenticateUserError_returnTrue() {
       assertThat(
               mapper.supports(
-                  new AuthService.AuthenticateUserError.InvalidCredentials(
-                      new InvalidCredentialsError())))
+                  new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError())))
           .isTrue();
     }
 
     @Test
-    @DisplayName("given a RefreshTokensError, then return true")
+    @DisplayName("given a Error, then return true")
     public void givenRefreshTokensError_returnTrue() {
       assertThat(
               mapper.supports(
-                  new AuthService.RefreshTokensError.InvalidToken(
-                      InvalidRefreshTokenError.notFound())))
+                  new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.notFound())))
           .isTrue();
     }
 
@@ -232,12 +230,10 @@ public class AuthErrorMapperTest {
   class Map {
 
     @Test
-    @DisplayName("given an AuthenticateUserError, then delegate to mapAuthenticateUserError")
+    @DisplayName("given an Error, then delegate to mapAuthenticateUserError")
     public void givenAuthenticateUserError_delegatesToMapAuthenticateUserError() {
       ErrorResult result =
-          mapper.map(
-              new AuthService.AuthenticateUserError.InvalidCredentials(
-                  new InvalidCredentialsError()));
+          mapper.map(new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError()));
       assertThat(result.status()).isEqualTo(401);
     }
 
@@ -249,11 +245,10 @@ public class AuthErrorMapperTest {
     }
 
     @Test
-    @DisplayName("given a RefreshTokensError, then delegate to mapRefreshTokensError")
+    @DisplayName("given a Error, then delegate to mapRefreshTokensError")
     public void givenRefreshTokensError_delegatesToMapRefreshTokensError() {
       ErrorResult result =
-          mapper.map(
-              new AuthService.RefreshTokensError.InvalidToken(InvalidRefreshTokenError.expired()));
+          mapper.map(new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.expired()));
       assertThat(result.status()).isEqualTo(401);
     }
 
