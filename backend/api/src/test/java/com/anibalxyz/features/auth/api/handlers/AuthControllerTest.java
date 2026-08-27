@@ -123,9 +123,7 @@ public class AuthControllerTest extends UnitTest {
       assertThat(actualCookie.getName()).isEqualTo("refreshToken");
       assertThat(actualCookie.getValue()).isEqualTo(result.refreshToken().value());
       assertThat(actualCookie.getMaxAge())
-          .isEqualTo(
-              secondsUntilExpiry(result.refreshTokenExpiryDate(), FIXED_NOW.toInstant())
-                  * AuthController.REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER);
+          .isEqualTo(secondsUntilExpiry(result.refreshTokenExpiryDate(), FIXED_NOW.toInstant()));
 
       verify(ctx).status(200);
       verify(ctx).json(expectedResponse);
