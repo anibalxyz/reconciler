@@ -5,13 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for Password VO")
-public class PasswordTest {
+public class PasswordTest extends UnitTest {
   @ParameterizedTest
   @ValueSource(strings = {"", " "})
   @DisplayName("of: given a  blank password, then return InvalidPasswordError with Blank reason")

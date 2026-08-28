@@ -13,11 +13,11 @@ import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.*;
 
 @DisplayName("Tests for UserErrorMapper")
-public class UserErrorMapperTest {
-
+public class UserErrorMapperTest extends UnitTest {
   private static final UserNotFoundError userNotFoundError = UserNotFoundError.byId(1);
   private UserErrorMapper mapper;
 

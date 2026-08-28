@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -25,12 +26,7 @@ class RefreshTokenServiceTest extends UnitTest {
   private static final Instant FIXED_NOW =
       LocalDateTime.of(2025, 11, 25, 10, 0).toInstant(ZoneOffset.UTC);
   @Mock private RefreshTokenRepository refreshTokenRepository;
-  private RefreshTokenService refreshTokenService;
-
-  @BeforeEach
-  void deps() {
-    refreshTokenService = new RefreshTokenService(refreshTokenRepository);
-  }
+  @InjectMocks private RefreshTokenService refreshTokenService;
 
   @Test
   @DisplayName("verifyRefreshToken: given valid RefreshToken, then return success")

@@ -13,19 +13,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class MaintenancePolicyTest extends UnitTest {
-
   private static final ZoneId ZONE = ZoneId.of("America/Montevideo");
   private static final MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
-
   private static final ZonedDateTime BASE_DATE = ZonedDateTime.of(2026, 4, 20, 0, 0, 0, 0, ZONE);
-
   private static final ZonedDateTime WINDOW_START =
       BASE_DATE
           .with(TemporalAdjusters.nextOrSame(MaintenancePolicy.START_DAY))
           .with(MaintenancePolicy.START_TIME);
-
   private static final ZonedDateTime WINDOW_END = calculateWindowEnd();
-
   private static final ZonedDateTime VALID_TIME = WINDOW_START.minusHours(5);
 
   private static ZonedDateTime calculateWindowEnd() {

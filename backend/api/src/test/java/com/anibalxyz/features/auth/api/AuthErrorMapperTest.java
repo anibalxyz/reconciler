@@ -18,10 +18,11 @@ import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.*;
 
 @DisplayName("Tests for AuthErrorMapper")
-public class AuthErrorMapperTest {
+public class AuthErrorMapperTest extends UnitTest {
 
   private AuthErrorMapper mapper;
 
@@ -126,8 +127,7 @@ public class AuthErrorMapperTest {
     public void givenMaintenanceWindow_return503WithDetail() {
       var availableFrom = java.time.Instant.parse("2025-06-02T08:00:00Z");
       ErrorResult result =
-          mapper.mapRefreshTokensError(
-              new RefreshTokens.Error.MaintenanceWindow(availableFrom));
+          mapper.mapRefreshTokensError(new RefreshTokens.Error.MaintenanceWindow(availableFrom));
 
       assertThat(result.status()).isEqualTo(503);
       assertThat(result.response())

@@ -6,20 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.anibalxyz.shared.ResultAsserts;
 import com.anibalxyz.shared.UnitTest;
 import java.time.Instant;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests for User Domain Object")
 public class UserTest extends UnitTest {
   private static final Instant TIMESTAMP = Instant.now();
-
-  private static User baseUser;
-
-  @BeforeAll
-  public static void setup() {
-    baseUser = VALID_USER;
-  }
+  private static final User baseUser = VALID_USER;
 
   @Test
   @DisplayName("equals: given same reference, then return true")

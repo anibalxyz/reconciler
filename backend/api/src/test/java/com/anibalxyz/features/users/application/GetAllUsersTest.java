@@ -10,12 +10,9 @@ import com.anibalxyz.shared.UnitTest;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetAllUsers service")
 public class GetAllUsersTest extends UnitTest {
   @Mock private UserRepository userRepository;

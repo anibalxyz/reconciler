@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.application;
 
+import static com.anibalxyz.shared.Constants.Auth.MINIMUM_BCRYPT_LOG_ROUNDS;
 import static com.anibalxyz.shared.Constants.Users.*;
 import static com.anibalxyz.shared.NotificationAssert.assertThatNotification;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,18 +12,14 @@ import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.*;
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
 import com.anibalxyz.shared.UnitTest;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for CreateUser service")
 public class CreateUserTest extends UnitTest {
   @Mock private UserRepository userRepository;
@@ -31,9 +28,11 @@ public class CreateUserTest extends UnitTest {
 
   @BeforeEach
   void deps() {
-    CreateUser.Env env = Constants.APP_ENV;
+    CreateUser.Env env = new TestEnv(MINIMUM_BCRYPT_LOG_ROUNDS);
     createUser = new CreateUser(env, userRepository);
   }
+
+  private record TestEnv(int BCRYPT_LOG_ROUNDS) implements CreateUser.Env {}
 
   @Nested
   @DisplayName("Success Scenarios")

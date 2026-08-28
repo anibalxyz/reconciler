@@ -3,7 +3,6 @@ package com.anibalxyz.features.auth.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.core.Result;
-import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.shared.ResultAsserts;
 import com.anibalxyz.shared.UnitTest;
 import io.jsonwebtoken.Claims;
@@ -126,7 +125,7 @@ class JwtServiceTest extends UnitTest {
 
   private record JwtEnvironmentStub(
       SecretKey JWT_KEY, String JWT_ISSUER, long JWT_ACCESS_EXPIRATION_TIME_MINUTES)
-      implements JwtEnvironment {
+      implements JwtService.Env {
     public JwtEnvironmentStub withJWT_KEY(SecretKey JWT_KEY) {
       return new JwtEnvironmentStub(
           JWT_KEY, this.JWT_ISSUER, this.JWT_ACCESS_EXPIRATION_TIME_MINUTES);

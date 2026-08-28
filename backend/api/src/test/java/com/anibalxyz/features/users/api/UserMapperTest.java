@@ -11,12 +11,7 @@ import org.junit.jupiter.api.*;
 
 @DisplayName("Tests for UserMapper")
 public class UserMapperTest extends UnitTest {
-  private static User user;
-
-  @BeforeAll
-  public static void setup() {
-    user = VALID_USER;
-  }
+  private static final User user = VALID_USER;
 
   @Test
   @DisplayName("toDetailResponse: maps all fields correctly and excludes password hash")
