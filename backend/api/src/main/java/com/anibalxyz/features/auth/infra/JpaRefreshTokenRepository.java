@@ -2,6 +2,8 @@ package com.anibalxyz.features.auth.infra;
 
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
+import com.anibalxyz.features.auth.domain.TokenHash;
+import com.anibalxyz.features.users.infra.UserEntity;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -15,19 +17,29 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
     this.provider = provider;
   }
 
+  @SuppressWarnings("resource")
+  private RefreshTokenEntity fromDomain(RefreshToken domain) {
+    return new RefreshTokenEntity(
+        null,
+        domain.tokenHash().value(),
+        em().getReference(UserEntity.class, domain.userId().value()),
+        domain.expiryDate(),
+        domain.isRevoked());
+  }
+
   private EntityManager em() {
     return provider.get();
   }
 
   @Override
   @SuppressWarnings("resource")
-  public Optional<RefreshToken> findByToken(String token) {
+  public Optional<RefreshToken> findByTokenHash(TokenHash tokenHash) {
     try {
       RefreshTokenEntity entity =
           em().createQuery(
-                  "SELECT rt FROM RefreshTokenEntity rt WHERE rt.token = :token",
+                  "SELECT rt FROM RefreshTokenEntity rt WHERE rt.tokenHash = :tokenHash",
                   RefreshTokenEntity.class)
-              .setParameter("token", token)
+              .setParameter("tokenHash", tokenHash.value())
               .getSingleResult();
       return Optional.of(entity.toDomain());
     } catch (NoResultException e) {
@@ -37,15 +49,24 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
 
   @Override
   @SuppressWarnings("resource")
-  public RefreshToken save(RefreshToken refreshToken) {
-    RefreshTokenEntity entity = em().merge(RefreshTokenEntity.fromDomain(refreshToken));
-    em().flush(); // Ensure the entity is persisted and ID is generated before returning
-    return entity.toDomain();
+  public void persist(RefreshToken refreshToken) {
+    RefreshTokenEntity entity = fromDomain(refreshToken);
+    em().persist(entity);
+  }
+
+  @Override
+  @SuppressWarnings("resource")
+  public void revoke(TokenHash tokenHash) {
+    em().createQuery(
+            "UPDATE RefreshTokenEntity rt SET rt.revoked = true WHERE rt.tokenHash = :tokenHash")
+        .setParameter("tokenHash", tokenHash.value())
+        .executeUpdate();
   }
 
   @Override
   @SuppressWarnings("resource")
   public int deleteExpiredTokens() {
+    // TODO: should pass the 'now' of the application, not using the database
     return em().createQuery(
             "DELETE FROM RefreshTokenEntity rt WHERE rt.expiryDate < CURRENT_TIMESTAMP")
         .executeUpdate();

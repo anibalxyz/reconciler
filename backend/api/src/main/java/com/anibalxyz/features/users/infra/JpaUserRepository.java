@@ -25,10 +25,6 @@ public class JpaUserRepository implements UserRepository {
     return userEntityList.stream().map(UserEntity::toDomain).toList();
   }
 
-  private EntityManager em() {
-    return provider.get();
-  }
-
   @Override
   @SuppressWarnings("resource")
   public Optional<User> findById(Integer id) {
@@ -58,7 +54,7 @@ public class JpaUserRepository implements UserRepository {
   @SuppressWarnings("resource")
   public User save(User user) {
     UserEntity userEntity = em().merge(UserEntity.fromDomain(user));
-    em().flush();
+    em().flush(); // TODO: check if can remove it
     return userEntity.toDomain();
   }
 
@@ -71,5 +67,9 @@ public class JpaUserRepository implements UserRepository {
       return true;
     }
     return false;
+  }
+
+  private EntityManager em() {
+    return provider.get();
   }
 }

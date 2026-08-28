@@ -6,7 +6,7 @@ import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.users.application.CreateUser;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.server.config.AppEnv;
-import com.anibalxyz.server.config.modules.startup.ServerEnvironment;
+import com.anibalxyz.server.config.modules.ServerConfig;
 import io.javalin.http.SameSite;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,7 +43,7 @@ public record AppEnvironmentSource(
     Boolean SWAGGER_ENABLED)
     implements UpdateUserById.Env,
         CreateUser.Env,
-        ServerEnvironment,
+        ServerConfig.Env,
         JwtEnvironment,
         AuthApiEnvironment,
         AuthEnvironment {

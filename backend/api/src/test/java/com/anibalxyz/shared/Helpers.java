@@ -108,7 +108,7 @@ public class Helpers {
 
     em.getTransaction().commit();
 
-    UserEntity entity = em.find(UserEntity.class, saved.id());
+    UserEntity entity = em.find(UserEntity.class, saved.id().value());
     em.refresh(entity);
     return entity;
   }

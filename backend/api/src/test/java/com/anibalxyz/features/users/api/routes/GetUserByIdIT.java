@@ -21,7 +21,7 @@ public class GetUserByIdIT extends UsersIT {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
     DetailedUserResponse expected = UserMapper.toDetailResponse(user);
 
-    Response response = http.get("/users/" + user.id(), createJwtHeader(validJwt));
+    Response response = http.get("/users/" + user.id().value(), createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(200);
     assertThat(http.parseBody(response, new TypeReference<DetailedUserResponse>() {}))
         .isEqualTo(expected);

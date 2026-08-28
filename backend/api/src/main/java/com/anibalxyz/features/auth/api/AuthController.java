@@ -10,12 +10,11 @@ import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import io.javalin.http.*;
 import java.time.Clock;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AuthController implements AuthApi {
-  // TODO: make configurable via environment
-  public static final int REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER = 2;
   public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
   private static final Logger log = LoggerFactory.getLogger(AuthController.class);
   private final AuthApiEnvironment env;
@@ -34,17 +33,20 @@ public class AuthController implements AuthApi {
     this.clock = clock;
   }
 
+  public static long secondsUntilExpiry(Instant expiryDate, Instant now) {
+    return Math.max(0, expiryDate.getEpochSecond() - now.getEpochSecond());
+  }
+
   @Override
   public void login(Context ctx) {
     LoginCommand command = ctx.bodyAsClass(LoginRequest.class).toCommand();
-    AuthResult authResultValue = authService.authenticateUser(command).orThrow(FailureSignal::new);
+    AuthResult authResult = authService.authenticateUser(command).orThrow(FailureSignal::new);
 
     setRefreshTokenCookie(
         ctx,
-        authResultValue.refreshToken().token(),
-        authResultValue.refreshToken().secondsUntilExpiry(clock.instant())
-            * REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER);
-    ctx.status(200).json(new AuthResponse(authResultValue.accessToken()));
+        authResult.refreshToken().value(),
+        secondsUntilExpiry(authResult.refreshTokenExpiryDate(), clock.instant()));
+    ctx.status(200).json(new AuthResponse(authResult.accessToken()));
   }
 
   @Override
@@ -66,15 +68,14 @@ public class AuthController implements AuthApi {
       throw new UnauthorizedResponse("Missing refresh token in cookie");
     }
 
-    AuthResult authResultValue =
+    AuthResult authResult =
         authService.refreshTokens(refreshTokenFromCookie).orThrow(FailureSignal::new);
 
     setRefreshTokenCookie(
         ctx,
-        authResultValue.refreshToken().token(),
-        authResultValue.refreshToken().secondsUntilExpiry(clock.instant())
-            * REFRESH_TOKEN_COOKIE_MAX_AGE_MULTIPLIER);
-    ctx.status(200).json(new AuthResponse(authResultValue.accessToken()));
+        authResult.refreshToken().value(),
+        secondsUntilExpiry(authResult.refreshTokenExpiryDate(), clock.instant()));
+    ctx.status(200).json(new AuthResponse(authResult.accessToken()));
   }
 
   private void emptyRefreshTokenCookie(Context ctx) {

@@ -54,7 +54,7 @@ public abstract class IntegrationTest {
 
     http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
 
-    validJwt = createValidJwt(app.config().env(), testClock, VALID_USER.id());
+    validJwt = createValidJwt(app.config().env(), testClock, VALID_USER.id().value());
 
     Runtime.getRuntime().addShutdownHook(new Thread(app::stop));
   }

@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config.modules.startup;
+package com.anibalxyz.server.config.modules;
 
 import com.anibalxyz.server.config.AppEnv;
 import io.javalin.config.JavalinConfig;
@@ -16,9 +16,9 @@ import io.javalin.openapi.schema.OpenApiSchemaBuilder;
  */
 public class SwaggerConfig implements StartupConfig {
 
-  private final ServerEnvironment env;
+  private final ServerConfig.Env env;
 
-  public SwaggerConfig(ServerEnvironment env) {
+  public SwaggerConfig(ServerConfig.Env env) {
     this.env = env;
   }
 

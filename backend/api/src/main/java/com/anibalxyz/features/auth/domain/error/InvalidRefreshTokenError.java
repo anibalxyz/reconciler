@@ -22,11 +22,17 @@ public final class InvalidRefreshTokenError extends ReasonedError<InvalidRefresh
     return new InvalidRefreshTokenError(new Reason.Revoked());
   }
 
+  public static InvalidRefreshTokenError invalid() {
+    return new InvalidRefreshTokenError(new Reason.Invalid());
+  }
+
   public sealed interface Reason extends DomainErrorReason {
     record NotFound() implements Reason {}
 
     record Expired() implements Reason {}
 
     record Revoked() implements Reason {}
+
+    record Invalid() implements Reason {}
   }
 }

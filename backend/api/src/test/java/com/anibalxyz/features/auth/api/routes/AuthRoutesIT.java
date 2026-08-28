@@ -2,7 +2,7 @@ package com.anibalxyz.features.auth.api.routes;
 
 import static com.anibalxyz.features.auth.api.AuthController.REFRESH_TOKEN_COOKIE;
 import static com.anibalxyz.shared.Constants.APP_CONFIG;
-import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_TOKEN_STRING;
+import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_RAW_TOKEN_STRING;
 import static com.anibalxyz.shared.Constants.Users.*;
 import static com.anibalxyz.shared.Helpers.getValueFromCookie;
 import static com.anibalxyz.shared.Helpers.persistUser;
@@ -65,7 +65,7 @@ public class AuthRoutesIT extends IntegrationTest {
     assertThat(token).isNotNull();
     var result = refreshTokenService.verifyRefreshToken(token, testClock.instant());
     var refreshToken = ResultAsserts.success(result);
-    assertThat(refreshToken.user().id()).isEqualTo(id);
+    assertThat(refreshToken.userId().value()).isEqualTo(id);
   }
 
   @BeforeEach
@@ -176,11 +176,11 @@ public class AuthRoutesIT extends IntegrationTest {
       assertThat(loginResponse.code()).isEqualTo(200);
 
       AuthResponse authResponse = http.parseBody(loginResponse, AuthResponse.class);
-      validateJwt(authResponse.accessToken(), user.id());
+      validateJwt(authResponse.accessToken(), user.id().value());
 
       String refreshTokenCookie =
           getValueFromCookie(loginResponse.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
-      validateRefreshToken(refreshTokenCookie, user.id());
+      validateRefreshToken(refreshTokenCookie, user.id().value());
     }
   }
 
@@ -218,7 +218,7 @@ public class AuthRoutesIT extends IntegrationTest {
               new AuthService.AuthenticateUserError.MaintenanceWindow(MAINTENANCE_START));
 
       Map<String, String> cookie =
-          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_TOKEN_STRING);
+          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_RAW_TOKEN_STRING);
       Response response = http.post("/auth/refresh", "", cookie);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(503);
 
@@ -240,7 +240,7 @@ public class AuthRoutesIT extends IntegrationTest {
 
       // it is called "VALID" referring to the format, but is not a real value
       Map<String, String> cookie =
-          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_TOKEN_STRING);
+          Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_RAW_TOKEN_STRING);
 
       Response response = http.post("/auth/refresh", "", cookie);
       assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
@@ -267,11 +267,11 @@ public class AuthRoutesIT extends IntegrationTest {
       assertThat(response.code()).isEqualTo(200);
 
       AuthResponse authResponse = http.parseBody(response, AuthResponse.class);
-      validateJwt(authResponse.accessToken(), user.id());
+      validateJwt(authResponse.accessToken(), user.id().value());
 
       String refreshTokenCookie =
           getValueFromCookie(response.header("Set-Cookie"), REFRESH_TOKEN_COOKIE);
-      validateRefreshToken(refreshTokenCookie, user.id());
+      validateRefreshToken(refreshTokenCookie, user.id().value());
     }
   }
 }

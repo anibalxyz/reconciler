@@ -2,7 +2,9 @@ package com.anibalxyz.shared;
 
 import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 
+import com.anibalxyz.features.auth.domain.RawToken;
 import com.anibalxyz.features.auth.domain.RefreshToken;
+import com.anibalxyz.features.auth.domain.TokenHash;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
@@ -31,10 +33,12 @@ public class Constants {
   }
 
   public static final class Users {
+    public static final Integer VALID_USER_ID_INT = 1;
     public static final String VALID_NAME_STRING = "John Doe";
     public static final String VALID_EMAIL_STRING = "valid@email.com";
     public static final String VALID_PASSWORD_STRING = "V4L|D_Passw0Rd";
 
+    public static final UserId VALID_USER_ID = ResultAsserts.success(UserId.of(VALID_USER_ID_INT));
     public static final Name VALID_NAME = ResultAsserts.success(Name.of(VALID_NAME_STRING));
     public static final Email VALID_EMAIL = ResultAsserts.success(Email.of(VALID_EMAIL_STRING));
     public static final Password VALID_PASSWORD =
@@ -43,13 +47,7 @@ public class Constants {
         PasswordHash.of(VALID_PASSWORD, APP_ENV.BCRYPT_LOG_ROUNDS());
 
     /**
-     * A pre-built user whose credentials match the VALID_* constants:
-     *
-     * <p>name = VALID_NAME,
-     *
-     * <p>email = VALID_EMAIL,
-     *
-     * <p>password hash = hash of VALID_PASSWORD_STRING.
+     * A pre-built user whose credentials match the VALID_* constants
      *
      * <p>Ideal for tests that need a user whose password is known since the plaintext cannot be
      * read back from the entity.
@@ -58,7 +56,7 @@ public class Constants {
 
     public static User buildUser(int id, String email) {
       return User.reconstitute(
-          id,
+          ResultAsserts.success(UserId.of(id)),
           VALID_NAME,
           ResultAsserts.success(Email.of(email)),
           VALID_PASSWORD_HASH,
@@ -68,7 +66,12 @@ public class Constants {
 
     public static User buildUser(int id) {
       return User.reconstitute(
-          id, VALID_NAME, VALID_EMAIL, VALID_PASSWORD_HASH, Instant.now(), Instant.now());
+          ResultAsserts.success(UserId.of(id)),
+          VALID_NAME,
+          VALID_EMAIL,
+          VALID_PASSWORD_HASH,
+          Instant.now(),
+          Instant.now());
     }
   }
 
@@ -77,10 +80,14 @@ public class Constants {
     public static final String VALID_JWT_STRING =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
 
-    public static final String VALID_REFRESH_TOKEN_STRING = "e4192c47-9649-48be-9f88-523240f45b6e";
+    public static final String VALID_REFRESH_RAW_TOKEN_STRING =
+        "e4192c47-9649-48be-9f88-523240f45b6e";
+    public static final RawToken VALID_REFRESH_RAW_TOKEN =
+        ResultAsserts.success(RawToken.of(VALID_REFRESH_RAW_TOKEN_STRING));
+    public static final TokenHash VALID_REFRESH_TOKEN_HASH = TokenHash.of(VALID_REFRESH_RAW_TOKEN);
 
-    public static RefreshToken buildToken(Instant expiryDate) {
-      return new RefreshToken(1L, "token-value", VALID_USER, expiryDate, false);
+    public static RefreshToken buildRefreshToken(Instant expiryDate) {
+      return RefreshToken.of(VALID_REFRESH_TOKEN_HASH, VALID_USER.id(), expiryDate);
     }
   }
 }

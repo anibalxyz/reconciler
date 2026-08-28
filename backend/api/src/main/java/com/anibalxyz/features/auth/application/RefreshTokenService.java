@@ -1,13 +1,13 @@
 package com.anibalxyz.features.auth.application;
 
 import com.anibalxyz.core.Result;
+import com.anibalxyz.features.auth.domain.RawToken;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
+import com.anibalxyz.features.auth.domain.TokenHash;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.users.domain.User;
+import com.anibalxyz.features.users.domain.UserId;
 import java.time.*;
-import java.util.Optional;
-import java.util.UUID;
 
 public class RefreshTokenService {
   private final RefreshTokenRepository refreshTokenRepository;
@@ -16,38 +16,19 @@ public class RefreshTokenService {
     this.refreshTokenRepository = refreshTokenRepository;
   }
 
-  /**
-   * If the time-window feature is enabled, the expiration date may be capped to the end of the
-   * current window.
-   */
-  public RefreshToken createRefreshToken(User user, Instant expiryDate) {
-    return refreshTokenRepository.save(
-        new RefreshToken(null, UUID.randomUUID().toString(), user, expiryDate, false));
-  }
-
-  public Result<RefreshToken, InvalidRefreshTokenError> verifyAndRotate(
-      String token, Instant now, Instant expiryDate) {
-    return verifyRefreshToken(token, now)
-        .onSuccess(oldToken -> refreshTokenRepository.save(oldToken.withRevoked(true)))
-        .map(oldToken -> createRefreshToken(oldToken.user(), expiryDate));
-  }
-
-  public Result<RefreshToken, InvalidRefreshTokenError> verifyRefreshToken(
-      String token, Instant now) {
-    Optional<RefreshToken> found = refreshTokenRepository.findByToken(token);
-    if (found.isEmpty()) {
-      return Result.failure(InvalidRefreshTokenError.notFound());
-    }
-
-    RefreshToken refreshToken = found.get();
-
+  private static Result<RefreshToken, InvalidRefreshTokenError> checkIfExpired(
+      Instant now, RefreshToken refreshToken) {
     if (refreshToken.isExpired(now)) {
       // NOTE: here could add logic to invalidate all tokens for the user
       // if an expired token is used, as it could signal a token theft attempt.
       return Result.failure(InvalidRefreshTokenError.expired());
     }
+    return Result.success(refreshToken);
+  }
 
-    if (refreshToken.revoked()) {
+  private static Result<RefreshToken, InvalidRefreshTokenError> checkIfRevoked(
+      RefreshToken refreshToken) {
+    if (refreshToken.isRevoked()) {
       // NOTE: here could add logic to invalidate all tokens for the user
       // if a revoked token is used, as it could signal a token theft attempt.
       return Result.failure(InvalidRefreshTokenError.revoked());
@@ -56,15 +37,58 @@ public class RefreshTokenService {
     return Result.success(refreshToken);
   }
 
-  public void revokeToken(String token) {
-    if (token == null || token.isBlank()) return;
+  /**
+   * If the time-window feature is enabled, the expiration date may be capped to the end of the
+   * current window.
+   */
+  public RawToken createRefreshToken(UserId userId, Instant expiryDate) {
+    RawToken rawToken = RawToken.generate();
+    TokenHash tokenHash = TokenHash.of(rawToken);
+    refreshTokenRepository.persist(RefreshToken.of(tokenHash, userId, expiryDate));
+    return rawToken;
+  }
 
-    refreshTokenRepository
-        .findByToken(token)
-        .ifPresent((refreshToken) -> refreshTokenRepository.save(refreshToken.withRevoked(true)));
+  public Result<RotationResult, InvalidRefreshTokenError> verifyAndRotate(
+      String token, Instant now, Instant expiryDate) {
+    return verifyRefreshToken(token, now)
+        .onSuccess(oldToken -> refreshTokenRepository.revoke(oldToken.tokenHash()))
+        .map(
+            oldToken ->
+                new RotationResult(
+                    oldToken.userId(), createRefreshToken(oldToken.userId(), expiryDate)));
+  }
+
+  public Result<RefreshToken, InvalidRefreshTokenError> verifyRefreshToken(
+      String rawToken, Instant now) {
+    return RawToken.of(rawToken)
+        .mapError(invalidRawTokenError -> InvalidRefreshTokenError.invalid())
+        .map(TokenHash::of)
+        .flatMap(this::findByHash)
+        .flatMap(refreshToken -> checkIfExpired(now, refreshToken))
+        .flatMap(RefreshTokenService::checkIfRevoked);
+  }
+
+  private Result<RefreshToken, InvalidRefreshTokenError> findByHash(TokenHash tokenHash) {
+    return refreshTokenRepository
+        .findByTokenHash(tokenHash)
+        .<Result<RefreshToken, InvalidRefreshTokenError>>map(Result::success)
+        .orElseGet(() -> Result.failure(InvalidRefreshTokenError.notFound()));
+  }
+
+  public void revokeToken(String rawToken) {
+    RawToken.of(rawToken)
+        .map(TokenHash::of)
+        .onSuccess(
+            tokenHash ->
+                refreshTokenRepository
+                    .findByTokenHash(tokenHash)
+                    .ifPresent(
+                        (refreshToken) -> refreshTokenRepository.revoke(refreshToken.tokenHash())));
   }
 
   public int cleanupExpiredTokens() {
     return refreshTokenRepository.deleteExpiredTokens();
   }
+
+  public record RotationResult(UserId userId, RawToken rawToken) {}
 }

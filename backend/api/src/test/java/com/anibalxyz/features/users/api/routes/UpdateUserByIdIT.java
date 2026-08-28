@@ -33,14 +33,15 @@ public class UpdateUserByIdIT extends UsersIT {
   @DisplayName("PUT /users/{id}: given no properties provided, then return 400 Bad Request")
   public void PUT_users_id_noPropertiesProvided_return400() {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
+    Integer userId = user.id().value();
     UpdateUserRequest requestBody = new UpdateUserRequest(null, null, null);
 
     ErrorResult expectedResult = ErrorMapper.map(new UpdateUserById.Error.EmptyCommand());
 
-    Response response = http.put("/users/" + user.id(), requestBody, createJwtHeader(validJwt));
+    Response response = http.put("/users/" + userId, requestBody, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
-    assertThat(userRepository.findById(user.id()).orElseThrow()).isEqualTo(user);
+    assertThat(userRepository.findById(userId).orElseThrow()).isEqualTo(user);
     ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
     assertThat(actual.instance()).isNotNull();
     assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
@@ -57,10 +58,10 @@ public class UpdateUserByIdIT extends UsersIT {
 
     ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
 
-    Response response =
-        http.put("/users/" + userToUpdate.id(), requestBody, createJwtHeader(validJwt));
+    Integer userId = userToUpdate.id().value();
+    Response response = http.put("/users/" + userId, requestBody, createJwtHeader(validJwt));
     assertThat(400).isEqualTo(response.code()).isEqualTo(expectedResult.status());
-    assertThat(userRepository.findById(userToUpdate.id()).orElseThrow().email().value())
+    assertThat(userRepository.findById(userId).orElseThrow().email().value())
         .isEqualTo(userToUpdate.email().value());
     ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
     assertThat(actual.instance()).isNotNull();
@@ -72,18 +73,19 @@ public class UpdateUserByIdIT extends UsersIT {
   public void PUT_users_id_invalidProperty_return400ValidationError() {
     User user =
         persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
+    Integer userId = user.id().value();
     CreateUserRequest requestBody =
         new CreateUserRequest("  ", VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
     ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
-    Response response = http.put("/users/" + user.id(), requestBody, createJwtHeader(validJwt));
+    Response response = http.put("/users/" + userId, requestBody, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
 
     ErrorResponse actual = http.parseBody(response, ErrorResponse.class);
     assertThat(actual.instance()).isNotNull();
     assertThat(actual.instance(null)).isEqualTo(expectedResult.response());
-    assertThat(userRepository.findById(user.id()).orElseThrow()).isEqualTo(user);
+    assertThat(userRepository.findById(userId).orElseThrow()).isEqualTo(user);
   }
 
   @ParameterizedTest
@@ -91,6 +93,7 @@ public class UpdateUserByIdIT extends UsersIT {
   @DisplayName("PUT /users/{id}: given valid id and property, then return 200 and the updated user")
   public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp) {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
+    Integer userId = user.id().value();
     Instant prevUpdatedAt = user.updatedAt();
 
     UpdateUserRequest request =
@@ -99,10 +102,10 @@ public class UpdateUserByIdIT extends UsersIT {
             updatingProp.equals("email") ? "new.user@mail.com" : null,
             updatingProp.equals("password") ? ("NEW_" + VALID_PASSWORD_STRING) : null);
 
-    Response response = http.put("/users/" + user.id(), request, createJwtHeader(validJwt));
+    Response response = http.put("/users/" + userId, request, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(200);
 
-    UserEntity updatedEntity = em.find(UserEntity.class, user.id());
+    UserEntity updatedEntity = em.find(UserEntity.class, userId);
     em.refresh(updatedEntity);
     User updated = updatedEntity.toDomain();
 

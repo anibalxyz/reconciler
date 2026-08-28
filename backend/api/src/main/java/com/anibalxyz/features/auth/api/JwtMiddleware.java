@@ -3,7 +3,7 @@ package com.anibalxyz.features.auth.api;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.modules.startup.StartupConfig;
+import com.anibalxyz.server.config.modules.StartupConfig;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;

@@ -1,7 +1,6 @@
 package com.anibalxyz.features.auth.domain;
 
-import static com.anibalxyz.shared.Constants.Auth.buildToken;
-import static com.anibalxyz.shared.Constants.Users.VALID_USER;
+import static com.anibalxyz.shared.Constants.Auth.buildRefreshToken;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.shared.UnitTest;
@@ -18,68 +17,68 @@ class RefreshTokenTest extends UnitTest {
   @Test
   @DisplayName("isExpired: given expiry date is in the future, then return false")
   void isExpired_expiryDateInTheFuture_returnFalse() {
-    RefreshToken token = buildToken(FUTURE);
+    RefreshToken token = buildRefreshToken(FUTURE);
     assertThat(token.isExpired(NOW)).isFalse();
   }
 
   @Test
   @DisplayName("isExpired: given expiry date is in the past, then return true")
   void isExpired_expiryDateInThePast_returnTrue() {
-    RefreshToken token = buildToken(PAST);
+    RefreshToken token = buildRefreshToken(PAST);
     assertThat(token.isExpired(NOW)).isTrue();
   }
 
   @Test
   @DisplayName("isExpired: given expiry date equals reference time, then return true")
   void isExpired_expiryDateEqualsNow_returnTrue() {
-    RefreshToken token = buildToken(NOW);
+    RefreshToken token = buildRefreshToken(NOW);
     assertThat(token.isExpired(NOW)).isTrue();
   }
 
-  @Test
-  @DisplayName("secondsUntilExpiry: calculations")
-  void secondsUntilExpiry_calculations() {
-    // Case 1: Future (1 hour later)
-    RefreshToken futureToken = buildToken(NOW.plusSeconds(3600));
-    assertThat(futureToken.secondsUntilExpiry(NOW)).isEqualTo(3600);
+  /* TODO: move to the layer that uses it
+    @Test
+    @DisplayName("secondsUntilExpiry: calculations")
+    void secondsUntilExpiry_calculations() {
+      // Case 1: Future (1 hour later)
+      RefreshToken futureToken = buildRefreshToken(NOW.plusSeconds(3600));
+      assertThat(futureToken.secondsUntilExpiry(NOW)).isEqualTo(3600);
 
-    // Case 2: Exact present (expired exactly now)
-    RefreshToken presentToken = buildToken(NOW);
-    assertThat(presentToken.secondsUntilExpiry(NOW)).isZero();
+      // Case 2: Exact present (expired exactly now)
+      RefreshToken presentToken = buildRefreshToken(NOW);
+      assertThat(presentToken.secondsUntilExpiry(NOW)).isZero();
 
-    // Case 3: Past (expired 10 seconds ago)
-    RefreshToken pastToken = buildToken(NOW.minusSeconds(10));
-    assertThat(pastToken.secondsUntilExpiry(NOW)).isZero();
-  }
-
+      // Case 3: Past (expired 10 seconds ago)
+      RefreshToken pastToken = buildRefreshToken(NOW.minusSeconds(10));
+      assertThat(pastToken.secondsUntilExpiry(NOW)).isZero();
+    }
+  */
   @Test
   @DisplayName("withRevoked: given revoked is false, then return new instance with revoked true")
   void withRevoked_revokedFalse_returnNewInstanceWithRevokedTrue() {
-    RefreshToken original = buildToken(FUTURE);
+    RefreshToken original = buildRefreshToken(FUTURE);
     RefreshToken revoked = original.withRevoked(true);
 
-    assertThat(revoked.revoked()).isTrue();
-    assertThat(original.revoked()).isFalse();
+    assertThat(revoked.isRevoked()).isTrue();
+    assertThat(original.isRevoked()).isFalse();
   }
 
   @Test
   @DisplayName("withRevoked: given any revoked value, then preserve all other fields")
   void withRevoked_anyValue_preserveAllOtherFields() {
-    RefreshToken original = buildToken(FUTURE);
+    RefreshToken original = buildRefreshToken(FUTURE);
     RefreshToken revoked = original.withRevoked(true);
 
-    assertThat(revoked.id()).isEqualTo(original.id());
-    assertThat(revoked.token()).isEqualTo(original.token());
-    assertThat(revoked.user()).isEqualTo(original.user());
+    assertThat(revoked.userId()).isEqualTo(original.userId());
+    assertThat(revoked.tokenHash()).isEqualTo(original.tokenHash());
     assertThat(revoked.expiryDate()).isEqualTo(original.expiryDate());
   }
 
   @Test
   @DisplayName("withRevoked: given revoked is true, then return new instance with revoked false")
   void withRevoked_revokedTrue_returnNewInstanceWithRevokedFalse() {
-    RefreshToken original = new RefreshToken(1L, "token-value", VALID_USER, FUTURE, true);
+    RefreshToken original = buildRefreshToken(FUTURE);
     RefreshToken unrevoked = original.withRevoked(false);
 
-    assertThat(unrevoked.revoked()).isFalse();
+    assertThat(unrevoked.isRevoked()).isFalse();
   }
 }

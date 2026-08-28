@@ -96,7 +96,7 @@ public class CreateUserIT extends UsersIT {
     assertThat(persisted.passwordMatches(requestBody.password())).isTrue();
     assertThat(persisted.createdAt())
         .isCloseTo(persisted.updatedAt(), within(5, ChronoUnit.SECONDS));
-    assertThat(persisted.id()).isEqualTo(responseBody.id()).isPositive();
+    assertThat(persisted.id().value()).isEqualTo(responseBody.id()).isPositive();
     assertThat(responseBody.name())
         .isEqualTo(requestBody.name())
         .isEqualTo(persisted.name().value());

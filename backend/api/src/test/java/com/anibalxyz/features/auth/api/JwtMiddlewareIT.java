@@ -109,7 +109,7 @@ public class JwtMiddlewareIT extends IntegrationTest {
       long justExpiredTime = jwtAccessExpirationTimeMinutes + 1;
       Clock clockInThePast = Clock.offset(testClock, Duration.ofMinutes(-justExpiredTime));
       JwtService jwtService = new JwtService(Constants.APP_CONFIG.env(), clockInThePast);
-      String expiredJwt = jwtService.generateToken(user.id());
+      String expiredJwt = jwtService.generateToken(user.id().value());
 
       ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Expired());
 

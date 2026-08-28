@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config.modules.startup;
+package com.anibalxyz.server.config.modules;
 
 import io.javalin.config.JavalinConfig;
 

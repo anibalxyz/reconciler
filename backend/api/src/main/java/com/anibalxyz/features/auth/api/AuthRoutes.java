@@ -3,7 +3,7 @@ package com.anibalxyz.features.auth.api;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
-import com.anibalxyz.server.config.modules.startup.StartupConfig;
+import com.anibalxyz.server.config.modules.StartupConfig;
 import io.javalin.config.JavalinConfig;
 
 public class AuthRoutes implements StartupConfig {

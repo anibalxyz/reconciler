@@ -1,9 +1,8 @@
-package com.anibalxyz.server.config.modules.runtime;
+package com.anibalxyz.server.config.modules;
 
-import static com.anibalxyz.server.config.modules.runtime.MetricsConfig.METRICS_PATH;
+import static com.anibalxyz.server.config.modules.MetricsConfig.METRICS_PATH;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.server.config.modules.startup.StartupConfig;
 import io.javalin.config.JavalinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

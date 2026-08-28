@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests for User Domain Object")
 public class UserTest extends UnitTest {
-  private static final int ID = 1;
   private static final Instant TIMESTAMP = Instant.now();
 
   private static User baseUser;
@@ -36,7 +35,7 @@ public class UserTest extends UnitTest {
     Instant later = TIMESTAMP.plusSeconds(60);
 
     User sameIdDifferentFields =
-        User.reconstitute(ID, otherName, otherEmail, VALID_PASSWORD_HASH, later, later);
+        User.reconstitute(VALID_USER_ID, otherName, otherEmail, VALID_PASSWORD_HASH, later, later);
 
     assertThat(baseUser).isEqualTo(sameIdDifferentFields);
   }
@@ -44,7 +43,7 @@ public class UserTest extends UnitTest {
   @Test
   @DisplayName("equals: given different id, then return false")
   void equals_differentId_returnsFalse() {
-    User otherIdUser = buildUser(baseUser.id() + 1);
+    User otherIdUser = buildUser(baseUser.id().value() + 1);
 
     assertThat(baseUser).isNotEqualTo(otherIdUser);
   }
@@ -86,7 +85,8 @@ public class UserTest extends UnitTest {
   void hashCode_sameId_returnsSameHashCode() {
     Email otherEmail = ResultAsserts.success(Email.of("other" + baseUser.email().value()));
     User sameIdDifferentFields =
-        User.reconstitute(ID, VALID_NAME, otherEmail, VALID_PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
+        User.reconstitute(
+            VALID_USER_ID, VALID_NAME, otherEmail, VALID_PASSWORD_HASH, TIMESTAMP, TIMESTAMP);
 
     assertThat(baseUser.hashCode()).isEqualTo(sameIdDifferentFields.hashCode());
   }

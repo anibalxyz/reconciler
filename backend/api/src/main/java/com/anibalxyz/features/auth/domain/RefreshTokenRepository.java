@@ -3,9 +3,11 @@ package com.anibalxyz.features.auth.domain;
 import java.util.Optional;
 
 public interface RefreshTokenRepository {
-  Optional<RefreshToken> findByToken(String token);
+  Optional<RefreshToken> findByTokenHash(TokenHash tokenHash);
 
-  RefreshToken save(RefreshToken refreshToken);
+  void persist(RefreshToken refreshToken);
+
+  void revoke(TokenHash tokenHash);
 
   int deleteExpiredTokens();
 }

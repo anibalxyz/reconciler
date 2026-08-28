@@ -73,9 +73,9 @@ public class UpdateUserByIdTest extends UnitTest {
     public void updateUserById_blankName_returnBlankErrorOnName() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(" ", null, VALID_PASSWORD_STRING);
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       var failure = ResultAsserts.failure(result);
       assertThat(failure).isInstanceOf(UpdateUserById.Error.ValidationFailed.class);
@@ -97,9 +97,9 @@ public class UpdateUserByIdTest extends UnitTest {
     public void updateUserById_blankEmail_returnBlankErrorOnEmail() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, " ", VALID_PASSWORD_STRING);
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       var failure = ResultAsserts.failure(result);
       assertThat(failure).isInstanceOf(Error.ValidationFailed.class);
@@ -121,9 +121,9 @@ public class UpdateUserByIdTest extends UnitTest {
     public void updateUserById_blankPassword_returnBlankErrorOnPassword() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand("New Name", null, " ");
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       var failure = ResultAsserts.failure(result);
       assertThat(failure).isInstanceOf(UpdateUserById.Error.ValidationFailed.class);
@@ -147,9 +147,9 @@ public class UpdateUserByIdTest extends UnitTest {
     public void updateUserById_invalidEmail_returnInvalidFormatErrorOnEmail(String email) {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, email, null);
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       var failure = ResultAsserts.failure(result);
       assertThat(failure).isInstanceOf(Error.ValidationFailed.class);
@@ -174,9 +174,9 @@ public class UpdateUserByIdTest extends UnitTest {
     public void updateUserById_invalidPassword_returnInvalidValueErrorOnPassword(String password) {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, null, password);
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       var failure = ResultAsserts.failure(result);
       assertThat(failure).isInstanceOf(Error.ValidationFailed.class);
@@ -197,11 +197,11 @@ public class UpdateUserByIdTest extends UnitTest {
       User existing = VALID_USER;
       UpdateUserCommand command =
           new UpdateUserCommand(null, "taken" + existing.email().value(), null);
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
       when(userRepository.findByEmail(ResultAsserts.success(Email.of(command.email()))))
           .thenReturn(Optional.of(existing));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       var failure = ResultAsserts.failure(result);
       assertThat(failure).isInstanceOf(Error.ValidationFailed.class);
@@ -222,10 +222,10 @@ public class UpdateUserByIdTest extends UnitTest {
       UpdateUserCommand command = new UpdateUserCommand("Valid Name", null, null);
       User expected = existing.withName(ResultAsserts.success(Name.of(command.name())));
 
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
       when(userRepository.save(expected)).thenAnswer(inv -> inv.getArgument(0));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       User actual = ResultAsserts.success(result);
       assertThat(actual).isEqualTo(expected);
@@ -238,11 +238,11 @@ public class UpdateUserByIdTest extends UnitTest {
       UpdateUserCommand command = new UpdateUserCommand(null, "new@mail.com", null);
       User expected = existing.withEmail(ResultAsserts.success(Email.of(command.email())));
 
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
       when(userRepository.findByEmail(expected.email())).thenReturn(Optional.empty());
       when(userRepository.save(expected)).thenAnswer(inv -> inv.getArgument(0));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       User actual = ResultAsserts.success(result);
       assertThat(actual).isEqualTo(expected);
@@ -255,7 +255,7 @@ public class UpdateUserByIdTest extends UnitTest {
       String newPassword = "new" + VALID_PASSWORD_STRING;
       UpdateUserCommand command = new UpdateUserCommand(null, null, newPassword);
 
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
       when(userRepository.save(
               argThat(
                   u ->
@@ -264,7 +264,7 @@ public class UpdateUserByIdTest extends UnitTest {
                           && u.passwordMatches(newPassword))))
           .thenAnswer(inv -> inv.getArgument(0));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       User actual = ResultAsserts.success(result);
       assertThat(actual.passwordMatches(newPassword)).isTrue();
@@ -277,10 +277,10 @@ public class UpdateUserByIdTest extends UnitTest {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, existing.email().value(), null);
 
-      when(userRepository.findById(existing.id())).thenReturn(Optional.of(existing));
+      when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
       when(userRepository.save(existing)).thenAnswer(inv -> inv.getArgument(0));
 
-      var result = updateUserById.execute(existing.id(), command);
+      var result = updateUserById.execute(existing.id().value(), command);
 
       User user = ResultAsserts.success(result);
       assertThat(user).isEqualTo(existing);

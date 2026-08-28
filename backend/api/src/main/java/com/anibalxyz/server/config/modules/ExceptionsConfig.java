@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config.modules.runtime;
+package com.anibalxyz.server.config.modules;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
@@ -7,7 +7,6 @@ import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.server.api.LogEntry;
-import com.anibalxyz.server.config.modules.startup.StartupConfig;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
