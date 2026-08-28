@@ -37,7 +37,7 @@ public class RefreshTokensHandlerTest extends UnitTest {
   @ParameterizedTest
   @NullAndEmptySource
   @DisplayName("handle: given missing refresh token cookie, then throw UnauthorizedResponse")
-  public void refresh_missingRefreshTokenCookie_throwUnauthorizedResponse(String value) {
+  public void handle_missingRefreshTokenCookie_throwUnauthorizedResponse(String value) {
     when(authCookieService.getRefreshTokenCookie(ctx)).thenReturn(value);
 
     assertThatThrownBy(() -> refreshTokensHandler.handle(ctx))
@@ -47,7 +47,7 @@ public class RefreshTokensHandlerTest extends UnitTest {
 
   @Test
   @DisplayName("handle: given service result is failure, then throw FailureSignal with its error")
-  public void refresh_serviceReturnsRefreshTokensError_throwFailureSignal() {
+  public void handle_serviceReturnsRefreshTokensError_throwFailureSignal() {
     Result<AuthResult, RefreshTokens.Error> failedResult =
         Result.failure(new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.notFound()));
 
@@ -64,7 +64,7 @@ public class RefreshTokensHandlerTest extends UnitTest {
   @Test
   @DisplayName(
       "handle: given existing refresh token and service returns success, then respond 200 with refreshed tokens")
-  public void refresh_existingRefreshTokenAndServiceReturnsSuccess_respond200WithRefreshedTokens() {
+  public void handle_existingRefreshTokenAndServiceReturnsSuccess_respond200WithRefreshedTokens() {
     AuthResult result =
         new AuthResult(
             VALID_JWT_STRING,

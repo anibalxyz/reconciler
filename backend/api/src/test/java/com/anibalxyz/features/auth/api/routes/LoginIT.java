@@ -1,7 +1,6 @@
 package com.anibalxyz.features.auth.api.routes;
 
 import static com.anibalxyz.features.auth.api.AuthCookieService.REFRESH_TOKEN_COOKIE;
-import static com.anibalxyz.features.auth.api.routes.AuthIT.*;
 import static com.anibalxyz.shared.Constants.Users.VALID_EMAIL_STRING;
 import static com.anibalxyz.shared.Constants.Users.VALID_NAME_STRING;
 import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
@@ -48,7 +47,7 @@ public class LoginIT extends AuthIT {
   }
 
   @Test
-  @DisplayName("given outside maintenance window, respond with 503 Unavailable Server")
+  @DisplayName("given outside maintenance window, then respond with 503 Unavailable Server")
   void outsideMaintenanceWindow_respond503UnavailableServer() {
     testClock.resetTo(SATURDAY_MIDDAY);
     LoginRequest loginRequest = new LoginRequest(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
@@ -65,7 +64,7 @@ public class LoginIT extends AuthIT {
   }
 
   @Test
-  @DisplayName("given invalid credentials, respond with 401 Auth")
+  @DisplayName("given invalid credentials, then respond with 401 Auth")
   void invalidCredentials_respond401Unauthorized() {
     User user =
         persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
@@ -84,7 +83,7 @@ public class LoginIT extends AuthIT {
   }
 
   @Test
-  @DisplayName("given valid credentials, respond 200 with refresh and access tokens")
+  @DisplayName("given valid credentials, then respond 200 with refresh and access tokens")
   void validCredentials_respond200WithTokens() {
     User user =
         persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();

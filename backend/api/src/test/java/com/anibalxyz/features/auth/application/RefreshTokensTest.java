@@ -1,9 +1,6 @@
 package com.anibalxyz.features.auth.application;
 
 import static com.anibalxyz.shared.Constants.Auth.*;
-import static com.anibalxyz.shared.Constants.Auth.VALID_JWT_STRING;
-import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_RAW_TOKEN;
-import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_RAW_TOKEN_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -44,8 +41,9 @@ public class RefreshTokensTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("given valid command but outside time window, then return MaintenanceWindow error")
-  void validCommandOutsideWindow_returnMaintenanceWindow() {
+  @DisplayName(
+      "execute: given valid command but outside time window, then return MaintenanceWindow error")
+  void execute_validCommandOutsideWindow_returnMaintenanceWindow() {
     Clock clockOutsideWindow =
         Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
     var serviceOutsideWindow =
@@ -58,8 +56,8 @@ public class RefreshTokensTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("given refresh token rotation failed, then return InvalidToken error")
-  void refreshTokenRotationFailed_returnInvalidToken() {
+  @DisplayName("execute: given refresh token rotation failed, then return InvalidToken error")
+  void execute_refreshTokenRotationFailed_returnInvalidToken() {
     var expiryDate = maintenancePolicy.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
     var error = InvalidRefreshTokenError.notFound();
     when(refreshTokenService.verifyAndRotate(
@@ -77,8 +75,8 @@ public class RefreshTokensTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("given refresh token rotation failed, then return InvalidToken error")
-  void validRefreshToken_returnAuthResult() {
+  @DisplayName("execute: given valid refresh token, then return AuthResult")
+  void execute_validRefreshToken_returnAuthResult() {
     var expiryDate = maintenancePolicy.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);
     RefreshToken currentRefreshToken = buildRefreshToken(clock.instant().plus(1, ChronoUnit.DAYS));
 

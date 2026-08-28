@@ -3,7 +3,6 @@ package com.anibalxyz.features.auth.api.routes;
 import static com.anibalxyz.features.auth.api.AuthCookieService.REFRESH_TOKEN_COOKIE;
 import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_RAW_TOKEN_STRING;
 import static com.anibalxyz.shared.Constants.Users.*;
-import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static com.anibalxyz.shared.Helpers.getValueFromCookie;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,7 +46,7 @@ public class RefreshTokensIT extends AuthIT {
   }
 
   @Test
-  @DisplayName("given outside maintenance window, respond with 503 Unavailable Server")
+  @DisplayName("given outside maintenance window, then respond with 503 Unavailable Server")
   void outsideMaintenanceWindow_respond503UnavailableServer() {
     testClock.resetTo(SATURDAY_MIDDAY);
     ErrorResult expectedResult =

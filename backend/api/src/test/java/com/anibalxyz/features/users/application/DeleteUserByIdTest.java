@@ -20,18 +20,8 @@ public class DeleteUserByIdTest extends UnitTest {
   @InjectMocks private DeleteUserById deleteUserById;
 
   @Test
-  @DisplayName("deleteUserById: given an existing id, then return success")
-  public void deleteUserById_existingId_returnSuccess() {
-    when(userRepository.deleteById(1)).thenReturn(true);
-
-    var result = deleteUserById.execute(1);
-
-    assertThat(ResultAsserts.success(result)).isNull();
-  }
-
-  @Test
-  @DisplayName("deleteUserById: given a non-existing id, then return UserNotFoundError")
-  public void deleteUserById_nonExistingId_returnUserNotFoundError() {
+  @DisplayName("execute: given a non-existing id, then return UserNotFoundError")
+  public void execute_nonExistingId_returnUserNotFoundError() {
     int id = 999;
     when(userRepository.deleteById(id)).thenReturn(false);
 
@@ -42,5 +32,15 @@ public class DeleteUserByIdTest extends UnitTest {
         .isInstanceOf(UserNotFoundError.class)
         .extracting(ReasonedError::getReason)
         .isEqualTo(new UserNotFoundError.Reason.ById(id));
+  }
+
+  @Test
+  @DisplayName("execute: given an existing id, then return success")
+  public void execute_existingId_returnSuccess() {
+    when(userRepository.deleteById(1)).thenReturn(true);
+
+    var result = deleteUserById.execute(1);
+
+    assertThat(ResultAsserts.success(result)).isNull();
   }
 }

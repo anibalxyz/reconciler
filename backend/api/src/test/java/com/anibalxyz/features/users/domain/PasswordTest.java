@@ -49,8 +49,8 @@ public class PasswordTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("toString: given any PasswordHash object, then return an asterisks string")
-  public void toString_anyPasswordHash_returnAsterisksString() {
+  @DisplayName("toString: given any Password object, then return an asterisks string")
+  public void toString_anyPassword_returnAsterisksString() {
     // fragile if final string changes, but we assume it will not
     assertThat(VALID_PASSWORD.toString()).isEqualTo("********");
   }

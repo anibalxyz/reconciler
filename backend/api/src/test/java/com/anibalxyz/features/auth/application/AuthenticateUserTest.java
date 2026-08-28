@@ -53,8 +53,8 @@ public class AuthenticateUserTest extends UnitTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"password", "email"})
-  @DisplayName("given there is a field error, then return ValidationFailed error")
-  void fieldError_returnValidationFailed(String field) {
+  @DisplayName("execute: given there is a field error, then return ValidationFailed error")
+  void execute_fieldError_returnValidationFailed(String field) {
     String email = field.equals("email") ? " " : VALID_EMAIL_STRING;
     String password = field.equals("password") ? " " : VALID_PASSWORD_STRING;
     LoginCommand command = new LoginCommand(email, password);
@@ -72,8 +72,8 @@ public class AuthenticateUserTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("given there are field errors, then return ValidationFailed error")
-  void fieldErrors_returnValidationFailed() {
+  @DisplayName("execute: given there are field errors, then return ValidationFailed error")
+  void execute_fieldErrors_returnValidationFailed() {
     LoginCommand command = new LoginCommand(" ", " ");
 
     var result = authenticateUser.execute(command);
@@ -91,8 +91,9 @@ public class AuthenticateUserTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("given valid command but outside time window, then return MaintenanceWindow error")
-  void validCommandOutsideWindow_returnMaintenanceWindow() {
+  @DisplayName(
+      "execute: given valid command but outside time window, then return MaintenanceWindow error")
+  void execute_validCommandOutsideWindow_returnMaintenanceWindow() {
     LoginCommand command = new LoginCommand(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
     Clock clockOutsideWindow =
@@ -112,8 +113,8 @@ public class AuthenticateUserTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("given user not found, then return InvalidCredentials error")
-  void userByEmailNotFound_returnInvalidCredentials() {
+  @DisplayName("execute: given user not found, then return InvalidCredentials error")
+  void execute_userByEmailNotFound_returnInvalidCredentials() {
     LoginCommand command = new LoginCommand(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
     var expectedError =
         new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError());
@@ -126,8 +127,8 @@ public class AuthenticateUserTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("given password is incorrect, then return InvalidCredentials error")
-  void passwordIsIncorrect_returnInvalidCredentials() {
+  @DisplayName("execute: given password is incorrect, then return InvalidCredentials error")
+  void execute_passwordIsIncorrect_returnInvalidCredentials() {
     User user = VALID_USER;
     String differentPassword = VALID_PASSWORD_STRING + "makeItDifferent";
     LoginCommand command = new LoginCommand(user.email().value(), differentPassword);
@@ -141,8 +142,8 @@ public class AuthenticateUserTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("given valid command, then return AuthResult")
-  void validCommand_returnAuthResult() {
+  @DisplayName("execute: given valid command, then return AuthResult")
+  void execute_validCommand_returnAuthResult() {
     User user = VALID_USER;
     LoginCommand command = new LoginCommand(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
     Instant expiryDate = maintenancePolicy.calculateExpiryDate(ZonedDateTime.now(clock), DURATION);

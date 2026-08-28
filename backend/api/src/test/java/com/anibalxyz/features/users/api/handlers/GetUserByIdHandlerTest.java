@@ -28,8 +28,8 @@ public class GetUserByIdHandlerTest extends UnitTest {
   @InjectMocks private GetUserByIdHandler getUserByIdHandler;
 
   @Test
-  @DisplayName("getUserById: given the service returns UserNotFoundError, then throw FailureSignal")
-  public void getUserById_serviceReturnsUserNotFoundError_throwFailureSignal() {
+  @DisplayName("handle: given the service returns UserNotFoundError, then throw FailureSignal")
+  public void handle_serviceReturnsUserNotFoundError_throwFailureSignal() {
     int nonExistingId = 999;
     whenGettingPathParamId(ctx).thenReturn(nonExistingId);
     when(getUserById.execute(nonExistingId))
@@ -42,16 +42,16 @@ public class GetUserByIdHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("getUserById: given an invalid id, then throw BadRequestResponse")
-  public void getUserById_invalidId_throwBadRequestResponse() {
+  @DisplayName("handle: given an invalid id, then throw BadRequestResponse")
+  public void handle_invalidId_throwBadRequestResponse() {
     whenGettingPathParamId(ctx).thenThrow(new BadRequestResponse());
 
     assertThatThrownBy(() -> getUserByIdHandler.handle(ctx)).isInstanceOf(BadRequestResponse.class);
   }
 
   @Test
-  @DisplayName("getUserById: given the service returns User, then return 200 with User")
-  public void getUserById_serviceReturnsUser_respond200WithUser() {
+  @DisplayName("handle: given the service returns User, then return 200 with User")
+  public void handle_serviceReturnsUser_respond200WithUser() {
     User fakeUser = VALID_USER;
 
     stubStatusChaining(ctx);

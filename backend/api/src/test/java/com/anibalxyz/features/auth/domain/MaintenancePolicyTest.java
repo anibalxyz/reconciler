@@ -37,7 +37,7 @@ public class MaintenancePolicyTest extends UnitTest {
 
   @Nested
   @DisplayName("Tests for Expiry Policy logic")
-  class TokenExpiryPolicy {
+  class ExpiryPolicy {
     @Test
     @DisplayName("calculateExpiryDate: given expiry before Window Start, then return normal expiry")
     void calculateExpiryDate_expiryBeforeWindowStart_returnNormal() {

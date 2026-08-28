@@ -15,12 +15,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for RefreshTokenService")
 class RefreshTokenServiceTest extends UnitTest {
   private static final Instant FIXED_NOW =
@@ -158,8 +155,8 @@ class RefreshTokenServiceTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("cleanupExpiredTokens: once called, then return count of deleted tokens")
-  void cleanupExpiredTokens_returnCount() {
+  @DisplayName("cleanupExpiredTokens: given method is called, then return count of deleted tokens")
+  void cleanupExpiredTokens_methodCalled_returnCount() {
     int expectedCount = 213;
     when(refreshTokenRepository.deleteExpiredTokens()).thenReturn(expectedCount);
 

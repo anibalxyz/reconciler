@@ -22,8 +22,8 @@ public class LogoutHandlerTest extends UnitTest {
   @InjectMocks private LogoutHandler logoutHandler;
 
   @Test
-  @DisplayName("logout: given existing refresh token, then clear cookie and revoke token")
-  void logout_existingRefreshToken_clearCookieAndRevokeToken() {
+  @DisplayName("handle: given existing refresh token, then clear cookie and revoke token")
+  void handle_existingRefreshToken_clearCookieAndRevokeToken() {
     when(ctx.status(anyInt())).thenReturn(ctx);
     when(authCookieService.getRefreshTokenCookie(ctx)).thenReturn(VALID_REFRESH_RAW_TOKEN_STRING);
 

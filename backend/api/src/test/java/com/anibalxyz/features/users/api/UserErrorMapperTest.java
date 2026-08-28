@@ -19,15 +19,10 @@ import org.junit.jupiter.api.*;
 @DisplayName("Tests for UserErrorMapper")
 public class UserErrorMapperTest extends UnitTest {
   private static final UserNotFoundError userNotFoundError = UserNotFoundError.byId(1);
-  private UserErrorMapper mapper;
-
-  @BeforeEach
-  public void setup() {
-    mapper = new UserErrorMapper();
-  }
+  private final UserErrorMapper mapper = new UserErrorMapper();
 
   @Nested
-  @DisplayName("mapUserNotFoundError")
+  @DisplayName("mapUserNotFoundError()")
   class MapUserNotFoundError {
 
     @Test
@@ -47,7 +42,7 @@ public class UserErrorMapperTest extends UnitTest {
   }
 
   @Nested
-  @DisplayName("mapUpdateUserByIdError")
+  @DisplayName("mapUpdateUserByIdError()")
   class MapUpdateUserByIdError {
 
     @Test
@@ -83,7 +78,7 @@ public class UserErrorMapperTest extends UnitTest {
   }
 
   @Nested
-  @DisplayName("supports")
+  @DisplayName("supports()")
   class Supports {
 
     @Test
@@ -106,7 +101,7 @@ public class UserErrorMapperTest extends UnitTest {
   }
 
   @Nested
-  @DisplayName("map")
+  @DisplayName("map()")
   class Map {
 
     @Test
@@ -131,7 +126,7 @@ public class UserErrorMapperTest extends UnitTest {
   }
 
   @Nested
-  @DisplayName("supportsFieldError")
+  @DisplayName("supportsFieldError()")
   class SupportsFieldError {
 
     @Test
@@ -148,7 +143,7 @@ public class UserErrorMapperTest extends UnitTest {
   }
 
   @Nested
-  @DisplayName("mapFieldError")
+  @DisplayName("mapFieldError()")
   class MapFieldError {
 
     @Test
@@ -174,7 +169,7 @@ public class UserErrorMapperTest extends UnitTest {
   }
 
   @Nested
-  @DisplayName("mapInvalidValue")
+  @DisplayName("mapInvalidValue()")
   class MapInvalidValue {
 
     @Test

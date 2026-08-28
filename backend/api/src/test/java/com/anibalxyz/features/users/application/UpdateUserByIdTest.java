@@ -41,8 +41,8 @@ public class UpdateUserByIdTest extends UnitTest {
   class Failure {
 
     @Test
-    @DisplayName("updateUserById: given a non-existing id, then return NotFound error")
-    public void updateUserById_nonExistingId_returnNotFoundError() {
+    @DisplayName("execute: given a non-existing id, then return NotFound error")
+    public void execute_nonExistingId_returnNotFoundError() {
       int id = 999;
       UpdateUserCommand command = new UpdateUserCommand("New Name", null, null);
       when(userRepository.findById(id)).thenReturn(Optional.empty());
@@ -57,8 +57,8 @@ public class UpdateUserByIdTest extends UnitTest {
     }
 
     @Test
-    @DisplayName("updateUserById: given all fields empty, then return EmptyCommand error")
-    public void updateUserById_emptyCommand_returnEmptyCommandFailure() {
+    @DisplayName("execute: given all fields empty, then return EmptyCommand error")
+    public void execute_emptyCommand_returnEmptyCommandFailure() {
       UpdateUserCommand command = new UpdateUserCommand(null, null, null);
 
       var result = updateUserById.execute(1, command);
@@ -68,8 +68,8 @@ public class UpdateUserByIdTest extends UnitTest {
     }
 
     @Test
-    @DisplayName("updateUserById: given a blank name, then return Blank error on name")
-    public void updateUserById_blankName_returnBlankErrorOnName() {
+    @DisplayName("execute: given a blank name, then return Blank error on name")
+    public void execute_blankName_returnBlankErrorOnName() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(" ", null, VALID_PASSWORD_STRING);
       when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
@@ -92,8 +92,8 @@ public class UpdateUserByIdTest extends UnitTest {
     }
 
     @Test
-    @DisplayName("updateUserById: given a blank email, then return Blank error on email")
-    public void updateUserById_blankEmail_returnBlankErrorOnEmail() {
+    @DisplayName("execute: given a blank email, then return Blank error on email")
+    public void execute_blankEmail_returnBlankErrorOnEmail() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, " ", VALID_PASSWORD_STRING);
       when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
@@ -116,8 +116,8 @@ public class UpdateUserByIdTest extends UnitTest {
     }
 
     @Test
-    @DisplayName("updateUserById: given a blank password, then return Blank error on password")
-    public void updateUserById_blankPassword_returnBlankErrorOnPassword() {
+    @DisplayName("execute: given a blank password, then return Blank error on password")
+    public void execute_blankPassword_returnBlankErrorOnPassword() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand("New Name", null, " ");
       when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
@@ -141,9 +141,8 @@ public class UpdateUserByIdTest extends UnitTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"some@mail", "some-mail.com", "@mail.com"})
-    @DisplayName(
-        "updateUserById: given an invalid email format, then return InvalidFormat error on email")
-    public void updateUserById_invalidEmail_returnInvalidFormatErrorOnEmail(String email) {
+    @DisplayName("execute: given an invalid email format, then return InvalidFormat error on email")
+    public void execute_invalidEmail_returnInvalidFormatErrorOnEmail(String email) {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, email, null);
       when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
@@ -169,8 +168,8 @@ public class UpdateUserByIdTest extends UnitTest {
           "long-72-chars-12345678901234567890123456789012345678901234567890123456789"
         })
     @DisplayName(
-        "updateUserById: given an invalid password value, then return InvalidValue error on password")
-    public void updateUserById_invalidPassword_returnInvalidValueErrorOnPassword(String password) {
+        "execute: given an invalid password value, then return InvalidValue error on password")
+    public void execute_invalidPassword_returnInvalidValueErrorOnPassword(String password) {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, null, password);
       when(userRepository.findById(existing.id().value())).thenReturn(Optional.of(existing));
@@ -191,8 +190,8 @@ public class UpdateUserByIdTest extends UnitTest {
 
     @Test
     @DisplayName(
-        "updateUserById: given an email already in use, then return EmailAlreadyTakenError on email")
-    public void updateUserById_emailAlreadyInUse_returnEmailAlreadyTakenError() {
+        "execute: given an email already in use, then return EmailAlreadyTakenError on email")
+    public void execute_emailAlreadyInUse_returnEmailAlreadyTakenError() {
       User existing = VALID_USER;
       UpdateUserCommand command =
           new UpdateUserCommand(null, "taken" + existing.email().value(), null);
@@ -215,8 +214,8 @@ public class UpdateUserByIdTest extends UnitTest {
   class Success {
 
     @Test
-    @DisplayName("updateUserById: given a valid id and name, then return the updated user")
-    public void updateUserById_validIdAndName_returnUpdatedUser() {
+    @DisplayName("execute: given a valid id and name, then return the updated user")
+    public void execute_validIdAndName_returnUpdatedUser() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand("Valid Name", null, null);
       User expected = existing.withName(ResultAsserts.success(Name.of(command.name())));
@@ -231,8 +230,8 @@ public class UpdateUserByIdTest extends UnitTest {
     }
 
     @Test
-    @DisplayName("updateUserById: given a valid id and email, then return the updated user")
-    public void updateUserById_validIdAndEmail_returnUpdatedUser() {
+    @DisplayName("execute: given a valid id and email, then return the updated user")
+    public void execute_validIdAndEmail_returnUpdatedUser() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, "new@mail.com", null);
       User expected = existing.withEmail(ResultAsserts.success(Email.of(command.email())));
@@ -248,8 +247,8 @@ public class UpdateUserByIdTest extends UnitTest {
     }
 
     @Test
-    @DisplayName("updateUserById: given a valid id and password, then return the updated user")
-    public void updateUserById_validIdAndPassword_returnUpdatedUser() {
+    @DisplayName("execute: given a valid id and password, then return the updated user")
+    public void execute_validIdAndPassword_returnUpdatedUser() {
       User existing = VALID_USER;
       String newPassword = "new" + VALID_PASSWORD_STRING;
       UpdateUserCommand command = new UpdateUserCommand(null, null, newPassword);
@@ -271,8 +270,8 @@ public class UpdateUserByIdTest extends UnitTest {
 
     @Test
     @DisplayName(
-        "updateUserById: given an email already in use by the user, then return the unmodified user")
-    public void updateUserById_emailAlreadyUsedByUser_returnUnmodifiedUser() {
+        "execute: given an email already in use by the user, then return the unmodified user")
+    public void execute_emailAlreadyUsedByUser_returnUnmodifiedUser() {
       User existing = VALID_USER;
       UpdateUserCommand command = new UpdateUserCommand(null, existing.email().value(), null);
 

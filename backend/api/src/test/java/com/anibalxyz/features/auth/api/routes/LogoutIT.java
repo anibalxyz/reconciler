@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Tests for POST /logout")
 public class LogoutIT extends IntegrationTest {
   @Test
-  @DisplayName("POST /logout: always respond 204 and clear refresh token cookie")
-  void logout_always_respond204AndClearCookie() {
+  @DisplayName("POST /logout: given request, then respond 204 and clear refresh token cookie")
+  void logout_request_respond204AndClearCookie() {
     try (Response response = http.post("/auth/logout", "")) {
       assertThat(response.code()).isEqualTo(204);
 

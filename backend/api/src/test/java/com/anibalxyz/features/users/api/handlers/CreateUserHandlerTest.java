@@ -29,9 +29,8 @@ public class CreateUserHandlerTest extends UnitTest {
   @InjectMocks private CreateUserHandler createUserHandler;
 
   @Test
-  @DisplayName(
-      "createUser: given the service returns ValidationNotification, then throw FailureSignal")
-  public void createUser_serviceReturnsValidationNotification_throwFailureSignal() {
+  @DisplayName("handle: given the service returns ValidationNotification, then throw FailureSignal")
+  public void handle_serviceReturnsValidationNotification_throwFailureSignal() {
     CreateUserRequest request = mock(CreateUserRequest.class);
     CreateUserCommand command = mock(CreateUserCommand.class);
     when(request.toCommand()).thenReturn(command);
@@ -46,8 +45,8 @@ public class CreateUserHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("createUser: given the service returns User, then respond 201 with new user")
-  public void createUser_serviceReturnsUser_respond201WithNewUser() {
+  @DisplayName("handle: given the service returns User, then respond 201 with new user")
+  public void handle_serviceReturnsUser_respond201WithNewUser() {
     User user = VALID_USER;
     CreateUserRequest request =
         new CreateUserRequest(user.name().value(), user.email().value(), VALID_PASSWORD_STRING);

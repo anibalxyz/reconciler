@@ -14,8 +14,8 @@ public class UserMapperTest extends UnitTest {
   private static final User user = VALID_USER;
 
   @Test
-  @DisplayName("toDetailResponse: maps all fields correctly and excludes password hash")
-  public void toDetailResponse_mapsAllFieldsCorrectly() {
+  @DisplayName("toDetailResponse: given user, maps all fields correctly and excludes password hash")
+  public void toDetailResponse_user_mapsAllFieldsCorrectly() {
     DetailedUserResponse response = UserMapper.toDetailResponse(user);
 
     assertThat(response.id()).isEqualTo(user.id().value());
@@ -26,8 +26,9 @@ public class UserMapperTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("toCreateResponse: maps id, name and email correctly and excludes password hash")
-  public void toCreateResponse_mapsIdNameAndEmailCorrectly() {
+  @DisplayName(
+      "toCreateResponse: given user, then maps id, name and email correctly and excludes password hash")
+  public void toCreateResponse_user_mapsIdNameAndEmailCorrectly() {
     CreateUserResponse response = UserMapper.toCreateResponse(user);
 
     assertThat(response.id()).isEqualTo(user.id().value());

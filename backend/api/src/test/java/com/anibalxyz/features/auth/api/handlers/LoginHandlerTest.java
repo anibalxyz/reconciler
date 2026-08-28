@@ -38,8 +38,8 @@ public class LoginHandlerTest extends UnitTest {
   @InjectMocks private LoginHandler loginHandler;
 
   @Test
-  @DisplayName("login: given service result is failure, then throw FailureSignal with its error")
-  public void login_serviceResultIsFailure_throwFailureSignal() {
+  @DisplayName("handle: given service result is failure, then throw FailureSignal with its error")
+  public void handle_serviceResultIsFailure_throwFailureSignal() {
     LoginRequest request = new LoginRequest("", "");
 
     Result<AuthResult, AuthenticateUser.Error> failedResult =
@@ -56,8 +56,8 @@ public class LoginHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("login: given service returns success, then respond 200 with JWT and set cookie")
-  public void login_serviceReturnsSuccess_respond200WithJWTAndSetCookie() {
+  @DisplayName("handle: given service returns success, then respond 200 with JWT and set cookie")
+  public void handle_serviceReturnsSuccess_respond200WithJWTAndSetCookie() {
     LoginRequest request = new LoginRequest("", "");
     AuthResult dummyAuthResult =
         new AuthResult(VALID_JWT_STRING, VALID_REFRESH_RAW_TOKEN, FIXED_NOW.toInstant());

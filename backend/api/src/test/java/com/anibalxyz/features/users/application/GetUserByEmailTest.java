@@ -22,20 +22,8 @@ public class GetUserByEmailTest extends UnitTest {
   @InjectMocks private GetUserByEmail getUserByEmail;
 
   @Test
-  @DisplayName("getUserByEmail: given an existing email, then return the correct user")
-  public void getUserByEmail_existingEmail_returnUser() {
-    User expected = VALID_USER;
-    when(userRepository.findByEmail(expected.email())).thenReturn(Optional.of(expected));
-
-    var result = getUserByEmail.execute(expected.email().value());
-
-    User actual = ResultAsserts.success(result);
-    assertThat(actual).isEqualTo(expected);
-  }
-
-  @Test
-  @DisplayName("getUserByEmail: given a non-existing email, then return UserNotFoundError")
-  public void getUserByEmail_nonExistingEmail_returnUserNotFoundError() {
+  @DisplayName("execute: given a non-existing email, then return UserNotFoundError")
+  public void execute_nonExistingEmail_returnUserNotFoundError() {
     String email = "non.existing@mail.com";
     when(userRepository.findByEmail(ResultAsserts.success(Email.of(email))))
         .thenReturn(Optional.empty());
@@ -50,9 +38,8 @@ public class GetUserByEmailTest extends UnitTest {
   }
 
   @Test
-  @DisplayName(
-      "getUserByEmail: given a blank email, then return InvalidEmailError with Blank reason")
-  public void getUserByEmail_blankEmail_returnInvalidEmailErrorWithBlankReason() {
+  @DisplayName("execute: given a blank email, then return InvalidEmailError with Blank reason")
+  public void execute_blankEmail_returnInvalidEmailErrorWithBlankReason() {
     var result = getUserByEmail.execute(" ");
 
     var failure = ResultAsserts.failure(result);
@@ -64,8 +51,8 @@ public class GetUserByEmailTest extends UnitTest {
 
   @Test
   @DisplayName(
-      "getUserByEmail: given an invalid email format, then return InvalidEmailError with InvalidFormat reason")
-  public void getUserByEmail_invalidEmailFormat_returnInvalidEmailErrorWithInvalidFormatReason() {
+      "execute: given an invalid email format, then return InvalidEmailError with InvalidFormat reason")
+  public void execute_invalidEmailFormat_returnInvalidEmailErrorWithInvalidFormatReason() {
     var result = getUserByEmail.execute("mailemail.com");
 
     var err = ResultAsserts.failure(result);
@@ -73,5 +60,17 @@ public class GetUserByEmailTest extends UnitTest {
         .isInstanceOf(InvalidEmailError.class)
         .extracting(e -> ((InvalidEmailError) e).getReason())
         .isEqualTo(new InvalidEmailError.Reason.InvalidFormat());
+  }
+
+  @Test
+  @DisplayName("execute: given an existing email, then return the correct user")
+  public void execute_existingEmail_returnUser() {
+    User expected = VALID_USER;
+    when(userRepository.findByEmail(expected.email())).thenReturn(Optional.of(expected));
+
+    var result = getUserByEmail.execute(expected.email().value());
+
+    User actual = ResultAsserts.success(result);
+    assertThat(actual).isEqualTo(expected);
   }
 }

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Tests for DELETE /users/{id}")
 public class DeleteUserByIdIT extends UsersIT {
   @Test
-  @DisplayName("DELETE /users/{id}: given an existing id, then return 204 and delete the user")
-  public void DELETE_users_id_existingId_return204() {
+  @DisplayName("given an existing id, then respond 204 and delete the user")
+  public void existingId_respond204() {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
     Integer userId = user.id().value();
 

@@ -17,13 +17,8 @@ public abstract class AuthIT extends IntegrationTest {
       FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.SATURDAY)).with(LocalTime.NOON).toInstant();
   static final Instant MAINTENANCE_START =
       FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).with(LocalTime.of(8, 0)).toInstant();
-  static JwtService jwtService;
+  static final JwtService jwtService = new JwtService(APP_CONFIG.env(), testClock);
   static RefreshTokenService refreshTokenService;
-
-  @BeforeAll
-  public static void setup() {
-    jwtService = new JwtService(APP_CONFIG.env(), testClock);
-  }
 
   public static void validateJwt(String accessToken, Integer id) {
     var jwt = ResultAsserts.success(jwtService.validateToken(accessToken));

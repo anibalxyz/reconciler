@@ -18,8 +18,8 @@ import tools.jackson.core.type.TypeReference;
 public class GetAllUsersIT extends UsersIT {
 
   @Test
-  @DisplayName("GET /users: given users exist, then return 200 and the list of users")
-  public void GET_users_usersExist_return200AndListOfUsers() {
+  @DisplayName("given users exist, then respond 200 and the list of users")
+  public void usersExist_respond200AndListOfUsers() {
     List<UserEntity> persisted =
         List.of(
             persistUser(em, "Name", "name@mail.com"),
@@ -36,8 +36,8 @@ public class GetAllUsersIT extends UsersIT {
   }
 
   @Test
-  @DisplayName("GET /users: given no users exist, then return 200 and an empty list")
-  public void GET_users_noUsersExist_return200AndEmptyList() {
+  @DisplayName("given no users exist, then respond 200 and an empty list")
+  public void noUsersExist_respond200AndEmptyList() {
     Response response = http.get("/users", createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(200);
     CollectionResponse<DetailedUserResponse> actual =
