@@ -35,23 +35,6 @@ class RefreshTokenTest extends UnitTest {
     assertThat(token.isExpired(NOW)).isTrue();
   }
 
-  /* TODO: move to the layer that uses it
-    @Test
-    @DisplayName("secondsUntilExpiry: calculations")
-    void secondsUntilExpiry_calculations() {
-      // Case 1: Future (1 hour later)
-      RefreshToken futureToken = buildRefreshToken(NOW.plusSeconds(3600));
-      assertThat(futureToken.secondsUntilExpiry(NOW)).isEqualTo(3600);
-
-      // Case 2: Exact present (expired exactly now)
-      RefreshToken presentToken = buildRefreshToken(NOW);
-      assertThat(presentToken.secondsUntilExpiry(NOW)).isZero();
-
-      // Case 3: Past (expired 10 seconds ago)
-      RefreshToken pastToken = buildRefreshToken(NOW.minusSeconds(10));
-      assertThat(pastToken.secondsUntilExpiry(NOW)).isZero();
-    }
-  */
   @Test
   @DisplayName("withRevoked: given revoked is false, then return new instance with revoked true")
   void withRevoked_revokedFalse_returnNewInstanceWithRevokedTrue() {
