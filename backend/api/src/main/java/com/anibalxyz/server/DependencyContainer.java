@@ -1,9 +1,11 @@
 package com.anibalxyz.server;
 
-import com.anibalxyz.features.auth.api.AuthApi;
-import com.anibalxyz.features.auth.api.AuthController;
+import com.anibalxyz.features.auth.api.AuthCookieService;
 import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.auth.api.JwtMiddleware;
+import com.anibalxyz.features.auth.api.handlers.LoginHandler;
+import com.anibalxyz.features.auth.api.handlers.LogoutHandler;
+import com.anibalxyz.features.auth.api.handlers.RefreshTokensHandler;
 import com.anibalxyz.features.auth.application.*;
 import com.anibalxyz.features.auth.domain.MaintenancePolicy;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
@@ -112,8 +114,12 @@ public final class DependencyContainer {
     UpdateUserByIdHandler updateUserByIdHandler = new UpdateUserByIdHandler(updateUserById);
     DeleteUserByIdHandler deleteUserByIdHandler = new DeleteUserByIdHandler(deleteUserById);
 
-    AuthApi authController =
-        new AuthController(env, clock, authenticateUser, refreshTokens, refreshTokenService);
+    AuthCookieService authCookieService = new AuthCookieService(clock, env);
+    LoginHandler loginHandler = new LoginHandler(authCookieService, authenticateUser);
+    LogoutHandler logoutHandler = new LogoutHandler(authCookieService, refreshTokenService);
+    RefreshTokensHandler refreshTokensHandler =
+        new RefreshTokensHandler(authCookieService, refreshTokens);
+
     SystemController systemController = new SystemController(persistenceManager);
 
     // Middlewares
@@ -129,7 +135,7 @@ public final class DependencyContainer {
             createUserHandler,
             updateUserByIdHandler,
             deleteUserByIdHandler);
-    authRoutes = new AuthRoutes(authController);
+    authRoutes = new AuthRoutes(loginHandler, logoutHandler, refreshTokensHandler);
 
     // Events
     refreshTokensCleanupScheduler = new RefreshTokensCleanupScheduler(refreshTokenService);

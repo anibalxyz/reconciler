@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.api.routes;
 
-import static com.anibalxyz.features.auth.api.AuthController.REFRESH_TOKEN_COOKIE;
+import static com.anibalxyz.features.auth.api.AuthCookieService.REFRESH_TOKEN_COOKIE;
 import static com.anibalxyz.shared.Constants.APP_CONFIG;
 import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_RAW_TOKEN_STRING;
 import static com.anibalxyz.shared.Constants.Users.*;
@@ -233,7 +233,6 @@ public class AuthRoutesIT extends IntegrationTest {
           ErrorMapper.map(
               new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.notFound()));
 
-      // it is called "VALID" referring to the format, but is not a real value
       Map<String, String> cookie =
           Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_RAW_TOKEN_STRING);
 

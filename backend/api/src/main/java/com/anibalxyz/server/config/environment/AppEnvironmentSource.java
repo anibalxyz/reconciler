@@ -1,6 +1,6 @@
 package com.anibalxyz.server.config.environment;
 
-import com.anibalxyz.features.auth.api.env.AuthApiEnvironment;
+import com.anibalxyz.features.auth.api.AuthCookieService;
 import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
@@ -48,8 +48,8 @@ public record AppEnvironmentSource(
         ServerConfig.Env,
         AuthenticateUser.Env,
         RefreshTokens.Env,
+        AuthCookieService.Env,
         JwtEnvironment,
-        AuthApiEnvironment,
         AuthEnvironment {
   @Override
   public @NonNull String toString() {
