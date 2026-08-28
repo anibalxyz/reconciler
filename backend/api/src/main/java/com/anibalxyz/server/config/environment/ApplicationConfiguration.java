@@ -23,7 +23,7 @@ public record ApplicationConfiguration(AppEnvironmentSource env, DatabaseVariabl
 
     Map<String, Object> jwt = new LinkedHashMap<>();
     jwt.put("issuer", env.JWT_ISSUER());
-    jwt.put("accessTokenExpirationMinutes", env.JWT_ACCESS_EXPIRATION_TIME_MINUTES());
+    jwt.put("accessTokenExpirationMinutes", env.JWT_ACCESS_EXPIRATION_TIME_SECONDS() / 60);
     jwt.put("refreshTokenExpirationDays", env.JWT_REFRESH_EXPIRATION_TIME_DAYS().toDays());
     configSummary.put("jwt", jwt);
 

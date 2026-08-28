@@ -30,7 +30,7 @@ public abstract class AuthIT extends IntegrationTest {
             Date.from(
                 testClock
                     .instant()
-                    .plusSeconds(APP_CONFIG.env().JWT_ACCESS_EXPIRATION_TIME_MINUTES() * 60)));
+                    .plusSeconds(APP_CONFIG.env().JWT_ACCESS_EXPIRATION_TIME_SECONDS())));
   }
 
   public static void validateRefreshToken(String token, Integer id) {

@@ -32,7 +32,7 @@ class JwtServiceTest extends UnitTest {
 
   static {
     // placed here to avoid error caused by bad order of declaration
-    env = new JwtEnvironmentStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES);
+    env = new JwtEnvironmentStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES * 60);
   }
 
   private JwtService jwtService;
@@ -121,11 +121,11 @@ class JwtServiceTest extends UnitTest {
   }
 
   private record JwtEnvironmentStub(
-      SecretKey JWT_KEY, String JWT_ISSUER, long JWT_ACCESS_EXPIRATION_TIME_MINUTES)
+      SecretKey JWT_KEY, String JWT_ISSUER, long JWT_ACCESS_EXPIRATION_TIME_SECONDS)
       implements JwtService.Env {
     public JwtEnvironmentStub withJWT_KEY(SecretKey JWT_KEY) {
       return new JwtEnvironmentStub(
-          JWT_KEY, this.JWT_ISSUER, this.JWT_ACCESS_EXPIRATION_TIME_MINUTES);
+          JWT_KEY, this.JWT_ISSUER, this.JWT_ACCESS_EXPIRATION_TIME_SECONDS);
     }
   }
 }

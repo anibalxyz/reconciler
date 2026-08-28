@@ -36,7 +36,7 @@ public record AppEnvironmentSource(
     int BCRYPT_LOG_ROUNDS,
     SecretKey JWT_KEY,
     String JWT_ISSUER,
-    long JWT_ACCESS_EXPIRATION_TIME_MINUTES,
+    long JWT_ACCESS_EXPIRATION_TIME_SECONDS,
     Duration JWT_REFRESH_EXPIRATION_TIME_DAYS,
     Boolean AUTH_COOKIE_SECURE,
     String AUTH_COOKIE_DOMAIN,

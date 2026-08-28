@@ -31,8 +31,7 @@ public class JwtService {
         .subject(subject)
         .issuedAt(iat)
         .notBefore(iat)
-        // TODO: move this calculation to ConfigurationFactory
-        .expiration(Date.from(now.plusSeconds(env.JWT_ACCESS_EXPIRATION_TIME_MINUTES() * 60)))
+        .expiration(Date.from(now.plusSeconds(env.JWT_ACCESS_EXPIRATION_TIME_SECONDS())))
         .issuer(env.JWT_ISSUER())
         .signWith(env.JWT_KEY())
         .compact();
@@ -66,7 +65,7 @@ public class JwtService {
 
     String JWT_ISSUER();
 
-    long JWT_ACCESS_EXPIRATION_TIME_MINUTES();
+    long JWT_ACCESS_EXPIRATION_TIME_SECONDS();
   }
 
   public sealed interface JwtValidationError {

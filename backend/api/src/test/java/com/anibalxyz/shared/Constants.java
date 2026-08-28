@@ -87,7 +87,6 @@ public class Constants {
     public static final TokenHash VALID_REFRESH_TOKEN_HASH = TokenHash.of(VALID_REFRESH_RAW_TOKEN);
 
     public static final int MINIMUM_BCRYPT_LOG_ROUNDS = 4;
-    public static final int JWT_EXPIRATION_TIME_MINUTES = 30;
 
     public static RefreshToken buildRefreshToken(Instant expiryDate) {
       return RefreshToken.of(VALID_REFRESH_TOKEN_HASH, VALID_USER.id(), expiryDate);
