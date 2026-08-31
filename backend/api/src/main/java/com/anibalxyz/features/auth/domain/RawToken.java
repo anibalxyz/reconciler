@@ -1,5 +1,6 @@
 package com.anibalxyz.features.auth.domain;
 
+import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.core.Result;
 import com.anibalxyz.features.auth.domain.error.InvalidRawTokenError;
 import java.util.Objects;
@@ -59,18 +60,26 @@ public final class RawToken {
     return true;
   }
 
+  public String value() {
+    return value;
+  }
+
+  @ExcludeFromJacocoGenerated
   @Override
   public int hashCode() {
     return Objects.hashCode(value);
   }
 
+  @ExcludeFromJacocoGenerated
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof RawToken rawToken)) return false;
     return Objects.equals(value, rawToken.value);
   }
 
-  public String value() {
-    return value;
+  @ExcludeFromJacocoGenerated
+  @Override
+  public String toString() {
+    return "*******";
   }
 }

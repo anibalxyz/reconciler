@@ -38,10 +38,6 @@ public final class MaintenancePolicy {
         now.with(TemporalAdjusters.previousOrSame(START_DAY)).with(START_TIME);
     ZonedDateTime nextEnd = lastStart.with(TemporalAdjusters.nextOrSame(END_DAY)).with(END_TIME);
 
-    if (nextEnd.isBefore(lastStart)) {
-      nextEnd = nextEnd.plusWeeks(1);
-    }
-
     return now.isAfter(lastStart) && now.isBefore(nextEnd);
   }
 }

@@ -1,5 +1,6 @@
 package com.anibalxyz.features.auth.api;
 
+import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.Role;
@@ -23,32 +24,34 @@ public class JwtMiddleware implements StartupConfig {
     this.jwtService = jwtService;
   }
 
-  // TODO: Missing branches will be covered soon with unit testing
+  // TODO: Implement Unit Testing once this have clear functionality
+  //       Currently, it is partially covered my Integration Tests
+  @ExcludeFromJacocoGenerated
   @Override
   public void apply(JavalinConfig cfg) {
-    cfg.routes.beforeMatched(
-        ctx -> {
-          Set<RouteRole> permittedRoles = ctx.routeRoles();
-
-          if (permittedRoles.isEmpty() || permittedRoles.contains(Role.GUEST)) {
-            return;
-          }
-
-          // For any other role, run the JWT middleware to authenticate
-          handle(ctx);
-
-          // At this point, if jwtMiddleware didn't throw, the user is authenticated.
-          // We can grant them the AUTHENTICATED role.
-          Set<RouteRole> userRoles = Set.of(Role.AUTHENTICATED);
-
-          if (userRoles.stream().noneMatch(permittedRoles::contains)) {
-            throw new ForbiddenResponse("Access denied");
-          }
-        });
+    cfg.routes.beforeMatched(this::execute);
   }
 
-  // TODO: rename more semantically
-  public void handle(Context ctx) {
+  public void execute(Context ctx) {
+    Set<RouteRole> permittedRoles = ctx.routeRoles();
+
+    if (permittedRoles.isEmpty() || permittedRoles.contains(Role.GUEST)) {
+      return;
+    }
+
+    // For any other role, run the JWT middleware to authenticate
+    validateJwt(ctx);
+
+    // At this point, if jwtMiddleware didn't throw, the user is authenticated.
+    // We can grant them the AUTHENTICATED role.
+    Set<RouteRole> userRoles = Set.of(Role.AUTHENTICATED);
+
+    if (userRoles.stream().noneMatch(permittedRoles::contains)) {
+      throw new ForbiddenResponse("Access denied");
+    }
+  }
+
+  public void validateJwt(Context ctx) {
     String authHeader = ctx.header(AUTHORIZATION_HEADER);
 
     if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {

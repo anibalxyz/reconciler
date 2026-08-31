@@ -26,16 +26,13 @@ class RefreshTokenServiceTest extends UnitTest {
   @InjectMocks private RefreshTokenService refreshTokenService;
 
   @Test
-  @DisplayName("verifyRefreshToken: given valid RefreshToken, then return success")
-  void verifyRefreshToken_validRefreshToken_returnSuccess() {
-    RefreshToken token = buildRefreshToken(FIXED_NOW.plus(1, ChronoUnit.DAYS));
-    when(refreshTokenRepository.findByTokenHash(VALID_REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.of(token));
+  @DisplayName(
+      "verifyRefreshToken: given invalid raw token string, then return failure with Invalid reason")
+  void verifyRefreshToken_invalidRawToken_returnFailureWithInvalid() {
+    var result = refreshTokenService.verifyRefreshToken("invalid-raw-token", FIXED_NOW);
 
-    var result = refreshTokenService.verifyRefreshToken(VALID_REFRESH_RAW_TOKEN_STRING, FIXED_NOW);
-
-    RefreshToken value = ResultAsserts.success(result);
-    assertThat(value).isEqualTo(token);
+    assertThat(ResultAsserts.failure(result).getReason())
+        .isInstanceOf(InvalidRefreshTokenError.Reason.Invalid.class);
   }
 
   @Test
@@ -118,6 +115,19 @@ class RefreshTokenServiceTest extends UnitTest {
     assertThat(rotation.userId()).isEqualTo(oldToken.userId());
     assertThat(rotation.rawToken().value()).isNotEqualTo(VALID_REFRESH_RAW_TOKEN_STRING);
     assertThat(RawToken.isValid(rotation.rawToken().value())).isTrue();
+  }
+
+  @Test
+  @DisplayName("verifyRefreshToken: given valid RefreshToken, then return success")
+  void verifyRefreshToken_validRefreshToken_returnSuccess() {
+    RefreshToken token = buildRefreshToken(FIXED_NOW.plus(1, ChronoUnit.DAYS));
+    when(refreshTokenRepository.findByTokenHash(VALID_REFRESH_TOKEN_HASH))
+        .thenReturn(Optional.of(token));
+
+    var result = refreshTokenService.verifyRefreshToken(VALID_REFRESH_RAW_TOKEN_STRING, FIXED_NOW);
+
+    RefreshToken value = ResultAsserts.success(result);
+    assertThat(value).isEqualTo(token);
   }
 
   @Test

@@ -272,5 +272,12 @@ public class UserErrorMapperTest extends UnitTest {
       assertThatThrownBy(() -> mapper.mapInvalidValue(new InvalidPasswordHashError()))
           .isInstanceOf(UnreachableCodeException.class);
     }
+
+    @Test
+    @DisplayName("given InvalidUserIdError, then throw UnreachableCodeException")
+    public void givenInvalidUserIdError_throwUnreachableCodeException() {
+      assertThatThrownBy(() -> mapper.mapInvalidValue(new InvalidUserIdError()))
+          .isInstanceOf(UnreachableCodeException.class);
+    }
   }
 }

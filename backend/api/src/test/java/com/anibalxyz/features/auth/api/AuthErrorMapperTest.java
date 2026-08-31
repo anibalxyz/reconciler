@@ -177,6 +177,16 @@ public class AuthErrorMapperTest extends UnitTest {
       assertThat(result.response())
           .isEqualTo(new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED));
     }
+
+    @Test
+    @DisplayName("given Invalid reason, then return 401 with correct detail")
+    public void givenInvalid_return401WithDetail() {
+      ErrorResult result = mapper.mapInvalidRefreshTokenError(InvalidRefreshTokenError.invalid());
+
+      assertThat(result.status()).isEqualTo(401);
+      assertThat(result.response())
+          .isEqualTo(new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_INVALID));
+    }
   }
 
   @Nested

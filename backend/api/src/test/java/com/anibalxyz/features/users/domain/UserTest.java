@@ -9,10 +9,22 @@ import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Tests for User Domain Object")
+@DisplayName("Tests for User Domain Entity")
 public class UserTest extends UnitTest {
   private static final Instant TIMESTAMP = Instant.now();
   private static final User baseUser = VALID_USER;
+
+  @Test
+  @DisplayName("passwordMatches: given correct password, then return true")
+  void passwordMatches_correctPassword_returnsTrue() {
+    assertThat(VALID_USER.passwordMatches(VALID_PASSWORD_STRING)).isTrue();
+  }
+
+  @Test
+  @DisplayName("passwordMatches: given wrong password, then return false")
+  void passwordMatches_wrongPassword_returnsFalse() {
+    assertThat(VALID_USER.passwordMatches("wrong")).isFalse();
+  }
 
   @Test
   @DisplayName("equals: given same reference, then return true")

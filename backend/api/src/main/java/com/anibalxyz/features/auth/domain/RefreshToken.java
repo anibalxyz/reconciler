@@ -31,6 +31,10 @@ public final class RefreshToken {
     return !now.isBefore(expiryDate);
   }
 
+  public RefreshToken withRevoked(boolean revoked) {
+    return new RefreshToken(tokenHash, userId, expiryDate, revoked);
+  }
+
   public UserId userId() {
     return userId;
   }
@@ -45,10 +49,6 @@ public final class RefreshToken {
 
   public boolean isRevoked() {
     return revoked;
-  }
-
-  public RefreshToken withRevoked(boolean revoked) {
-    return new RefreshToken(tokenHash, userId, expiryDate, revoked);
   }
 
   @Override
