@@ -1,39 +1,18 @@
 package com.anibalxyz.features.auth.domain;
 
+import static com.anibalxyz.shared.MaintenanceTestClock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.shared.UnitTest;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.TemporalAdjusters;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class MaintenancePolicyTest extends UnitTest {
-  private static final ZoneId ZONE = ZoneId.of("America/Montevideo");
   private static final MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
-  private static final ZonedDateTime BASE_DATE = ZonedDateTime.of(2026, 4, 20, 0, 0, 0, 0, ZONE);
-  private static final ZonedDateTime WINDOW_START =
-      BASE_DATE
-          .with(TemporalAdjusters.nextOrSame(MaintenancePolicy.START_DAY))
-          .with(MaintenancePolicy.START_TIME);
-  private static final ZonedDateTime WINDOW_END = calculateWindowEnd();
-  private static final ZonedDateTime VALID_TIME = WINDOW_START.minusHours(5);
-
-  private static ZonedDateTime calculateWindowEnd() {
-    ZonedDateTime end =
-        MaintenancePolicyTest.WINDOW_START
-            .with(TemporalAdjusters.nextOrSame(MaintenancePolicy.END_DAY))
-            .with(MaintenancePolicy.END_TIME);
-
-    if (!end.isAfter(MaintenancePolicyTest.WINDOW_START)) {
-      end = end.plusWeeks(1);
-    }
-    return end;
-  }
 
   @Nested
   @DisplayName("Tests for Expiry Policy logic")
@@ -42,16 +21,16 @@ public class MaintenancePolicyTest extends UnitTest {
     @DisplayName("calculateExpiryDate: given expiry before Window Start, then return normal expiry")
     void calculateExpiryDate_expiryBeforeWindowStart_returnNormal() {
       Duration exp = Duration.ofHours(2);
-      Instant result = maintenancePolicy.calculateExpiryDate(VALID_TIME, exp);
+      Instant result = maintenancePolicy.calculateExpiryDate(OUTSIDE_WINDOW_TIME, exp);
 
-      assertThat(result).isEqualTo(VALID_TIME.plus(exp).toInstant());
+      assertThat(result).isEqualTo(OUTSIDE_WINDOW_TIME.plus(exp).toInstant());
     }
 
     @Test
     @DisplayName("calculateExpiryDate: given expiry after Window Start, then cap at Window Start")
     void calculateExpiryDate_expiryAfterWindowStart_capAtWindowStart() {
       Duration exp = Duration.ofDays(10);
-      Instant result = maintenancePolicy.calculateExpiryDate(VALID_TIME, exp);
+      Instant result = maintenancePolicy.calculateExpiryDate(OUTSIDE_WINDOW_TIME, exp);
 
       assertThat(result).isEqualTo(WINDOW_START.toInstant());
     }
@@ -87,7 +66,7 @@ public class MaintenancePolicyTest extends UnitTest {
     @Test
     @DisplayName("blockedUntil: given now is a valid time outside maintenance, then return empty")
     void blockedUntil_validTime_returnEmpty() {
-      assertThat(maintenancePolicy.blockedUntil(VALID_TIME)).isEmpty();
+      assertThat(maintenancePolicy.blockedUntil(OUTSIDE_WINDOW_TIME)).isEmpty();
     }
 
     @Test

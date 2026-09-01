@@ -1,6 +1,7 @@
 package com.anibalxyz.features.auth.application;
 
 import static com.anibalxyz.shared.Constants.Auth.*;
+import static com.anibalxyz.shared.MaintenanceTestClock.INSIDE_WINDOW_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -22,12 +23,9 @@ import org.mockito.Mock;
 @DisplayName("Tests for RefreshTokens use case")
 public class RefreshTokensTest extends UnitTest {
   private static final Instant FIXED_INSTANT = Instant.parse("2025-01-01T12:00:00Z");
-  private static final ZoneId ZONE = ZoneId.of("America/Montevideo");
-  private static final ZonedDateTime SATURDAY_MORNING =
-      LocalDateTime.of(2025, 12, 6, 8, 0).atZone(ZONE);
   private static final Duration DURATION = Duration.ofDays(7);
   private static final EnvStub env = new EnvStub(DURATION);
-  private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZONE);
+  private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
   private static final MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
 
   @Mock private JwtService jwtService;
@@ -46,7 +44,7 @@ public class RefreshTokensTest extends UnitTest {
       "execute: given valid command but outside time window, then return MaintenanceWindow error")
   void execute_validCommandOutsideWindow_returnMaintenanceWindow() {
     Clock clockOutsideWindow =
-        Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
+        Clock.fixed(INSIDE_WINDOW_TIME.toInstant(), INSIDE_WINDOW_TIME.getZone());
     var serviceOutsideWindow =
         new RefreshTokens(
             env, clockOutsideWindow, maintenancePolicy, jwtService, refreshTokenService);
@@ -61,7 +59,7 @@ public class RefreshTokensTest extends UnitTest {
       "execute: given invalid token but outside window, then return MaintenanceWindow first")
   void execute_invalidTokenOutsideWindow_returnMaintenanceWindow() {
     Clock clockOutsideWindow =
-        Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
+        Clock.fixed(INSIDE_WINDOW_TIME.toInstant(), INSIDE_WINDOW_TIME.getZone());
     var serviceOutsideWindow =
         new RefreshTokens(
             env, clockOutsideWindow, maintenancePolicy, jwtService, refreshTokenService);

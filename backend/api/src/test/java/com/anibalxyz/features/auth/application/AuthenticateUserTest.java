@@ -5,6 +5,7 @@ import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_RAW_TOKEN;
 import static com.anibalxyz.shared.Constants.Users.VALID_EMAIL_STRING;
 import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static com.anibalxyz.shared.Constants.Users.VALID_USER;
+import static com.anibalxyz.shared.MaintenanceTestClock.INSIDE_WINDOW_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -31,12 +32,9 @@ import org.mockito.Mock;
 @DisplayName("Tests for AuthenticateUsers use case")
 public class AuthenticateUserTest extends UnitTest {
   private static final Instant FIXED_INSTANT = Instant.parse("2025-01-01T12:00:00Z");
-  private static final ZoneId ZONE = ZoneId.of("America/Montevideo");
-  private static final ZonedDateTime SATURDAY_MORNING =
-      LocalDateTime.of(2025, 12, 6, 8, 0).atZone(ZONE);
   private static final Duration DURATION = Duration.ofDays(7);
   private static final EnvStub env = new EnvStub(DURATION);
-  private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZONE);
+  private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
   private static final MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
 
   @Mock private GetUserByEmail getUserByEmail;
@@ -50,28 +48,6 @@ public class AuthenticateUserTest extends UnitTest {
     authenticateUser =
         new AuthenticateUser(
             env, clock, maintenancePolicy, getUserByEmail, jwtService, refreshTokenService);
-  }
-
-  @Test
-  @DisplayName(
-      "execute: given invalid command but outside window, then return MaintenanceWindow first")
-  void execute_invalidCommandOutsideWindow_returnMaintenanceWindow() {
-    LoginCommand command = new LoginCommand(" ", " ");
-    Clock clockOutsideWindow =
-        Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
-    var authenticateUserOutsideWindow =
-        new AuthenticateUser(
-            env,
-            clockOutsideWindow,
-            maintenancePolicy,
-            getUserByEmail,
-            jwtService,
-            refreshTokenService);
-
-    var result = authenticateUserOutsideWindow.execute(command);
-    assertThat(ResultAsserts.failure(result))
-        .isInstanceOf(AuthenticateUser.Error.MaintenanceWindow.class);
-    verifyNoInteractions(getUserByEmail);
   }
 
   @ParameterizedTest
@@ -120,7 +96,7 @@ public class AuthenticateUserTest extends UnitTest {
     LoginCommand command = new LoginCommand(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
     Clock clockOutsideWindow =
-        Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
+        Clock.fixed(INSIDE_WINDOW_TIME.toInstant(), INSIDE_WINDOW_TIME.getZone());
     var authenticateUserOutsideWindow =
         new AuthenticateUser(
             env,
@@ -133,6 +109,28 @@ public class AuthenticateUserTest extends UnitTest {
     var result = authenticateUserOutsideWindow.execute(command);
     assertThat(ResultAsserts.failure(result))
         .isInstanceOf(AuthenticateUser.Error.MaintenanceWindow.class);
+  }
+
+  @Test
+  @DisplayName(
+      "execute: given invalid command but outside window, then return MaintenanceWindow first")
+  void execute_invalidCommandOutsideWindow_returnMaintenanceWindow() {
+    LoginCommand command = new LoginCommand(" ", " ");
+    Clock clockOutsideWindow =
+        Clock.fixed(INSIDE_WINDOW_TIME.toInstant(), INSIDE_WINDOW_TIME.getZone());
+    var authenticateUserOutsideWindow =
+        new AuthenticateUser(
+            env,
+            clockOutsideWindow,
+            maintenancePolicy,
+            getUserByEmail,
+            jwtService,
+            refreshTokenService);
+
+    var result = authenticateUserOutsideWindow.execute(command);
+    assertThat(ResultAsserts.failure(result))
+        .isInstanceOf(AuthenticateUser.Error.MaintenanceWindow.class);
+    verifyNoInteractions(getUserByEmail);
   }
 
   @Test
