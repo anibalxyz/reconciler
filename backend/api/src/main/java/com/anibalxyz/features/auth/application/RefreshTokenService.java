@@ -65,9 +65,5 @@ public class RefreshTokenService {
                         (refreshToken) -> refreshTokenRepository.revoke(refreshToken.tokenHash())));
   }
 
-  public int cleanupExpiredTokens() {
-    return refreshTokenRepository.deleteExpiredTokens();
-  }
-
   public record RotationResult(UserId userId, RawToken rawToken) {}
 }

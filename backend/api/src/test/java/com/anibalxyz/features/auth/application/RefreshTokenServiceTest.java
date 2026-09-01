@@ -163,15 +163,4 @@ class RefreshTokenServiceTest extends UnitTest {
     verify(refreshTokenRepository).revoke(refreshToken.tokenHash());
     verify(refreshTokenRepository, never()).persist(any());
   }
-
-  @Test
-  @DisplayName("cleanupExpiredTokens: given method is called, then return count of deleted tokens")
-  void cleanupExpiredTokens_methodCalled_returnCount() {
-    int expectedCount = 213;
-    when(refreshTokenRepository.deleteExpiredTokens()).thenReturn(expectedCount);
-
-    int actualCount = refreshTokenService.cleanupExpiredTokens();
-
-    assertThat(actualCount).isEqualTo(expectedCount);
-  }
 }

@@ -138,7 +138,7 @@ public final class DependencyContainer {
     authRoutes = new AuthRoutes(loginHandler, logoutHandler, refreshTokensHandler);
 
     // Events
-    refreshTokensCleanupScheduler = new RefreshTokensCleanupScheduler(refreshTokenService);
+    refreshTokensCleanupScheduler = new RefreshTokensCleanupScheduler(refreshTokenRepository);
   }
 
   public PersistenceManager persistenceManager() {
