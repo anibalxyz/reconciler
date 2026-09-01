@@ -5,7 +5,7 @@ import static com.anibalxyz.shared.Helpers.*;
 import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.auth.api.AuthCookieService;
-import com.anibalxyz.features.auth.application.RefreshTokenService;
+import com.anibalxyz.features.auth.application.Logout;
 import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.Context;
 import java.time.*;
@@ -17,7 +17,7 @@ import org.mockito.Mock;
 public class LogoutHandlerTest extends UnitTest {
   @Mock private Context ctx;
   @Mock private AuthCookieService authCookieService;
-  @Mock private RefreshTokenService refreshTokenService;
+  @Mock private Logout logout;
 
   @InjectMocks private LogoutHandler logoutHandler;
 
@@ -29,7 +29,7 @@ public class LogoutHandlerTest extends UnitTest {
 
     logoutHandler.handle(ctx);
 
-    verify(refreshTokenService).revokeToken(VALID_REFRESH_RAW_TOKEN_STRING);
+    verify(logout).execute(VALID_REFRESH_RAW_TOKEN_STRING);
     verify(ctx).status(204);
 
     verify(authCookieService).clearRefreshTokenCookie(ctx);

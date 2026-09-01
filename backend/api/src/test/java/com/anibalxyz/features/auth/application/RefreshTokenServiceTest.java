@@ -129,38 +129,4 @@ class RefreshTokenServiceTest extends UnitTest {
     RefreshToken value = ResultAsserts.success(result);
     assertThat(value).isEqualTo(token);
   }
-
-  @Test
-  @DisplayName("revokeToken: given no token, then do nothing")
-  void revokeToken_noToken_doNothing() {
-    refreshTokenService.revokeToken(null);
-    refreshTokenService.revokeToken("");
-
-    verify(refreshTokenRepository, never()).persist(any());
-    verify(refreshTokenRepository, never()).findByTokenHash(any());
-  }
-
-  @Test
-  @DisplayName("revokeToken: given token not found, then do nothing")
-  void revokeToken_tokenNotFound_doNothing() {
-    when(refreshTokenRepository.findByTokenHash(VALID_REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.empty());
-
-    refreshTokenService.revokeToken(VALID_REFRESH_RAW_TOKEN_STRING);
-
-    verify(refreshTokenRepository, never()).persist(any());
-  }
-
-  @Test
-  @DisplayName("revokeToken: given valid token, then revoke it")
-  void revokeToken_validToken_revokeIt() {
-    RefreshToken refreshToken = buildRefreshToken(FIXED_NOW);
-    when(refreshTokenRepository.findByTokenHash(refreshToken.tokenHash()))
-        .thenReturn(Optional.of(refreshToken));
-
-    refreshTokenService.revokeToken(VALID_REFRESH_RAW_TOKEN_STRING);
-
-    verify(refreshTokenRepository).revoke(refreshToken.tokenHash());
-    verify(refreshTokenRepository, never()).persist(any());
-  }
 }

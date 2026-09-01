@@ -54,16 +54,5 @@ public class RefreshTokenService {
         .orElseGet(() -> Result.failure(InvalidRefreshTokenError.notFound()));
   }
 
-  public void revokeToken(String rawToken) {
-    RawToken.of(rawToken)
-        .map(TokenHash::of)
-        .onSuccess(
-            tokenHash ->
-                refreshTokenRepository
-                    .findByTokenHash(tokenHash)
-                    .ifPresent(
-                        (refreshToken) -> refreshTokenRepository.revoke(refreshToken.tokenHash())));
-  }
-
   public record RotationResult(UserId userId, RawToken rawToken) {}
 }

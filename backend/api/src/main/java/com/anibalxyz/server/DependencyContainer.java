@@ -105,6 +105,7 @@ public final class DependencyContainer {
             env, clock, maintenancePolicy, getUserByEmail, jwtService, refreshTokenService);
     RefreshTokens refreshTokens =
         new RefreshTokens(env, clock, maintenancePolicy, jwtService, refreshTokenService);
+    Logout logout = new Logout(refreshTokenRepository);
 
     // 5. Handlers and Middlewares
     // Handlers
@@ -116,7 +117,7 @@ public final class DependencyContainer {
 
     AuthCookieService authCookieService = new AuthCookieService(clock, env);
     LoginHandler loginHandler = new LoginHandler(authCookieService, authenticateUser);
-    LogoutHandler logoutHandler = new LogoutHandler(authCookieService, refreshTokenService);
+    LogoutHandler logoutHandler = new LogoutHandler(authCookieService, logout);
     RefreshTokensHandler refreshTokensHandler =
         new RefreshTokensHandler(authCookieService, refreshTokens);
 
