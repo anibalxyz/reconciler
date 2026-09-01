@@ -47,24 +47,19 @@ public class RefreshTokens {
 
     Instant expiryDate =
         maintenancePolicy.calculateExpiryDate(now, env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
-    var rotationResult =
-        verifyRefreshToken(refreshTokenString, now.toInstant())
-            .onSuccess(oldToken -> refreshTokenRepository.revoke(oldToken.tokenHash()))
-            .map(
-                oldToken ->
-                    new RotationResult(
-                        oldToken.userId(),
-                        createRefreshToken.execute(oldToken.userId(), expiryDate)));
-
-    return switch (rotationResult) {
-      case Result.Failure(var invalidRefreshTokenError) ->
-          Result.failure(new Error.InvalidToken(invalidRefreshTokenError));
-      case Result.Success(var rotation) -> {
-        String newAccessToken = jwtService.generateToken(rotation.userId().value());
-        log.info("Tokens refreshed");
-        yield Result.success(new AuthResult(newAccessToken, rotation.rawToken(), expiryDate));
-      }
-    };
+    return verifyRefreshToken(refreshTokenString, now.toInstant())
+        .onSuccess(oldToken -> refreshTokenRepository.revoke(oldToken.tokenHash()))
+        .map(
+            oldToken ->
+                new RotationResult(
+                    oldToken.userId(), createRefreshToken.execute(oldToken.userId(), expiryDate)))
+        .<Error>mapError(Error.InvalidToken::new)
+        .map(
+            rotationResult -> {
+              String newAccessToken = jwtService.generateToken(rotationResult.userId().value());
+              log.info("Tokens refreshed");
+              return new AuthResult(newAccessToken, rotationResult.rawToken(), expiryDate);
+            });
   }
 
   private Result<RefreshToken, InvalidRefreshTokenError> verifyRefreshToken(
