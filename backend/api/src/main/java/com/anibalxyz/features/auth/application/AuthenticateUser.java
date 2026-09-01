@@ -29,7 +29,7 @@ public class AuthenticateUser {
   private final MaintenancePolicy maintenancePolicy;
   private final GetUserByEmail getUserByEmail;
   private final JwtService jwtService;
-  private final RefreshTokenService refreshTokenService;
+  private final CreateRefreshToken createRefreshToken;
 
   public AuthenticateUser(
       Env env,
@@ -37,13 +37,13 @@ public class AuthenticateUser {
       MaintenancePolicy maintenancePolicy,
       GetUserByEmail getUserByEmail,
       JwtService jwtService,
-      RefreshTokenService refreshTokenService) {
+      CreateRefreshToken createRefreshToken) {
     this.env = env;
     this.clock = clock;
     this.maintenancePolicy = maintenancePolicy;
     this.getUserByEmail = getUserByEmail;
     this.jwtService = jwtService;
-    this.refreshTokenService = refreshTokenService;
+    this.createRefreshToken = createRefreshToken;
   }
 
   public Result<AuthResult, Error> execute(LoginCommand command) {
@@ -79,7 +79,7 @@ public class AuthenticateUser {
         Instant expiryDate =
             maintenancePolicy.calculateExpiryDate(
                 ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
-        RawToken refreshToken = refreshTokenService.createRefreshToken(userId, expiryDate);
+        RawToken refreshToken = createRefreshToken.execute(userId, expiryDate);
         log.info("User authenticated");
         yield Result.success(new AuthResult(accessToken, refreshToken, expiryDate));
       }

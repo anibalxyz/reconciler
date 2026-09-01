@@ -4,6 +4,7 @@ import static com.anibalxyz.shared.Constants.APP_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.auth.application.*;
+import com.anibalxyz.features.auth.domain.*;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
 import com.anibalxyz.shared.IntegrationTest;
 import com.anibalxyz.shared.ResultAsserts;
@@ -18,7 +19,10 @@ public abstract class AuthIT extends IntegrationTest {
   static final Instant MAINTENANCE_START =
       FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).with(LocalTime.of(8, 0)).toInstant();
   static final JwtService jwtService = new JwtService(APP_CONFIG.env(), testClock);
-  static RefreshTokenService refreshTokenService;
+  static RefreshTokenRepository refreshTokenRepository;
+  static RefreshTokens refreshTokens;
+  static CreateRefreshToken createRefreshToken;
+  static MaintenancePolicy maintenancePolicy;
 
   public static void validateJwt(String accessToken, Integer id) {
     var jwt = ResultAsserts.success(jwtService.validateToken(accessToken));
@@ -35,14 +39,32 @@ public abstract class AuthIT extends IntegrationTest {
 
   public static void validateRefreshToken(String token, Integer id) {
     assertThat(token).isNotNull();
-    var result = refreshTokenService.verifyRefreshToken(token, testClock.instant());
-    var refreshToken = ResultAsserts.success(result);
+
+    RawToken rawToken = ResultAsserts.success(RawToken.of(token));
+    TokenHash tokenHash = TokenHash.of(rawToken);
+
+    RefreshToken refreshToken =
+        refreshTokenRepository
+            .findByTokenHash(tokenHash)
+            .orElseThrow(() -> new AssertionError("Refresh token not found in database"));
+
     assertThat(refreshToken.userId().value()).isEqualTo(id);
+    assertThat(refreshToken.isRevoked()).isFalse();
+    assertThat(refreshToken.checkIfExpired(testClock.instant()).isSuccess()).isTrue();
   }
 
   @BeforeEach
   public void deps() {
-    var refreshTokenRepository = new JpaRefreshTokenRepository(() -> em);
-    refreshTokenService = new RefreshTokenService(refreshTokenRepository);
+    refreshTokenRepository = new JpaRefreshTokenRepository(() -> em);
+    createRefreshToken = new CreateRefreshToken(refreshTokenRepository);
+    maintenancePolicy = new MaintenancePolicy();
+    refreshTokens =
+        new RefreshTokens(
+            APP_CONFIG.env(),
+            testClock,
+            refreshTokenRepository,
+            maintenancePolicy,
+            jwtService,
+            createRefreshToken);
   }
 }

@@ -39,7 +39,7 @@ public class AuthenticateUserTest extends UnitTest {
 
   @Mock private GetUserByEmail getUserByEmail;
   @Mock private JwtService jwtService;
-  @Mock private RefreshTokenService refreshTokenService;
+  @Mock private CreateRefreshToken createRefreshToken;
 
   private AuthenticateUser authenticateUser;
 
@@ -47,7 +47,7 @@ public class AuthenticateUserTest extends UnitTest {
   void deps() {
     authenticateUser =
         new AuthenticateUser(
-            env, clock, maintenancePolicy, getUserByEmail, jwtService, refreshTokenService);
+            env, clock, maintenancePolicy, getUserByEmail, jwtService, createRefreshToken);
   }
 
   @ParameterizedTest
@@ -104,7 +104,7 @@ public class AuthenticateUserTest extends UnitTest {
             maintenancePolicy,
             getUserByEmail,
             jwtService,
-            refreshTokenService);
+            createRefreshToken);
 
     var result = authenticateUserOutsideWindow.execute(command);
     assertThat(ResultAsserts.failure(result))
@@ -125,7 +125,7 @@ public class AuthenticateUserTest extends UnitTest {
             maintenancePolicy,
             getUserByEmail,
             jwtService,
-            refreshTokenService);
+            createRefreshToken);
 
     var result = authenticateUserOutsideWindow.execute(command);
     assertThat(ResultAsserts.failure(result))
@@ -173,7 +173,7 @@ public class AuthenticateUserTest extends UnitTest {
 
     when(getUserByEmail.execute(command.email())).thenReturn(Result.success(user));
     when(jwtService.generateToken(user.id().value())).thenReturn(expectedResult.accessToken());
-    when(refreshTokenService.createRefreshToken(user.id(), expiryDate))
+    when(createRefreshToken.execute(user.id(), expiryDate))
         .thenReturn(expectedResult.refreshToken());
 
     var result = authenticateUser.execute(command);

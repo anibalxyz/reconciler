@@ -87,7 +87,11 @@ public final class DependencyContainer {
     UserRepository userRepository = new JpaUserRepository(emProvider);
     RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
 
-    // 4. Services / Use Cases / Policies
+    // 4. Domain Services / Policies
+
+    MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
+
+    // 5. Application Services / Use Cases
     GetAllUsers getAllUsers = new GetAllUsers(userRepository);
     GetUserByEmail getUserByEmail = new GetUserByEmail(userRepository);
     GetUserById getUserById = new GetUserById(userRepository);
@@ -95,19 +99,18 @@ public final class DependencyContainer {
     UpdateUserById updateUserById = new UpdateUserById(env, userRepository);
     DeleteUserById deleteUserById = new DeleteUserById(userRepository);
 
-    MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
-
-    RefreshTokenService refreshTokenService = new RefreshTokenService(refreshTokenRepository);
     JwtService jwtService = new JwtService(env, clock);
 
+    CreateRefreshToken createRefreshToken = new CreateRefreshToken(refreshTokenRepository);
     AuthenticateUser authenticateUser =
         new AuthenticateUser(
-            env, clock, maintenancePolicy, getUserByEmail, jwtService, refreshTokenService);
+            env, clock, maintenancePolicy, getUserByEmail, jwtService, createRefreshToken);
     RefreshTokens refreshTokens =
-        new RefreshTokens(env, clock, maintenancePolicy, jwtService, refreshTokenService);
+        new RefreshTokens(
+            env, clock, refreshTokenRepository, maintenancePolicy, jwtService, createRefreshToken);
     Logout logout = new Logout(refreshTokenRepository);
 
-    // 5. Handlers and Middlewares
+    // 6. Handlers and Middlewares
     // Handlers
     GetAllUsersHandler getAllUsersHandler = new GetAllUsersHandler(getAllUsers);
     GetUserByIdHandler getUserByIdHandler = new GetUserByIdHandler(getUserById);
@@ -126,7 +129,7 @@ public final class DependencyContainer {
     // Middlewares
     jwtMiddleware = new JwtMiddleware(jwtService);
 
-    // 6. Routes and Events
+    // 7. Routes and Events
     // Routes
     systemRoutes = new SystemRoutes(systemController);
     userRoutes =
