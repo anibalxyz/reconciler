@@ -16,27 +16,6 @@ public class RefreshTokenService {
     this.refreshTokenRepository = refreshTokenRepository;
   }
 
-  private static Result<RefreshToken, InvalidRefreshTokenError> checkIfExpired(
-      Instant now, RefreshToken refreshToken) {
-    if (refreshToken.isExpired(now)) {
-      // NOTE: here could add logic to invalidate all tokens for the user
-      // if an expired token is used, as it could signal a token theft attempt.
-      return Result.failure(InvalidRefreshTokenError.expired());
-    }
-    return Result.success(refreshToken);
-  }
-
-  private static Result<RefreshToken, InvalidRefreshTokenError> checkIfRevoked(
-      RefreshToken refreshToken) {
-    if (refreshToken.isRevoked()) {
-      // NOTE: here could add logic to invalidate all tokens for the user
-      // if a revoked token is used, as it could signal a token theft attempt.
-      return Result.failure(InvalidRefreshTokenError.revoked());
-    }
-
-    return Result.success(refreshToken);
-  }
-
   /**
    * If the time-window feature is enabled, the expiration date may be capped to the end of the
    * current window.
@@ -64,8 +43,8 @@ public class RefreshTokenService {
         .mapError(invalidRawTokenError -> InvalidRefreshTokenError.invalid())
         .map(TokenHash::of)
         .flatMap(this::findByHash)
-        .flatMap(refreshToken -> checkIfExpired(now, refreshToken))
-        .flatMap(RefreshTokenService::checkIfRevoked);
+        .flatMap(refreshToken -> refreshToken.checkIfExpired(now))
+        .flatMap(RefreshToken::checkIfRevoked);
   }
 
   private Result<RefreshToken, InvalidRefreshTokenError> findByHash(TokenHash tokenHash) {
