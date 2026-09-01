@@ -47,7 +47,9 @@ public class AuthenticateUser {
   }
 
   public Result<AuthResult, Error> execute(LoginCommand command) {
-    Optional<Instant> blocked = maintenancePolicy.blockedUntil(ZonedDateTime.now(clock));
+    ZonedDateTime now = ZonedDateTime.now(clock);
+
+    Optional<Instant> blocked = maintenancePolicy.blockedUntil(now);
     if (blocked.isPresent()) {
       return Result.failure(new Error.MaintenanceWindow(blocked.get()));
     }
@@ -61,29 +63,33 @@ public class AuthenticateUser {
       return Result.failure(new Error.ValidationFailed(notification));
     }
 
-    var userResult = getUserByEmail.execute(command.email());
+    return verifyCredentials(command)
+        .<Error>mapError(Error.InvalidCredentials::new)
+        .map(user -> createAuthResult(user, now));
+  }
 
-    return switch (userResult) {
-      case Result.Failure(var ignored) ->
-          Result.failure(new Error.InvalidCredentials(new InvalidCredentialsError()));
-      case Result.Success(User user) -> {
-        if (!user.passwordMatches(command.password())) {
-          yield Result.failure(new Error.InvalidCredentials(new InvalidCredentialsError()));
-        }
+  private Result<User, InvalidCredentialsError> verifyCredentials(LoginCommand command) {
+    return getUserByEmail
+        .execute(command.email())
+        .mapError(ignored -> new InvalidCredentialsError())
+        .flatMap(
+            user ->
+                user.passwordMatches(command.password())
+                    ? Result.success(user)
+                    : Result.failure(new InvalidCredentialsError()));
+  }
 
-        UserId userId = user.id();
+  private AuthResult createAuthResult(User user, ZonedDateTime now) {
+    UserId userId = user.id();
+    RequestContext.setUserId(userId.value());
 
-        RequestContext.setUserId(userId.value());
+    String accessToken = jwtService.generateToken(userId.value());
+    Instant expiryDate =
+        maintenancePolicy.calculateExpiryDate(now, env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
+    RawToken refreshToken = createRefreshToken.execute(userId, expiryDate);
 
-        String accessToken = jwtService.generateToken(userId.value());
-        Instant expiryDate =
-            maintenancePolicy.calculateExpiryDate(
-                ZonedDateTime.now(clock), env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
-        RawToken refreshToken = createRefreshToken.execute(userId, expiryDate);
-        log.info("User authenticated");
-        yield Result.success(new AuthResult(accessToken, refreshToken, expiryDate));
-      }
-    };
+    log.info("User authenticated");
+    return new AuthResult(accessToken, refreshToken, expiryDate);
   }
 
   public sealed interface Error {
