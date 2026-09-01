@@ -6,6 +6,7 @@ import static com.anibalxyz.shared.Constants.Users.VALID_EMAIL_STRING;
 import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static com.anibalxyz.shared.Constants.Users.VALID_USER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.anibalxyz.core.Result;
@@ -49,6 +50,28 @@ public class AuthenticateUserTest extends UnitTest {
     authenticateUser =
         new AuthenticateUser(
             env, clock, maintenancePolicy, getUserByEmail, jwtService, refreshTokenService);
+  }
+
+  @Test
+  @DisplayName(
+      "execute: given invalid command but outside window, then return MaintenanceWindow first")
+  void execute_invalidCommandOutsideWindow_returnMaintenanceWindow() {
+    LoginCommand command = new LoginCommand(" ", " ");
+    Clock clockOutsideWindow =
+        Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
+    var authenticateUserOutsideWindow =
+        new AuthenticateUser(
+            env,
+            clockOutsideWindow,
+            maintenancePolicy,
+            getUserByEmail,
+            jwtService,
+            refreshTokenService);
+
+    var result = authenticateUserOutsideWindow.execute(command);
+    assertThat(ResultAsserts.failure(result))
+        .isInstanceOf(AuthenticateUser.Error.MaintenanceWindow.class);
+    verifyNoInteractions(getUserByEmail);
   }
 
   @ParameterizedTest

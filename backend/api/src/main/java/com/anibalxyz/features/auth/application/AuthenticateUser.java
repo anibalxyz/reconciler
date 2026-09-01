@@ -47,6 +47,11 @@ public class AuthenticateUser {
   }
 
   public Result<AuthResult, Error> execute(LoginCommand command) {
+    Optional<Instant> blocked = maintenancePolicy.blockedUntil(ZonedDateTime.now(clock));
+    if (blocked.isPresent()) {
+      return Result.failure(new Error.MaintenanceWindow(blocked.get()));
+    }
+
     ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
 
     Email.validate(command.email()).onFailure(err -> notification.add("email", err));
@@ -54,11 +59,6 @@ public class AuthenticateUser {
 
     if (notification.hasErrors()) {
       return Result.failure(new Error.ValidationFailed(notification));
-    }
-
-    Optional<Instant> blocked = maintenancePolicy.blockedUntil(ZonedDateTime.now(clock));
-    if (blocked.isPresent()) {
-      return Result.failure(new Error.MaintenanceWindow(blocked.get()));
     }
 
     var userResult = getUserByEmail.execute(command.email());

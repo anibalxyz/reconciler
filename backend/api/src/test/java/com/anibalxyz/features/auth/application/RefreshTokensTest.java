@@ -2,6 +2,7 @@ package com.anibalxyz.features.auth.application;
 
 import static com.anibalxyz.shared.Constants.Auth.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.anibalxyz.core.Result;
@@ -53,6 +54,22 @@ public class RefreshTokensTest extends UnitTest {
     var result = serviceOutsideWindow.execute(VALID_REFRESH_RAW_TOKEN_STRING);
     assertThat(ResultAsserts.failure(result))
         .isInstanceOf(RefreshTokens.Error.MaintenanceWindow.class);
+  }
+
+  @Test
+  @DisplayName(
+      "execute: given invalid token but outside window, then return MaintenanceWindow first")
+  void execute_invalidTokenOutsideWindow_returnMaintenanceWindow() {
+    Clock clockOutsideWindow =
+        Clock.fixed(SATURDAY_MORNING.toInstant(), SATURDAY_MORNING.getZone());
+    var serviceOutsideWindow =
+        new RefreshTokens(
+            env, clockOutsideWindow, maintenancePolicy, jwtService, refreshTokenService);
+
+    var result = serviceOutsideWindow.execute("not-a-valid-token");
+    assertThat(ResultAsserts.failure(result))
+        .isInstanceOf(RefreshTokens.Error.MaintenanceWindow.class);
+    verifyNoInteractions(refreshTokenService);
   }
 
   @Test
