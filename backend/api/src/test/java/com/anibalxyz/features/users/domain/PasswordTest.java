@@ -5,13 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for Password VO")
-public class PasswordTest {
+public class PasswordTest extends UnitTest {
   @ParameterizedTest
   @ValueSource(strings = {"", " "})
   @DisplayName("of: given a  blank password, then return InvalidPasswordError with Blank reason")
@@ -48,8 +49,8 @@ public class PasswordTest {
   }
 
   @Test
-  @DisplayName("toString: given any PasswordHash object, then return an asterisks string")
-  public void toString_anyPasswordHash_returnAsterisksString() {
+  @DisplayName("toString: given any Password object, then return an asterisks string")
+  public void toString_anyPassword_returnAsterisksString() {
     // fragile if final string changes, but we assume it will not
     assertThat(VALID_PASSWORD.toString()).isEqualTo("********");
   }

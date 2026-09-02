@@ -14,12 +14,9 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for DeleteUserByIdHandler")
 public class DeleteUserByIdHandlerTest extends UnitTest {
   @Mock private DeleteUserById deleteUserById;
@@ -27,8 +24,8 @@ public class DeleteUserByIdHandlerTest extends UnitTest {
   @InjectMocks private DeleteUserByIdHandler deleteUserByIdHandler;
 
   @Test
-  @DisplayName("deleteUserById: given an invalid id, then throw BadRequestResponse")
-  public void deleteUserById_invalidId_throwBadRequestResponse() {
+  @DisplayName("handle: given an invalid id, then throw BadRequestResponse")
+  public void handle_invalidId_throwBadRequestResponse() {
     whenGettingPathParamId(ctx).thenThrow(new BadRequestResponse());
 
     assertThatThrownBy(() -> deleteUserByIdHandler.handle(ctx))
@@ -36,9 +33,8 @@ public class DeleteUserByIdHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName(
-      "deleteUserById: given the service returns UserNotFoundError, then throw FailureSignal")
-  public void deleteUserById_serviceReturnsUserNotFoundError_throwFailureSignal() {
+  @DisplayName("handle: given the service returns UserNotFoundError, then throw FailureSignal")
+  public void handle_serviceReturnsUserNotFoundError_throwFailureSignal() {
     int nonExistingId = 999;
     whenGettingPathParamId(ctx).thenReturn(nonExistingId);
     when(deleteUserById.execute(nonExistingId))
@@ -51,8 +47,8 @@ public class DeleteUserByIdHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("deleteUserById: given the service returns success, then respond 204 no content")
-  public void deleteUserById_serviceReturnsSuccess_respond204NoContent() {
+  @DisplayName("handle: given the service returns success, then respond 204 no content")
+  public void handle_serviceReturnsSuccess_respond204NoContent() {
     int validId = 1;
     whenGettingPathParamId(ctx).thenReturn(validId);
     when(deleteUserById.execute(validId)).thenReturn(Result.success(null));

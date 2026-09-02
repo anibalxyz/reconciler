@@ -86,6 +86,8 @@ public class Constants {
         ResultAsserts.success(RawToken.of(VALID_REFRESH_RAW_TOKEN_STRING));
     public static final TokenHash VALID_REFRESH_TOKEN_HASH = TokenHash.of(VALID_REFRESH_RAW_TOKEN);
 
+    public static final int MINIMUM_BCRYPT_LOG_ROUNDS = 4;
+
     public static RefreshToken buildRefreshToken(Instant expiryDate) {
       return RefreshToken.of(VALID_REFRESH_TOKEN_HASH, VALID_USER.id(), expiryDate);
     }

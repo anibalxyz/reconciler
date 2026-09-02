@@ -1,8 +1,6 @@
 package com.anibalxyz.features.users.api.routes;
 
 import static com.anibalxyz.shared.Constants.Users.*;
-import static com.anibalxyz.shared.Constants.Users.VALID_EMAIL_STRING;
-import static com.anibalxyz.shared.Constants.Users.VALID_NAME_STRING;
 import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,8 +28,8 @@ import tools.jackson.core.type.TypeReference;
 public class UpdateUserByIdIT extends UsersIT {
 
   @Test
-  @DisplayName("PUT /users/{id}: given no properties provided, then return 400 Bad Request")
-  public void PUT_users_id_noPropertiesProvided_return400() {
+  @DisplayName("given no properties provided, then respond 400 Bad Request")
+  public void noPropertiesProvided_respond400() {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
     Integer userId = user.id().value();
     UpdateUserRequest requestBody = new UpdateUserRequest(null, null, null);
@@ -48,8 +46,8 @@ public class UpdateUserByIdIT extends UsersIT {
   }
 
   @Test
-  @DisplayName("PUT /users/{id}: given an already taken email, then return 400 validation error")
-  public void PUT_users_id_alreadyTakenEmail_return400() {
+  @DisplayName("given an already taken email, then respond 400 validation error")
+  public void alreadyTakenEmail_respond400() {
     User existingUser =
         persistUser(em, "existing." + VALID_NAME_STRING, "existing." + VALID_EMAIL_STRING)
             .toDomain();
@@ -69,8 +67,8 @@ public class UpdateUserByIdIT extends UsersIT {
   }
 
   @Test
-  @DisplayName("PUT /users/{id}: given an invalid property, then return 400 validation error")
-  public void PUT_users_id_invalidProperty_return400ValidationError() {
+  @DisplayName("given an invalid property, then respond 400 validation error")
+  public void invalidProperty_respond400ValidationError() {
     User user =
         persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
     Integer userId = user.id().value();
@@ -90,8 +88,8 @@ public class UpdateUserByIdIT extends UsersIT {
 
   @ParameterizedTest
   @ValueSource(strings = {"name", "email", "password"})
-  @DisplayName("PUT /users/{id}: given valid id and property, then return 200 and the updated user")
-  public void PUT_users_id_validProperty_return200AndUpdatedUser(String updatingProp) {
+  @DisplayName("given valid id and property, then respond 200 and the updated user")
+  public void validProperty_respond200AndUpdatedUser(String updatingProp) {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
     Integer userId = user.id().value();
     Instant prevUpdatedAt = user.updatedAt();
@@ -120,9 +118,7 @@ public class UpdateUserByIdIT extends UsersIT {
         assertThat(updated.email().value()).isEqualTo(Email.normalize(request.email()));
         assertThat(responseBody.email()).isEqualTo(request.email());
       }
-      case "password" -> {
-        assertTrue(updated.passwordMatches(request.password()));
-      }
+      case "password" -> assertTrue(updated.passwordMatches(request.password()));
     }
 
     assertThat(updated.updatedAt()).isEqualTo(responseBody.updatedAt()).isAfter(prevUpdatedAt);

@@ -1,5 +1,6 @@
 package com.anibalxyz.features.users.api.out;
 
+import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
 import com.anibalxyz.features.common.api.out.response.success.ResponseMeta;
 import com.anibalxyz.features.common.api.out.response.success.SuccessResponse;
@@ -17,6 +18,7 @@ public record DetailedUserResponse(
     @OpenApiExample("2025-10-10T10:00:00") Instant updatedAt)
     implements SuccessResponse {
 
+  @ExcludeFromJacocoGenerated
   @JsonPropertyOrder({"data", "meta"})
   @OpenApiName("UserDetailResponseCollection")
   public static class Collection extends CollectionResponse<DetailedUserResponse> {

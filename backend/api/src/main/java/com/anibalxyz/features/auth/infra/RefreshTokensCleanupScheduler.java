@@ -2,7 +2,7 @@ package com.anibalxyz.features.auth.infra;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.features.auth.application.RefreshTokenService;
+import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.server.config.modules.StartupConfig;
 import io.javalin.config.JavalinConfig;
 import java.util.concurrent.Executors;
@@ -14,11 +14,11 @@ import org.slf4j.LoggerFactory;
 public class RefreshTokensCleanupScheduler implements StartupConfig {
 
   private static final Logger log = LoggerFactory.getLogger(RefreshTokensCleanupScheduler.class);
-  private final RefreshTokenService refreshTokenService;
+  private final RefreshTokenRepository refreshTokenRepository;
   private ScheduledExecutorService scheduler;
 
-  public RefreshTokensCleanupScheduler(RefreshTokenService refreshTokenService) {
-    this.refreshTokenService = refreshTokenService;
+  public RefreshTokensCleanupScheduler(RefreshTokenRepository refreshTokenRepository) {
+    this.refreshTokenRepository = refreshTokenRepository;
   }
 
   @Override
@@ -27,7 +27,7 @@ public class RefreshTokensCleanupScheduler implements StartupConfig {
 
     scheduler.scheduleAtFixedRate(
         () -> {
-          int deletedCount = refreshTokenService.cleanupExpiredTokens();
+          int deletedCount = refreshTokenRepository.deleteExpiredTokens();
           log.info("Finished scheduled refresh token cleanup", kv("deleted_count", deletedCount));
         },
         0,

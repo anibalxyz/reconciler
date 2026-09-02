@@ -32,8 +32,8 @@ public class ContractIT extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("ANY /users/{id}: given an invalid id format, then return 400 Bad Request")
-  public void ANY_users_id_invalidIdFormat_return400() {
+  @DisplayName("ANY /users/{id}: given an invalid id format, then respond 400 Bad Request")
+  public void ANY_users_id_invalidIdFormat_respond400() {
     ErrorResult expectedResult =
         InfrastructureErrorMapper.map(
             new BadRequestResponse("Invalid ID format. Must be a number."));
@@ -52,8 +52,8 @@ public class ContractIT extends IntegrationTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"GET", "PUT", "DELETE"})
-  @DisplayName("ANY /users/{id}: given a non-existing id, then return 404")
-  public void ANY_users_id_nonExistingId_return404(String method) {
+  @DisplayName("ANY /users/{id}: given a non-existing id, then respond 404")
+  public void ANY_users_id_nonExistingId_respond404(String method) {
     int nonExistingId = 999;
     ErrorResult expectedResult = ErrorMapper.map(UserNotFoundError.byId(nonExistingId));
 
@@ -78,8 +78,8 @@ public class ContractIT extends IntegrationTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"POST", "PUT"})
-  @DisplayName("ANY /users: given a malformed JSON payload, then return 400 Bad Request")
-  public void ANY_users_malformedJson_return400(String method) {
+  @DisplayName("ANY /users: given a malformed JSON payload, then respond 400 Bad Request")
+  public void ANY_users_malformedJson_respond400(String method) {
     String malformedJson =
         """
                         {
@@ -102,8 +102,8 @@ public class ContractIT extends IntegrationTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"POST", "PUT"})
-  @DisplayName("ANY /users: given an unknown property, then return 400 Bad Request")
-  public void ANY_users_unknownProperty_return400(String method) {
+  @DisplayName("ANY /users: given an unknown property, then respond 400 Bad Request")
+  public void ANY_users_unknownProperty_respond400(String method) {
     String unknownProperty = "mail";
     Map<String, String> requestBody = new HashMap<>();
     requestBody.put("name", "New User");

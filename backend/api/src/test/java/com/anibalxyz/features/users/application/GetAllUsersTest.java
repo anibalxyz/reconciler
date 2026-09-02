@@ -10,12 +10,9 @@ import com.anibalxyz.shared.UnitTest;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetAllUsers service")
 public class GetAllUsersTest extends UnitTest {
   @Mock private UserRepository userRepository;
@@ -23,19 +20,19 @@ public class GetAllUsersTest extends UnitTest {
   @InjectMocks private GetAllUsers getAllUsers;
 
   @Test
-  @DisplayName("getAllUsers: given users exist, then return a list of all users")
-  public void getAllUsers_usersExist_returnListOfUsers() {
+  @DisplayName("execute: given no users exist, then return an empty list")
+  public void execute_noUsersExist_returnEmptyList() {
+    when(userRepository.findAll()).thenReturn(List.of());
+
+    assertThat(getAllUsers.execute()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("execute: given users exist, then return a list of all users")
+  public void execute_usersExist_returnListOfUsers() {
     List<User> expectedUsers = List.of(buildUser(1), buildUser(2));
     when(userRepository.findAll()).thenReturn(expectedUsers);
 
     assertThat(getAllUsers.execute()).isEqualTo(expectedUsers);
-  }
-
-  @Test
-  @DisplayName("getAllUsers: given no users exist, then return an empty list")
-  public void getAllUsers_noUsersExist_returnEmptyList() {
-    when(userRepository.findAll()).thenReturn(List.of());
-
-    assertThat(getAllUsers.execute()).isEmpty();
   }
 }

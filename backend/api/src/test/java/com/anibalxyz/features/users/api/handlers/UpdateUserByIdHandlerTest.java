@@ -19,12 +19,9 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for UpdateUserByIdHandler")
 public class UpdateUserByIdHandlerTest extends UnitTest {
   @Mock private UpdateUserById updateUserById;
@@ -32,8 +29,8 @@ public class UpdateUserByIdHandlerTest extends UnitTest {
   @InjectMocks private UpdateUserByIdHandler updateUserByIdHandler;
 
   @Test
-  @DisplayName("updateUserById: given an invalid id, then throw BadRequestResponse")
-  public void updateUserById_invalidId_throwBadRequestResponse() {
+  @DisplayName("handle: given an invalid id, then throw BadRequestResponse")
+  public void handle_invalidId_throwBadRequestResponse() {
     whenGettingPathParamId(ctx).thenThrow(new BadRequestResponse());
 
     assertThatThrownBy(() -> updateUserByIdHandler.handle(ctx))
@@ -41,8 +38,8 @@ public class UpdateUserByIdHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("updateUserById: given the service returns Error, then throw FailureSignal")
-  public void updateUserById_serviceReturnsUpdateUserByIdError_throwFailureSignal() {
+  @DisplayName("handle: given the service returns Error, then throw FailureSignal")
+  public void handle_serviceReturnsUpdateUserByIdError_throwFailureSignal() {
     UpdateUserRequest request = mock(UpdateUserRequest.class);
     UpdateUserCommand command = mock(UpdateUserCommand.class);
     when(request.toCommand()).thenReturn(command);
@@ -59,8 +56,8 @@ public class UpdateUserByIdHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("updateUserById: given the service returns User, then respond 200 with updated user")
-  public void updateUserById_serviceReturnsUser_respond200WithUpdatedUser() {
+  @DisplayName("handle: given the service returns User, then respond 200 with updated user")
+  public void handle_serviceReturnsUser_respond200WithUpdatedUser() {
     UpdateUserRequest request =
         new UpdateUserRequest(VALID_EMAIL_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 

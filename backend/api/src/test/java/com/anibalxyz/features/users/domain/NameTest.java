@@ -4,13 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.users.domain.error.InvalidNameError;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for Name Value Object")
-public class NameTest {
+public class NameTest extends UnitTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"Name", "Some other name", "There are no format rules yet hehe"})

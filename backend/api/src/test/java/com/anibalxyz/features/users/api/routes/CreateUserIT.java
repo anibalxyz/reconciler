@@ -1,8 +1,6 @@
 package com.anibalxyz.features.users.api.routes;
 
 import static com.anibalxyz.shared.Constants.Users.*;
-import static com.anibalxyz.shared.Constants.Users.VALID_NAME_STRING;
-import static com.anibalxyz.shared.Constants.Users.VALID_PASSWORD_STRING;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -26,8 +24,8 @@ import tools.jackson.core.type.TypeReference;
 public class CreateUserIT extends UsersIT {
 
   @Test
-  @DisplayName("POST /users: given an invalid property, then return 400 validation error")
-  public void POST_users_invalidProperty_return400ValidationError() {
+  @DisplayName("given an invalid property, then respond 400 validation error")
+  public void invalidProperty_respond400ValidationError() {
     CreateUserRequest requestBody =
         new CreateUserRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
@@ -44,8 +42,8 @@ public class CreateUserIT extends UsersIT {
   }
 
   @Test
-  @DisplayName("POST /users: given a missing property, then return 400 Bad Request")
-  public void POST_users_missingProperty_return400() {
+  @DisplayName("given a missing property, then respond 400 Bad Request")
+  public void missingProperty_respond400() {
     CreateUserRequest requestBody =
         new CreateUserRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
@@ -62,8 +60,8 @@ public class CreateUserIT extends UsersIT {
   }
 
   @Test
-  @DisplayName("POST /users: given an already taken email, then return 400 validation error")
-  public void POST_users_alreadyTakenEmail_return400() {
+  @DisplayName("given an already taken email, then respond 400 validation error")
+  public void alreadyTakenEmail_respond400() {
     String existingEmail = "existing." + VALID_EMAIL_STRING;
     persistUser(em, "existing." + VALID_NAME_STRING, existingEmail);
     CreateUserRequest requestBody =
@@ -81,8 +79,8 @@ public class CreateUserIT extends UsersIT {
   }
 
   @Test
-  @DisplayName("POST /users: given valid user data, then return 201 and create the user")
-  public void POST_users_validData_return201AndCreateUser() {
+  @DisplayName("given valid user data, then respond 201 and create the user")
+  public void validData_respond201AndCreateUser() {
     CreateUserRequest requestBody =
         new CreateUserRequest("New User", "new.user@mail.com", VALID_PASSWORD_STRING);
 

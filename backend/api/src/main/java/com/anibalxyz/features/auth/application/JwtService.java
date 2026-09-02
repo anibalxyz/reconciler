@@ -1,22 +1,22 @@
 package com.anibalxyz.features.auth.application;
 
 import com.anibalxyz.core.Result;
-import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
+import javax.crypto.SecretKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JwtService {
   private static final Logger log = LoggerFactory.getLogger(JwtService.class);
-  private final JwtEnvironment env;
+  private final Env env;
   private final Clock clock;
 
-  public JwtService(JwtEnvironment env, Clock clock) {
+  public JwtService(Env env, Clock clock) {
     this.env = env;
     this.clock = clock;
   }
@@ -31,8 +31,7 @@ public class JwtService {
         .subject(subject)
         .issuedAt(iat)
         .notBefore(iat)
-        // TODO: move this calculation to ConfigurationFactory
-        .expiration(Date.from(now.plusSeconds(env.JWT_ACCESS_EXPIRATION_TIME_MINUTES() * 60)))
+        .expiration(Date.from(now.plusSeconds(env.JWT_ACCESS_EXPIRATION_TIME_SECONDS())))
         .issuer(env.JWT_ISSUER())
         .signWith(env.JWT_KEY())
         .compact();
@@ -59,6 +58,14 @@ public class JwtService {
       log.warn("Security Alert: Invalid token detected - {}", e.toString());
       return Result.failure(new JwtValidationError.Invalid());
     }
+  }
+
+  public interface Env {
+    SecretKey JWT_KEY();
+
+    String JWT_ISSUER();
+
+    long JWT_ACCESS_EXPIRATION_TIME_SECONDS();
   }
 
   public sealed interface JwtValidationError {

@@ -5,6 +5,8 @@ import io.javalin.http.Context;
 
 public final class Utils {
 
+  private Utils() {}
+
   /**
    * @throws BadRequestResponse if the ID is missing or not a valid integer.
    */

@@ -1,8 +1,10 @@
 package com.anibalxyz.server.config.environment;
 
-import com.anibalxyz.features.auth.api.env.AuthApiEnvironment;
+import com.anibalxyz.features.auth.api.AuthCookieService;
+import com.anibalxyz.features.auth.application.AuthenticateUser;
+import com.anibalxyz.features.auth.application.JwtService;
+import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.application.env.AuthEnvironment;
-import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.users.application.CreateUser;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.server.config.AppEnv;
@@ -34,7 +36,7 @@ public record AppEnvironmentSource(
     int BCRYPT_LOG_ROUNDS,
     SecretKey JWT_KEY,
     String JWT_ISSUER,
-    long JWT_ACCESS_EXPIRATION_TIME_MINUTES,
+    long JWT_ACCESS_EXPIRATION_TIME_SECONDS,
     Duration JWT_REFRESH_EXPIRATION_TIME_DAYS,
     Boolean AUTH_COOKIE_SECURE,
     String AUTH_COOKIE_DOMAIN,
@@ -44,8 +46,10 @@ public record AppEnvironmentSource(
     implements UpdateUserById.Env,
         CreateUser.Env,
         ServerConfig.Env,
-        JwtEnvironment,
-        AuthApiEnvironment,
+        AuthenticateUser.Env,
+        RefreshTokens.Env,
+        AuthCookieService.Env,
+        JwtService.Env,
         AuthEnvironment {
   @Override
   public @NonNull String toString() {

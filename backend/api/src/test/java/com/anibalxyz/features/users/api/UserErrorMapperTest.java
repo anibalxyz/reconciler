@@ -13,21 +13,16 @@ import com.anibalxyz.features.users.domain.error.*;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
 import com.anibalxyz.shared.ResultAsserts;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.*;
 
 @DisplayName("Tests for UserErrorMapper")
-public class UserErrorMapperTest {
-
+public class UserErrorMapperTest extends UnitTest {
   private static final UserNotFoundError userNotFoundError = UserNotFoundError.byId(1);
-  private UserErrorMapper mapper;
-
-  @BeforeEach
-  public void setup() {
-    mapper = new UserErrorMapper();
-  }
+  private final UserErrorMapper mapper = new UserErrorMapper();
 
   @Nested
-  @DisplayName("mapUserNotFoundError")
+  @DisplayName("mapUserNotFoundError()")
   class MapUserNotFoundError {
 
     @Test
@@ -47,7 +42,7 @@ public class UserErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("mapUpdateUserByIdError")
+  @DisplayName("mapUpdateUserByIdError()")
   class MapUpdateUserByIdError {
 
     @Test
@@ -83,7 +78,7 @@ public class UserErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("supports")
+  @DisplayName("supports()")
   class Supports {
 
     @Test
@@ -106,7 +101,7 @@ public class UserErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("map")
+  @DisplayName("map()")
   class Map {
 
     @Test
@@ -131,7 +126,7 @@ public class UserErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("supportsFieldError")
+  @DisplayName("supportsFieldError()")
   class SupportsFieldError {
 
     @Test
@@ -148,7 +143,7 @@ public class UserErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("mapFieldError")
+  @DisplayName("mapFieldError()")
   class MapFieldError {
 
     @Test
@@ -174,7 +169,7 @@ public class UserErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("mapInvalidValue")
+  @DisplayName("mapInvalidValue()")
   class MapInvalidValue {
 
     @Test
@@ -275,6 +270,13 @@ public class UserErrorMapperTest {
     @DisplayName("given InvalidPasswordHashError, then throw UnreachableCodeException")
     public void givenInvalidPasswordHashError_throwUnreachableException() {
       assertThatThrownBy(() -> mapper.mapInvalidValue(new InvalidPasswordHashError()))
+          .isInstanceOf(UnreachableCodeException.class);
+    }
+
+    @Test
+    @DisplayName("given InvalidUserIdError, then throw UnreachableCodeException")
+    public void givenInvalidUserIdError_throwUnreachableCodeException() {
+      assertThatThrownBy(() -> mapper.mapInvalidValue(new InvalidUserIdError()))
           .isInstanceOf(UnreachableCodeException.class);
     }
   }

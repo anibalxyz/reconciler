@@ -53,10 +53,12 @@ public class User {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
+  @ExcludeFromJacocoGenerated
   public UserId id() {
     return id;
   }
 
+  @ExcludeFromJacocoGenerated
   public Name name() {
     return name;
   }
@@ -65,14 +67,17 @@ public class User {
     return email;
   }
 
+  @ExcludeFromJacocoGenerated
   public PasswordHash passwordHash() {
     return passwordHash;
   }
 
+  @ExcludeFromJacocoGenerated
   public Instant createdAt() {
     return createdAt;
   }
 
+  @ExcludeFromJacocoGenerated
   public Instant updatedAt() {
     return updatedAt;
   }

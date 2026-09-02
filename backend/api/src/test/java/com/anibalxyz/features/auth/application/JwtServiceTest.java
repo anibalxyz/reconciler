@@ -3,7 +3,6 @@ package com.anibalxyz.features.auth.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.core.Result;
-import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.shared.ResultAsserts;
 import com.anibalxyz.shared.UnitTest;
 import io.jsonwebtoken.Claims;
@@ -14,14 +13,11 @@ import javax.crypto.SecretKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @DisplayName("Tests for JwtService")
-@ExtendWith(MockitoExtension.class)
 class JwtServiceTest extends UnitTest {
   private static final ZonedDateTime FIXED_NOW =
       LocalDateTime.of(2025, 11, 25, 10, 0).atZone(ZoneId.of("America/Montevideo"));
@@ -36,7 +32,7 @@ class JwtServiceTest extends UnitTest {
 
   static {
     // placed here to avoid error caused by bad order of declaration
-    env = new JwtEnvironmentStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES);
+    env = new JwtEnvironmentStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES * 60);
   }
 
   private JwtService jwtService;
@@ -125,11 +121,11 @@ class JwtServiceTest extends UnitTest {
   }
 
   private record JwtEnvironmentStub(
-      SecretKey JWT_KEY, String JWT_ISSUER, long JWT_ACCESS_EXPIRATION_TIME_MINUTES)
-      implements JwtEnvironment {
+      SecretKey JWT_KEY, String JWT_ISSUER, long JWT_ACCESS_EXPIRATION_TIME_SECONDS)
+      implements JwtService.Env {
     public JwtEnvironmentStub withJWT_KEY(SecretKey JWT_KEY) {
       return new JwtEnvironmentStub(
-          JWT_KEY, this.JWT_ISSUER, this.JWT_ACCESS_EXPIRATION_TIME_MINUTES);
+          JWT_KEY, this.JWT_ISSUER, this.JWT_ACCESS_EXPIRATION_TIME_SECONDS);
     }
   }
 }

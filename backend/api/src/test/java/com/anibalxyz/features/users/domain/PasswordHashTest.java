@@ -1,15 +1,14 @@
 package com.anibalxyz.features.users.domain;
 
+import static com.anibalxyz.shared.Constants.Auth.MINIMUM_BCRYPT_LOG_ROUNDS;
 import static com.anibalxyz.shared.Constants.Users.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
-import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.ResultAsserts;
 import com.anibalxyz.shared.UnitTest;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,14 +18,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tests for PasswordHash VO")
 public class PasswordHashTest extends UnitTest {
-  public static int BCRYPT_LOG_ROUNDS;
-  private static String HASH_PREFIX;
-
-  @BeforeAll
-  public static void setup() {
-    BCRYPT_LOG_ROUNDS = Constants.APP_ENV.BCRYPT_LOG_ROUNDS();
-    HASH_PREFIX = String.format("$2a$%02d$", BCRYPT_LOG_ROUNDS);
-  }
+  public static int BCRYPT_LOG_ROUNDS = MINIMUM_BCRYPT_LOG_ROUNDS;
+  private static final String HASH_PREFIX = String.format("$2a$%02d$", BCRYPT_LOG_ROUNDS);
 
   private static Stream<String> provideInvalidHashes() {
     return Stream.of(

@@ -14,12 +14,9 @@ import io.javalin.http.Context;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetAllUsersHandler")
 public class GetAllUsersHandlerTest extends UnitTest {
   @Mock private GetAllUsers getAllUsers;
@@ -27,8 +24,8 @@ public class GetAllUsersHandlerTest extends UnitTest {
   @InjectMocks private GetAllUsersHandler getAllUsersHandler;
 
   @Test
-  @DisplayName("getAllUsers: given there are users, then respond 200 with users list")
-  public void getAllUsers_thereAreUsers_respond200WithUsersList() {
+  @DisplayName("handle: given there are users, then respond 200 with users list")
+  public void handle_thereAreUsers_respond200WithUsersList() {
     List<User> fakeUsers = List.of(buildUser(1), buildUser(2));
 
     stubStatusChaining(ctx);
@@ -43,8 +40,8 @@ public class GetAllUsersHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("getAllUsers: given there are no users, then respond 200 with empty list")
-  public void getAllUsers_thereAreNoUsers_respond200WithEmptyList() {
+  @DisplayName("handle: given there are no users, then respond 200 with empty list")
+  public void handle_thereAreNoUsers_respond200WithEmptyList() {
     List<User> fakeUsers = List.of();
 
     stubStatusChaining(ctx);

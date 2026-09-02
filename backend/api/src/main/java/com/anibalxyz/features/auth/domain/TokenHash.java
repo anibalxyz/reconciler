@@ -1,5 +1,6 @@
 package com.anibalxyz.features.auth.domain;
 
+import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.server.exception.UnreachableCodeException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -14,13 +15,18 @@ public final class TokenHash {
   }
 
   public static TokenHash of(RawToken rawToken) {
-    try {
-      MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-      String tokenString = rawToken.value();
+    MessageDigest messageDigest = getMessageDigest();
+    String tokenString = rawToken.value();
 
-      byte[] inputBytes = tokenString.getBytes(StandardCharsets.UTF_8);
-      byte[] hashBytes = messageDigest.digest(inputBytes);
-      return new TokenHash(hashBytes);
+    byte[] inputBytes = tokenString.getBytes(StandardCharsets.UTF_8);
+    byte[] hashBytes = messageDigest.digest(inputBytes);
+    return new TokenHash(hashBytes);
+  }
+
+  @ExcludeFromJacocoGenerated
+  public static MessageDigest getMessageDigest() {
+    try {
+      return MessageDigest.getInstance("SHA-256");
     } catch (NoSuchAlgorithmException e) {
       throw UnreachableCodeException.of(e, "SHA-256 algorithm not found");
     }
@@ -34,17 +40,20 @@ public final class TokenHash {
     return Arrays.copyOf(value, value.length);
   }
 
+  @ExcludeFromJacocoGenerated
   @Override
   public int hashCode() {
     return Arrays.hashCode(value);
   }
 
+  @ExcludeFromJacocoGenerated
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof TokenHash tokenHash)) return false;
     return Arrays.equals(value, tokenHash.value);
   }
 
+  @ExcludeFromJacocoGenerated
   @Override
   public String toString() {
     return "*******";

@@ -6,8 +6,9 @@ import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.auth.api.out.AuthErrorCode;
-import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.application.JwtService;
+import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.domain.error.AuthDomainError;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
@@ -17,20 +18,16 @@ import com.anibalxyz.features.users.domain.error.UserDomainError;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.exception.UnhandledErrorException;
 import com.anibalxyz.server.exception.UnreachableCodeException;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.*;
 
 @DisplayName("Tests for AuthErrorMapper")
-public class AuthErrorMapperTest {
+public class AuthErrorMapperTest extends UnitTest {
 
-  private AuthErrorMapper mapper;
-
-  @BeforeEach
-  public void setup() {
-    mapper = new AuthErrorMapper();
-  }
+  private final AuthErrorMapper mapper = new AuthErrorMapper();
 
   @Nested
-  @DisplayName("mapInvalidCredentialsError")
+  @DisplayName("mapInvalidCredentialsError()")
   class MapInvalidCredentialsError {
 
     @Test
@@ -45,7 +42,7 @@ public class AuthErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("mapJwtValidationError")
+  @DisplayName("mapJwtValidationError()")
   class MapJwtValidationError {
 
     @Test
@@ -74,16 +71,15 @@ public class AuthErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("mapAuthenticateUserError")
+  @DisplayName("mapAuthenticateUserError()")
   class MapAuthenticateUserError {
 
     @Test
     @DisplayName("given InvalidCredentials, then delegate to mapInvalidCredentialsError")
-    public void givenInvalidCredentials_delegatesToMapInvalidCredentialsError() {
+    public void givenInvalidCredentials_delegateToMapInvalidCredentialsError() {
       ErrorResult result =
           mapper.mapAuthenticateUserError(
-              new AuthService.AuthenticateUserError.InvalidCredentials(
-                  new InvalidCredentialsError()));
+              new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError()));
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
@@ -96,7 +92,7 @@ public class AuthErrorMapperTest {
       var availableFrom = java.time.Instant.parse("2025-06-02T08:00:00Z");
       ErrorResult result =
           mapper.mapAuthenticateUserError(
-              new AuthService.AuthenticateUserError.MaintenanceWindow(availableFrom));
+              new AuthenticateUser.Error.MaintenanceWindow(availableFrom));
 
       assertThat(result.status()).isEqualTo(503);
       assertThat(result.response())
@@ -111,14 +107,14 @@ public class AuthErrorMapperTest {
       ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
       ErrorResult result =
           mapper.mapAuthenticateUserError(
-              new AuthService.AuthenticateUserError.ValidationFailed(notification));
+              new AuthenticateUser.Error.ValidationFailed(notification));
 
       assertThat(result.status()).isEqualTo(400);
     }
   }
 
   @Nested
-  @DisplayName("mapRefreshTokensError")
+  @DisplayName("mapRefreshTokensError()")
   class MapRefreshTokensError {
 
     @Test
@@ -126,8 +122,7 @@ public class AuthErrorMapperTest {
     public void givenMaintenanceWindow_return503WithDetail() {
       var availableFrom = java.time.Instant.parse("2025-06-02T08:00:00Z");
       ErrorResult result =
-          mapper.mapRefreshTokensError(
-              new AuthService.RefreshTokensError.MaintenanceWindow(availableFrom));
+          mapper.mapRefreshTokensError(new RefreshTokens.Error.MaintenanceWindow(availableFrom));
 
       assertThat(result.status()).isEqualTo(503);
       assertThat(result.response())
@@ -138,10 +133,10 @@ public class AuthErrorMapperTest {
 
     @Test
     @DisplayName("given InvalidToken, then delegate to mapInvalidRefreshTokenError")
-    public void givenInvalidToken_delegatesToMapInvalidRefreshTokenError() {
+    public void givenInvalidToken_delegateToMapInvalidRefreshTokenError() {
       InvalidRefreshTokenError tokenError = InvalidRefreshTokenError.notFound();
       ErrorResult result =
-          mapper.mapRefreshTokensError(new AuthService.RefreshTokensError.InvalidToken(tokenError));
+          mapper.mapRefreshTokensError(new RefreshTokens.Error.InvalidToken(tokenError));
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
@@ -150,7 +145,7 @@ public class AuthErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("mapInvalidRefreshTokenError")
+  @DisplayName("mapInvalidRefreshTokenError()")
   class MapInvalidRefreshTokenError {
 
     @Test
@@ -182,10 +177,20 @@ public class AuthErrorMapperTest {
       assertThat(result.response())
           .isEqualTo(new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_EXPIRED));
     }
+
+    @Test
+    @DisplayName("given Invalid reason, then return 401 with correct detail")
+    public void givenInvalid_return401WithDetail() {
+      ErrorResult result = mapper.mapInvalidRefreshTokenError(InvalidRefreshTokenError.invalid());
+
+      assertThat(result.status()).isEqualTo(401);
+      assertThat(result.response())
+          .isEqualTo(new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_INVALID));
+    }
   }
 
   @Nested
-  @DisplayName("supports")
+  @DisplayName("supports()")
   class Supports {
 
     @Test
@@ -201,22 +206,20 @@ public class AuthErrorMapperTest {
     }
 
     @Test
-    @DisplayName("given an AuthenticateUserError, then return true")
+    @DisplayName("given an Error, then return true")
     public void givenAuthenticateUserError_returnTrue() {
       assertThat(
               mapper.supports(
-                  new AuthService.AuthenticateUserError.InvalidCredentials(
-                      new InvalidCredentialsError())))
+                  new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError())))
           .isTrue();
     }
 
     @Test
-    @DisplayName("given a RefreshTokensError, then return true")
+    @DisplayName("given an Error, then return true")
     public void givenRefreshTokensError_returnTrue() {
       assertThat(
               mapper.supports(
-                  new AuthService.RefreshTokensError.InvalidToken(
-                      InvalidRefreshTokenError.notFound())))
+                  new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.notFound())))
           .isTrue();
     }
 
@@ -228,16 +231,14 @@ public class AuthErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("map")
+  @DisplayName("map()")
   class Map {
 
     @Test
-    @DisplayName("given an AuthenticateUserError, then delegate to mapAuthenticateUserError")
-    public void givenAuthenticateUserError_delegatesToMapAuthenticateUserError() {
+    @DisplayName("given an Error, then delegate to mapAuthenticateUserError")
+    public void givenAuthenticateUserError_delegateToMapAuthenticateUserError() {
       ErrorResult result =
-          mapper.map(
-              new AuthService.AuthenticateUserError.InvalidCredentials(
-                  new InvalidCredentialsError()));
+          mapper.map(new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError()));
       assertThat(result.status()).isEqualTo(401);
     }
 
@@ -249,17 +250,16 @@ public class AuthErrorMapperTest {
     }
 
     @Test
-    @DisplayName("given a RefreshTokensError, then delegate to mapRefreshTokensError")
-    public void givenRefreshTokensError_delegatesToMapRefreshTokensError() {
+    @DisplayName("given an Error, then delegate to mapRefreshTokensError")
+    public void givenRefreshTokensError_delegateToMapRefreshTokensError() {
       ErrorResult result =
-          mapper.map(
-              new AuthService.RefreshTokensError.InvalidToken(InvalidRefreshTokenError.expired()));
+          mapper.map(new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.expired()));
       assertThat(result.status()).isEqualTo(401);
     }
 
     @Test
     @DisplayName("given an InvalidCredentialsError, then delegate to mapInvalidCredentialsError")
-    public void givenInvalidCredentialsError_delegatesToMapInvalidCredentialsError() {
+    public void givenInvalidCredentialsError_delegateToMapInvalidCredentialsError() {
       ErrorResult result = mapper.map(new InvalidCredentialsError());
       assertThat(result.status()).isEqualTo(401);
     }
@@ -273,7 +273,7 @@ public class AuthErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("supportsFieldError")
+  @DisplayName("supportsFieldError()")
   class SupportsFieldError {
 
     @Test
@@ -290,13 +290,13 @@ public class AuthErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("mapFieldError")
+  @DisplayName("mapFieldError()")
   class MapFieldError {
 
     @Test
     @DisplayName(
-        "given InvalidValueError, then propagates the expected UnreachableCodeException from mapInvalidValue")
-    public void givenInvalidValueError_propagatesUnreachableCodeException() {
+        "given InvalidValueError, then propagate the expected UnreachableCodeException from mapInvalidValue")
+    public void givenInvalidValueError_propagateUnreachableCodeException() {
       AuthDomainError.InvalidValueError error = InvalidRefreshTokenError.notFound();
 
       assertThatThrownBy(() -> mapper.mapFieldError(error))
@@ -319,7 +319,7 @@ public class AuthErrorMapperTest {
   }
 
   @Nested
-  @DisplayName("mapInvalidValue")
+  @DisplayName("mapInvalidValue()")
   class MapInvalidValue {
 
     @Test

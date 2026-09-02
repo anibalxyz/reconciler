@@ -16,8 +16,8 @@ import tools.jackson.core.type.TypeReference;
 public class GetUserByIdIT extends UsersIT {
 
   @Test
-  @DisplayName("GET /users/{id}: given an existing user id, then return 200 and the user data")
-  public void GET_users_id_existingId_return200AndUser() {
+  @DisplayName("given an existing user id, then respond 200 and the user data")
+  public void existingId_respond200AndUser() {
     User user = persistUser(em, "John Doe", "john@mail.com").toDomain();
     DetailedUserResponse expected = UserMapper.toDetailResponse(user);
 

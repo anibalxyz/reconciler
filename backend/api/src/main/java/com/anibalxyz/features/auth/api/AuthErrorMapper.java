@@ -5,8 +5,9 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 import com.anibalxyz.core.domain.error.DomainError;
 import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.auth.api.out.AuthErrorCode;
-import com.anibalxyz.features.auth.application.AuthService;
+import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.application.JwtService;
+import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.domain.error.AuthDomainError;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
@@ -30,11 +31,10 @@ public class AuthErrorMapper implements FeatureErrorMapper {
         LogEntry.warn("Invalid credentials attempt"));
   }
 
-  public ErrorResult mapAuthenticateUserError(AuthService.AuthenticateUserError error) {
+  public ErrorResult mapAuthenticateUserError(AuthenticateUser.Error error) {
     return switch (error) {
-      case AuthService.AuthenticateUserError.InvalidCredentials ignored ->
-          mapInvalidCredentialsError();
-      case AuthService.AuthenticateUserError.MaintenanceWindow e ->
+      case AuthenticateUser.Error.InvalidCredentials ignored -> mapInvalidCredentialsError();
+      case AuthenticateUser.Error.MaintenanceWindow e ->
           new ErrorResult(
               503,
               new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
@@ -42,14 +42,14 @@ public class AuthErrorMapper implements FeatureErrorMapper {
               LogEntry.debug(
                   "Authentication during maintenance window",
                   kv("available_from", e.availableFrom())));
-      case AuthService.AuthenticateUserError.ValidationFailed e ->
+      case AuthenticateUser.Error.ValidationFailed e ->
           ValidationErrorMapper.map(e.notification(), ErrorMapper::mapFieldError);
     };
   }
 
-  public ErrorResult mapRefreshTokensError(AuthService.RefreshTokensError error) {
+  public ErrorResult mapRefreshTokensError(RefreshTokens.Error error) {
     return switch (error) {
-      case AuthService.RefreshTokensError.MaintenanceWindow e ->
+      case RefreshTokens.Error.MaintenanceWindow e ->
           new ErrorResult(
               503,
               new ErrorResponse(CommonErrorCode.UNAVAILABLE_SERVICE)
@@ -57,7 +57,7 @@ public class AuthErrorMapper implements FeatureErrorMapper {
               LogEntry.debug(
                   "Token refresh during maintenance window",
                   kv("available_from", e.availableFrom())));
-      case AuthService.RefreshTokensError.InvalidToken e -> mapInvalidRefreshTokenError(e.error());
+      case RefreshTokens.Error.InvalidToken e -> mapInvalidRefreshTokenError(e.error());
     };
   }
 
@@ -81,7 +81,7 @@ public class AuthErrorMapper implements FeatureErrorMapper {
       case InvalidRefreshTokenError.Reason.Invalid ignored ->
           new ErrorResult(
               401,
-              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND),
+              new ErrorResponse(AuthErrorCode.REFRESH_TOKEN_INVALID),
               LogEntry.warn("Invalid refresh token was used"));
     };
   }
@@ -89,16 +89,16 @@ public class AuthErrorMapper implements FeatureErrorMapper {
   @Override
   public boolean supports(Object error) {
     return error instanceof AuthDomainError
-        || error instanceof AuthService.AuthenticateUserError
-        || error instanceof AuthService.RefreshTokensError
+        || error instanceof AuthenticateUser.Error
+        || error instanceof RefreshTokens.Error
         || error instanceof JwtService.JwtValidationError;
   }
 
   @Override
   public ErrorResult map(Object error) {
     return switch (error) {
-      case AuthService.AuthenticateUserError e -> mapAuthenticateUserError(e);
-      case AuthService.RefreshTokensError e -> mapRefreshTokensError(e);
+      case AuthenticateUser.Error e -> mapAuthenticateUserError(e);
+      case RefreshTokens.Error e -> mapRefreshTokensError(e);
       case JwtService.JwtValidationError e -> mapJwtValidationError(e);
       case InvalidCredentialsError ignored -> mapInvalidCredentialsError();
       default -> throw new UnhandledErrorException(error);

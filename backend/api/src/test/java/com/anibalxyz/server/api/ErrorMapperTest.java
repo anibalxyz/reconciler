@@ -9,11 +9,12 @@ import com.anibalxyz.core.domain.error.InvalidValueError;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.server.exception.UnregisteredMapperException;
+import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests for ErrorMapper")
-public class ErrorMapperTest {
+public class ErrorMapperTest extends UnitTest {
 
   @Test
   @DisplayName("map: given an error with a registered mapper, then return a mapped result")

@@ -2,7 +2,9 @@ package com.anibalxyz.features.auth.domain;
 
 import static com.anibalxyz.shared.Constants.Auth.buildRefreshToken;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
+import com.anibalxyz.features.users.domain.UserId;
 import com.anibalxyz.shared.UnitTest;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
@@ -35,50 +37,62 @@ class RefreshTokenTest extends UnitTest {
     assertThat(token.isExpired(NOW)).isTrue();
   }
 
-  /* TODO: move to the layer that uses it
-    @Test
-    @DisplayName("secondsUntilExpiry: calculations")
-    void secondsUntilExpiry_calculations() {
-      // Case 1: Future (1 hour later)
-      RefreshToken futureToken = buildRefreshToken(NOW.plusSeconds(3600));
-      assertThat(futureToken.secondsUntilExpiry(NOW)).isEqualTo(3600);
-
-      // Case 2: Exact present (expired exactly now)
-      RefreshToken presentToken = buildRefreshToken(NOW);
-      assertThat(presentToken.secondsUntilExpiry(NOW)).isZero();
-
-      // Case 3: Past (expired 10 seconds ago)
-      RefreshToken pastToken = buildRefreshToken(NOW.minusSeconds(10));
-      assertThat(pastToken.secondsUntilExpiry(NOW)).isZero();
-    }
-  */
   @Test
-  @DisplayName("withRevoked: given revoked is false, then return new instance with revoked true")
-  void withRevoked_revokedFalse_returnNewInstanceWithRevokedTrue() {
-    RefreshToken original = buildRefreshToken(FUTURE);
-    RefreshToken revoked = original.withRevoked(true);
+  @DisplayName("equals: given same instance, then return true")
+  void equals_sameInstance_returnTrue() {
+    RefreshToken token = buildRefreshToken(FUTURE);
 
-    assertThat(revoked.isRevoked()).isTrue();
-    assertThat(original.isRevoked()).isFalse();
+    assertThat(token.equals(token)).isTrue();
   }
 
   @Test
-  @DisplayName("withRevoked: given any revoked value, then preserve all other fields")
-  void withRevoked_anyValue_preserveAllOtherFields() {
-    RefreshToken original = buildRefreshToken(FUTURE);
-    RefreshToken revoked = original.withRevoked(true);
+  @DisplayName("equals: given null or different class, then return false")
+  void equals_nullOrDifferentClass_returnFalse() {
+    RefreshToken token = buildRefreshToken(FUTURE);
 
-    assertThat(revoked.userId()).isEqualTo(original.userId());
-    assertThat(revoked.tokenHash()).isEqualTo(original.tokenHash());
-    assertThat(revoked.expiryDate()).isEqualTo(original.expiryDate());
+    assertThat(token.equals(null)).isFalse();
+    assertThat(token.equals("some String")).isFalse();
   }
 
   @Test
-  @DisplayName("withRevoked: given revoked is true, then return new instance with revoked false")
-  void withRevoked_revokedTrue_returnNewInstanceWithRevokedFalse() {
-    RefreshToken original = buildRefreshToken(FUTURE);
-    RefreshToken unrevoked = original.withRevoked(false);
+  @DisplayName("equals and hashCode: given same tokenHash, then return true and matching hashCode")
+  void equalsAndHashCode_sameTokenHash_returnTrueAndMatchingHashCode() {
+    TokenHash hash = mock(TokenHash.class);
+    UserId userId1 = mock(UserId.class);
+    UserId userId2 = mock(UserId.class);
 
-    assertThat(unrevoked.isRevoked()).isFalse();
+    RefreshToken token1 = RefreshToken.of(hash, userId1, FUTURE);
+    RefreshToken token2 = RefreshToken.reconstitute(hash, userId2, PAST, true);
+
+    assertThat(token1).isEqualTo(token2);
+    assertThat(token1.hashCode()).isEqualTo(token2.hashCode());
+  }
+
+  @Test
+  @DisplayName("equals: given different tokenHash, then return false")
+  void equals_differentTokenHash_returnFalse() {
+    TokenHash hash1 = mock(TokenHash.class);
+    TokenHash hash2 = mock(TokenHash.class);
+    UserId userId = mock(UserId.class);
+
+    RefreshToken token1 = RefreshToken.of(hash1, userId, FUTURE);
+    RefreshToken token2 = RefreshToken.of(hash2, userId, FUTURE);
+
+    assertThat(token1).isNotEqualTo(token2);
+  }
+
+  @Test
+  @DisplayName("equals: given null tokenHash in either instance, then return false")
+  void equals_nullTokenHash_returnFalse() {
+    TokenHash hash = mock(TokenHash.class);
+    UserId userId = mock(UserId.class);
+
+    RefreshToken tokenWithNullHash1 = RefreshToken.of(null, userId, FUTURE);
+    RefreshToken tokenWithNullHash2 = RefreshToken.of(null, userId, FUTURE);
+    RefreshToken tokenWithHash = RefreshToken.of(hash, userId, FUTURE);
+
+    assertThat(tokenWithNullHash1.equals(tokenWithHash)).isFalse();
+    assertThat(tokenWithHash.equals(tokenWithNullHash1)).isFalse();
+    assertThat(tokenWithNullHash1.equals(tokenWithNullHash2)).isFalse();
   }
 }

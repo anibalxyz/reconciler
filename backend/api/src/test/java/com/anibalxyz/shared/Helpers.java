@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import com.anibalxyz.features.auth.api.JwtMiddleware;
 import com.anibalxyz.features.auth.application.JwtService;
-import com.anibalxyz.features.auth.application.env.JwtEnvironment;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.features.users.infra.UserEntity;
@@ -126,7 +125,7 @@ public class Helpers {
     return null;
   }
 
-  public static String createValidJwt(JwtEnvironment env, Clock clock, int userId) {
+  public static String createValidJwt(JwtService.Env env, Clock clock, int userId) {
     var jwtService = new JwtService(env, clock);
     return jwtService.generateToken(userId);
   }

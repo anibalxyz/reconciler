@@ -170,12 +170,14 @@ public class ConfigurationFactory {
         Duration.ofMinutes(
                 Long.parseLong(getEnvVar("JWT_ACCESS_EXPIRATION_TIME_MINUTES", callback)))
             .toMinutes();
+    long jwtAccessExpirationTimeSeconds = jwtAccessExpirationTimeMinutes * 60;
     Duration jwtRefreshExpirationTime =
         Duration.ofDays(Long.parseLong(getEnvVar("JWT_REFRESH_EXPIRATION_TIME_DAYS", callback)));
 
     int bcryptLogRounds = Integer.parseInt(getEnvVar("BCRYPT_LOG_ROUNDS", callback));
 
     String authCookieDomain = getEnvVar("AUTH_COOKIE_DOMAIN", callback, true);
+    authCookieDomain = authCookieDomain.isBlank() ? null : authCookieDomain;
     Boolean authCookieSecure = appEnv == AppEnv.PROD;
     String authCookiePath = apiPrefix + getEnvVar("AUTH_COOKIE_PATH", callback);
 
@@ -208,10 +210,10 @@ public class ConfigurationFactory {
             bcryptLogRounds,
             jwtKey,
             jwtIssuer,
-            jwtAccessExpirationTimeMinutes,
+            jwtAccessExpirationTimeSeconds,
             jwtRefreshExpirationTime,
             authCookieSecure,
-            authCookieDomain.isBlank() ? null : authCookieDomain,
+            authCookieDomain,
             authCookieSameSite,
             authCookiePath,
             swaggerEnabled);

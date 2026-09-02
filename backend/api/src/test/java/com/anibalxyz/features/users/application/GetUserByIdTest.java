@@ -13,12 +13,9 @@ import com.anibalxyz.shared.UnitTest;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Tests for GetUserById service")
 public class GetUserByIdTest extends UnitTest {
   @Mock private UserRepository userRepository;
@@ -26,20 +23,8 @@ public class GetUserByIdTest extends UnitTest {
   @InjectMocks private GetUserById getUserById;
 
   @Test
-  @DisplayName("getUserById: given an existing id, then return the correct user")
-  public void getUserById_existingId_returnUser() {
-    User expected = VALID_USER;
-    when(userRepository.findById(expected.id().value())).thenReturn(Optional.of(expected));
-
-    var result = getUserById.execute(expected.id().value());
-
-    User actual = ResultAsserts.success(result);
-    assertThat(actual).isEqualTo(expected);
-  }
-
-  @Test
-  @DisplayName("getUserById: given a non-existing id, then return UserNotFoundError")
-  public void getUserById_nonExistingId_returnUserNotFoundError() {
+  @DisplayName("execute: given a non-existing id, then return UserNotFoundError")
+  public void execute_nonExistingId_returnUserNotFoundError() {
     int id = 999;
     when(userRepository.findById(id)).thenReturn(Optional.empty());
 
@@ -50,5 +35,17 @@ public class GetUserByIdTest extends UnitTest {
         .isInstanceOf(UserNotFoundError.class)
         .extracting(ReasonedError::getReason)
         .isEqualTo(new UserNotFoundError.Reason.ById(id));
+  }
+
+  @Test
+  @DisplayName("execute: given an existing id, then return the correct user")
+  public void execute_existingId_returnUser() {
+    User expected = VALID_USER;
+    when(userRepository.findById(expected.id().value())).thenReturn(Optional.of(expected));
+
+    var result = getUserById.execute(expected.id().value());
+
+    User actual = ResultAsserts.success(result);
+    assertThat(actual).isEqualTo(expected);
   }
 }

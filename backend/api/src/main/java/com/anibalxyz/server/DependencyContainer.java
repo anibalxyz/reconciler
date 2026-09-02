@@ -1,12 +1,13 @@
 package com.anibalxyz.server;
 
-import com.anibalxyz.features.auth.api.AuthApi;
-import com.anibalxyz.features.auth.api.AuthController;
+import com.anibalxyz.features.auth.api.AuthCookieService;
 import com.anibalxyz.features.auth.api.AuthRoutes;
 import com.anibalxyz.features.auth.api.JwtMiddleware;
-import com.anibalxyz.features.auth.application.AuthService;
-import com.anibalxyz.features.auth.application.JwtService;
-import com.anibalxyz.features.auth.application.RefreshTokenService;
+import com.anibalxyz.features.auth.api.handlers.LoginHandler;
+import com.anibalxyz.features.auth.api.handlers.LogoutHandler;
+import com.anibalxyz.features.auth.api.handlers.RefreshTokensHandler;
+import com.anibalxyz.features.auth.application.*;
+import com.anibalxyz.features.auth.domain.MaintenancePolicy;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.infra.JpaRefreshTokenRepository;
 import com.anibalxyz.features.auth.infra.RefreshTokensCleanupScheduler;
@@ -47,7 +48,6 @@ public final class DependencyContainer {
 
   private final ServerConfig serverConfig;
   private final SwaggerConfig swaggerConfig;
-  private final MicrometerPlugin micrometerPlugin;
 
   private final LifecycleConfig lifecycleConfig;
   private final ExceptionsConfig exceptionsConfig;
@@ -73,7 +73,7 @@ public final class DependencyContainer {
     // Startup Configurations
     serverConfig = new ServerConfig(config.env());
     swaggerConfig = new SwaggerConfig(config.env());
-    micrometerPlugin =
+    MicrometerPlugin micrometerPlugin =
         new MicrometerPlugin(
             micrometerPluginConfig -> micrometerPluginConfig.registry = prometheusMeterRegistry);
 
@@ -87,8 +87,11 @@ public final class DependencyContainer {
     UserRepository userRepository = new JpaUserRepository(emProvider);
     RefreshTokenRepository refreshTokenRepository = new JpaRefreshTokenRepository(emProvider);
 
-    // 4. Services
-    // Use Cases (temporary)
+    // 4. Domain Services / Policies
+
+    MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
+
+    // 5. Application Services / Use Cases
     GetAllUsers getAllUsers = new GetAllUsers(userRepository);
     GetUserByEmail getUserByEmail = new GetUserByEmail(userRepository);
     GetUserById getUserById = new GetUserById(userRepository);
@@ -96,12 +99,18 @@ public final class DependencyContainer {
     UpdateUserById updateUserById = new UpdateUserById(env, userRepository);
     DeleteUserById deleteUserById = new DeleteUserById(userRepository);
 
-    RefreshTokenService refreshTokenService = new RefreshTokenService(refreshTokenRepository);
     JwtService jwtService = new JwtService(env, clock);
-    AuthService authService =
-        new AuthService(env, clock, getUserByEmail, jwtService, refreshTokenService);
 
-    // 5. Handlers and Middlewares
+    CreateRefreshToken createRefreshToken = new CreateRefreshToken(refreshTokenRepository);
+    AuthenticateUser authenticateUser =
+        new AuthenticateUser(
+            env, clock, maintenancePolicy, getUserByEmail, jwtService, createRefreshToken);
+    RefreshTokens refreshTokens =
+        new RefreshTokens(
+            env, clock, refreshTokenRepository, maintenancePolicy, jwtService, createRefreshToken);
+    Logout logout = new Logout(refreshTokenRepository);
+
+    // 6. Handlers and Middlewares
     // Handlers
     GetAllUsersHandler getAllUsersHandler = new GetAllUsersHandler(getAllUsers);
     GetUserByIdHandler getUserByIdHandler = new GetUserByIdHandler(getUserById);
@@ -109,13 +118,18 @@ public final class DependencyContainer {
     UpdateUserByIdHandler updateUserByIdHandler = new UpdateUserByIdHandler(updateUserById);
     DeleteUserByIdHandler deleteUserByIdHandler = new DeleteUserByIdHandler(deleteUserById);
 
-    AuthApi authController = new AuthController(env, authService, refreshTokenService, clock);
+    AuthCookieService authCookieService = new AuthCookieService(clock, env);
+    LoginHandler loginHandler = new LoginHandler(authCookieService, authenticateUser);
+    LogoutHandler logoutHandler = new LogoutHandler(authCookieService, logout);
+    RefreshTokensHandler refreshTokensHandler =
+        new RefreshTokensHandler(authCookieService, refreshTokens);
+
     SystemController systemController = new SystemController(persistenceManager);
 
     // Middlewares
     jwtMiddleware = new JwtMiddleware(jwtService);
 
-    // 6. Routes and Events
+    // 7. Routes and Events
     // Routes
     systemRoutes = new SystemRoutes(systemController);
     userRoutes =
@@ -125,10 +139,10 @@ public final class DependencyContainer {
             createUserHandler,
             updateUserByIdHandler,
             deleteUserByIdHandler);
-    authRoutes = new AuthRoutes(authController);
+    authRoutes = new AuthRoutes(loginHandler, logoutHandler, refreshTokensHandler);
 
     // Events
-    refreshTokensCleanupScheduler = new RefreshTokensCleanupScheduler(refreshTokenService);
+    refreshTokensCleanupScheduler = new RefreshTokensCleanupScheduler(refreshTokenRepository);
   }
 
   public PersistenceManager persistenceManager() {
@@ -141,10 +155,6 @@ public final class DependencyContainer {
 
   public SwaggerConfig swaggerConfig() {
     return swaggerConfig;
-  }
-
-  public MicrometerPlugin micrometerPlugin() {
-    return micrometerPlugin;
   }
 
   public LifecycleConfig lifecycleConfig() {
