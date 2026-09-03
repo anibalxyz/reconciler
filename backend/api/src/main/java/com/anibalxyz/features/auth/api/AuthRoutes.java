@@ -6,6 +6,7 @@ import static io.javalin.apibuilder.ApiBuilder.post;
 import com.anibalxyz.features.auth.api.handlers.LoginHandler;
 import com.anibalxyz.features.auth.api.handlers.LogoutHandler;
 import com.anibalxyz.features.auth.api.handlers.RefreshTokensHandler;
+import com.anibalxyz.features.common.api.Role;
 import com.anibalxyz.server.config.modules.StartupConfig;
 import io.javalin.config.JavalinConfig;
 
@@ -29,9 +30,9 @@ public class AuthRoutes implements StartupConfig {
             path(
                 "/api/auth",
                 () -> {
-                  post("/login", loginHandler);
-                  post("/refresh", refreshTokensHandler);
-                  post("/logout", logoutHandler);
+                  post("/login", loginHandler, Role.GUEST);
+                  post("/refresh", refreshTokensHandler, Role.GUEST);
+                  post("/logout", logoutHandler, Role.GUEST);
                 }));
   }
 }

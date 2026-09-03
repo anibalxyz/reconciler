@@ -21,7 +21,7 @@ public class SystemRoutes implements StartupConfig {
 
   /** Assumes that SwaggerConfig has been applied */
   public void applyRedirects(JavalinConfig cfg) {
-    cfg.routes.get("/", ctx -> ctx.redirect("/swagger"));
-    cfg.routes.get("/api", ctx -> ctx.redirect("/swagger"));
+    cfg.routes.get("/", ctx -> ctx.redirect("/swagger"), Role.GUEST);
+    cfg.routes.get("/api", ctx -> ctx.redirect("/swagger"), Role.GUEST);
   }
 }

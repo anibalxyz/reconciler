@@ -24,8 +24,6 @@ public class JwtMiddleware implements StartupConfig {
     this.jwtService = jwtService;
   }
 
-  // TODO: Implement Unit Testing once this have clear functionality
-  //       Currently, it is partially covered my Integration Tests
   @ExcludeFromJacocoGenerated
   @Override
   public void apply(JavalinConfig cfg) {
@@ -35,7 +33,7 @@ public class JwtMiddleware implements StartupConfig {
   public void execute(Context ctx) {
     Set<RouteRole> permittedRoles = ctx.routeRoles();
 
-    if (permittedRoles.isEmpty() || permittedRoles.contains(Role.GUEST)) {
+    if (permittedRoles.contains(Role.GUEST)) {
       return;
     }
 

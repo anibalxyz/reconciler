@@ -1,5 +1,6 @@
 package com.anibalxyz.server.config.modules;
 
+import com.anibalxyz.features.common.api.Role;
 import io.javalin.config.JavalinConfig;
 import io.javalin.micrometer.MicrometerPlugin;
 import io.micrometer.core.instrument.Meter;
@@ -91,7 +92,8 @@ public class MetricsConfig implements StartupConfig {
         ctx -> {
           ctx.contentType("text/plain; version=0.0.4; charset=utf-8");
           ctx.result(registry.scrape());
-        });
+        },
+        Role.GUEST);
   }
 
   private void registerPlugin(JavalinConfig cfg) {
