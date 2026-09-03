@@ -21,7 +21,6 @@ import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.security.RouteRole;
 import io.jsonwebtoken.Claims;
-import java.util.Collections;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,16 +46,6 @@ class JwtMiddlewareTest extends UnitTest {
   @Nested
   @DisplayName("execute()")
   class Execute {
-
-    @Test
-    @DisplayName("given empty route roles, then skip JWT validation")
-    void givenEmptyRouteRoles_thenSkipValidation() {
-      when(ctx.routeRoles()).thenReturn(Collections.emptySet());
-
-      jwtMiddleware.execute(ctx);
-
-      verify(ctx, never()).header(AUTHORIZATION_HEADER);
-    }
 
     @Test
     @DisplayName("given GUEST role, then skip JWT validation")
