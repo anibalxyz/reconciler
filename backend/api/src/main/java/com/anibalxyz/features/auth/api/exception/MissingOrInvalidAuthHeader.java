@@ -10,6 +10,6 @@ import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
 public final class MissingOrInvalidAuthHeader extends HttpException {
 
   public MissingOrInvalidAuthHeader() {
-    super(401, CommonErrorCode.UNAUTHORIZED, "Missing or invalid Authorization header");
+    super(401, CommonErrorCode.UNAUTHENTICATED, "Missing or invalid Authorization header");
   }
 }

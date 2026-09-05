@@ -10,6 +10,6 @@ import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
 public final class AccessDenied extends HttpException {
 
   public AccessDenied() {
-    super(403, CommonErrorCode.UNAUTHORIZED, "Access denied");
+    super(403, CommonErrorCode.ACCESS_DENIED, "Access denied");
   }
 }

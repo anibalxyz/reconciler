@@ -7,6 +7,6 @@ import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
 public final class MissingRefreshTokenCookie extends HttpException {
 
   public MissingRefreshTokenCookie() {
-    super(401, CommonErrorCode.UNAUTHORIZED, "Missing refresh token in cookie");
+    super(401, CommonErrorCode.UNAUTHENTICATED, "Missing refresh token in cookie");
   }
 }

@@ -37,7 +37,8 @@ public class AuthErrorMapperTest extends UnitTest {
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
-          .isEqualTo(new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Invalid credentials"));
+          .isEqualTo(
+              new ErrorResponse(CommonErrorCode.UNAUTHENTICATED).detail("Invalid credentials"));
     }
   }
 
@@ -83,7 +84,8 @@ public class AuthErrorMapperTest extends UnitTest {
 
       assertThat(result.status()).isEqualTo(401);
       assertThat(result.response())
-          .isEqualTo(new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Invalid credentials"));
+          .isEqualTo(
+              new ErrorResponse(CommonErrorCode.UNAUTHENTICATED).detail("Invalid credentials"));
     }
 
     @Test
