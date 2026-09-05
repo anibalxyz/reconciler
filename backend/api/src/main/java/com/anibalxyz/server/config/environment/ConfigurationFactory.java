@@ -4,6 +4,7 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.anibalxyz.persistence.DatabaseVariables;
 import com.anibalxyz.server.config.AppEnv;
+import com.anibalxyz.server.exception.ConfigurationException.*;
 import io.javalin.http.SameSite;
 import io.jsonwebtoken.security.Keys;
 import java.io.FileInputStream;
@@ -14,6 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
@@ -24,7 +26,6 @@ import org.slf4j.LoggerFactory;
 // TODO: add Hikari configuration from env variables
 // TODO: all this stuff surely can be done declaratively e.g. using some POO pattern.
 //       I'm thinking in Strategy pattern
-// TODO: implement custom exceptions
 // TODO: adding a env-identifier to each variable (or set of vars) may be useful
 /**
  * A factory for creating application configuration from various sources.
@@ -79,18 +80,16 @@ public class ConfigurationFactory {
    *
    * @param appEnv The environment to load configuration for (e.g., TEST, DEV).
    * @return A new {@link ApplicationConfiguration} instance.
-   * @throws IllegalStateException if the specified .env file cannot be found or read.
+   * @throws UnableToLoadDotenvFile if the specified .env file cannot be found or read.
    */
   public static ApplicationConfiguration loadFromEnvFile(AppEnv appEnv) {
-    if (appEnv == null) {
-      throw new IllegalArgumentException("appEnv cannot be null");
-    }
+    Objects.requireNonNull(appEnv, "appEnv cannot be null");
     Properties props = new Properties();
     String appEnvString = appEnv.toString().toLowerCase();
     try (InputStream in = new FileInputStream("../.env." + appEnvString)) {
       props.load(in);
     } catch (IOException e) {
-      throw new IllegalStateException("Could not load .env file for configuration", e);
+      throw new UnableToLoadDotenvFile(e);
     }
     log.info("Loading configuration from .env file for the '{}' environment", appEnvString);
     return loadEnvironmentVariables(props::getProperty, appEnv);
@@ -103,7 +102,7 @@ public class ConfigurationFactory {
    * @param callback A function that resolves an environment variable name to its value.
    * @param appEnv The application environment (TEST, DEV, or PROD).
    * @return A fully populated {@link ApplicationConfiguration} instance.
-   * @throws IllegalStateException if a required environment variable is missing or invalid.
+   * @throws NeededPropertyException if a required environment variable is missing or invalid.
    */
   private static ApplicationConfiguration loadEnvironmentVariables(
       Function<String, String> callback, AppEnv appEnv) {
@@ -158,11 +157,11 @@ public class ConfigurationFactory {
     // JWT configuration
     String jwtSecret = getEnvVar("JWT_SECRET", callback);
     if (jwtSecret == null || jwtSecret.isBlank()) {
-      throw new IllegalArgumentException("JWT_SECRET must not be null or empty");
+      throw new InvalidProperty("JWT_SECRET", "Must not be null or empty");
     }
     byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
     if (secretBytes.length < 32) {
-      throw new IllegalArgumentException("JWT_SECRET must be at least 256 bits (32 bytes)");
+      throw new InvalidProperty("JWT_SECRET", "Must be at least 256 bits (32 bytes/characters)");
     }
     SecretKey jwtKey = Keys.hmacShaKeyFor(secretBytes);
     String jwtIssuer = getEnvVar("JWT_ISSUER", callback);
@@ -187,7 +186,7 @@ public class ConfigurationFactory {
       authCookieSameSite =
           SameSite.valueOf(getEnvVar("AUTH_COOKIE_SAMESITE", callback).toUpperCase());
     } catch (IllegalArgumentException e) {
-      throw new IllegalStateException("Invalid value for AUTH_COOKIE_SAMESITE: " + e.getMessage());
+      throw new InvalidProperty("AUTH_COOKIE_SAMESITE", "Available values are: NONE, STRICT, LAX");
     }
 
     // Feature Flags
@@ -233,14 +232,13 @@ public class ConfigurationFactory {
    * @param source A function that takes the property name and returns its value.
    * @param allowEmpty If true, allows null or blank values; if false, throws an exception.
    * @return The value of the configuration property.
-   * @throws IllegalStateException if {@code allowEmpty} is false and the property is missing or
-   *     blank.
+   * @throws MissingProperty if {@code allowEmpty} is false and the property is missing or blank.
    */
   private static String getEnvVar(
       String name, Function<String, String> source, boolean allowEmpty) {
     String value = source.apply(name);
     if (!allowEmpty && (value == null || value.isBlank())) {
-      throw new IllegalStateException("Missing required configuration property: " + name);
+      throw new MissingProperty(name);
     }
     return value;
   }
@@ -248,10 +246,13 @@ public class ConfigurationFactory {
   /**
    * Safely retrieves a required configuration value from a given source.
    *
+   * <p>This method is a convenience wrapper for {@link #getEnvVar(String, Function, boolean)} with
+   * {@code allowEmpty} set to false.
+   *
    * @param name The name of the configuration property to retrieve.
    * @param source A function that provides the value based on the name.
    * @return The non-blank value of the configuration property.
-   * @throws IllegalStateException if the property is missing or blank.
+   * @throws MissingProperty if the property is missing or blank.
    */
   private static String getEnvVar(String name, Function<String, String> source) {
     return getEnvVar(name, source, false);

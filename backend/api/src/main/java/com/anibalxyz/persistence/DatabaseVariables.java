@@ -1,5 +1,6 @@
 package com.anibalxyz.persistence;
 
+import com.anibalxyz.server.exception.ConfigurationException;
 import org.jetbrains.annotations.NotNull;
 
 /** Type-safe representation of database connection variables. */
@@ -15,18 +16,24 @@ public class DatabaseVariables {
   }
 
   /**
-   * @throws IllegalStateException if any of the required variables are null.
+   * @throws ConfigurationException.MissingProperty if any of the required variables are missing.
    */
   public static DatabaseVariables generate(
-      String host, String port, String name, String user, String password)
-      throws IllegalStateException {
-    if (host == null || name == null || user == null || password == null) {
-      throw new IllegalStateException(
-          "Missing required database environment variables (DB_HOST, DB_NAME, DB_USER, DB_PASSWORD)");
-    }
+      String host, String port, String name, String user, String password) {
+    validate(host, port, name, user, password);
+
     String url = "jdbc:postgresql://" + host + ":" + port + "/" + name;
 
     return new DatabaseVariables(url, user, password);
+  }
+
+  private static void validate(
+      String host, String port, String name, String user, String password) {
+    if (host == null) throw new ConfigurationException.MissingProperty("host");
+    if (port == null) throw new ConfigurationException.MissingProperty("port");
+    if (name == null) throw new ConfigurationException.MissingProperty("name");
+    if (user == null) throw new ConfigurationException.MissingProperty("user");
+    if (password == null) throw new ConfigurationException.MissingProperty("password");
   }
 
   public String url() {
