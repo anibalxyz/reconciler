@@ -10,6 +10,7 @@ import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 public class InfrastructureErrorMapper {
+  private static final int INVALID_RESOLVER = 12345;
 
   private static final List<Resolver> resolvers =
       List.of(new Resolver.JsonError(), new Resolver.NotFound(), new Resolver.HttpError());
@@ -46,7 +47,7 @@ public class InfrastructureErrorMapper {
     final class NotFound implements Resolver {
       @Override
       public ErrorResult execute(Exception e) {
-        if (!(e instanceof EndpointNotFound)) return new ErrorResult(404, null);
+        if (!(e instanceof EndpointNotFound)) return new ErrorResult(INVALID_RESOLVER, null);
         return new ErrorResult(
             404, new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND).detail(e.getMessage()));
       }
@@ -55,7 +56,7 @@ public class InfrastructureErrorMapper {
     final class HttpError implements Resolver {
       @Override
       public ErrorResult execute(Exception e) {
-        if (!(e instanceof HttpException hex)) return new ErrorResult(500, null);
+        if (!(e instanceof HttpException hex)) return new ErrorResult(INVALID_RESOLVER, null);
         return new ErrorResult(
             hex.status(), new ErrorResponse(hex.errorCode()).detail(hex.detail()));
       }
