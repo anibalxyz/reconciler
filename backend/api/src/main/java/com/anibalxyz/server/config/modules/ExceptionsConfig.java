@@ -11,13 +11,11 @@ import com.anibalxyz.server.context.RequestContext;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
-import io.javalin.http.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.event.Level;
 
-// TODO: use a more semantic name for this class
 public class ExceptionsConfig implements StartupConfig {
 
   private static final Logger log = LoggerFactory.getLogger(ExceptionsConfig.class);
@@ -34,10 +32,6 @@ public class ExceptionsConfig implements StartupConfig {
 
           ctx.status(result.status()).json(result.response().instance(requestId));
         });
-
-    // Force Javalin's built-in exceptions to pass through our centralized mapper.
-    // Will be obsolete when fully migrated to custom exceptions.
-    cfg.routes.exception(HttpResponseException.class, this::handleException);
 
     cfg.routes.exception(
         Exception.class,

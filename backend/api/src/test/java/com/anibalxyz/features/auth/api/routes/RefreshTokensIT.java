@@ -7,6 +7,7 @@ import static com.anibalxyz.shared.Helpers.getValueFromCookie;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anibalxyz.features.auth.api.exception.MissingRefreshTokenCookie;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthenticateUser;
@@ -17,7 +18,6 @@ import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.server.api.ErrorMapper;
 import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
-import io.javalin.http.UnauthorizedResponse;
 import java.util.Map;
 import okhttp3.Response;
 import org.junit.jupiter.api.DisplayName;
@@ -27,10 +27,9 @@ import org.junit.jupiter.api.Test;
 public class RefreshTokensIT extends AuthIT {
 
   @Test
-  @DisplayName("given missing refreshToken cookie, then respond with 401 Unauthorized")
-  void missingCookie_respond401Unauthorized() {
-    ErrorResult expectedResult =
-        InfrastructureErrorMapper.map(new UnauthorizedResponse("Missing refresh token in cookie"));
+  @DisplayName("given missing refreshToken cookie, then respond with 401 MissingRefreshTokenCookie")
+  void missingCookie_respond401MissingRefreshTokenCookie() {
+    ErrorResult expectedResult = InfrastructureErrorMapper.map(new MissingRefreshTokenCookie());
 
     Map<String, String> cookie = Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=");
 

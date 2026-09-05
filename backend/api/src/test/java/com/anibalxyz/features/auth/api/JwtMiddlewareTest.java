@@ -11,14 +11,14 @@ import static org.mockito.Mockito.when;
 
 import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.features.auth.api.exception.AccessDenied;
+import com.anibalxyz.features.auth.api.exception.MissingOrInvalidAuthHeader;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.application.JwtService.JwtValidationError;
 import com.anibalxyz.features.common.api.Role;
 import com.anibalxyz.server.context.RequestContext;
 import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.Context;
-import io.javalin.http.ForbiddenResponse;
-import io.javalin.http.UnauthorizedResponse;
 import io.javalin.security.RouteRole;
 import io.jsonwebtoken.Claims;
 import java.util.Set;
@@ -74,8 +74,8 @@ class JwtMiddlewareTest extends UnitTest {
     }
 
     @Test
-    @DisplayName("given permitted role without AUTHENTICATED, then throw ForbiddenResponse")
-    void givenUnmatchedRole_thenThrowForbiddenResponse() {
+    @DisplayName("given permitted role without AUTHENTICATED, then throw AccessDenied")
+    void givenUnmatchedRole_thenThrowAccessDenied() {
       RouteRole customRole = mock(RouteRole.class);
       when(ctx.routeRoles()).thenReturn(Set.of(customRole));
       when(ctx.header(AUTHORIZATION_HEADER)).thenReturn(BEARER_PREFIX + "valid-token");
@@ -84,9 +84,7 @@ class JwtMiddlewareTest extends UnitTest {
       when(claims.getSubject()).thenReturn("42");
       when(jwtService.validateToken("valid-token")).thenReturn(Result.success(claims));
 
-      assertThatThrownBy(() -> jwtMiddleware.execute(ctx))
-          .isInstanceOf(ForbiddenResponse.class)
-          .hasMessage("Access denied");
+      assertThatThrownBy(() -> jwtMiddleware.execute(ctx)).isInstanceOf(AccessDenied.class);
     }
   }
 
@@ -95,23 +93,21 @@ class JwtMiddlewareTest extends UnitTest {
   class ValidateJwt {
 
     @Test
-    @DisplayName("given null header, then throw UnauthorizedResponse")
-    void givenNullHeader_thenThrowUnauthorizedResponse() {
+    @DisplayName("given null header, then throw MissingOrInvalidAuthHeader")
+    void givenNullHeader_thenThrowMissingOrInvalidAuthHeader() {
       when(ctx.header(AUTHORIZATION_HEADER)).thenReturn(null);
 
       assertThatThrownBy(() -> jwtMiddleware.validateJwt(ctx))
-          .isInstanceOf(UnauthorizedResponse.class)
-          .hasMessage("Missing or invalid Authorization header");
+          .isInstanceOf(MissingOrInvalidAuthHeader.class);
     }
 
     @Test
-    @DisplayName("given header without Bearer prefix, then throw UnauthorizedResponse")
-    void givenHeaderWithoutBearer_thenThrowUnauthorizedResponse() {
+    @DisplayName("given header without Bearer prefix, then throw MissingOrInvalidAuthHeader")
+    void givenHeaderWithoutBearer_thenThrowMissingOrInvalidAuthHeader() {
       when(ctx.header(AUTHORIZATION_HEADER)).thenReturn("A" + BEARER_PREFIX + "xyz123");
 
       assertThatThrownBy(() -> jwtMiddleware.validateJwt(ctx))
-          .isInstanceOf(UnauthorizedResponse.class)
-          .hasMessage("Missing or invalid Authorization header");
+          .isInstanceOf(MissingOrInvalidAuthHeader.class);
     }
 
     @Test

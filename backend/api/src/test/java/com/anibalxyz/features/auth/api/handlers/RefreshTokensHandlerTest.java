@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.auth.api.AuthCookieService;
+import com.anibalxyz.features.auth.api.exception.MissingRefreshTokenCookie;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.application.out.AuthResult;
@@ -14,7 +15,6 @@ import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.shared.ResultAsserts;
 import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.Context;
-import io.javalin.http.UnauthorizedResponse;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.*;
@@ -36,13 +36,12 @@ public class RefreshTokensHandlerTest extends UnitTest {
 
   @ParameterizedTest
   @NullAndEmptySource
-  @DisplayName("handle: given missing refresh token cookie, then throw UnauthorizedResponse")
-  public void handle_missingRefreshTokenCookie_throwUnauthorizedResponse(String value) {
+  @DisplayName("handle: given missing refresh token cookie, then throw MissingRefreshTokenCookie")
+  public void handle_missingRefreshTokenCookie_throwMissingRefreshTokenCookie(String value) {
     when(authCookieService.getRefreshTokenCookie(ctx)).thenReturn(value);
 
     assertThatThrownBy(() -> refreshTokensHandler.handle(ctx))
-        .isInstanceOf(UnauthorizedResponse.class)
-        .hasMessage("Missing refresh token in cookie");
+        .isInstanceOf(MissingRefreshTokenCookie.class);
   }
 
   @Test
