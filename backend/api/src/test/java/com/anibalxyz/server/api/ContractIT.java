@@ -3,13 +3,13 @@ package com.anibalxyz.server.api;
 import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anibalxyz.core.api.exception.InvalidIdFormat;
 import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.api.in.UpdateUserRequest;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.shared.IntegrationTest;
-import io.javalin.http.BadRequestResponse;
 import java.util.HashMap;
 import java.util.Map;
 import okhttp3.Response;
@@ -32,11 +32,9 @@ public class ContractIT extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("ANY /users/{id}: given an invalid id format, then respond 400 Bad Request")
+  @DisplayName("ANY /users/{id}: given an invalid id format, then respond 400 InvalidIdFormat")
   public void ANY_users_id_invalidIdFormat_respond400() {
-    ErrorResult expectedResult =
-        InfrastructureErrorMapper.map(
-            new BadRequestResponse("Invalid ID format. Must be a number."));
+    ErrorResult expectedResult = InfrastructureErrorMapper.map(new InvalidIdFormat("abc"));
 
     Response response = http.get("/users/abc", createJwtHeader(validJwt));
     assertThat(400).isEqualTo(response.code()).isEqualTo(expectedResult.status());
@@ -45,8 +43,6 @@ public class ContractIT extends IntegrationTest {
     ErrorResponse actual = http.parseBody(response, new TypeReference<>() {});
     assertThat(actual.title()).isEqualTo(expected.title());
     assertThat(actual.code()).isEqualTo(expected.code());
-    // NOTE: this is fragile as we are assuming BadRequestResponse.message
-    //       Once we use custom exception, this will be cleaner
     assertThat(actual.detail()).isEqualTo(expected.detail());
   }
 

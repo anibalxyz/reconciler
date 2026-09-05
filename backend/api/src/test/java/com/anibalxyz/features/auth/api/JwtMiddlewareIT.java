@@ -4,6 +4,7 @@ import static com.anibalxyz.shared.Constants.Users.*;
 import static com.anibalxyz.shared.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anibalxyz.features.auth.api.exception.MissingOrInvalidAuthHeader;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
@@ -14,7 +15,6 @@ import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.server.api.InfrastructureErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.IntegrationTest;
-import io.javalin.http.UnauthorizedResponse;
 import java.time.*;
 import java.util.Map;
 import okhttp3.Response;
@@ -37,11 +37,9 @@ public class JwtMiddlewareIT extends IntegrationTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"missingHeader", "invalidHeader", "missingJwt"})
-  @DisplayName("ANY /*: given missing JWT, then respond with 401 Auth")
-  void ANY_endpoint_missingJwt_respond401Unauthorized(String cause) {
-    ErrorResult expectedResult =
-        InfrastructureErrorMapper.map(
-            new UnauthorizedResponse("Missing or invalid Authorization header"));
+  @DisplayName("ANY /*: given missing JWT, then respond with 401 MissingOrInvalidAuthHeader")
+  void ANY_endpoint_missingJwt_respond401MissingOrInvalidAuthHeader(String cause) {
+    ErrorResult expectedResult = InfrastructureErrorMapper.map(new MissingOrInvalidAuthHeader());
 
     Map<String, String> headers =
         switch (cause) {
@@ -57,8 +55,6 @@ public class JwtMiddlewareIT extends IntegrationTest {
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(401);
 
     ErrorResponse actualResponseBody = http.parseBody(response, ErrorResponse.class);
-    // NOTE: this is fragile as we are assuming UnauthorizedResponse.message
-    //       Once we use custom exception, this will be cleaner
     assertThat(actualResponseBody.instance()).isNotNull();
     assertThat(actualResponseBody.instance(null)).isEqualTo(expectedResult.response());
   }

@@ -2,14 +2,14 @@ package com.anibalxyz.features.auth.api;
 
 import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
 import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.features.auth.api.exception.AccessDenied;
+import com.anibalxyz.features.auth.api.exception.MissingOrInvalidAuthHeader;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.Role;
 import com.anibalxyz.server.config.modules.StartupConfig;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
-import io.javalin.http.ForbiddenResponse;
-import io.javalin.http.UnauthorizedResponse;
 import io.javalin.security.RouteRole;
 import java.util.Set;
 
@@ -45,7 +45,7 @@ public class JwtMiddleware implements StartupConfig {
     Set<RouteRole> userRoles = Set.of(Role.AUTHENTICATED);
 
     if (userRoles.stream().noneMatch(permittedRoles::contains)) {
-      throw new ForbiddenResponse("Access denied");
+      throw new AccessDenied();
     }
   }
 
@@ -53,7 +53,7 @@ public class JwtMiddleware implements StartupConfig {
     String authHeader = ctx.header(AUTHORIZATION_HEADER);
 
     if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
-      throw new UnauthorizedResponse("Missing or invalid Authorization header");
+      throw new MissingOrInvalidAuthHeader();
     }
 
     String token = authHeader.substring(BEARER_PREFIX.length());

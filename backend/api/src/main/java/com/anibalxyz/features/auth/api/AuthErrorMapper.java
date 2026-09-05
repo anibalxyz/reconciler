@@ -27,7 +27,7 @@ public class AuthErrorMapper implements FeatureErrorMapper {
   public ErrorResult mapInvalidCredentialsError() {
     return new ErrorResult(
         401,
-        new ErrorResponse(CommonErrorCode.UNAUTHORIZED).detail("Invalid credentials"),
+        new ErrorResponse(CommonErrorCode.UNAUTHENTICATED).detail("Invalid credentials"),
         LogEntry.warn("Invalid credentials attempt"));
   }
 
@@ -125,7 +125,7 @@ public class AuthErrorMapper implements FeatureErrorMapper {
   }
 
   public ErrorResult mapJwtValidationError(JwtService.JwtValidationError jwe) {
-    ErrorResponse base = new ErrorResponse(CommonErrorCode.UNAUTHORIZED);
+    ErrorResponse base = new ErrorResponse(CommonErrorCode.UNAUTHENTICATED);
     return switch (jwe) {
       case JwtService.JwtValidationError.Invalid ignored ->
           new ErrorResult(

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.anibalxyz.core.api.exception.InvalidIdFormat;
 import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.exception.FailureSignal;
 import com.anibalxyz.features.users.api.UserMapper;
@@ -14,7 +15,6 @@ import com.anibalxyz.features.users.application.GetUserById;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.shared.UnitTest;
-import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,11 +42,11 @@ public class GetUserByIdHandlerTest extends UnitTest {
   }
 
   @Test
-  @DisplayName("handle: given an invalid id, then throw BadRequestResponse")
-  public void handle_invalidId_throwBadRequestResponse() {
-    whenGettingPathParamId(ctx).thenThrow(new BadRequestResponse());
+  @DisplayName("handle: given an invalid id, then throw InvalidIdFormat")
+  public void handle_invalidId_throwInvalidIdFormat() {
+    whenGettingPathParamId(ctx).thenThrow(new InvalidIdFormat("abc"));
 
-    assertThatThrownBy(() -> getUserByIdHandler.handle(ctx)).isInstanceOf(BadRequestResponse.class);
+    assertThatThrownBy(() -> getUserByIdHandler.handle(ctx)).isInstanceOf(InvalidIdFormat.class);
   }
 
   @Test

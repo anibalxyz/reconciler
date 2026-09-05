@@ -1,9 +1,10 @@
 package com.anibalxyz.server.exception;
 
 import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
+import com.anibalxyz.reconciler.exception.ReconcilerException;
 
 @ExcludeFromJacocoGenerated
-public final class UnreachableCodeException extends IllegalStateException {
+public final class UnreachableCodeException extends ReconcilerException {
 
   private UnreachableCodeException(String message) {
     super(message);
