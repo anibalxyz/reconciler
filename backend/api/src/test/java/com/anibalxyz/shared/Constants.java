@@ -10,6 +10,7 @@ import com.anibalxyz.server.config.environment.AppEnvironmentSource;
 import com.anibalxyz.server.config.environment.ApplicationConfiguration;
 import com.anibalxyz.server.config.environment.ConfigurationFactory;
 import java.time.Instant;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +26,26 @@ public class Constants {
   public static void init() {
     if (initialized) return;
 
-    APP_CONFIG = ConfigurationFactory.loadForTest();
+    String[] args = getArgs();
+    APP_CONFIG = ConfigurationFactory.load(args);
     APP_ENV = APP_CONFIG.env();
 
     initialized = true;
     log.info("Constants initialized: {}", APP_CONFIG);
+  }
+
+  private static String @NonNull [] getArgs() {
+    String[] args;
+    if (Boolean.parseBoolean(System.getProperty("useSystemEnv", "false"))) {
+      args = new String[] {};
+    } else {
+      String envFile = System.getProperty("envFile");
+      args =
+          (envFile != null && !envFile.isBlank())
+              ? new String[] {"--env-file", envFile}
+              : new String[] {};
+    }
+    return args;
   }
 
   public static final class Users {

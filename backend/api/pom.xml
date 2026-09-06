@@ -90,6 +90,16 @@
 
     <profiles>
         <profile>
+            <id>test-default-env-file</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <envFile>../.env.test</envFile>
+                <test.argLine>-Xshare:off ${mockito.agent} -DenvFile=${envFile}</test.argLine>
+            </properties>
+        </profile>
+        <profile>
             <id>dist</id>
             <build>
                 <plugins>

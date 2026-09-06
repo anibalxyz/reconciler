@@ -7,10 +7,12 @@ import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.exception.ConfigurationException.*;
 import io.javalin.http.SameSite;
 import io.jsonwebtoken.security.Keys;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -40,24 +42,11 @@ public class ConfigurationFactory {
 
   private ConfigurationFactory() {}
 
-  /**
-   * Loads configuration specifically for the test environment.
-   *
-   * <p>It first checks for system environment variables. If not found, it falls back to loading
-   * from the {@code .env.test} file. This allows tests to run consistently both locally and in
-   * CI/CD environments.
-   *
-   * @return An {@link ApplicationConfiguration} instance for testing.
-   */
-  public static ApplicationConfiguration loadForTest() {
-    // TODO: make this logic global -> requires a CLI argument
-    // This logic allows tests to run both locally (reading .env.test)
-    // and in a containerized environment (reading system env vars).
-    if (System.getenv("APP_ENV") != null) {
-      return loadFromEnv();
-    } else {
-      return loadFromEnvFile(AppEnv.TEST);
-    }
+  public static ApplicationConfiguration load(String[] args) {
+    return ArgParser.find("--env-file", args)
+        .map(Paths::get)
+        .map(ConfigurationFactory::loadFromEnvFile)
+        .orElseGet(ConfigurationFactory::loadFromEnv);
   }
 
   /**
@@ -67,32 +56,28 @@ public class ConfigurationFactory {
    * @return A new {@link ApplicationConfiguration} instance.
    */
   public static ApplicationConfiguration loadFromEnv() {
-    AppEnv appEnv = AppEnv.parseFromString(getEnvVar("APP_ENV", System::getenv));
-    log.info(
-        "Loading configuration from the system environment for the '{}' environment",
-        appEnv.name().toLowerCase());
-    return loadEnvironmentVariables(System::getenv, appEnv);
+    log.info("Loading configuration from the system environment.");
+    return loadEnvironmentVariables(System::getenv);
   }
 
   /**
    * Loads configuration from a {@code .env.{appEnv}} file from the project's root. This method is
    * intended for local development, allowing developers to manage environment variables in a file.
    *
-   * @param appEnv The environment to load configuration for (e.g., TEST, DEV).
    * @return A new {@link ApplicationConfiguration} instance.
    * @throws UnableToLoadDotenvFile if the specified .env file cannot be found or read.
    */
-  public static ApplicationConfiguration loadFromEnvFile(AppEnv appEnv) {
-    Objects.requireNonNull(appEnv, "appEnv cannot be null");
+  public static ApplicationConfiguration loadFromEnvFile(Path path) {
+    Objects.requireNonNull(path, "'path' cannot be null");
+
     Properties props = new Properties();
-    String appEnvString = appEnv.toString().toLowerCase();
-    try (InputStream in = new FileInputStream("../.env." + appEnvString)) {
+    try (InputStream in = Files.newInputStream(path)) {
       props.load(in);
     } catch (IOException e) {
       throw new UnableToLoadDotenvFile(e);
     }
-    log.info("Loading configuration from .env file for the '{}' environment", appEnvString);
-    return loadEnvironmentVariables(props::getProperty, appEnv);
+    log.info("Loading configuration from .env file.");
+    return loadEnvironmentVariables(props::getProperty);
   }
 
   /**
@@ -100,12 +85,12 @@ public class ConfigurationFactory {
    * source. It constructs the final {@link ApplicationConfiguration} object.
    *
    * @param callback A function that resolves an environment variable name to its value.
-   * @param appEnv The application environment (TEST, DEV, or PROD).
    * @return A fully populated {@link ApplicationConfiguration} instance.
    * @throws NeededPropertyException if a required environment variable is missing or invalid.
    */
   private static ApplicationConfiguration loadEnvironmentVariables(
-      Function<String, String> callback, AppEnv appEnv) {
+      Function<String, String> callback) {
+    AppEnv appEnv = AppEnv.parseFromString(getEnvVar("APP_ENV", callback));
 
     ZoneId systemTimezone = ZoneId.of(getEnvVar("SYSTEM_TIMEZONE", callback));
     String systemTimeOverrideString = getEnvVar("SYSTEM_TIME_OVERRIDE", callback, true);
