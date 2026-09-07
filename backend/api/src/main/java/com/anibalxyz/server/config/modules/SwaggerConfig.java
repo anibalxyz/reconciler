@@ -1,5 +1,6 @@
 package com.anibalxyz.server.config.modules;
 
+import com.anibalxyz.features.common.api.Role;
 import com.anibalxyz.server.config.AppEnv;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
@@ -54,7 +55,8 @@ public class SwaggerConfig implements StartupConfig {
 
   public void registerSwaggerPlugin(JavalinConfig javalinConfig) {
     javalinConfig.registerPlugin(
-        new SwaggerPlugin(swaggerConfig -> swaggerConfig.withUiPath("/swagger")));
+        new SwaggerPlugin(
+            swaggerConfig -> swaggerConfig.withUiPath("/swagger").withRoles(Role.GUEST)));
   }
 
   private void registerOpenApiPlugin(JavalinConfig javalinConfig) {
@@ -63,6 +65,7 @@ public class SwaggerConfig implements StartupConfig {
             openApiConfig ->
                 openApiConfig
                     .withDocumentationPath("/openapi")
+                    .withRoles(Role.GUEST)
                     .withDefinitionConfiguration(this::definitionConfiguration)
             //                    .withDefinitionProcessor(this::definitionProcessor)
             ));
