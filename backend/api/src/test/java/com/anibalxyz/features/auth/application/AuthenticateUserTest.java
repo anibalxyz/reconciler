@@ -33,7 +33,7 @@ import org.mockito.Mock;
 public class AuthenticateUserTest extends UnitTest {
   private static final Instant FIXED_INSTANT = Instant.parse("2025-01-01T12:00:00Z");
   private static final Duration DURATION = Duration.ofDays(7);
-  private static final ConfigStub configStub = new ConfigStub(DURATION);
+  private static final SettingsStub configStub = new SettingsStub(DURATION);
   private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
   private static final MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
 
@@ -181,6 +181,6 @@ public class AuthenticateUserTest extends UnitTest {
     assertThat(authResult).isEqualTo(expectedResult);
   }
 
-  private record ConfigStub(Duration jwtRefreshExpirationTimeDays)
-      implements AuthenticateUser.Config {}
+  private record SettingsStub(Duration jwtRefreshExpirationTimeDays)
+      implements AuthenticateUser.Settings {}
 }

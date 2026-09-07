@@ -8,7 +8,7 @@ import java.util.function.Function;
  * which one it is.
  */
 @FunctionalInterface
-public interface ConfigValueReader {
+public interface SettingsReader {
   /**
    * Adapts a name-to-value source (e.g. {@code System::getenv}) into a reader.
    *
@@ -16,7 +16,7 @@ public interface ConfigValueReader {
    * @return a reader throwing {@link ConfigurationException.MissingProperty} for missing or blank
    *     required values
    */
-  static ConfigValueReader from(Function<String, String> source)
+  static SettingsReader from(Function<String, String> source)
       throws ConfigurationException.MissingProperty {
     return (name, allowEmpty) -> {
       String value = source.apply(name);

@@ -13,11 +13,11 @@ public class UpdateUserById {
 
   private static final Logger log = LoggerFactory.getLogger(UpdateUserById.class);
 
-  private final Config config;
+  private final Settings settings;
   private final UserRepository userRepository;
 
-  public UpdateUserById(Config config, UserRepository userRepository) {
-    this.config = config;
+  public UpdateUserById(Settings settings, UserRepository userRepository) {
+    this.settings = settings;
     this.userRepository = userRepository;
   }
 
@@ -104,7 +104,7 @@ public class UpdateUserById {
     user = data.email().map(user::withEmail).orElse(user);
     user =
         data.password()
-            .map(password -> PasswordHash.of(password, config.bcryptLogRounds()))
+            .map(password -> PasswordHash.of(password, settings.bcryptLogRounds()))
             .map(user::withPasswordHash)
             .orElse(user);
     return user;
@@ -119,7 +119,7 @@ public class UpdateUserById {
     }
   }
 
-  public interface Config {
+  public interface Settings {
     int bcryptLogRounds();
   }
 

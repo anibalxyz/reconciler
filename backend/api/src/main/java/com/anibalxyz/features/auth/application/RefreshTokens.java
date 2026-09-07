@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class RefreshTokens {
   private static final Logger log = LoggerFactory.getLogger(RefreshTokens.class);
-  private final Config config;
+  private final Settings settings;
   private final Clock clock;
   private final RefreshTokenRepository refreshTokenRepository;
   private final MaintenancePolicy maintenancePolicy;
@@ -23,13 +23,13 @@ public class RefreshTokens {
   private final CreateRefreshToken createRefreshToken;
 
   public RefreshTokens(
-      Config config,
+      Settings settings,
       Clock clock,
       RefreshTokenRepository refreshTokenRepository,
       MaintenancePolicy maintenancePolicy,
       JwtService jwtService,
       CreateRefreshToken createRefreshToken) {
-    this.config = config;
+    this.settings = settings;
     this.clock = clock;
     this.refreshTokenRepository = refreshTokenRepository;
     this.maintenancePolicy = maintenancePolicy;
@@ -46,7 +46,7 @@ public class RefreshTokens {
     }
 
     Instant expiryDate =
-        maintenancePolicy.calculateExpiryDate(now, config.jwtRefreshExpirationTimeDays());
+        maintenancePolicy.calculateExpiryDate(now, settings.jwtRefreshExpirationTimeDays());
     return verifyRefreshToken(refreshTokenString, now.toInstant())
         .onSuccess(oldToken -> refreshTokenRepository.revoke(oldToken.tokenHash()))
         .map(
@@ -85,7 +85,7 @@ public class RefreshTokens {
     record InvalidToken(InvalidRefreshTokenError error) implements Error {}
   }
 
-  public interface Config {
+  public interface Settings {
     Duration jwtRefreshExpirationTimeDays();
   }
 

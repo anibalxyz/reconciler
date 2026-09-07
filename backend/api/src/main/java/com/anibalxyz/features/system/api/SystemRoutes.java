@@ -4,10 +4,10 @@ import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.modules.StartupConfig;
+import com.anibalxyz.server.config.modules.StartupModule;
 import io.javalin.config.JavalinConfig;
 
-public class SystemRoutes implements StartupConfig {
+public class SystemRoutes implements StartupModule {
   private final SystemApi systemApi;
 
   public SystemRoutes(SystemApi systemApi) {
@@ -19,7 +19,7 @@ public class SystemRoutes implements StartupConfig {
     cfg.routes.apiBuilder(() -> path("/health", () -> get(systemApi::healthCheck, Role.GUEST)));
   }
 
-  /** Assumes that SwaggerConfig has been applied */
+  /** Assumes that SwaggerModule has been applied */
   public void applyRedirects(JavalinConfig cfg) {
     cfg.routes.get("/", ctx -> ctx.redirect("/swagger"), Role.GUEST);
     cfg.routes.get("/api", ctx -> ctx.redirect("/swagger"), Role.GUEST);

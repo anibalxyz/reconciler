@@ -1,6 +1,6 @@
 package com.anibalxyz.server.config.modules;
 
-import static com.anibalxyz.server.config.modules.MetricsConfig.METRICS_PATH;
+import static com.anibalxyz.server.config.modules.MetricsModule.METRICS_PATH;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import io.javalin.config.JavalinConfig;
@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-public class AccessLogConfig implements StartupConfig {
+public class AccessLogModule implements StartupModule {
 
   public static final String REQUEST_START_TIME_ATTR = "requestStartTime";
   private static final Logger log = LoggerFactory.getLogger("reconciler.access");

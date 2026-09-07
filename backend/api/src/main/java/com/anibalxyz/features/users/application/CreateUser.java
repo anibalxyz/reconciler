@@ -11,11 +11,11 @@ import org.slf4j.LoggerFactory;
 public class CreateUser {
   private static final Logger log = LoggerFactory.getLogger(CreateUser.class);
 
-  private final Config config;
+  private final Settings settings;
   private final UserRepository userRepository;
 
-  public CreateUser(Config config, UserRepository userRepository) {
-    this.config = config;
+  public CreateUser(Settings settings, UserRepository userRepository) {
+    this.settings = settings;
     this.userRepository = userRepository;
   }
 
@@ -42,14 +42,14 @@ public class CreateUser {
       return Result.failure(notification);
     }
 
-    PasswordHash password = PasswordHash.of(passwordResult.unwrap(), config.bcryptLogRounds());
+    PasswordHash password = PasswordHash.of(passwordResult.unwrap(), settings.bcryptLogRounds());
 
     log.info("User created");
     return Result.success(
         userRepository.save(User.create(nameResult.unwrap(), emailResult.unwrap(), password)));
   }
 
-  public interface Config {
+  public interface Settings {
     int bcryptLogRounds();
   }
 }

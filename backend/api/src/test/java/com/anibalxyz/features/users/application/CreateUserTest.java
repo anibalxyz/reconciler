@@ -28,8 +28,8 @@ public class CreateUserTest extends UnitTest {
 
   @BeforeEach
   void deps() {
-    CreateUser.Config config = new TestConfig(MINIMUM_BCRYPT_LOG_ROUNDS);
-    createUser = new CreateUser(config, userRepository);
+    CreateUser.Settings settings = new TestSettings(MINIMUM_BCRYPT_LOG_ROUNDS);
+    createUser = new CreateUser(settings, userRepository);
   }
 
   @Test
@@ -235,5 +235,5 @@ public class CreateUserTest extends UnitTest {
     assertTrue(actual.passwordMatches(request.password()));
   }
 
-  private record TestConfig(int bcryptLogRounds) implements CreateUser.Config {}
+  private record TestSettings(int bcryptLogRounds) implements CreateUser.Settings {}
 }

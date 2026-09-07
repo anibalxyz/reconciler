@@ -15,12 +15,12 @@ import io.javalin.openapi.schema.OpenApiSchemaBuilder;
  * information, contact details, license information, and server configurations. The OpenAPI
  * specification follows industry standards and provides complete API documentation.
  */
-public class SwaggerConfig implements StartupConfig {
+public class SwaggerModule implements StartupModule {
 
   private final Config config;
   private final AppEnv appEnv;
 
-  public SwaggerConfig(Config config, AppEnv appEnv) {
+  public SwaggerModule(Config config, AppEnv appEnv) {
     this.config = config;
     this.appEnv = appEnv;
   }

@@ -21,8 +21,8 @@ import org.mockito.Mock;
 public class AuthCookieServiceTest extends UnitTest {
 
   private static final Instant NOW = Instant.parse("2025-01-01T12:00:00Z");
-  private static final TestConfig testConfig =
-      new TestConfig(true, "example.com", SameSite.STRICT, "/");
+  private static final TestSettings testConfig =
+      new TestSettings(true, "example.com", SameSite.STRICT, "/");
 
   @Mock private Context ctx;
   private AuthCookieService authCookieService;
@@ -33,12 +33,12 @@ public class AuthCookieServiceTest extends UnitTest {
     authCookieService = new AuthCookieService(clock, testConfig);
   }
 
-  private record TestConfig(
+  private record TestSettings(
       Boolean authCookieSecure,
       String authCookieDomain,
       SameSite authCookieSamesite,
       String authCookiePath)
-      implements AuthCookieService.Config {}
+      implements AuthCookieService.Settings {}
 
   @Nested
   @DisplayName("Tests for secondsUntilExpiry")

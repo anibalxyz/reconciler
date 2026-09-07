@@ -1,12 +1,12 @@
 package com.anibalxyz.persistence;
 
-import com.anibalxyz.server.config.ConfigValueReader;
-import com.anibalxyz.server.config.groups.ConfigGroup;
+import com.anibalxyz.server.config.SettingsReader;
+import com.anibalxyz.server.config.settings.Settings;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Type-safe representation of database connection variables. */
-public class DatabaseVariables implements ConfigGroup {
+public class DatabaseVariables implements Settings {
   private final String url;
   private final String user;
   private final String password;
@@ -17,7 +17,7 @@ public class DatabaseVariables implements ConfigGroup {
     this.password = password;
   }
 
-  public static DatabaseVariables from(ConfigValueReader reader) {
+  public static DatabaseVariables from(SettingsReader reader) {
     String name = reader.read("DB_NAME");
     String user = reader.read("DB_USER");
     String password = reader.read("DB_PASSWORD");

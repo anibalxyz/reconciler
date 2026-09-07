@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class AuthenticateUser {
   private static final Logger log = LoggerFactory.getLogger(AuthenticateUser.class);
-  private final Config config;
+  private final Settings settings;
   private final Clock clock;
   private final MaintenancePolicy maintenancePolicy;
   private final GetUserByEmail getUserByEmail;
@@ -32,13 +32,13 @@ public class AuthenticateUser {
   private final CreateRefreshToken createRefreshToken;
 
   public AuthenticateUser(
-      Config config,
+      Settings settings,
       Clock clock,
       MaintenancePolicy maintenancePolicy,
       GetUserByEmail getUserByEmail,
       JwtService jwtService,
       CreateRefreshToken createRefreshToken) {
-    this.config = config;
+    this.settings = settings;
     this.clock = clock;
     this.maintenancePolicy = maintenancePolicy;
     this.getUserByEmail = getUserByEmail;
@@ -85,7 +85,7 @@ public class AuthenticateUser {
 
     String accessToken = jwtService.generateToken(userId.value());
     Instant expiryDate =
-        maintenancePolicy.calculateExpiryDate(now, config.jwtRefreshExpirationTimeDays());
+        maintenancePolicy.calculateExpiryDate(now, settings.jwtRefreshExpirationTimeDays());
     RawToken refreshToken = createRefreshToken.execute(userId, expiryDate);
 
     log.info("User authenticated");
@@ -101,7 +101,7 @@ public class AuthenticateUser {
         implements Error {}
   }
 
-  public interface Config {
+  public interface Settings {
     Duration jwtRefreshExpirationTimeDays();
   }
 }

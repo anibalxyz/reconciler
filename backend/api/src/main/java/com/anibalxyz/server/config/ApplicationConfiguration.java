@@ -4,10 +4,10 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.anibalxyz.core.AppEnv;
 import com.anibalxyz.persistence.DatabaseVariables;
-import com.anibalxyz.server.config.groups.ClockConfig;
-import com.anibalxyz.server.config.groups.FeatureFlags;
-import com.anibalxyz.server.config.groups.HttpServerConfig;
-import com.anibalxyz.server.config.groups.SecurityConfig;
+import com.anibalxyz.server.config.settings.ClockSettings;
+import com.anibalxyz.server.config.settings.FeatureFlags;
+import com.anibalxyz.server.config.settings.HttpServerSettings;
+import com.anibalxyz.server.config.settings.SecuritySettings;
 import com.anibalxyz.server.exception.ConfigurationException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -19,17 +19,17 @@ import org.slf4j.LoggerFactory;
 public class ApplicationConfiguration {
   private static final Logger log = LoggerFactory.getLogger(ApplicationConfiguration.class);
   private final AppEnv appEnv;
-  private final SecurityConfig security;
-  private final HttpServerConfig httpServer;
-  private final ClockConfig clock;
+  private final SecuritySettings security;
+  private final HttpServerSettings httpServer;
+  private final ClockSettings clock;
   private final DatabaseVariables database;
   private final FeatureFlags featureFlags;
 
   private ApplicationConfiguration(
       AppEnv appEnv,
-      HttpServerConfig httpServer,
-      ClockConfig clock,
-      SecurityConfig security,
+      HttpServerSettings httpServer,
+      ClockSettings clock,
+      SecuritySettings security,
       DatabaseVariables database,
       FeatureFlags featureFlags) {
     this.appEnv = appEnv;
@@ -41,18 +41,23 @@ public class ApplicationConfiguration {
   }
 
   public static ApplicationConfiguration from(Function<String, String> callback) {
-    ConfigValueReader reader = ConfigValueReader.from(callback);
+    SettingsReader reader = SettingsReader.from(callback);
 
     AppEnv appEnv = getAppEnvFromString(reader.read("APP_ENV"));
-    SecurityConfig securityConfig = SecurityConfig.from(reader, appEnv);
-    HttpServerConfig httpServerConfig = HttpServerConfig.from(reader, appEnv);
-    ClockConfig clockConfig = ClockConfig.from(reader);
+    SecuritySettings securitySettings = SecuritySettings.from(reader, appEnv);
+    HttpServerSettings httpServerSettings = HttpServerSettings.from(reader, appEnv);
+    ClockSettings clockSettings = ClockSettings.from(reader);
     FeatureFlags featureFlags = FeatureFlags.from(reader);
     DatabaseVariables databaseVariables = DatabaseVariables.from(reader);
 
     var result =
         new ApplicationConfiguration(
-            appEnv, httpServerConfig, clockConfig, securityConfig, databaseVariables, featureFlags);
+            appEnv,
+            httpServerSettings,
+            clockSettings,
+            securitySettings,
+            databaseVariables,
+            featureFlags);
 
     logLoadedConfiguration(result, appEnv);
     return result;
@@ -91,15 +96,15 @@ public class ApplicationConfiguration {
     return appEnv;
   }
 
-  public SecurityConfig security() {
+  public SecuritySettings security() {
     return security;
   }
 
-  public HttpServerConfig httpServer() {
+  public HttpServerSettings httpServer() {
     return httpServer;
   }
 
-  public ClockConfig clock() {
+  public ClockSettings clock() {
     return clock;
   }
 

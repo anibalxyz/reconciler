@@ -1,9 +1,9 @@
-package com.anibalxyz.server.config.groups;
+package com.anibalxyz.server.config.settings;
 
 import com.anibalxyz.core.AppEnv;
-import com.anibalxyz.server.config.ConfigValueReader;
-import com.anibalxyz.server.config.modules.ServerConfig;
-import com.anibalxyz.server.config.modules.SwaggerConfig;
+import com.anibalxyz.server.config.SettingsReader;
+import com.anibalxyz.server.config.modules.ServerModule;
+import com.anibalxyz.server.config.modules.SwaggerModule;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,8 +11,8 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HttpServerConfig implements ConfigGroup, ServerConfig.Config, SwaggerConfig.Config {
-  private static final Logger log = LoggerFactory.getLogger(HttpServerConfig.class);
+public class HttpServerSettings implements Settings, ServerModule.Config, SwaggerModule.Config {
+  private static final Logger log = LoggerFactory.getLogger(HttpServerSettings.class);
   private final String serverUrl;
   private final String apiUrl;
   private final int apiPort;
@@ -20,7 +20,7 @@ public class HttpServerConfig implements ConfigGroup, ServerConfig.Config, Swagg
   private final String[] corsAllowedOrigins;
   private final String contactEmail;
 
-  private HttpServerConfig(
+  private HttpServerSettings(
       String serverUrl,
       String apiUrl,
       int apiPort,
@@ -35,7 +35,7 @@ public class HttpServerConfig implements ConfigGroup, ServerConfig.Config, Swagg
     this.contactEmail = contactEmail;
   }
 
-  public static HttpServerConfig from(ConfigValueReader reader, AppEnv appEnv) {
+  public static HttpServerSettings from(SettingsReader reader, AppEnv appEnv) {
     String apiProtocol = reader.read("API_PROTOCOL", true);
     if (apiProtocol == null || apiProtocol.isBlank()) {
       apiProtocol = appEnv == AppEnv.PROD ? "https" : "http";
@@ -71,7 +71,7 @@ public class HttpServerConfig implements ConfigGroup, ServerConfig.Config, Swagg
 
     String contactEmail = reader.read("CONTACT_EMAIL");
 
-    return new HttpServerConfig(
+    return new HttpServerSettings(
         serverUrl, apiUrl, apiPort, apiPublicUrl, corsAllowedOrigins, contactEmail);
   }
 

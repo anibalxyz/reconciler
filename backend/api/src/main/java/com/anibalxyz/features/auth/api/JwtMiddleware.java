@@ -6,14 +6,14 @@ import com.anibalxyz.features.auth.api.exception.AccessDenied;
 import com.anibalxyz.features.auth.api.exception.MissingOrInvalidAuthHeader;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.modules.StartupConfig;
+import com.anibalxyz.server.config.modules.StartupModule;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.security.RouteRole;
 import java.util.Set;
 
-public class JwtMiddleware implements StartupConfig {
+public class JwtMiddleware implements StartupModule {
 
   public static final String JWT_USER_ID = "jwt_userId";
   public static final String AUTHORIZATION_HEADER = "Authorization";

@@ -8,7 +8,7 @@ import com.anibalxyz.features.auth.domain.TokenHash;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.server.config.ApplicationConfiguration;
 import com.anibalxyz.server.config.ConfigurationFactory;
-import com.anibalxyz.server.config.groups.SecurityConfig;
+import com.anibalxyz.server.config.settings.SecuritySettings;
 import java.time.Instant;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 public class Constants {
   private static final Logger log = LoggerFactory.getLogger(Constants.class);
   public static ApplicationConfiguration config;
-  public static SecurityConfig securityConfig;
+  public static SecuritySettings securitySettings;
   private static boolean initialized;
 
   public static void init() {
@@ -26,7 +26,7 @@ public class Constants {
 
     String[] args = getArgs();
     config = ConfigurationFactory.load(args);
-    securityConfig = config.security();
+    securitySettings = config.security();
 
     initialized = true;
     log.info("Test constants initialized.");
@@ -58,7 +58,7 @@ public class Constants {
     public static final Password VALID_PASSWORD =
         ResultAsserts.success(Password.of(VALID_PASSWORD_STRING));
     public static final PasswordHash VALID_PASSWORD_HASH =
-        PasswordHash.of(VALID_PASSWORD, securityConfig.bcryptLogRounds());
+        PasswordHash.of(VALID_PASSWORD, securitySettings.bcryptLogRounds());
 
     /**
      * A pre-built user whose credentials match the VALID_* constants

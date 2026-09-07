@@ -13,11 +13,11 @@ import org.slf4j.LoggerFactory;
 
 public class JwtService {
   private static final Logger log = LoggerFactory.getLogger(JwtService.class);
-  private final Config config;
+  private final Settings settings;
   private final Clock clock;
 
-  public JwtService(Config config, Clock clock) {
-    this.config = config;
+  public JwtService(Settings settings, Clock clock) {
+    this.settings = settings;
     this.clock = clock;
   }
 
@@ -31,9 +31,9 @@ public class JwtService {
         .subject(subject)
         .issuedAt(iat)
         .notBefore(iat)
-        .expiration(Date.from(now.plusSeconds(config.jwtAccessExpirationTimeSeconds())))
-        .issuer(config.jwtIssuer())
-        .signWith(config.jwtKey())
+        .expiration(Date.from(now.plusSeconds(settings.jwtAccessExpirationTimeSeconds())))
+        .issuer(settings.jwtIssuer())
+        .signWith(settings.jwtKey())
         .compact();
   }
 
@@ -44,7 +44,7 @@ public class JwtService {
     try {
       return Result.success(
           Jwts.parser()
-              .verifyWith(config.jwtKey())
+              .verifyWith(settings.jwtKey())
               .clock(() -> Date.from(clock.instant()))
               .build()
               .parseSignedClaims(token)
@@ -60,7 +60,7 @@ public class JwtService {
     }
   }
 
-  public interface Config {
+  public interface Settings {
     SecretKey jwtKey();
 
     String jwtIssuer();

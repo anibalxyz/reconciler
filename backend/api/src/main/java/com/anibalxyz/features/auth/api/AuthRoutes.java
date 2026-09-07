@@ -7,10 +7,10 @@ import com.anibalxyz.features.auth.api.handlers.LoginHandler;
 import com.anibalxyz.features.auth.api.handlers.LogoutHandler;
 import com.anibalxyz.features.auth.api.handlers.RefreshTokensHandler;
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.modules.StartupConfig;
+import com.anibalxyz.server.config.modules.StartupModule;
 import io.javalin.config.JavalinConfig;
 
-public class AuthRoutes implements StartupConfig {
+public class AuthRoutes implements StartupModule {
   private final LoginHandler loginHandler;
   private final LogoutHandler logoutHandler;
   private final RefreshTokensHandler refreshTokensHandler;

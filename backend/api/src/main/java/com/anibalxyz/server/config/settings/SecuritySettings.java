@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config.groups;
+package com.anibalxyz.server.config.settings;
 
 import com.anibalxyz.core.AppEnv;
 import com.anibalxyz.features.auth.api.AuthCookieService;
@@ -7,7 +7,7 @@ import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.users.application.CreateUser;
 import com.anibalxyz.features.users.application.UpdateUserById;
-import com.anibalxyz.server.config.ConfigValueReader;
+import com.anibalxyz.server.config.SettingsReader;
 import com.anibalxyz.server.exception.ConfigurationException;
 import io.javalin.http.SameSite;
 import io.jsonwebtoken.security.Keys;
@@ -18,14 +18,14 @@ import java.util.Map;
 import javax.crypto.SecretKey;
 import org.jspecify.annotations.NonNull;
 
-public class SecurityConfig
-    implements ConfigGroup,
-        UpdateUserById.Config,
-        CreateUser.Config,
-        AuthenticateUser.Config,
-        RefreshTokens.Config,
-        AuthCookieService.Config,
-        JwtService.Config {
+public class SecuritySettings
+    implements Settings,
+        UpdateUserById.Settings,
+        CreateUser.Settings,
+        AuthenticateUser.Settings,
+        RefreshTokens.Settings,
+        AuthCookieService.Settings,
+        JwtService.Settings {
   private final int bcryptLogRounds;
   private final SecretKey jwtKey;
   private final String jwtIssuer;
@@ -36,7 +36,7 @@ public class SecurityConfig
   private final SameSite authCookieSameSite;
   private final String authCookiePath;
 
-  private SecurityConfig(
+  private SecuritySettings(
       int bcryptLogRounds,
       SecretKey jwtKey,
       String jwtIssuer,
@@ -58,7 +58,7 @@ public class SecurityConfig
     this.authCookiePath = authCookiePath;
   }
 
-  public static SecurityConfig from(ConfigValueReader reader, AppEnv appEnv) {
+  public static SecuritySettings from(SettingsReader reader, AppEnv appEnv) {
 
     // JWT configuration
     String jwtSecret = reader.read("JWT_SECRET");
@@ -96,7 +96,7 @@ public class SecurityConfig
           "AUTH_COOKIE_SAMESITE", "Available values are: NONE, STRICT, LAX");
     }
 
-    return new SecurityConfig(
+    return new SecuritySettings(
         bcryptLogRounds,
         jwtKey,
         jwtIssuer,

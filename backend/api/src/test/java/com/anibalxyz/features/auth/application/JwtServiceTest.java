@@ -28,11 +28,11 @@ class JwtServiceTest extends UnitTest {
   private static final String JWT_ISSUER = "test-issuer";
   private static final long JWT_EXPIRATION_MINUTES = 30L;
   private static final int USER_ID = 123;
-  private static final JwtConfigStub jwtConfigStub;
+  private static final JwtSettingsStub jwtConfigStub;
 
   static {
     // placed here to avoid error caused by bad order of declaration
-    jwtConfigStub = new JwtConfigStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES * 60);
+    jwtConfigStub = new JwtSettingsStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES * 60);
   }
 
   private JwtService jwtService;
@@ -123,11 +123,11 @@ class JwtServiceTest extends UnitTest {
     assertThat(failure).isInstanceOf(JwtService.JwtValidationError.Missing.class);
   }
 
-  private record JwtConfigStub(
+  private record JwtSettingsStub(
       SecretKey jwtKey, String jwtIssuer, long jwtAccessExpirationTimeSeconds)
-      implements JwtService.Config {
-    public JwtConfigStub withJWT_KEY(SecretKey JWT_KEY) {
-      return new JwtConfigStub(JWT_KEY, this.jwtIssuer, this.jwtAccessExpirationTimeSeconds);
+      implements JwtService.Settings {
+    public JwtSettingsStub withJWT_KEY(SecretKey JWT_KEY) {
+      return new JwtSettingsStub(JWT_KEY, this.jwtIssuer, this.jwtAccessExpirationTimeSeconds);
     }
   }
 }

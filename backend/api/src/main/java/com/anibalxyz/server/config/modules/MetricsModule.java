@@ -20,14 +20,14 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MetricsConfig implements StartupConfig {
+public class MetricsModule implements StartupModule {
 
   public static final String METRICS_PATH = "/internal/metrics";
-  private static final Logger log = LoggerFactory.getLogger(MetricsConfig.class);
+  private static final Logger log = LoggerFactory.getLogger(MetricsModule.class);
   private final MicrometerPlugin plugin;
   private final PrometheusMeterRegistry registry;
 
-  public MetricsConfig(MicrometerPlugin plugin, PrometheusMeterRegistry registry) {
+  public MetricsModule(MicrometerPlugin plugin, PrometheusMeterRegistry registry) {
     this.plugin = plugin;
     this.registry = registry;
   }

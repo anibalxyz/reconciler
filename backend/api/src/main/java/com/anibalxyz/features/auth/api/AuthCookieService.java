@@ -8,12 +8,12 @@ import java.time.Instant;
 
 public class AuthCookieService {
   public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
-  private final Config config;
+  private final Settings settings;
   private final Clock clock;
 
-  public AuthCookieService(Clock clock, Config config) {
+  public AuthCookieService(Clock clock, Settings settings) {
     this.clock = clock;
-    this.config = config;
+    this.settings = settings;
   }
 
   public static long secondsUntilExpiry(Instant expiryDate, Instant now) {
@@ -34,12 +34,12 @@ public class AuthCookieService {
         new Cookie(
             REFRESH_TOKEN_COOKIE,
             refreshToken,
-            config.authCookiePath(),
+            settings.authCookiePath(),
             (int) maxAgeInSeconds,
-            config.authCookieSecure(),
+            settings.authCookieSecure(),
             true,
-            config.authCookieDomain(),
-            config.authCookieSamesite());
+            settings.authCookieDomain(),
+            settings.authCookieSamesite());
 
     ctx.cookie(cookie);
   }
@@ -48,7 +48,7 @@ public class AuthCookieService {
     return ctx.cookie(REFRESH_TOKEN_COOKIE);
   }
 
-  public interface Config {
+  public interface Settings {
     Boolean authCookieSecure();
 
     String authCookieDomain();

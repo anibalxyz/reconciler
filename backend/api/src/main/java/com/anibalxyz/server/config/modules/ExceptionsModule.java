@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.event.Level;
 
-public class ExceptionsConfig implements StartupConfig {
+public class ExceptionsModule implements StartupModule {
 
-  private static final Logger log = LoggerFactory.getLogger(ExceptionsConfig.class);
+  private static final Logger log = LoggerFactory.getLogger(ExceptionsModule.class);
 
   @Override
   public void apply(JavalinConfig cfg) {

@@ -1,21 +1,21 @@
-package com.anibalxyz.server.config.groups;
+package com.anibalxyz.server.config.settings;
 
-import com.anibalxyz.server.config.ConfigValueReader;
+import com.anibalxyz.server.config.SettingsReader;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ClockConfig implements ConfigGroup {
+public class ClockSettings implements Settings {
   private final ZoneId systemTimezone;
   private final Instant systemTimeOverride;
 
-  private ClockConfig(ZoneId systemTimezone, Instant systemTimeOverride) {
+  private ClockSettings(ZoneId systemTimezone, Instant systemTimeOverride) {
     this.systemTimezone = systemTimezone;
     this.systemTimeOverride = systemTimeOverride;
   }
 
-  public static ClockConfig from(ConfigValueReader reader) {
+  public static ClockSettings from(SettingsReader reader) {
     ZoneId systemTimezone = ZoneId.of(reader.read("SYSTEM_TIMEZONE"));
     String systemTimeOverrideString = reader.read("SYSTEM_TIME_OVERRIDE", true);
     Instant systemTimeOverride =
@@ -23,7 +23,7 @@ public class ClockConfig implements ConfigGroup {
             ? null
             : Instant.parse(systemTimeOverrideString);
 
-    return new ClockConfig(systemTimezone, systemTimeOverride);
+    return new ClockSettings(systemTimezone, systemTimeOverride);
   }
 
   public ZoneId systemTimezone() {

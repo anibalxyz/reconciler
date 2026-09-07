@@ -10,11 +10,11 @@ import jakarta.persistence.EntityManager;
  * This class hooks into Javalin's request lifecycle to handle resources that need to be created and
  * torn down for each HTTP request.
  */
-public class LifecycleConfig implements StartupConfig {
+public class LifecycleModule implements StartupModule {
 
   private final PersistenceManager persistenceManager;
 
-  public LifecycleConfig(PersistenceManager persistenceManager) {
+  public LifecycleModule(PersistenceManager persistenceManager) {
     this.persistenceManager = persistenceManager;
   }
 

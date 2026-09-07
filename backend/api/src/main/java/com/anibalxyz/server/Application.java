@@ -5,7 +5,7 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 import com.anibalxyz.core.AppEnv;
 import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.ApplicationConfiguration;
-import com.anibalxyz.server.config.groups.ClockConfig;
+import com.anibalxyz.server.config.settings.ClockSettings;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
@@ -41,7 +41,7 @@ public class Application {
 
   /**
    * Convenience factory for {@link AppEnv#DEV} and {@link AppEnv#PROD}: delegates to {@link
-   * #create(ApplicationConfiguration, Clock)} with {@link #buildClock(AppEnv, ClockConfig)}}.
+   * #create(ApplicationConfiguration, Clock)} with {@link #buildClock(AppEnv, ClockSettings)}}.
    */
   public static Application create(ApplicationConfiguration config) {
     return create(config, buildClock(config.appEnv(), config.clock()));
@@ -122,7 +122,7 @@ public class Application {
    * @param config the datetime configuration
    * @return the resolved clock
    */
-  public static Clock buildClock(AppEnv appEnv, ClockConfig config) {
+  public static Clock buildClock(AppEnv appEnv, ClockSettings config) {
     if (appEnv == AppEnv.PROD) {
       return Clock.system(config.systemTimezone());
     }
