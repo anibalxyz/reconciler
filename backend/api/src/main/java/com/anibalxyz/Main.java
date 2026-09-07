@@ -1,8 +1,8 @@
 package com.anibalxyz;
 
 import com.anibalxyz.server.Application;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.environment.ConfigurationFactory;
+import com.anibalxyz.server.config.ApplicationConfiguration;
+import com.anibalxyz.server.config.ConfigurationFactory;
 
 public class Main {
   public static void main(String[] args) {
@@ -11,6 +11,6 @@ public class Main {
 
     Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
 
-    server.start(config.env().API_PORT());
+    server.start(config.httpServer().apiPort());
   }
 }

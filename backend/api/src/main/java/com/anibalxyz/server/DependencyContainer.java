@@ -20,8 +20,8 @@ import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.persistence.EntityManagerProvider;
 import com.anibalxyz.persistence.PersistenceManager;
-import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
+import com.anibalxyz.server.config.ApplicationConfiguration;
+import com.anibalxyz.server.config.groups.SecurityConfig;
 import com.anibalxyz.server.config.modules.AccessLogConfig;
 import com.anibalxyz.server.config.modules.ExceptionsConfig;
 import com.anibalxyz.server.config.modules.LifecycleConfig;
@@ -64,15 +64,15 @@ public final class DependencyContainer {
 
   public DependencyContainer(ApplicationConfiguration config, Clock clock) {
     // 1. Infrastructure
-    AppEnvironmentSource env = config.env();
+    SecurityConfig securityConfig = config.security();
     EntityManagerProvider emProvider = new JavalinContextEntityManagerProvider();
     var prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     persistenceManager = new PersistenceManager(config.database());
 
     // 2. Configurations
     // Startup Configurations
-    serverConfig = new ServerConfig(config.env());
-    swaggerConfig = new SwaggerConfig(config.env());
+    serverConfig = new ServerConfig(config.httpServer());
+    swaggerConfig = new SwaggerConfig(config.httpServer(), config.appEnv());
     MicrometerPlugin micrometerPlugin =
         new MicrometerPlugin(
             micrometerPluginConfig -> micrometerPluginConfig.registry = prometheusMeterRegistry);
@@ -95,19 +95,29 @@ public final class DependencyContainer {
     GetAllUsers getAllUsers = new GetAllUsers(userRepository);
     GetUserByEmail getUserByEmail = new GetUserByEmail(userRepository);
     GetUserById getUserById = new GetUserById(userRepository);
-    CreateUser createUser = new CreateUser(env, userRepository);
-    UpdateUserById updateUserById = new UpdateUserById(env, userRepository);
+    CreateUser createUser = new CreateUser(securityConfig, userRepository);
+    UpdateUserById updateUserById = new UpdateUserById(securityConfig, userRepository);
     DeleteUserById deleteUserById = new DeleteUserById(userRepository);
 
-    JwtService jwtService = new JwtService(env, clock);
+    JwtService jwtService = new JwtService(securityConfig, clock);
 
     CreateRefreshToken createRefreshToken = new CreateRefreshToken(refreshTokenRepository);
     AuthenticateUser authenticateUser =
         new AuthenticateUser(
-            env, clock, maintenancePolicy, getUserByEmail, jwtService, createRefreshToken);
+            securityConfig,
+            clock,
+            maintenancePolicy,
+            getUserByEmail,
+            jwtService,
+            createRefreshToken);
     RefreshTokens refreshTokens =
         new RefreshTokens(
-            env, clock, refreshTokenRepository, maintenancePolicy, jwtService, createRefreshToken);
+            securityConfig,
+            clock,
+            refreshTokenRepository,
+            maintenancePolicy,
+            jwtService,
+            createRefreshToken);
     Logout logout = new Logout(refreshTokenRepository);
 
     // 6. Handlers and Middlewares
@@ -118,7 +128,7 @@ public final class DependencyContainer {
     UpdateUserByIdHandler updateUserByIdHandler = new UpdateUserByIdHandler(updateUserById);
     DeleteUserByIdHandler deleteUserByIdHandler = new DeleteUserByIdHandler(deleteUserById);
 
-    AuthCookieService authCookieService = new AuthCookieService(clock, env);
+    AuthCookieService authCookieService = new AuthCookieService(clock, securityConfig);
     LoginHandler loginHandler = new LoginHandler(authCookieService, authenticateUser);
     LogoutHandler logoutHandler = new LogoutHandler(authCookieService, logout);
     RefreshTokensHandler refreshTokensHandler =

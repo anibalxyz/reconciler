@@ -30,11 +30,11 @@ public class UpdateUserByIdTest extends UnitTest {
 
   @BeforeEach
   void deps() {
-    UpdateUserById.Env env = new TestEnv(MINIMUM_BCRYPT_LOG_ROUNDS);
-    updateUserById = new UpdateUserById(env, userRepository);
+    UpdateUserById.Config config = new TestConfig(MINIMUM_BCRYPT_LOG_ROUNDS);
+    updateUserById = new UpdateUserById(config, userRepository);
   }
 
-  private record TestEnv(int BCRYPT_LOG_ROUNDS) implements UpdateUserById.Env {}
+  private record TestConfig(int bcryptLogRounds) implements UpdateUserById.Config {}
 
   @Nested
   @DisplayName("Failure Scenarios")

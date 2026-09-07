@@ -1,7 +1,7 @@
 package com.anibalxyz.server.config.modules;
 
+import com.anibalxyz.core.AppEnv;
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.AppEnv;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.openapi.plugin.OpenApiPlugin;
@@ -17,10 +17,12 @@ import io.javalin.openapi.schema.OpenApiSchemaBuilder;
  */
 public class SwaggerConfig implements StartupConfig {
 
-  private final ServerConfig.Env env;
+  private final Config config;
+  private final AppEnv appEnv;
 
-  public SwaggerConfig(ServerConfig.Env env) {
-    this.env = env;
+  public SwaggerConfig(Config config, AppEnv appEnv) {
+    this.config = config;
+    this.appEnv = appEnv;
   }
 
   private static void swaggerPatch(Context ctx, AppEnv env) {
@@ -50,7 +52,7 @@ public class SwaggerConfig implements StartupConfig {
   public void apply(JavalinConfig javalinConfig) {
     registerOpenApiPlugin(javalinConfig);
     registerSwaggerPlugin(javalinConfig);
-    javalinConfig.routes.after("/swagger", ctx -> swaggerPatch(ctx, env.APP_ENV()));
+    javalinConfig.routes.after("/swagger", ctx -> swaggerPatch(ctx, appEnv));
   }
 
   public void registerSwaggerPlugin(JavalinConfig javalinConfig) {
@@ -85,7 +87,7 @@ systems. Built with clean architecture principles, domain-driven design, and com
                     .description(infoDescription)
                     // .termsOfService
                     // ("https://github.com/anibalxyz/reconciler/blob/main/README.md")
-                    .contact("Anibal Boggio", "https://github.com/anibalxyz", env.CONTACT_EMAIL())
+                    .contact("Anibal Boggio", "https://github.com/anibalxyz", config.contactEmail())
                     .license(
                         "MIT License",
                         "https://github.com/anibalxyz/reconciler/blob/main/LICENSE",
@@ -96,10 +98,10 @@ systems. Built with clean architecture principles, domain-driven design, and com
   }
 
   private void setServers(OpenApiSchemaBuilder definition) {
-    if (env.APP_ENV() == AppEnv.PROD) {
+    if (appEnv == AppEnv.PROD) {
       definition.server(
           openApiServer ->
-              openApiServer.description("Production Server").url(env.API_PUBLIC_URL()));
+              openApiServer.description("Production Server").url(config.apiPublicUrl()));
     } else {
       definition
           .server(
@@ -112,15 +114,16 @@ systems. Built with clean architecture principles, domain-driven design, and com
                   server
                       .description(
                           "API URL - direct-to-backend url but needs proper CORS configuration (/health does not work)")
-                      .url(env.API_URL()))
+                      .url(config.apiUrl()))
           .server(
               server ->
                   server
                       .description(
                           "ROOT URL - currently used to complement API URL server (enables /health but blocks the rest)")
-                      .url(env.SERVER_URL()));
+                      .url(config.serverUrl()));
     }
   }
+
   /*
   // TODO: uncomment once Javalin OpenAPI plugin uses jackson v3
   private String definitionProcessor(ObjectNode content) {
@@ -158,4 +161,14 @@ systems. Built with clean architecture principles, domain-driven design, and com
 
     return content.toPrettyString();
   } */
+
+  public interface Config {
+    String apiUrl();
+
+    String serverUrl();
+
+    String contactEmail();
+
+    String apiPublicUrl();
+  }
 }

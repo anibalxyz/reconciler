@@ -13,38 +13,12 @@ public class UpdateUserById {
 
   private static final Logger log = LoggerFactory.getLogger(UpdateUserById.class);
 
-  private final Env env;
+  private final Config config;
   private final UserRepository userRepository;
 
-  public UpdateUserById(Env env, UserRepository userRepository) {
-    this.env = env;
+  public UpdateUserById(Config config, UserRepository userRepository) {
+    this.config = config;
     this.userRepository = userRepository;
-  }
-
-  public Result<User, Error> execute(Integer id, UpdateUserCommand command) {
-    ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
-    UpdatingData data = validateData(command, notification);
-
-    if (allFieldsAreEmpty(data, notification)) {
-      return Result.failure(new Error.EmptyCommand());
-    }
-
-    Optional<User> userOptional = userRepository.findById(id);
-    if (userOptional.isEmpty()) {
-      return Result.failure(new Error.NotFound(UserNotFoundError.byId(id)));
-    }
-    User existingUser = userOptional.get();
-
-    data.email().ifPresent(email -> ensureEmailIsNotTaken(email, existingUser, notification));
-
-    if (notification.hasErrors()) {
-      return Result.failure(new Error.ValidationFailed(notification));
-    }
-
-    User updatedUser = assignUserData(existingUser, data);
-
-    log.info("User updated");
-    return Result.success(userRepository.save(updatedUser));
   }
 
   /**
@@ -99,12 +73,38 @@ public class UpdateUserById {
     return data;
   }
 
+  public Result<User, Error> execute(Integer id, UpdateUserCommand command) {
+    ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
+    UpdatingData data = validateData(command, notification);
+
+    if (allFieldsAreEmpty(data, notification)) {
+      return Result.failure(new Error.EmptyCommand());
+    }
+
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isEmpty()) {
+      return Result.failure(new Error.NotFound(UserNotFoundError.byId(id)));
+    }
+    User existingUser = userOptional.get();
+
+    data.email().ifPresent(email -> ensureEmailIsNotTaken(email, existingUser, notification));
+
+    if (notification.hasErrors()) {
+      return Result.failure(new Error.ValidationFailed(notification));
+    }
+
+    User updatedUser = assignUserData(existingUser, data);
+
+    log.info("User updated");
+    return Result.success(userRepository.save(updatedUser));
+  }
+
   private User assignUserData(User user, UpdatingData data) {
     user = data.name().map(user::withName).orElse(user);
     user = data.email().map(user::withEmail).orElse(user);
     user =
         data.password()
-            .map(password -> PasswordHash.of(password, env.BCRYPT_LOG_ROUNDS()))
+            .map(password -> PasswordHash.of(password, config.bcryptLogRounds()))
             .map(user::withPasswordHash)
             .orElse(user);
     return user;
@@ -119,8 +119,8 @@ public class UpdateUserById {
     }
   }
 
-  public interface Env {
-    int BCRYPT_LOG_ROUNDS();
+  public interface Config {
+    int bcryptLogRounds();
   }
 
   public sealed interface Error {

@@ -6,29 +6,27 @@ import com.anibalxyz.features.auth.domain.RawToken;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.TokenHash;
 import com.anibalxyz.features.users.domain.*;
-import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.environment.ConfigurationFactory;
+import com.anibalxyz.server.config.ApplicationConfiguration;
+import com.anibalxyz.server.config.ConfigurationFactory;
+import com.anibalxyz.server.config.groups.SecurityConfig;
 import java.time.Instant;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Provides centralized constants for testing, including environment configuration and mock data.
- */
+/** Provides centralized constants for testing, including configuration values and mock data. */
 public class Constants {
   private static final Logger log = LoggerFactory.getLogger(Constants.class);
-  public static ApplicationConfiguration APP_CONFIG;
-  public static AppEnvironmentSource APP_ENV;
+  public static ApplicationConfiguration config;
+  public static SecurityConfig securityConfig;
   private static boolean initialized;
 
   public static void init() {
     if (initialized) return;
 
     String[] args = getArgs();
-    APP_CONFIG = ConfigurationFactory.load(args);
-    APP_ENV = APP_CONFIG.env();
+    config = ConfigurationFactory.load(args);
+    securityConfig = config.security();
 
     initialized = true;
     log.info("Test constants initialized.");
@@ -60,7 +58,7 @@ public class Constants {
     public static final Password VALID_PASSWORD =
         ResultAsserts.success(Password.of(VALID_PASSWORD_STRING));
     public static final PasswordHash VALID_PASSWORD_HASH =
-        PasswordHash.of(VALID_PASSWORD, APP_ENV.BCRYPT_LOG_ROUNDS());
+        PasswordHash.of(VALID_PASSWORD, securityConfig.bcryptLogRounds());
 
     /**
      * A pre-built user whose credentials match the VALID_* constants

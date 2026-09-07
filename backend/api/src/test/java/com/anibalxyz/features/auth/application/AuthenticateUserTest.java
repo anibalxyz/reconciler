@@ -33,7 +33,7 @@ import org.mockito.Mock;
 public class AuthenticateUserTest extends UnitTest {
   private static final Instant FIXED_INSTANT = Instant.parse("2025-01-01T12:00:00Z");
   private static final Duration DURATION = Duration.ofDays(7);
-  private static final EnvStub env = new EnvStub(DURATION);
+  private static final ConfigStub configStub = new ConfigStub(DURATION);
   private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
   private static final MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
 
@@ -47,7 +47,7 @@ public class AuthenticateUserTest extends UnitTest {
   void deps() {
     authenticateUser =
         new AuthenticateUser(
-            env, clock, maintenancePolicy, getUserByEmail, jwtService, createRefreshToken);
+            configStub, clock, maintenancePolicy, getUserByEmail, jwtService, createRefreshToken);
   }
 
   @ParameterizedTest
@@ -99,7 +99,7 @@ public class AuthenticateUserTest extends UnitTest {
         Clock.fixed(INSIDE_WINDOW_TIME.toInstant(), INSIDE_WINDOW_TIME.getZone());
     var authenticateUserOutsideWindow =
         new AuthenticateUser(
-            env,
+            configStub,
             clockOutsideWindow,
             maintenancePolicy,
             getUserByEmail,
@@ -120,7 +120,7 @@ public class AuthenticateUserTest extends UnitTest {
         Clock.fixed(INSIDE_WINDOW_TIME.toInstant(), INSIDE_WINDOW_TIME.getZone());
     var authenticateUserOutsideWindow =
         new AuthenticateUser(
-            env,
+            configStub,
             clockOutsideWindow,
             maintenancePolicy,
             getUserByEmail,
@@ -181,6 +181,6 @@ public class AuthenticateUserTest extends UnitTest {
     assertThat(authResult).isEqualTo(expectedResult);
   }
 
-  private record EnvStub(Duration JWT_REFRESH_EXPIRATION_TIME_DAYS)
-      implements AuthenticateUser.Env {}
+  private record ConfigStub(Duration jwtRefreshExpirationTimeDays)
+      implements AuthenticateUser.Config {}
 }

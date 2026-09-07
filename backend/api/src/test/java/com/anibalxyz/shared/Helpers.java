@@ -103,7 +103,7 @@ public class Helpers {
                     ResultAsserts.success(Email.of(email)),
                     PasswordHash.of(
                         ResultAsserts.success(Password.of(password)),
-                        Constants.APP_ENV.BCRYPT_LOG_ROUNDS())));
+                        Constants.securityConfig.bcryptLogRounds())));
 
     em.getTransaction().commit();
 
@@ -125,8 +125,8 @@ public class Helpers {
     return null;
   }
 
-  public static String createValidJwt(JwtService.Env env, Clock clock, int userId) {
-    var jwtService = new JwtService(env, clock);
+  public static String createValidJwt(JwtService.Config config, Clock clock, int userId) {
+    var jwtService = new JwtService(config, clock);
     return jwtService.generateToken(userId);
   }
 

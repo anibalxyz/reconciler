@@ -1,4 +1,4 @@
-package com.anibalxyz.server.config.environment;
+package com.anibalxyz.server.config;
 
 import com.anibalxyz.server.exception.ConfigurationException.*;
 import java.io.IOException;
@@ -28,6 +28,8 @@ public class ConfigurationFactory {
    * Loads configuration from the given command-line arguments.
    *
    * <p>Uses the file passed via {@code --env-file} when present, otherwise the system environment.
+   * The flag keeps the {@code env} wording by convention; any properties-format file is accepted,
+   * not only dotenv ones.
    *
    * @param args the JVM command-line arguments
    * @return a fully populated {@link ApplicationConfiguration} instance

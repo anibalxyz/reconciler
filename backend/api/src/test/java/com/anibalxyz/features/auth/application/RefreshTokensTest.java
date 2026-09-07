@@ -24,7 +24,7 @@ import org.mockito.Mock;
 public class RefreshTokensTest extends UnitTest {
   private static final Instant FIXED_INSTANT = Instant.parse("2025-01-01T12:00:00Z");
   private static final Duration DURATION = Duration.ofDays(7);
-  private static final EnvStub env = new EnvStub(DURATION);
+  private static final ConfigStub configStub = new ConfigStub(DURATION);
   private static final Clock clock = Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
   private static final MaintenancePolicy maintenancePolicy = new MaintenancePolicy();
 
@@ -38,7 +38,12 @@ public class RefreshTokensTest extends UnitTest {
   void deps() {
     refreshTokens =
         new RefreshTokens(
-            env, clock, refreshTokenRepository, maintenancePolicy, jwtService, createRefreshToken);
+            configStub,
+            clock,
+            refreshTokenRepository,
+            maintenancePolicy,
+            jwtService,
+            createRefreshToken);
   }
 
   @Test
@@ -48,7 +53,7 @@ public class RefreshTokensTest extends UnitTest {
         Clock.fixed(INSIDE_WINDOW_TIME.toInstant(), INSIDE_WINDOW_TIME.getZone());
     var serviceOutsideWindow =
         new RefreshTokens(
-            env,
+            configStub,
             clockOutsideWindow,
             refreshTokenRepository,
             maintenancePolicy,
@@ -155,5 +160,6 @@ public class RefreshTokensTest extends UnitTest {
     verify(refreshTokenRepository).revoke(currentRefreshToken.tokenHash());
   }
 
-  private record EnvStub(Duration JWT_REFRESH_EXPIRATION_TIME_DAYS) implements RefreshTokens.Env {}
+  private record ConfigStub(Duration jwtRefreshExpirationTimeDays)
+      implements RefreshTokens.Config {}
 }

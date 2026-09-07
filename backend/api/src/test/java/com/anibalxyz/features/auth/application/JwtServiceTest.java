@@ -28,18 +28,18 @@ class JwtServiceTest extends UnitTest {
   private static final String JWT_ISSUER = "test-issuer";
   private static final long JWT_EXPIRATION_MINUTES = 30L;
   private static final int USER_ID = 123;
-  private static final JwtEnvironmentStub env;
+  private static final JwtConfigStub jwtConfigStub;
 
   static {
     // placed here to avoid error caused by bad order of declaration
-    env = new JwtEnvironmentStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES * 60);
+    jwtConfigStub = new JwtConfigStub(JWT_KEY, JWT_ISSUER, JWT_EXPIRATION_MINUTES * 60);
   }
 
   private JwtService jwtService;
 
   @BeforeEach
   void setup() {
-    jwtService = new JwtService(env, testClock);
+    jwtService = new JwtService(jwtConfigStub, testClock);
   }
 
   @Test
@@ -64,7 +64,8 @@ class JwtServiceTest extends UnitTest {
   @Test
   @DisplayName("validateToken: given expired token, then return failure with Expired reason")
   void validateToken_expiredToken_returnFailureWithExpired() {
-    JwtService delayedService = new JwtService(env, Clock.offset(testClock, Duration.ofHours(-50)));
+    JwtService delayedService =
+        new JwtService(jwtConfigStub, Clock.offset(testClock, Duration.ofHours(-50)));
     String token = delayedService.generateToken(USER_ID);
 
     var failure = ResultAsserts.failure(jwtService.validateToken(token));
@@ -75,7 +76,8 @@ class JwtServiceTest extends UnitTest {
   @Test
   @DisplayName("validateToken: given premature token, then return failure with Invalid reason")
   void validateToken_prematureToken_returnFailureWithInvalid() {
-    JwtService delayedService = new JwtService(env, Clock.offset(testClock, Duration.ofHours(50)));
+    JwtService delayedService =
+        new JwtService(jwtConfigStub, Clock.offset(testClock, Duration.ofHours(50)));
     String token = delayedService.generateToken(USER_ID);
 
     var failure = ResultAsserts.failure(jwtService.validateToken(token));
@@ -100,9 +102,10 @@ class JwtServiceTest extends UnitTest {
     String stringToMakeItDifferent = JWT_SECRET.substring(0, JWT_SECRET.length() - 1) + "^";
     SecretKey differentKey =
         Keys.hmacShaKeyFor((stringToMakeItDifferent).getBytes(StandardCharsets.UTF_8));
-    JwtService serviceWithDifferentKey = new JwtService(env.withJWT_KEY(differentKey), testClock);
+    JwtService serviceWithDifferentKey =
+        new JwtService(jwtConfigStub.withJWT_KEY(differentKey), testClock);
 
-    // Token signed with differentKey, validated by jwtService (which uses JWT_KEY)
+    // Token signed with differentKey, validated by jwtService (which uses jwtKey)
     String token = serviceWithDifferentKey.generateToken(USER_ID);
     var failure = ResultAsserts.failure(jwtService.validateToken(token));
 
@@ -120,12 +123,11 @@ class JwtServiceTest extends UnitTest {
     assertThat(failure).isInstanceOf(JwtService.JwtValidationError.Missing.class);
   }
 
-  private record JwtEnvironmentStub(
-      SecretKey JWT_KEY, String JWT_ISSUER, long JWT_ACCESS_EXPIRATION_TIME_SECONDS)
-      implements JwtService.Env {
-    public JwtEnvironmentStub withJWT_KEY(SecretKey JWT_KEY) {
-      return new JwtEnvironmentStub(
-          JWT_KEY, this.JWT_ISSUER, this.JWT_ACCESS_EXPIRATION_TIME_SECONDS);
+  private record JwtConfigStub(
+      SecretKey jwtKey, String jwtIssuer, long jwtAccessExpirationTimeSeconds)
+      implements JwtService.Config {
+    public JwtConfigStub withJWT_KEY(SecretKey JWT_KEY) {
+      return new JwtConfigStub(JWT_KEY, this.jwtIssuer, this.jwtAccessExpirationTimeSeconds);
     }
   }
 }

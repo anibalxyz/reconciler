@@ -5,7 +5,7 @@ import static com.anibalxyz.shared.Helpers.cleanDatabase;
 import static com.anibalxyz.shared.Helpers.createValidJwt;
 
 import com.anibalxyz.server.Application;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
+import com.anibalxyz.server.config.ApplicationConfiguration;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Clock;
@@ -45,7 +45,7 @@ public abstract class IntegrationTest {
       return;
     }
     Constants.init();
-    app = Application.create(Constants.APP_CONFIG, testClock);
+    app = Application.create(Constants.config, testClock);
     app.start(0);
 
     String baseUrl = app.javalin().jettyServer().server().getURI().toString() + "api";
@@ -54,7 +54,7 @@ public abstract class IntegrationTest {
 
     http = new HttpRequest(objectMapper, new OkHttpClient(), baseUrl);
 
-    validJwt = createValidJwt(app.config().env(), testClock, VALID_USER.id().value());
+    validJwt = createValidJwt(app.config().security(), testClock, VALID_USER.id().value());
 
     Runtime.getRuntime().addShutdownHook(new Thread(app::stop));
   }

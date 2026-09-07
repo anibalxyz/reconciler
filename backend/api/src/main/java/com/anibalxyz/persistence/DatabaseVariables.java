@@ -1,7 +1,7 @@
 package com.anibalxyz.persistence;
 
-import com.anibalxyz.server.config.environment.ConfigGroup;
-import com.anibalxyz.server.config.environment.ConfigValueReader;
+import com.anibalxyz.server.config.ConfigValueReader;
+import com.anibalxyz.server.config.groups.ConfigGroup;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

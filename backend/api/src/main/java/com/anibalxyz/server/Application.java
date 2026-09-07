@@ -2,10 +2,10 @@ package com.anibalxyz.server;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
+import com.anibalxyz.core.AppEnv;
 import com.anibalxyz.persistence.PersistenceManager;
-import com.anibalxyz.server.config.AppEnv;
-import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
+import com.anibalxyz.server.config.ApplicationConfiguration;
+import com.anibalxyz.server.config.groups.ClockConfig;
 import com.anibalxyz.server.context.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
@@ -41,10 +41,10 @@ public class Application {
 
   /**
    * Convenience factory for {@link AppEnv#DEV} and {@link AppEnv#PROD}: delegates to {@link
-   * #create(ApplicationConfiguration, Clock)} with {@link #buildClock(AppEnvironmentSource)}}.
+   * #create(ApplicationConfiguration, Clock)} with {@link #buildClock(AppEnv, ClockConfig)}}.
    */
   public static Application create(ApplicationConfiguration config) {
-    return create(config, buildClock(config.env()));
+    return create(config, buildClock(config.appEnv(), config.clock()));
   }
 
   /**
@@ -118,16 +118,17 @@ public class Application {
    * timezone for {@link AppEnv#PROD}, a fixed clock at {@code SYSTEM_TIME_OVERRIDE} if set, or the
    * system clock in America/Montevideo otherwise.
    *
-   * @param env environment configuration
+   * @param appEnv the application environment
+   * @param config the datetime configuration
    * @return the resolved clock
    */
-  public static Clock buildClock(AppEnvironmentSource env) {
-    if (env.APP_ENV() == AppEnv.PROD) {
-      return Clock.system(env.SYSTEM_TIMEZONE());
+  public static Clock buildClock(AppEnv appEnv, ClockConfig config) {
+    if (appEnv == AppEnv.PROD) {
+      return Clock.system(config.systemTimezone());
     }
 
-    if (env.SYSTEM_TIME_OVERRIDE() != null) {
-      return Clock.fixed(env.SYSTEM_TIME_OVERRIDE(), env.SYSTEM_TIMEZONE());
+    if (config.systemTimeOverride() != null) {
+      return Clock.fixed(config.systemTimeOverride(), config.systemTimezone());
     }
 
     return Clock.system(ZoneId.of("America/Montevideo"));
@@ -151,11 +152,11 @@ public class Application {
    * @param port The port to listen on.
    */
   public void start(int port) {
-    log.info("Starting server on port {} [{} mode]", port, config.env().APP_ENV());
+    log.info("Starting server on port {} [{} mode]", port, config.appEnv());
     javalin.start(port);
     log.info(
         "Server started successfully and is ready to accept connections on {}",
-        kv("api_url", config.env().API_URL()));
+        kv("api_url", config.httpServer().apiUrl()));
   }
 
   /** Stops the web server and shuts down the persistence layer gracefully. */

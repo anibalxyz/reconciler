@@ -1,5 +1,6 @@
-package com.anibalxyz.server.config.environment;
+package com.anibalxyz.server.config.groups;
 
+import com.anibalxyz.server.config.ConfigValueReader;
 import java.util.Map;
 
 public class FeatureFlags implements ConfigGroup {

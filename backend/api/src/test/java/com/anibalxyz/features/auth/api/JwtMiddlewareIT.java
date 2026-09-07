@@ -78,10 +78,10 @@ public class JwtMiddlewareIT extends IntegrationTest {
   void GET_users_expiredJwt_respond401Unauthorized() {
     User user =
         persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
-    long jwtAccessExpirationTimeMinutes = Constants.APP_ENV.JWT_ACCESS_EXPIRATION_TIME_SECONDS();
+    long jwtAccessExpirationTimeMinutes = Constants.securityConfig.jwtAccessExpirationTimeSeconds();
     long justExpiredTime = jwtAccessExpirationTimeMinutes + 60;
     Clock clockInThePast = Clock.offset(testClock, Duration.ofSeconds(-justExpiredTime));
-    JwtService jwtService = new JwtService(Constants.APP_CONFIG.env(), clockInThePast);
+    JwtService jwtService = new JwtService(Constants.securityConfig, clockInThePast);
     String expiredJwt = jwtService.generateToken(user.id().value());
 
     ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Expired());

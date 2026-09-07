@@ -1,12 +1,12 @@
-package com.anibalxyz.server.config.environment;
+package com.anibalxyz.server.config.groups;
 
 import java.util.Map;
 
 /**
  * A cohesive group of config values (e.g., feature flags, database settings).
  *
- * <p>Implementors must provide a {@code public static from(ConfigValueReader)} factory
- * (convention).
+ * <p>Implementors must provide a {@code public static from(ConfigValueReader, ...)} factory, which
+ * means that the method must accept at least the ConfigValueReader parameter, but may accept more.
  */
 public interface ConfigGroup {
 
