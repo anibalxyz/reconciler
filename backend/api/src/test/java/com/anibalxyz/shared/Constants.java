@@ -31,7 +31,7 @@ public class Constants {
     APP_ENV = APP_CONFIG.env();
 
     initialized = true;
-    log.info("Constants initialized: {}", APP_CONFIG);
+    log.info("Test constants initialized.");
   }
 
   private static String @NonNull [] getArgs() {

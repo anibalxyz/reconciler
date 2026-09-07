@@ -1,40 +1,74 @@
 package com.anibalxyz.server.config.environment;
 
+import static net.logstash.logback.argument.StructuredArguments.v;
+
 import com.anibalxyz.persistence.DatabaseVariables;
+import com.anibalxyz.server.config.AppEnv;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public record ApplicationConfiguration(AppEnvironmentSource env, DatabaseVariables database) {
+public class ApplicationConfiguration {
+  private static final Logger log = LoggerFactory.getLogger(ApplicationConfiguration.class);
+  private final AppEnvironmentSource env;
+  private final DatabaseVariables database;
+  private final FeatureFlags featureFlags;
+
+  private ApplicationConfiguration(
+      AppEnvironmentSource env, DatabaseVariables database, FeatureFlags featureFlags) {
+    this.env = env;
+    this.database = database;
+    this.featureFlags = featureFlags;
+  }
+
+  public static ApplicationConfiguration from(Function<String, String> callback) {
+    ConfigValueReader reader = ConfigValueReader.from(callback);
+
+    // TODO: add appEnv as a top level config
+    AppEnvironmentSource appEnvironmentSource = AppEnvironmentSource.from(reader);
+    FeatureFlags featureFlags = FeatureFlags.from(reader);
+    DatabaseVariables databaseVariables = DatabaseVariables.from(reader);
+
+    var result =
+        new ApplicationConfiguration(appEnvironmentSource, databaseVariables, featureFlags);
+
+    logLoadedConfiguration(result, appEnvironmentSource.APP_ENV());
+    return result;
+  }
+
+  /** TODO: refactor to a helper class, so can be used in other places */
+  private static void logLoadedConfiguration(ApplicationConfiguration result, AppEnv env) {
+    String logMessage = "Configuration loaded";
+    if (env.equals(AppEnv.TEST)) {
+      logMessage = logMessage.concat(": {}");
+    }
+    log.info(logMessage, v("config", result.toMap()));
+  }
+
+  public AppEnvironmentSource env() {
+    return env;
+  }
+
+  public DatabaseVariables database() {
+    return database;
+  }
+
+  public FeatureFlags featureFlags() {
+    return featureFlags;
+  }
 
   public Map<String, Object> toMap() {
     Map<String, Object> configSummary = new LinkedHashMap<>();
-    configSummary.put("environment", env.APP_ENV());
-
-    Map<String, Object> api = new LinkedHashMap<>();
-    api.put("url", env.API_URL());
-    api.put("port", env.API_PORT());
-    api.put("corsOrigins", env.CORS_ALLOWED_ORIGINS());
-    configSummary.put("api", api);
-
-    Map<String, Object> databaseMap = new LinkedHashMap<>();
-    databaseMap.put("url", database.url());
-    databaseMap.put("user", database.user());
-    configSummary.put("database", databaseMap);
-
-    Map<String, Object> jwt = new LinkedHashMap<>();
-    jwt.put("issuer", env.JWT_ISSUER());
-    jwt.put("accessTokenExpirationMinutes", env.JWT_ACCESS_EXPIRATION_TIME_SECONDS() / 60);
-    jwt.put("refreshTokenExpirationDays", env.JWT_REFRESH_EXPIRATION_TIME_DAYS().toDays());
-    configSummary.put("jwt", jwt);
-
-    Map<String, Object> auth = new LinkedHashMap<>();
-    auth.put("bcryptLogRounds", env.BCRYPT_LOG_ROUNDS());
-    auth.put("cookieSecure", env.AUTH_COOKIE_SECURE());
-    auth.put("cookieDomain", env.AUTH_COOKIE_DOMAIN());
-    auth.put("cookieSameSite", env.AUTH_COOKIE_SAMESITE());
-    auth.put("cookiePath", env.AUTH_COOKIE_PATH());
-    configSummary.put("auth", auth);
-
+    configSummary.put("environment", env.toMap());
+    configSummary.put("database", database.toMap());
+    configSummary.put("feature_flags", featureFlags.toMap());
     return configSummary;
+  }
+
+  @Override
+  public String toString() {
+    return toMap().toString();
   }
 }

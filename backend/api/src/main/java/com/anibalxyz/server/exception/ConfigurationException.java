@@ -8,9 +8,9 @@ public class ConfigurationException extends ReconcilerException {
     super(message, cause);
   }
 
-  public static class UnableToLoadDotenvFile extends ConfigurationException {
-    public UnableToLoadDotenvFile(IOException e) {
-      super("Could not load .env file for configuration", e);
+  public static class UnableToLoadConfigurationFile extends ConfigurationException {
+    public UnableToLoadConfigurationFile(IOException e) {
+      super("Could not load configuration file", e);
     }
   }
 

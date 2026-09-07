@@ -84,7 +84,7 @@ public class Application {
     return javalinConfig -> {
       container.serverConfig().apply(javalinConfig);
 
-      if (config.env().SWAGGER_ENABLED()) {
+      if (config.featureFlags().SWAGGER()) {
         container.swaggerConfig().apply(javalinConfig);
         container.systemRoutes().applyRedirects(javalinConfig);
       }

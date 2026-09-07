@@ -1,13 +1,15 @@
 package com.anibalxyz.persistence;
 
-import com.anibalxyz.server.exception.ConfigurationException;
-import org.jetbrains.annotations.NotNull;
+import com.anibalxyz.server.config.environment.ConfigGroup;
+import com.anibalxyz.server.config.environment.ConfigValueReader;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /** Type-safe representation of database connection variables. */
-public class DatabaseVariables {
-  public final String url;
-  public final String user;
-  public final String password;
+public class DatabaseVariables implements ConfigGroup {
+  private final String url;
+  private final String user;
+  private final String password;
 
   private DatabaseVariables(String url, String user, String password) {
     this.url = url;
@@ -15,25 +17,16 @@ public class DatabaseVariables {
     this.password = password;
   }
 
-  /**
-   * @throws ConfigurationException.MissingProperty if any of the required variables are missing.
-   */
-  public static DatabaseVariables generate(
-      String host, String port, String name, String user, String password) {
-    validate(host, port, name, user, password);
+  public static DatabaseVariables from(ConfigValueReader reader) {
+    String name = reader.read("DB_NAME");
+    String user = reader.read("DB_USER");
+    String password = reader.read("DB_PASSWORD");
+    String port = reader.read("DB_PORT");
+    String host = reader.read("DB_HOST");
 
     String url = "jdbc:postgresql://" + host + ":" + port + "/" + name;
 
     return new DatabaseVariables(url, user, password);
-  }
-
-  private static void validate(
-      String host, String port, String name, String user, String password) {
-    if (host == null) throw new ConfigurationException.MissingProperty("host");
-    if (port == null) throw new ConfigurationException.MissingProperty("port");
-    if (name == null) throw new ConfigurationException.MissingProperty("name");
-    if (user == null) throw new ConfigurationException.MissingProperty("user");
-    if (password == null) throw new ConfigurationException.MissingProperty("password");
   }
 
   public String url() {
@@ -48,12 +41,16 @@ public class DatabaseVariables {
     return password;
   }
 
-  /**
-   * @return The string representation of the object, masking the password for security.
-   */
-  @NotNull
+  @Override
+  public Map<String, Object> toMap() {
+    Map<String, Object> databaseMap = new LinkedHashMap<>();
+    databaseMap.put("url", url());
+    databaseMap.put("user", user());
+    return databaseMap;
+  }
+
   @Override
   public String toString() {
-    return "DatabaseVariables[" + "jdbcUrl=" + url + ", " + "user=" + user + ", password=********]";
+    return toMap().toString();
   }
 }

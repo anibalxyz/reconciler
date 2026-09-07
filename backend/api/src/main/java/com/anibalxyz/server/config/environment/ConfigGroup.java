@@ -15,5 +15,5 @@ public interface ConfigGroup {
    *
    * @return variable names to their loaded values
    */
-  Map<String, String> toMap();
+  Map<String, Object> toMap();
 }
