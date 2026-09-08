@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.api.out;
 
-import com.anibalxyz.features.common.api.out.response.success.SuccessResponse;
+import com.anibalxyz.core.api.response.success.SuccessResponse;
 import io.javalin.openapi.OpenApiExample;
 
 public record AuthResponse(

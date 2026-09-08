@@ -1,14 +1,13 @@
 package com.anibalxyz.server.config.settings;
 
-import com.anibalxyz.core.AppEnv;
 import com.anibalxyz.features.auth.api.AuthCookieService;
 import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.users.application.CreateUser;
 import com.anibalxyz.features.users.application.UpdateUserById;
-import com.anibalxyz.server.config.SettingsReader;
-import com.anibalxyz.server.exception.ConfigurationException;
+import com.anibalxyz.server.config.AppEnv;
+import com.anibalxyz.server.config.ConfigurationException;
 import io.javalin.http.SameSite;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;

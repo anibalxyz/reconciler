@@ -5,7 +5,7 @@ import static com.anibalxyz.shared.MaintenanceTestClock.INSIDE_WINDOW_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.core.domain.error.ReasonedError;
+import com.anibalxyz.core.domain.ReasonedError;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.MaintenancePolicy;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;

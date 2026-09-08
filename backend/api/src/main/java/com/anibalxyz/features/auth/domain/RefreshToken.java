@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.domain;
 
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
 import com.anibalxyz.features.users.domain.UserId;
 import java.time.Instant;

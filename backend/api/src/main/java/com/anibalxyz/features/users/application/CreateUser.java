@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.application;
 
-import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.*;

@@ -20,7 +20,7 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MetricsModule implements StartupModule {
+public class MetricsModule implements JavalinModule {
 
   public static final String METRICS_PATH = "/internal/metrics";
   private static final Logger log = LoggerFactory.getLogger(MetricsModule.class);

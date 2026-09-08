@@ -1,8 +1,8 @@
 package com.anibalxyz.features.users.api.handlers;
 
-import static com.anibalxyz.features.common.api.Utils.getParamId;
+import static com.anibalxyz.features.common.api.PathParams.getId;
 
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.in.UpdateUserRequest;
 import com.anibalxyz.features.users.api.openapi.UpdateUserByIdEndpoint;
@@ -21,7 +21,7 @@ public class UpdateUserByIdHandler implements Handler, UpdateUserByIdEndpoint {
 
   @Override
   public void handle(@NotNull Context ctx) {
-    int id = getParamId(ctx);
+    int id = getId(ctx);
 
     UpdateUserRequest updateUserRequest = ctx.bodyAsClass(UpdateUserRequest.class);
     User user =

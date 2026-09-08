@@ -9,14 +9,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.core.Result;
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.api.exception.AccessDenied;
 import com.anibalxyz.features.auth.api.exception.MissingOrInvalidAuthHeader;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.auth.application.JwtService.JwtValidationError;
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.context.RequestContext;
+import com.anibalxyz.server.http.context.RequestContext;
 import com.anibalxyz.shared.UnitTest;
 import io.javalin.http.Context;
 import io.javalin.security.RouteRole;

@@ -7,17 +7,17 @@ import static com.anibalxyz.shared.Helpers.getValueFromCookie;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anibalxyz.core.api.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.mappers.ErrorMapperResult;
 import com.anibalxyz.features.auth.api.exception.MissingRefreshTokenCookie;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.application.RefreshTokens;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.server.api.ErrorMapper;
-import com.anibalxyz.server.api.ErrorResult;
-import com.anibalxyz.server.api.InfrastructureErrorMapper;
+import com.anibalxyz.server.http.mappers.ExceptionsMapper;
+import com.anibalxyz.server.http.mappers.FeaturesErrorMapper;
 import java.util.Map;
 import okhttp3.Response;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +29,7 @@ public class RefreshTokensIT extends AuthIT {
   @Test
   @DisplayName("given missing refreshToken cookie, then respond with 401 MissingRefreshTokenCookie")
   void missingCookie_respond401MissingRefreshTokenCookie() {
-    ErrorResult expectedResult = InfrastructureErrorMapper.map(new MissingRefreshTokenCookie());
+    ErrorMapperResult expectedResult = ExceptionsMapper.map(new MissingRefreshTokenCookie());
 
     Map<String, String> cookie = Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=");
 
@@ -48,8 +48,8 @@ public class RefreshTokensIT extends AuthIT {
   @DisplayName("given outside maintenance window, then respond with 503 Unavailable Server")
   void outsideMaintenanceWindow_respond503UnavailableServer() {
     testClock.resetTo(SATURDAY_MIDDAY);
-    ErrorResult expectedResult =
-        ErrorMapper.map(new AuthenticateUser.Error.MaintenanceWindow(MAINTENANCE_START));
+    ErrorMapperResult expectedResult =
+        FeaturesErrorMapper.map(new AuthenticateUser.Error.MaintenanceWindow(MAINTENANCE_START));
 
     Map<String, String> cookie =
         Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_RAW_TOKEN_STRING);
@@ -67,8 +67,8 @@ public class RefreshTokensIT extends AuthIT {
   @Test
   @DisplayName("given invalid refresh token, then respond with 401 Unauthorized")
   void invalidRefreshToken_respond401Unauthorized() {
-    ErrorResult expectedResult =
-        ErrorMapper.map(new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.notFound()));
+    ErrorMapperResult expectedResult =
+        FeaturesErrorMapper.map(new RefreshTokens.Error.InvalidToken(InvalidRefreshTokenError.notFound()));
 
     Map<String, String> cookie =
         Map.of("Cookie", REFRESH_TOKEN_COOKIE + "=" + VALID_REFRESH_RAW_TOKEN_STRING);

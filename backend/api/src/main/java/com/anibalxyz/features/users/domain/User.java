@@ -1,6 +1,6 @@
 package com.anibalxyz.features.users.domain;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -13,7 +13,7 @@ public class User {
   private final Instant createdAt;
   private final Instant updatedAt;
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   private User(
       UserId id,
       Name name,
@@ -33,13 +33,13 @@ public class User {
   }
 
   /** Create a new {@code user} that has not yet been persisted. */
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public static User create(Name name, Email email, PasswordHash passwordHash) {
 
     return new User(null, name, email, passwordHash, null, null);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public static User reconstitute(
       UserId id,
       Name name,
@@ -53,12 +53,12 @@ public class User {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public UserId id() {
     return id;
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public Name name() {
     return name;
   }
@@ -67,17 +67,17 @@ public class User {
     return email;
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public PasswordHash passwordHash() {
     return passwordHash;
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public Instant createdAt() {
     return createdAt;
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public Instant updatedAt() {
     return updatedAt;
   }
@@ -86,17 +86,17 @@ public class User {
     return this.passwordHash.matches(password);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public User withName(Name name) {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public User withEmail(Email email) {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public User withPasswordHash(PasswordHash passwordHash) {
     return new User(id, name, email, passwordHash, createdAt, updatedAt);
   }
@@ -114,7 +114,7 @@ public class User {
     return this.id.equals(other.id);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public String toString() {
     return

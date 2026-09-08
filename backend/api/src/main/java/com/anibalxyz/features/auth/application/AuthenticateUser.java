@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.application;
 
-import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.MaintenancePolicy;
@@ -13,7 +13,7 @@ import com.anibalxyz.features.users.domain.Password;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.UserId;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
-import com.anibalxyz.server.context.RequestContext;
+import com.anibalxyz.server.http.context.RequestContext;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;

@@ -8,7 +8,7 @@ import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.features.users.infra.UserEntity;
-import com.anibalxyz.persistence.EntityManagerProvider;
+import com.anibalxyz.server.persistence.EntityManagerProvider;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.validation.Validator;

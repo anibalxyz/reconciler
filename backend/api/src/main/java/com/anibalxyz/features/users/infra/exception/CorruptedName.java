@@ -1,6 +1,6 @@
 package com.anibalxyz.features.users.infra.exception;
 
-import com.anibalxyz.features.common.infra.exception.CorruptedDbData;
+import com.anibalxyz.core.infra.CorruptedDbData;
 
 public class CorruptedName extends CorruptedDbData {
   public CorruptedName(String name, int userId) {

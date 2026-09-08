@@ -2,13 +2,7 @@ package com.anibalxyz.server.config;
 
 import static net.logstash.logback.argument.StructuredArguments.v;
 
-import com.anibalxyz.core.AppEnv;
-import com.anibalxyz.persistence.DatabaseVariables;
-import com.anibalxyz.server.config.settings.ClockSettings;
-import com.anibalxyz.server.config.settings.FeatureFlags;
-import com.anibalxyz.server.config.settings.HttpServerSettings;
-import com.anibalxyz.server.config.settings.SecuritySettings;
-import com.anibalxyz.server.exception.ConfigurationException;
+import com.anibalxyz.server.config.settings.*;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -22,7 +16,7 @@ public class ApplicationConfiguration {
   private final SecuritySettings security;
   private final HttpServerSettings httpServer;
   private final ClockSettings clock;
-  private final DatabaseVariables database;
+  private final DatabaseSettings database;
   private final FeatureFlags featureFlags;
 
   private ApplicationConfiguration(
@@ -30,7 +24,7 @@ public class ApplicationConfiguration {
       HttpServerSettings httpServer,
       ClockSettings clock,
       SecuritySettings security,
-      DatabaseVariables database,
+      DatabaseSettings database,
       FeatureFlags featureFlags) {
     this.appEnv = appEnv;
     this.httpServer = httpServer;
@@ -48,7 +42,7 @@ public class ApplicationConfiguration {
     HttpServerSettings httpServerSettings = HttpServerSettings.from(reader, appEnv);
     ClockSettings clockSettings = ClockSettings.from(reader);
     FeatureFlags featureFlags = FeatureFlags.from(reader);
-    DatabaseVariables databaseVariables = DatabaseVariables.from(reader);
+    DatabaseSettings databaseSettings = DatabaseSettings.from(reader);
 
     var result =
         new ApplicationConfiguration(
@@ -56,7 +50,7 @@ public class ApplicationConfiguration {
             httpServerSettings,
             clockSettings,
             securitySettings,
-            databaseVariables,
+            databaseSettings,
             featureFlags);
 
     logLoadedConfiguration(result, appEnv);
@@ -108,7 +102,7 @@ public class ApplicationConfiguration {
     return clock;
   }
 
-  public DatabaseVariables database() {
+  public DatabaseSettings database() {
     return database;
   }
 

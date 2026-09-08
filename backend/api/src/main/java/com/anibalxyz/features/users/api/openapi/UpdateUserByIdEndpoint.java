@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.api.openapi;
 
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponseExamples;
+import com.anibalxyz.core.api.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.error.ErrorResponseExamples;
 import com.anibalxyz.features.users.api.in.UpdateUserRequest;
 import com.anibalxyz.features.users.api.out.DetailedUserResponse;
 import com.anibalxyz.features.users.api.out.UsersErrorResponseExamples;

@@ -4,10 +4,10 @@ import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.modules.StartupModule;
+import com.anibalxyz.server.config.modules.JavalinModule;
 import io.javalin.config.JavalinConfig;
 
-public class SystemRoutes implements StartupModule {
+public class SystemRoutes implements JavalinModule {
   private final SystemApi systemApi;
 
   public SystemRoutes(SystemApi systemApi) {

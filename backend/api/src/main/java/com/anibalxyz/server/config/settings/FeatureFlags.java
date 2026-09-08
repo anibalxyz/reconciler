@@ -1,6 +1,5 @@
 package com.anibalxyz.server.config.settings;
 
-import com.anibalxyz.server.config.SettingsReader;
 import java.util.Map;
 
 public class FeatureFlags implements Settings {

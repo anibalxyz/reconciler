@@ -4,15 +4,15 @@ import static com.anibalxyz.shared.Constants.Users.*;
 import static com.anibalxyz.shared.Helpers.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anibalxyz.core.api.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.mappers.ErrorMapperResult;
 import com.anibalxyz.features.auth.api.exception.MissingOrInvalidAuthHeader;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.JwtService;
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.domain.User;
-import com.anibalxyz.server.api.ErrorMapper;
-import com.anibalxyz.server.api.ErrorResult;
-import com.anibalxyz.server.api.InfrastructureErrorMapper;
+import com.anibalxyz.server.http.mappers.ExceptionsMapper;
+import com.anibalxyz.server.http.mappers.FeaturesErrorMapper;
 import com.anibalxyz.shared.Constants;
 import com.anibalxyz.shared.IntegrationTest;
 import java.time.*;
@@ -39,7 +39,7 @@ public class JwtMiddlewareIT extends IntegrationTest {
   @ValueSource(strings = {"missingHeader", "invalidHeader", "missingJwt"})
   @DisplayName("ANY /*: given missing JWT, then respond with 401 MissingOrInvalidAuthHeader")
   void ANY_endpoint_missingJwt_respond401MissingOrInvalidAuthHeader(String cause) {
-    ErrorResult expectedResult = InfrastructureErrorMapper.map(new MissingOrInvalidAuthHeader());
+    ErrorMapperResult expectedResult = ExceptionsMapper.map(new MissingOrInvalidAuthHeader());
 
     Map<String, String> headers =
         switch (cause) {
@@ -62,7 +62,7 @@ public class JwtMiddlewareIT extends IntegrationTest {
   @Test
   @DisplayName("GET /users: given invalid JWT, then respond 401 Auth")
   void GET_users_invalidJwt_respond401Unauthorized() {
-    ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Invalid());
+    ErrorMapperResult expectedResult = FeaturesErrorMapper.map(new JwtService.JwtValidationError.Invalid());
 
     Map<String, String> headers = createJwtHeader("invalid-token");
     Response response = http.get("/users/", headers);
@@ -85,7 +85,7 @@ public class JwtMiddlewareIT extends IntegrationTest {
     JwtService jwtService = new JwtService(Constants.securitySettings, clockInThePast);
     String expiredJwt = jwtService.generateToken(user.id().value());
 
-    ErrorResult expectedResult = ErrorMapper.map(new JwtService.JwtValidationError.Expired());
+    ErrorMapperResult expectedResult = FeaturesErrorMapper.map(new JwtService.JwtValidationError.Expired());
 
     Map<String, String> headers = createJwtHeader(expiredJwt);
     Response response = http.get("/users/", headers);

@@ -7,9 +7,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.api.FailureSignal;
 import com.anibalxyz.core.application.ValidationNotification;
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.application.CreateUser;

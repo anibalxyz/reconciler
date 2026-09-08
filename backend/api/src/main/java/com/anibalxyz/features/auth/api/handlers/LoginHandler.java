@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.api.handlers;
 
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
 import com.anibalxyz.features.auth.api.AuthCookieService;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.openapi.LoginEndpoint;

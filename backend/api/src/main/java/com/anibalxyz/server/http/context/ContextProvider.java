@@ -1,0 +1,35 @@
+package com.anibalxyz.server.http.context;
+
+import com.anibalxyz.server.persistence.EntityManagerProvider;
+import io.javalin.http.Context;
+
+/**
+ * Provides request-scoped access to the Javalin {@link Context} using a {@link ThreadLocal}.
+ *
+ * <p>This utility allows components deep within the application layers (e.g., an {@link
+ * EntityManagerProvider}) to access request-specific data without needing the {@link Context}
+ * object to be passed down as a parameter through the entire call stack. The context is set at the
+ * beginning of a request and cleared at the end.
+ */
+public class ContextProvider {
+
+  private static final ThreadLocal<Context> contextThreadLocal = new ThreadLocal<>();
+
+  private ContextProvider() {}
+
+  public static void set(Context ctx) {
+    contextThreadLocal.set(ctx);
+  }
+
+  /**
+   * Removes the {@link Context} from the current thread to prevent memory leaks. This should be
+   * called at the end of the request lifecycle.
+   */
+  public static void clear() {
+    contextThreadLocal.remove();
+  }
+
+  public static Context get() {
+    return contextThreadLocal.get();
+  }
+}

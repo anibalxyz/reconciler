@@ -6,7 +6,8 @@ import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.mappers.ErrorMapperResult;
 import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.api.in.UpdateUserRequest;
 import com.anibalxyz.features.users.api.out.DetailedUserResponse;
@@ -14,8 +15,7 @@ import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.infra.UserEntity;
-import com.anibalxyz.server.api.ErrorMapper;
-import com.anibalxyz.server.api.ErrorResult;
+import com.anibalxyz.server.http.mappers.FeaturesErrorMapper;
 import java.time.Instant;
 import okhttp3.Response;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +34,7 @@ public class UpdateUserByIdIT extends UsersIT {
     Integer userId = user.id().value();
     UpdateUserRequest requestBody = new UpdateUserRequest(null, null, null);
 
-    ErrorResult expectedResult = ErrorMapper.map(new UpdateUserById.Error.EmptyCommand());
+    ErrorMapperResult expectedResult = FeaturesErrorMapper.map(new UpdateUserById.Error.EmptyCommand());
 
     Response response = http.put("/users/" + userId, requestBody, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
@@ -54,7 +54,7 @@ public class UpdateUserByIdIT extends UsersIT {
     User userToUpdate = persistUser(em, VALID_NAME_STRING, "update.me@mail.com").toDomain();
     UpdateUserRequest requestBody = new UpdateUserRequest(null, existingUser.email().value(), null);
 
-    ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
+    ErrorMapperResult expectedResult = errorResultFromAlreadyTakenEmail();
 
     Integer userId = userToUpdate.id().value();
     Response response = http.put("/users/" + userId, requestBody, createJwtHeader(validJwt));
@@ -75,7 +75,7 @@ public class UpdateUserByIdIT extends UsersIT {
     CreateUserRequest requestBody =
         new CreateUserRequest("  ", VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
-    ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
+    ErrorMapperResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
     Response response = http.put("/users/" + userId, requestBody, createJwtHeader(validJwt));
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);

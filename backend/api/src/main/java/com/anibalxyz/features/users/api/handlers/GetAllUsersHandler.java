@@ -1,6 +1,6 @@
 package com.anibalxyz.features.users.api.handlers;
 
-import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
+import com.anibalxyz.core.api.response.success.CollectionResponse;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.openapi.GetAllUsersEndpoint;
 import com.anibalxyz.features.users.api.out.DetailedUserResponse;

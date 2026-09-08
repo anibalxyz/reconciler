@@ -1,8 +1,8 @@
 package com.anibalxyz.server.config.modules;
 
-import com.anibalxyz.persistence.PersistenceManager;
-import com.anibalxyz.server.context.ContextProvider;
-import com.anibalxyz.server.context.RequestContext;
+import com.anibalxyz.server.http.context.ContextProvider;
+import com.anibalxyz.server.http.context.RequestContext;
+import com.anibalxyz.server.persistence.PersistenceManager;
 import io.javalin.config.JavalinConfig;
 import jakarta.persistence.EntityManager;
 
@@ -10,7 +10,7 @@ import jakarta.persistence.EntityManager;
  * This class hooks into Javalin's request lifecycle to handle resources that need to be created and
  * torn down for each HTTP request.
  */
-public class LifecycleModule implements StartupModule {
+public class LifecycleModule implements JavalinModule {
 
   private final PersistenceManager persistenceManager;
 

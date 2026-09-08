@@ -1,19 +1,19 @@
 package com.anibalxyz.features.auth.api;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
 import com.anibalxyz.features.auth.api.exception.AccessDenied;
 import com.anibalxyz.features.auth.api.exception.MissingOrInvalidAuthHeader;
 import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.common.api.Role;
-import com.anibalxyz.server.config.modules.StartupModule;
-import com.anibalxyz.server.context.RequestContext;
+import com.anibalxyz.server.config.modules.JavalinModule;
+import com.anibalxyz.server.http.context.RequestContext;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.security.RouteRole;
 import java.util.Set;
 
-public class JwtMiddleware implements StartupModule {
+public class JwtMiddleware implements JavalinModule {
 
   public static final String JWT_USER_ID = "jwt_userId";
   public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -24,7 +24,7 @@ public class JwtMiddleware implements StartupModule {
     this.jwtService = jwtService;
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public void apply(JavalinConfig cfg) {
     cfg.routes.beforeMatched(this::execute);

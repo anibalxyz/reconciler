@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.domain;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.domain.error.InvalidRawTokenError;
 import java.util.Objects;
 import java.util.UUID;
@@ -64,20 +64,20 @@ public final class RawToken {
     return value;
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public int hashCode() {
     return Objects.hashCode(value);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof RawToken rawToken)) return false;
     return Objects.equals(value, rawToken.value);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public String toString() {
     return "*******";

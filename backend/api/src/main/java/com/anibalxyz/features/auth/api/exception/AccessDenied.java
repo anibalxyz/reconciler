@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.api.exception;
 
-import com.anibalxyz.core.api.exception.HttpException;
-import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
+import com.anibalxyz.core.api.HttpException;
+import com.anibalxyz.core.api.response.error.CommonErrorCode;
 
 /**
  * Thrown by the JWT middleware when an authenticated user does not have any role required by the

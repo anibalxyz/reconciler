@@ -1,6 +1,6 @@
 package com.anibalxyz.server.config;
 
-import com.anibalxyz.server.exception.ConfigurationException.*;
+import com.anibalxyz.server.config.ConfigurationException.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;

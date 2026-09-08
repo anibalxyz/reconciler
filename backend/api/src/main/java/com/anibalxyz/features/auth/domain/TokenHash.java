@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.domain;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.server.exception.UnreachableCodeException;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
+import com.anibalxyz.core.primitives.UnreachableCodeException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,7 +23,7 @@ public final class TokenHash {
     return new TokenHash(hashBytes);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public static MessageDigest getMessageDigest() {
     try {
       return MessageDigest.getInstance("SHA-256");
@@ -40,20 +40,20 @@ public final class TokenHash {
     return Arrays.copyOf(value, value.length);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public int hashCode() {
     return Arrays.hashCode(value);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof TokenHash tokenHash)) return false;
     return Arrays.equals(value, tokenHash.value);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public String toString() {
     return "*******";

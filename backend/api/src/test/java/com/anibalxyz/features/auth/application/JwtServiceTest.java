@@ -2,7 +2,7 @@ package com.anibalxyz.features.auth.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.shared.ResultAsserts;
 import com.anibalxyz.shared.UnitTest;
 import io.jsonwebtoken.Claims;

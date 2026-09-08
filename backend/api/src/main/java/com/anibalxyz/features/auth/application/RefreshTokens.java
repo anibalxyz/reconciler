@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.application;
 
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.*;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;

@@ -1,7 +1,7 @@
 package com.anibalxyz.server.config.modules;
 
-import com.anibalxyz.core.AppEnv;
 import com.anibalxyz.features.common.api.Role;
+import com.anibalxyz.server.config.AppEnv;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.openapi.plugin.OpenApiPlugin;
@@ -15,7 +15,7 @@ import io.javalin.openapi.schema.OpenApiSchemaBuilder;
  * information, contact details, license information, and server configurations. The OpenAPI
  * specification follows industry standards and provides complete API documentation.
  */
-public class SwaggerModule implements StartupModule {
+public class SwaggerModule implements JavalinModule {
 
   private final Config config;
   private final AppEnv appEnv;

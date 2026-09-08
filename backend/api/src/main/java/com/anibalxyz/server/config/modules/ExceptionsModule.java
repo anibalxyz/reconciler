@@ -2,12 +2,12 @@ package com.anibalxyz.server.config.modules;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.core.application.exception.FailureSignal;
-import com.anibalxyz.server.api.ErrorMapper;
-import com.anibalxyz.server.api.ErrorResult;
-import com.anibalxyz.server.api.InfrastructureErrorMapper;
-import com.anibalxyz.server.api.LogEntry;
-import com.anibalxyz.server.context.RequestContext;
+import com.anibalxyz.core.api.FailureSignal;
+import com.anibalxyz.core.api.response.mappers.ErrorMapperResult;
+import com.anibalxyz.core.primitives.LogEntry;
+import com.anibalxyz.server.http.context.RequestContext;
+import com.anibalxyz.server.http.mappers.ExceptionsMapper;
+import com.anibalxyz.server.http.mappers.FeaturesErrorMapper;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.event.Level;
 
-public class ExceptionsModule implements StartupModule {
+public class ExceptionsModule implements JavalinModule {
 
   private static final Logger log = LoggerFactory.getLogger(ExceptionsModule.class);
 
@@ -25,7 +25,7 @@ public class ExceptionsModule implements StartupModule {
     cfg.routes.exception(
         FailureSignal.class,
         (e, ctx) -> {
-          ErrorResult result = ErrorMapper.map(e.getError());
+          ErrorMapperResult result = FeaturesErrorMapper.map(e.getError());
           String requestId = ctx.attribute(RequestContext.REQUEST_ID_KEY);
           MDC.put("status", String.valueOf(result.status()));
           emitLogEntry(result);
@@ -46,7 +46,7 @@ public class ExceptionsModule implements StartupModule {
   }
 
   private void handleException(Exception e, Context ctx) {
-    ErrorResult result = InfrastructureErrorMapper.map(e);
+    ErrorMapperResult result = ExceptionsMapper.map(e);
     String requestId = ctx.attribute(RequestContext.REQUEST_ID_KEY);
     MDC.put("status", String.valueOf(result.status()));
     emitLogEntry(result);
@@ -68,7 +68,7 @@ public class ExceptionsModule implements StartupModule {
     ctx.status(result.status()).json(result.response().instance(requestId));
   }
 
-  private void emitLogEntry(ErrorResult result) {
+  private void emitLogEntry(ErrorMapperResult result) {
     LogEntry entry = result.logEntry();
     if (entry == null) return;
     String errorCode = result.response().code();

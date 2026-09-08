@@ -10,8 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.MaintenancePolicy;

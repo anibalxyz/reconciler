@@ -3,7 +3,7 @@ package com.anibalxyz.shared;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.core.application.ValidationNotification;
-import com.anibalxyz.core.domain.error.DomainError;
+import com.anibalxyz.core.domain.DomainError;
 
 /** Assertion helpers for {@link ValidationNotification}. */
 public final class NotificationAssert {

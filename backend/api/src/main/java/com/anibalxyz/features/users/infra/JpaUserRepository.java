@@ -3,7 +3,7 @@ package com.anibalxyz.features.users.infra;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.UserRepository;
-import com.anibalxyz.persistence.EntityManagerProvider;
+import com.anibalxyz.server.persistence.EntityManagerProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import java.util.List;

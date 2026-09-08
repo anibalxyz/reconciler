@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.api.out;
 
-import com.anibalxyz.features.common.api.out.code.ErrorCode;
+import com.anibalxyz.core.api.response.error.ErrorCode;
 
 public enum AuthErrorCode implements ErrorCode {
   REFRESH_TOKEN_NOT_FOUND("Refresh token not found"),

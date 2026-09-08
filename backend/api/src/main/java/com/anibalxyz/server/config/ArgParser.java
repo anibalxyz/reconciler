@@ -1,6 +1,5 @@
 package com.anibalxyz.server.config;
 
-import com.anibalxyz.server.exception.ConfigurationException;
 import java.util.Optional;
 
 public class ArgParser {

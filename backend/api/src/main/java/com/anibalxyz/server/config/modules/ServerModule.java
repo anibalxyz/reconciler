@@ -12,7 +12,7 @@ import tools.jackson.databind.cfg.DateTimeFeature;
  * Jackson), enabling CORS, and registering default content types. This configuration is applied
  * once when the server starts.
  */
-public class ServerModule implements StartupModule {
+public class ServerModule implements JavalinModule {
 
   private static final Logger log = LoggerFactory.getLogger(ServerModule.class);
   private final Config config;

@@ -2,11 +2,11 @@ package com.anibalxyz.server;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.core.AppEnv;
-import com.anibalxyz.persistence.PersistenceManager;
+import com.anibalxyz.server.config.AppEnv;
 import com.anibalxyz.server.config.ApplicationConfiguration;
 import com.anibalxyz.server.config.settings.ClockSettings;
-import com.anibalxyz.server.context.RequestContext;
+import com.anibalxyz.server.http.context.RequestContext;
+import com.anibalxyz.server.persistence.PersistenceManager;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import java.time.Clock;

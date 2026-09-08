@@ -3,7 +3,7 @@ package com.anibalxyz.features.auth.domain;
 import static com.anibalxyz.shared.Constants.Auth.VALID_REFRESH_RAW_TOKEN_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.domain.error.InvalidRawTokenError;
 import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.DisplayName;

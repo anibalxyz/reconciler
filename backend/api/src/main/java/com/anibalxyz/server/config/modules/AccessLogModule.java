@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-public class AccessLogModule implements StartupModule {
+public class AccessLogModule implements JavalinModule {
 
   public static final String REQUEST_START_TIME_ATTR = "requestStartTime";
   private static final Logger log = LoggerFactory.getLogger("reconciler.access");

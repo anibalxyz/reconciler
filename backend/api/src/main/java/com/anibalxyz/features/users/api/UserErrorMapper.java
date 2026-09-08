@@ -2,20 +2,20 @@ package com.anibalxyz.features.users.api;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.core.domain.error.DomainError;
-import com.anibalxyz.core.domain.error.InvalidValueError;
-import com.anibalxyz.features.common.api.ValidationErrorMapper;
-import com.anibalxyz.features.common.api.out.code.CommonErrorCode;
-import com.anibalxyz.features.common.api.out.code.ValidationErrorCode;
-import com.anibalxyz.features.common.api.out.response.error.ErrorDetail;
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.error.CommonErrorCode;
+import com.anibalxyz.core.api.response.error.ErrorDetail;
+import com.anibalxyz.core.api.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.error.ValidationErrorCode;
+import com.anibalxyz.core.api.response.mappers.ErrorMapperResult;
+import com.anibalxyz.core.api.response.mappers.FeatureErrorMapper;
+import com.anibalxyz.core.api.response.mappers.UnhandledErrorException;
+import com.anibalxyz.core.api.response.mappers.ValidationErrorMapper;
+import com.anibalxyz.core.domain.DomainError;
+import com.anibalxyz.core.domain.InvalidValueError;
+import com.anibalxyz.core.primitives.LogEntry;
+import com.anibalxyz.core.primitives.UnreachableCodeException;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.error.*;
-import com.anibalxyz.server.api.ErrorResult;
-import com.anibalxyz.server.api.FeatureErrorMapper;
-import com.anibalxyz.server.api.LogEntry;
-import com.anibalxyz.server.exception.UnhandledErrorException;
-import com.anibalxyz.server.exception.UnreachableCodeException;
 
 public class UserErrorMapper implements FeatureErrorMapper {
 
@@ -25,7 +25,7 @@ public class UserErrorMapper implements FeatureErrorMapper {
   }
 
   @Override
-  public ErrorResult map(Object error) {
+  public ErrorMapperResult map(Object error) {
     return switch (error) {
       case UpdateUserById.Error e -> mapUpdateUserByIdError(e);
       case UserNotFoundError e -> mapUserNotFoundError(e);
@@ -53,10 +53,10 @@ public class UserErrorMapper implements FeatureErrorMapper {
     throw new UnhandledErrorException(error);
   }
 
-  public ErrorResult mapUpdateUserByIdError(UpdateUserById.Error error) {
+  public ErrorMapperResult mapUpdateUserByIdError(UpdateUserById.Error error) {
     return switch (error) {
       case UpdateUserById.Error.EmptyCommand ignored ->
-          new ErrorResult(
+          new ErrorMapperResult(
               400,
               new ErrorResponse(ValidationErrorCode.VALIDATION_ERROR)
                   .detail("At least one field (name, email, password) must be provided"),
@@ -67,11 +67,11 @@ public class UserErrorMapper implements FeatureErrorMapper {
     };
   }
 
-  public ErrorResult mapUserNotFoundError(UserNotFoundError error) {
+  public ErrorMapperResult mapUserNotFoundError(UserNotFoundError error) {
     ErrorResponse base = new ErrorResponse(CommonErrorCode.RESOURCE_NOT_FOUND);
     return switch (error.getReason()) {
       case UserNotFoundError.Reason.ById r ->
-          new ErrorResult(
+          new ErrorMapperResult(
               404,
               base.detail("User with id " + r.id() + " not found"),
               LogEntry.debug("User not found", kv("user_nf_id", r.id())));
