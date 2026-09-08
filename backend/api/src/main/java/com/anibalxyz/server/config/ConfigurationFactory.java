@@ -10,7 +10,6 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO: add Hikari configuration from env variables
 // TODO: adding a env-identifier to each variable (or set of vars) may be useful
 /**
  * A factory for creating application configuration from various sources.

@@ -8,11 +8,13 @@ public class DatabaseSettings implements Settings {
   private final String url;
   private final String user;
   private final String password;
+  private final HikariSettings hikari;
 
-  private DatabaseSettings(String url, String user, String password) {
+  private DatabaseSettings(String url, String user, String password, HikariSettings hikari) {
     this.url = url;
     this.user = user;
     this.password = password;
+    this.hikari = hikari;
   }
 
   public static DatabaseSettings from(SettingsReader reader) {
@@ -23,8 +25,9 @@ public class DatabaseSettings implements Settings {
     String host = reader.read("DB_HOST");
 
     String url = "jdbc:postgresql://" + host + ":" + port + "/" + name;
+    HikariSettings hikari = HikariSettings.from(reader);
 
-    return new DatabaseSettings(url, user, password);
+    return new DatabaseSettings(url, user, password, hikari);
   }
 
   public String url() {
@@ -39,11 +42,16 @@ public class DatabaseSettings implements Settings {
     return password;
   }
 
+  public HikariSettings hikari() {
+    return hikari;
+  }
+
   @Override
   public Map<String, Object> toMap() {
     Map<String, Object> databaseMap = new LinkedHashMap<>();
     databaseMap.put("url", url());
     databaseMap.put("user", user());
+    databaseMap.put("hikari", hikari().toMap());
     return databaseMap;
   }
 

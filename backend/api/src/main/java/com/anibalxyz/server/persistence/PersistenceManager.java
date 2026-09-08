@@ -45,17 +45,21 @@ public class PersistenceManager {
    * @return the programmatically configured {@link HibernatePersistenceConfiguration}.
    */
   private HibernatePersistenceConfiguration getProperties() {
-    // TODO: set these values dynamically using env variables
     return new HibernatePersistenceConfiguration("reconcilerPU")
         .jdbcUrl(dbConfig.url())
         .jdbcCredentials(dbConfig.user(), dbConfig.password())
         .provider(HikariCPConnectionProvider.class.getName())
-        .property(HikariCPSettings.HIKARI_MAX_SIZE, "20")
-        .property(HikariCPSettings.HIKARI_MIN_IDLE_SIZE, "2")
-        .property(HikariCPSettings.HIKARI_ACQUISITION_TIMEOUT, "15000")
-        .property(HikariCPSettings.HIKARI_VALIDATION_TIMEOUT, "5000")
-        .property(HikariCPSettings.HIKARI_INITIALIZATION_TIMEOUT, "60000")
-        .property(HikariCPSettings.HIKARI_IDLE_TIMEOUT, "300000")
+        .property(HikariCPSettings.HIKARI_MAX_SIZE, dbConfig.hikari().maxSize())
+        .property(HikariCPSettings.HIKARI_MIN_IDLE_SIZE, dbConfig.hikari().minIdleSize())
+        .property(
+            HikariCPSettings.HIKARI_ACQUISITION_TIMEOUT,
+            dbConfig.hikari().acquisitionTimeoutMillis())
+        .property(
+            HikariCPSettings.HIKARI_VALIDATION_TIMEOUT, dbConfig.hikari().validationTimeoutMillis())
+        .property(
+            HikariCPSettings.HIKARI_INITIALIZATION_TIMEOUT,
+            dbConfig.hikari().initializationTimeoutMillis())
+        .property(HikariCPSettings.HIKARI_IDLE_TIMEOUT, dbConfig.hikari().idleTimeoutMillis())
         .schemaToolingAction(Action.VALIDATE)
         .managedClasses(UserEntity.class, RefreshTokenEntity.class);
   }
