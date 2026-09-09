@@ -111,6 +111,7 @@ public class ApplicationConfiguration {
   public Map<String, Object> toMap() {
     Map<String, Object> configSummary = new LinkedHashMap<>();
     configSummary.put("app_env", appEnv.toString());
+    configSummary.put("http_server_config", httpServer.toMap());
     configSummary.put("datetime_config", clock.toMap());
     configSummary.put("security_config", security.toMap());
     configSummary.put("database", database.toMap());
