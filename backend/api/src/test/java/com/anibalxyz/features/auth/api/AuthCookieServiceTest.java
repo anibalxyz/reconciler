@@ -21,7 +21,8 @@ import org.mockito.Mock;
 public class AuthCookieServiceTest extends UnitTest {
 
   private static final Instant NOW = Instant.parse("2025-01-01T12:00:00Z");
-  private static final TestEnv TEST_ENV = new TestEnv(true, "example.com", SameSite.STRICT, "/");
+  private static final TestSettings testConfig =
+      new TestSettings(true, "example.com", SameSite.STRICT, "/");
 
   @Mock private Context ctx;
   private AuthCookieService authCookieService;
@@ -29,15 +30,15 @@ public class AuthCookieServiceTest extends UnitTest {
   @BeforeEach
   void deps() {
     Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    authCookieService = new AuthCookieService(clock, TEST_ENV);
+    authCookieService = new AuthCookieService(clock, testConfig);
   }
 
-  private record TestEnv(
-      Boolean AUTH_COOKIE_SECURE,
-      String AUTH_COOKIE_DOMAIN,
-      SameSite AUTH_COOKIE_SAMESITE,
-      String AUTH_COOKIE_PATH)
-      implements AuthCookieService.Env {}
+  private record TestSettings(
+      Boolean authCookieSecure,
+      String authCookieDomain,
+      SameSite authCookieSamesite,
+      String authCookiePath)
+      implements AuthCookieService.Settings {}
 
   @Nested
   @DisplayName("Tests for secondsUntilExpiry")
@@ -69,8 +70,8 @@ public class AuthCookieServiceTest extends UnitTest {
   class SetRefreshTokenCookie {
 
     @Test
-    @DisplayName("given valid parameters, then set cookie in context with env configurations")
-    void validParameters_setCookieInContextWithEnvConfigs() {
+    @DisplayName("given valid parameters, then set cookie in context")
+    void validParameters_setCookieInContext() {
       Instant expiry = NOW.plusSeconds(30);
 
       authCookieService.setRefreshTokenCookie(ctx, "my-token", expiry);

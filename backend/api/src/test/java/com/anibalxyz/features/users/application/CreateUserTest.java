@@ -28,8 +28,8 @@ public class CreateUserTest extends UnitTest {
 
   @BeforeEach
   void deps() {
-    CreateUser.Env env = new TestEnv(MINIMUM_BCRYPT_LOG_ROUNDS);
-    createUser = new CreateUser(env, userRepository);
+    CreateUser.Settings settings = new TestSettings(MINIMUM_BCRYPT_LOG_ROUNDS);
+    createUser = new CreateUser(settings, userRepository);
   }
 
   @Test
@@ -235,5 +235,5 @@ public class CreateUserTest extends UnitTest {
     assertTrue(actual.passwordMatches(request.password()));
   }
 
-  private record TestEnv(int BCRYPT_LOG_ROUNDS) implements CreateUser.Env {}
+  private record TestSettings(int bcryptLogRounds) implements CreateUser.Settings {}
 }

@@ -8,7 +8,7 @@ import com.anibalxyz.features.auth.application.JwtService;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
 import com.anibalxyz.features.users.infra.UserEntity;
-import com.anibalxyz.persistence.EntityManagerProvider;
+import com.anibalxyz.server.persistence.EntityManagerProvider;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.validation.Validator;
@@ -103,7 +103,7 @@ public class Helpers {
                     ResultAsserts.success(Email.of(email)),
                     PasswordHash.of(
                         ResultAsserts.success(Password.of(password)),
-                        Constants.APP_ENV.BCRYPT_LOG_ROUNDS())));
+                        Constants.securitySettings.bcryptLogRounds())));
 
     em.getTransaction().commit();
 
@@ -125,8 +125,8 @@ public class Helpers {
     return null;
   }
 
-  public static String createValidJwt(JwtService.Env env, Clock clock, int userId) {
-    var jwtService = new JwtService(env, clock);
+  public static String createValidJwt(JwtService.Settings settings, Clock clock, int userId) {
+    var jwtService = new JwtService(settings, clock);
     return jwtService.generateToken(userId);
   }
 

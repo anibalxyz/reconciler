@@ -1,6 +1,6 @@
 package com.anibalxyz.features.users.api.handlers;
 
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.api.openapi.CreateUserEndpoint;

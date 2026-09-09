@@ -6,13 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.mappers.ErrorMapperResult;
 import com.anibalxyz.features.users.api.in.CreateUserRequest;
 import com.anibalxyz.features.users.api.out.CreateUserResponse;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.infra.UserEntity;
-import com.anibalxyz.server.api.ErrorResult;
 import com.anibalxyz.shared.ResultAsserts;
 import java.time.temporal.ChronoUnit;
 import okhttp3.Response;
@@ -29,7 +29,7 @@ public class CreateUserIT extends UsersIT {
     CreateUserRequest requestBody =
         new CreateUserRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
-    ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
+    ErrorMapperResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
     Response response = http.post("/users", requestBody);
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
@@ -47,7 +47,7 @@ public class CreateUserIT extends UsersIT {
     CreateUserRequest requestBody =
         new CreateUserRequest(null, VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
-    ErrorResult expectedResult = errorResultFromInvalidName(requestBody.name());
+    ErrorMapperResult expectedResult = errorResultFromInvalidName(requestBody.name());
 
     Response response = http.post("/users", requestBody);
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
@@ -67,7 +67,7 @@ public class CreateUserIT extends UsersIT {
     CreateUserRequest requestBody =
         new CreateUserRequest(VALID_NAME_STRING, existingEmail, VALID_PASSWORD_STRING);
 
-    ErrorResult expectedResult = errorResultFromAlreadyTakenEmail();
+    ErrorMapperResult expectedResult = errorResultFromAlreadyTakenEmail();
 
     Response response = http.post("/users", requestBody);
     assertThat(response.code()).isEqualTo(expectedResult.status()).isEqualTo(400);

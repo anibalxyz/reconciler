@@ -5,7 +5,7 @@ import static com.anibalxyz.shared.Helpers.stubStatusChaining;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
+import com.anibalxyz.core.api.response.success.CollectionResponse;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.application.GetAllUsers;
 import com.anibalxyz.features.users.domain.User;

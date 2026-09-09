@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.users.domain.error.InvalidNameError;
 import java.util.Objects;
 
@@ -30,13 +30,13 @@ public final class Name {
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public int hashCode() {
     return Objects.hashCode(value);
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Name other)) return false;
@@ -44,7 +44,7 @@ public final class Name {
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public String toString() {
     return value;
   }

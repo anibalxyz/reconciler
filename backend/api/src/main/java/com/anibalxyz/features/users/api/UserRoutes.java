@@ -4,10 +4,10 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 
 import com.anibalxyz.features.common.api.Role;
 import com.anibalxyz.features.users.api.handlers.*;
-import com.anibalxyz.server.config.modules.StartupConfig;
+import com.anibalxyz.server.config.modules.JavalinModule;
 import io.javalin.config.JavalinConfig;
 
-public class UserRoutes implements StartupConfig {
+public class UserRoutes implements JavalinModule {
   private final GetAllUsersHandler getAllUsersHandler;
   private final GetUserByIdHandler getUserByIdHandler;
   private final CreateUserHandler createUserHandler;

@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.core.api.exception.InvalidIdFormat;
-import com.anibalxyz.core.Result;
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
+import com.anibalxyz.core.primitives.Result;
+import com.anibalxyz.features.common.api.InvalidIdFormat;
 import com.anibalxyz.features.users.application.DeleteUserById;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.shared.UnitTest;
@@ -28,8 +28,7 @@ public class DeleteUserByIdHandlerTest extends UnitTest {
   public void handle_invalidId_throwInvalidIdFormat() {
     whenGettingPathParamId(ctx).thenThrow(new InvalidIdFormat("abc"));
 
-    assertThatThrownBy(() -> deleteUserByIdHandler.handle(ctx))
-        .isInstanceOf(InvalidIdFormat.class);
+    assertThatThrownBy(() -> deleteUserByIdHandler.handle(ctx)).isInstanceOf(InvalidIdFormat.class);
   }
 
   @Test

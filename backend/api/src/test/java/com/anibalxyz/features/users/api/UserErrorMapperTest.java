@@ -2,16 +2,16 @@ package com.anibalxyz.features.users.api;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.anibalxyz.core.api.response.mappers.UnhandledErrorException;
 import com.anibalxyz.core.application.ValidationNotification;
-import com.anibalxyz.core.domain.error.DomainError;
-import com.anibalxyz.core.domain.error.InvalidValueError;
+import com.anibalxyz.core.domain.DomainError;
+import com.anibalxyz.core.domain.InvalidValueError;
+import com.anibalxyz.core.primitives.UnreachableCodeException;
 import com.anibalxyz.features.users.application.UpdateUserById;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.Name;
 import com.anibalxyz.features.users.domain.Password;
 import com.anibalxyz.features.users.domain.error.*;
-import com.anibalxyz.server.exception.UnhandledErrorException;
-import com.anibalxyz.server.exception.UnreachableCodeException;
 import com.anibalxyz.shared.ResultAsserts;
 import com.anibalxyz.shared.UnitTest;
 import org.junit.jupiter.api.*;

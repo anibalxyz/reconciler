@@ -1,8 +1,8 @@
 package com.anibalxyz.features.users.api.handlers;
 
-import static com.anibalxyz.features.common.api.Utils.getParamId;
+import static com.anibalxyz.features.common.api.PathParams.getId;
 
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.openapi.GetUserByIdEndpoint;
 import com.anibalxyz.features.users.application.GetUserById;
@@ -20,7 +20,7 @@ public class GetUserByIdHandler implements Handler, GetUserByIdEndpoint {
 
   @Override
   public void handle(@NotNull Context ctx) {
-    int id = getParamId(ctx);
+    int id = getId(ctx);
     User user = getUserById.execute(id).orThrow(FailureSignal::new);
 
     ctx.status(200).json(UserMapper.toDetailResponse(user));

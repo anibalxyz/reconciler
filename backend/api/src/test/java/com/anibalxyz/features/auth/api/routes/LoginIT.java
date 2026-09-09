@@ -8,17 +8,17 @@ import static com.anibalxyz.shared.Helpers.getValueFromCookie;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anibalxyz.core.api.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.mappers.ErrorMapperResult;
 import com.anibalxyz.core.application.ValidationNotification;
 import com.anibalxyz.features.auth.api.in.LoginRequest;
 import com.anibalxyz.features.auth.api.out.AuthResponse;
 import com.anibalxyz.features.auth.application.AuthenticateUser;
 import com.anibalxyz.features.auth.domain.error.InvalidCredentialsError;
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
 import com.anibalxyz.features.users.domain.Email;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
-import com.anibalxyz.server.api.ErrorMapper;
-import com.anibalxyz.server.api.ErrorResult;
+import com.anibalxyz.server.http.mappers.FeaturesErrorMapper;
 import com.anibalxyz.shared.ResultAsserts;
 import okhttp3.Response;
 import org.junit.jupiter.api.DisplayName;
@@ -35,8 +35,8 @@ public class LoginIT extends AuthIT {
     ValidationNotification<UserDomainError> notification = new ValidationNotification<>();
     notification.add("email", ResultAsserts.failure(Email.validate(invalidEmail)));
 
-    ErrorResult expectedResult =
-        ErrorMapper.map(new AuthenticateUser.Error.ValidationFailed(notification));
+    ErrorMapperResult expectedResult =
+        FeaturesErrorMapper.map(new AuthenticateUser.Error.ValidationFailed(notification));
 
     Response loginResponse = http.post("/auth/login", loginRequest);
     assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(400);
@@ -52,8 +52,8 @@ public class LoginIT extends AuthIT {
     testClock.resetTo(SATURDAY_MIDDAY);
     LoginRequest loginRequest = new LoginRequest(VALID_EMAIL_STRING, VALID_PASSWORD_STRING);
 
-    ErrorResult expectedResult =
-        ErrorMapper.map(new AuthenticateUser.Error.MaintenanceWindow(MAINTENANCE_START));
+    ErrorMapperResult expectedResult =
+        FeaturesErrorMapper.map(new AuthenticateUser.Error.MaintenanceWindow(MAINTENANCE_START));
 
     Response loginResponse = http.post("/auth/login", loginRequest);
     assertThat(loginResponse.code()).isEqualTo(expectedResult.status()).isEqualTo(503);
@@ -70,8 +70,8 @@ public class LoginIT extends AuthIT {
         persistUser(em, VALID_NAME_STRING, VALID_EMAIL_STRING, VALID_PASSWORD_STRING).toDomain();
     LoginRequest loginRequest =
         new LoginRequest("different" + user.email().value(), VALID_PASSWORD_STRING);
-    ErrorResult expectedResult =
-        ErrorMapper.map(
+    ErrorMapperResult expectedResult =
+        FeaturesErrorMapper.map(
             new AuthenticateUser.Error.InvalidCredentials(new InvalidCredentialsError()));
 
     Response loginResponse = http.post("/auth/login", loginRequest);

@@ -7,9 +7,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.core.api.exception.InvalidIdFormat;
-import com.anibalxyz.core.Result;
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
+import com.anibalxyz.core.primitives.Result;
+import com.anibalxyz.features.common.api.InvalidIdFormat;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.application.GetUserById;
 import com.anibalxyz.features.users.domain.User;

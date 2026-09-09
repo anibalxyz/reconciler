@@ -1,0 +1,73 @@
+package com.anibalxyz.server.config.modules;
+
+import io.javalin.config.JavalinConfig;
+import io.javalin.json.JavalinJackson3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.cfg.DateTimeFeature;
+
+/**
+ * This class is responsible for setting up essential server features like JSON serialization (with
+ * Jackson), enabling CORS, and registering default content types. This configuration is applied
+ * once when the server starts.
+ */
+public class ServerModule implements JavalinModule {
+
+  private static final Logger log = LoggerFactory.getLogger(ServerModule.class);
+  private final Config config;
+
+  public ServerModule(Config config) {
+    this.config = config;
+  }
+
+  private static void overrideIpGetter(JavalinConfig config) {
+    config.contextResolver.ip =
+        ctx -> {
+          String ip = ctx.header("X-Real-IP");
+          return (ip != null && !ip.isBlank()) ? ip : ctx.req().getRemoteAddr();
+        };
+  }
+
+  private static void configureJsonMapper(JavalinConfig config) {
+    config.jsonMapper(
+        new JavalinJackson3()
+            .updateMapper(
+                builder ->
+                    builder
+                        .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                        .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)));
+  }
+
+  private static void configureCors(JavalinConfig config, String[] hosts) {
+    if (hosts != null && hosts.length > 0) {
+      config.bundledPlugins.enableCors(
+          cors ->
+              cors.addRule(
+                  rule -> {
+                    for (String h : hosts) {
+                      rule.allowHost(h);
+                    }
+                    rule.allowCredentials = true;
+                  }));
+    } else {
+      log.warn("CORS_ALLOWED_ORIGINS not set. CORS will reject all origins");
+    }
+  }
+
+  @Override
+  public void apply(JavalinConfig javalinConfig) {
+    javalinConfig.concurrency.useVirtualThreads = true;
+    javalinConfig.router.ignoreTrailingSlashes = true;
+    javalinConfig.jetty.modifyServer(server -> server.setStopTimeout(5_000)); // graceful shutdown
+    javalinConfig.http.defaultContentType = "application/json; charset=utf-8";
+
+    configureCors(javalinConfig, config.corsAllowedOrigins());
+    configureJsonMapper(javalinConfig);
+    overrideIpGetter(javalinConfig);
+  }
+
+  public interface Config {
+    String[] corsAllowedOrigins();
+  }
+}

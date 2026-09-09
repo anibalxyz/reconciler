@@ -4,8 +4,8 @@ import static com.anibalxyz.shared.Constants.Auth.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-import com.anibalxyz.core.Result;
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.api.AuthCookieService;
 import com.anibalxyz.features.auth.api.exception.MissingRefreshTokenCookie;
 import com.anibalxyz.features.auth.api.out.AuthResponse;

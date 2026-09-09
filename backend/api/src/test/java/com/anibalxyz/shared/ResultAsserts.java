@@ -1,6 +1,6 @@
 package com.anibalxyz.shared;
 
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.Result;
 import java.util.Arrays;
 
 public final class ResultAsserts {

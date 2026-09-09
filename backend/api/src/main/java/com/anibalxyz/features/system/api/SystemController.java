@@ -1,7 +1,7 @@
 package com.anibalxyz.features.system.api;
 
 import com.anibalxyz.features.system.api.out.HealthResponse;
-import com.anibalxyz.persistence.PersistenceManager;
+import com.anibalxyz.server.persistence.PersistenceManager;
 import io.javalin.http.Context;
 import jakarta.persistence.EntityManager;
 

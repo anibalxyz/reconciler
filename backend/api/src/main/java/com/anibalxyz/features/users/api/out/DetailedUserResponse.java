@@ -1,9 +1,9 @@
 package com.anibalxyz.features.users.api.out;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
-import com.anibalxyz.features.common.api.out.response.success.ResponseMeta;
-import com.anibalxyz.features.common.api.out.response.success.SuccessResponse;
+import com.anibalxyz.core.api.response.success.CollectionResponse;
+import com.anibalxyz.core.api.response.success.ResponseMeta;
+import com.anibalxyz.core.api.response.success.SuccessResponse;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.javalin.openapi.OpenApiExample;
 import io.javalin.openapi.OpenApiName;
@@ -18,7 +18,7 @@ public record DetailedUserResponse(
     @OpenApiExample("2025-10-10T10:00:00") Instant updatedAt)
     implements SuccessResponse {
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @JsonPropertyOrder({"data", "meta"})
   @OpenApiName("UserDetailResponseCollection")
   public static class Collection extends CollectionResponse<DetailedUserResponse> {

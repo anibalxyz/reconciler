@@ -2,15 +2,17 @@ package com.anibalxyz.server;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.anibalxyz.persistence.PersistenceManager;
 import com.anibalxyz.server.config.AppEnv;
-import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.context.RequestContext;
+import com.anibalxyz.server.config.ApplicationConfiguration;
+import com.anibalxyz.server.config.settings.ClockSettings;
+import com.anibalxyz.server.http.context.RequestContext;
+import com.anibalxyz.server.persistence.PersistenceManager;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -29,22 +31,28 @@ import org.slf4j.LoggerFactory;
 public class Application {
   private static final Logger log = LoggerFactory.getLogger(Application.class);
   private final Javalin javalin;
+  private final List<Runnable> shutdownTasks;
   private final PersistenceManager persistenceManager;
   private final ApplicationConfiguration config;
 
   private Application(
-      Javalin javalin, PersistenceManager persistenceManager, ApplicationConfiguration config) {
+      Javalin javalin,
+      List<Runnable> shutdownTasks,
+      PersistenceManager persistenceManager,
+      ApplicationConfiguration config) {
+
     this.javalin = javalin;
+    this.shutdownTasks = shutdownTasks;
     this.persistenceManager = persistenceManager;
     this.config = config;
   }
 
   /**
    * Convenience factory for {@link AppEnv#DEV} and {@link AppEnv#PROD}: delegates to {@link
-   * #create(ApplicationConfiguration, Clock)} with {@link #buildClock(AppEnvironmentSource)}}.
+   * #create(ApplicationConfiguration, Clock)} with {@link #buildClock(AppEnv, ClockSettings)}}.
    */
   public static Application create(ApplicationConfiguration config) {
-    return create(config, buildClock(config.env()));
+    return create(config, buildClock(config.appEnv(), config.clock()));
   }
 
   /**
@@ -66,9 +74,32 @@ public class Application {
     DependencyContainer container = new DependencyContainer(config, clock);
 
     Consumer<JavalinConfig> javalinConfig = setupJavalinConfig(config, container);
+    List<Runnable> shutdownTasks = setupShutdownTasks(container);
+
     Javalin server = Javalin.create(javalinConfig);
 
-    return new Application(server, container.persistenceManager(), config);
+    return new Application(server, shutdownTasks, container.persistenceManager(), config);
+  }
+
+  /**
+   * Resolves the {@link Clock} to use for a given environment: system clock in the configured
+   * timezone for {@link AppEnv#PROD}, a fixed clock at {@code SYSTEM_TIME_OVERRIDE} if set, or the
+   * system clock in America/Montevideo otherwise.
+   *
+   * @param appEnv the application environment
+   * @param config the datetime configuration
+   * @return the resolved clock
+   */
+  private static Clock buildClock(AppEnv appEnv, ClockSettings config) {
+    if (appEnv == AppEnv.PROD) {
+      return Clock.system(config.systemTimezone());
+    }
+
+    if (config.systemTimeOverride() != null) {
+      return Clock.fixed(config.systemTimeOverride(), config.systemTimezone());
+    }
+
+    return Clock.system(ZoneId.of("America/Montevideo"));
   }
 
   /**
@@ -84,7 +115,7 @@ public class Application {
     return javalinConfig -> {
       container.serverConfig().apply(javalinConfig);
 
-      if (config.env().SWAGGER_ENABLED()) {
+      if (config.featureFlags().SWAGGER()) {
         container.swaggerConfig().apply(javalinConfig);
         container.systemRoutes().applyRedirects(javalinConfig);
       }
@@ -114,23 +145,48 @@ public class Application {
   }
 
   /**
-   * Resolves the {@link Clock} to use for a given environment: system clock in the configured
-   * timezone for {@link AppEnv#PROD}, a fixed clock at {@code SYSTEM_TIME_OVERRIDE} if set, or the
-   * system clock in America/Montevideo otherwise.
+   * Registers the application resources that require explicit cleanup upon shutdown.
    *
-   * @param env environment configuration
-   * @return the resolved clock
+   * @param container the assembled dependency graph
+   * @return <b>ordered</b> list of cleanup tasks to be executed sequentially during shutdown
    */
-  public static Clock buildClock(AppEnvironmentSource env) {
-    if (env.APP_ENV() == AppEnv.PROD) {
-      return Clock.system(env.SYSTEM_TIMEZONE());
-    }
+  private static List<Runnable> setupShutdownTasks(DependencyContainer container) {
+    List<Runnable> shutdownTasks = new ArrayList<>();
+    shutdownTasks.add(container.metricsConfig()::close);
+    shutdownTasks.add(container.persistenceManager()::close);
+    return shutdownTasks;
+  }
 
-    if (env.SYSTEM_TIME_OVERRIDE() != null) {
-      return Clock.fixed(env.SYSTEM_TIME_OVERRIDE(), env.SYSTEM_TIMEZONE());
+  private static void tryShutdown(Runnable task) {
+    try {
+      task.run();
+    } catch (Exception e) {
+      log.error("Error shutting down task", e);
     }
+  }
 
-    return Clock.system(ZoneId.of("America/Montevideo"));
+  /**
+   * Starts the web server on the specified port.
+   *
+   * @param port The port to listen on.
+   */
+  public void start(int port) {
+    log.info("Starting server on port {} [{} mode]", port, config.appEnv());
+    javalin.start(port);
+    log.info(
+        "Server started successfully and is ready to accept connections on {}",
+        kv("api_url", config.httpServer().apiUrl()));
+  }
+
+  /** Stops the web server and shuts down all registered resources gracefully. */
+  public void shutdown() {
+    log.info("Stopping Application...");
+    javalin.stop();
+
+    log.info("Shutting down Application resources...");
+    shutdownTasks.forEach(Application::tryShutdown);
+
+    log.info("Server shutdown completed successfully!");
   }
 
   public Javalin javalin() {
@@ -143,24 +199,5 @@ public class Application {
 
   public ApplicationConfiguration config() {
     return config;
-  }
-
-  /**
-   * Starts the web server on the specified port.
-   *
-   * @param port The port to listen on.
-   */
-  public void start(int port) {
-    log.info("Starting server on port {} [{} mode]", port, config.env().APP_ENV());
-    javalin.start(port);
-    log.info(
-        "Server started successfully and is ready to accept connections on {}",
-        kv("api_url", config.env().API_URL()));
-  }
-
-  /** Stops the web server and shuts down the persistence layer gracefully. */
-  public void stop() {
-    javalin.stop();
-    persistenceManager.shutdown();
   }
 }

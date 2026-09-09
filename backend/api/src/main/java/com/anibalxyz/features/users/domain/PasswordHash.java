@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordHashError;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -62,21 +62,17 @@ public class PasswordHash {
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public int hashCode() {
     return Objects.hashCode(value);
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof PasswordHash other)) return false;
     return Objects.equals(value, other.value());
-  }
-
-  public String value() {
-    return value;
   }
 
   /**
@@ -86,5 +82,9 @@ public class PasswordHash {
   @Override
   public String toString() {
     return "********";
+  }
+
+  public String value() {
+    return value;
   }
 }

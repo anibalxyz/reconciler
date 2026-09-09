@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.api.routes;
 
-import static com.anibalxyz.shared.Constants.APP_CONFIG;
+import static com.anibalxyz.shared.Constants.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anibalxyz.features.auth.application.*;
@@ -18,7 +18,7 @@ public abstract class AuthIT extends IntegrationTest {
       FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.SATURDAY)).with(LocalTime.NOON).toInstant();
   static final Instant MAINTENANCE_START =
       FIXED_NOW.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).with(LocalTime.of(8, 0)).toInstant();
-  static final JwtService jwtService = new JwtService(APP_CONFIG.env(), testClock);
+  static final JwtService jwtService = new JwtService(config.security(), testClock);
   static RefreshTokenRepository refreshTokenRepository;
   static RefreshTokens refreshTokens;
   static CreateRefreshToken createRefreshToken;
@@ -28,13 +28,13 @@ public abstract class AuthIT extends IntegrationTest {
     var jwt = ResultAsserts.success(jwtService.validateToken(accessToken));
     assertThat(jwt.getSubject()).isEqualTo(id.toString());
     assertThat(jwt.getIssuedAt()).isEqualTo(testClock.instant());
-    assertThat(jwt.getIssuer()).isEqualTo(APP_CONFIG.env().JWT_ISSUER());
+    assertThat(jwt.getIssuer()).isEqualTo(config.security().jwtIssuer());
     assertThat(jwt.getExpiration())
         .isEqualTo(
             Date.from(
                 testClock
                     .instant()
-                    .plusSeconds(APP_CONFIG.env().JWT_ACCESS_EXPIRATION_TIME_SECONDS())));
+                    .plusSeconds(config.security().jwtAccessExpirationTimeSeconds())));
   }
 
   public static void validateRefreshToken(String token, Integer id) {
@@ -60,7 +60,7 @@ public abstract class AuthIT extends IntegrationTest {
     maintenancePolicy = new MaintenancePolicy();
     refreshTokens =
         new RefreshTokens(
-            APP_CONFIG.env(),
+            config.security(),
             testClock,
             refreshTokenRepository,
             maintenancePolicy,

@@ -1,8 +1,8 @@
 package com.anibalxyz.features.users.api.handlers;
 
-import static com.anibalxyz.features.common.api.Utils.getParamId;
+import static com.anibalxyz.features.common.api.PathParams.getId;
 
-import com.anibalxyz.core.application.exception.FailureSignal;
+import com.anibalxyz.core.api.FailureSignal;
 import com.anibalxyz.features.users.api.openapi.DeleteUserByIdEndpoint;
 import com.anibalxyz.features.users.application.DeleteUserById;
 import io.javalin.http.Context;
@@ -18,7 +18,7 @@ public class DeleteUserByIdHandler implements Handler, DeleteUserByIdEndpoint {
 
   @Override
   public void handle(@NotNull Context ctx) {
-    int id = getParamId(ctx);
+    int id = getId(ctx);
     deleteUserById.execute(id).orThrow(FailureSignal::new);
     ctx.status(204);
   }

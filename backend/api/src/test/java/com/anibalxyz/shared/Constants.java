@@ -6,30 +6,44 @@ import com.anibalxyz.features.auth.domain.RawToken;
 import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.TokenHash;
 import com.anibalxyz.features.users.domain.*;
-import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.environment.ConfigurationFactory;
+import com.anibalxyz.server.config.ApplicationConfiguration;
+import com.anibalxyz.server.config.ConfigurationFactory;
+import com.anibalxyz.server.config.settings.SecuritySettings;
 import java.time.Instant;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Provides centralized constants for testing, including environment configuration and mock data.
- */
+/** Provides centralized constants for testing, including configuration values and mock data. */
 public class Constants {
   private static final Logger log = LoggerFactory.getLogger(Constants.class);
-  public static ApplicationConfiguration APP_CONFIG;
-  public static AppEnvironmentSource APP_ENV;
+  public static ApplicationConfiguration config;
+  public static SecuritySettings securitySettings;
   private static boolean initialized;
 
   public static void init() {
     if (initialized) return;
 
-    APP_CONFIG = ConfigurationFactory.loadForTest();
-    APP_ENV = APP_CONFIG.env();
+    String[] args = getArgs();
+    config = ConfigurationFactory.load(args);
+    securitySettings = config.security();
 
     initialized = true;
-    log.info("Constants initialized: {}", APP_CONFIG);
+    log.info("Test constants initialized.");
+  }
+
+  private static String @NonNull [] getArgs() {
+    String[] args;
+    if (Boolean.parseBoolean(System.getProperty("useSystemEnv", "false"))) {
+      args = new String[] {};
+    } else {
+      String envFile = System.getProperty("envFile");
+      args =
+          (envFile != null && !envFile.isBlank())
+              ? new String[] {"--env-file", envFile}
+              : new String[] {};
+    }
+    return args;
   }
 
   public static final class Users {
@@ -44,7 +58,7 @@ public class Constants {
     public static final Password VALID_PASSWORD =
         ResultAsserts.success(Password.of(VALID_PASSWORD_STRING));
     public static final PasswordHash VALID_PASSWORD_HASH =
-        PasswordHash.of(VALID_PASSWORD, APP_ENV.BCRYPT_LOG_ROUNDS());
+        PasswordHash.of(VALID_PASSWORD, securitySettings.bcryptLogRounds());
 
     /**
      * A pre-built user whose credentials match the VALID_* constants

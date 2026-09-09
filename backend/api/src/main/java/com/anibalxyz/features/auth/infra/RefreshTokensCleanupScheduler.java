@@ -3,7 +3,7 @@ package com.anibalxyz.features.auth.infra;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
-import com.anibalxyz.server.config.modules.StartupConfig;
+import com.anibalxyz.server.config.modules.JavalinModule;
 import io.javalin.config.JavalinConfig;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RefreshTokensCleanupScheduler implements StartupConfig {
+public class RefreshTokensCleanupScheduler implements JavalinModule {
 
   private static final Logger log = LoggerFactory.getLogger(RefreshTokensCleanupScheduler.class);
   private final RefreshTokenRepository refreshTokenRepository;

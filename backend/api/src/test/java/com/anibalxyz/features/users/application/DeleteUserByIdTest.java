@@ -3,7 +3,7 @@ package com.anibalxyz.features.users.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.anibalxyz.core.domain.error.ReasonedError;
+import com.anibalxyz.core.domain.ReasonedError;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.domain.error.UserNotFoundError;
 import com.anibalxyz.shared.ResultAsserts;

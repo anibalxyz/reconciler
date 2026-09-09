@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.api.openapi;
 
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponse;
-import com.anibalxyz.features.common.api.out.response.error.ErrorResponseExamples;
+import com.anibalxyz.core.api.response.error.ErrorResponse;
+import com.anibalxyz.core.api.response.error.ErrorResponseExamples;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
 

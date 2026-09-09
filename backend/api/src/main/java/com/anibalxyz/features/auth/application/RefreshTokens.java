@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.application;
 
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.*;
 import com.anibalxyz.features.auth.domain.error.InvalidRefreshTokenError;
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class RefreshTokens {
   private static final Logger log = LoggerFactory.getLogger(RefreshTokens.class);
-  private final Env env;
+  private final Settings settings;
   private final Clock clock;
   private final RefreshTokenRepository refreshTokenRepository;
   private final MaintenancePolicy maintenancePolicy;
@@ -23,13 +23,13 @@ public class RefreshTokens {
   private final CreateRefreshToken createRefreshToken;
 
   public RefreshTokens(
-      Env env,
+      Settings settings,
       Clock clock,
       RefreshTokenRepository refreshTokenRepository,
       MaintenancePolicy maintenancePolicy,
       JwtService jwtService,
       CreateRefreshToken createRefreshToken) {
-    this.env = env;
+    this.settings = settings;
     this.clock = clock;
     this.refreshTokenRepository = refreshTokenRepository;
     this.maintenancePolicy = maintenancePolicy;
@@ -46,7 +46,7 @@ public class RefreshTokens {
     }
 
     Instant expiryDate =
-        maintenancePolicy.calculateExpiryDate(now, env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
+        maintenancePolicy.calculateExpiryDate(now, settings.jwtRefreshExpirationTimeDays());
     return verifyRefreshToken(refreshTokenString, now.toInstant())
         .onSuccess(oldToken -> refreshTokenRepository.revoke(oldToken.tokenHash()))
         .map(
@@ -85,8 +85,8 @@ public class RefreshTokens {
     record InvalidToken(InvalidRefreshTokenError error) implements Error {}
   }
 
-  public interface Env {
-    Duration JWT_REFRESH_EXPIRATION_TIME_DAYS();
+  public interface Settings {
+    Duration jwtRefreshExpirationTimeDays();
   }
 
   public record RotationResult(UserId userId, RawToken rawToken) {}

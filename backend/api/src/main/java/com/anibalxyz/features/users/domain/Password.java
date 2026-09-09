@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.users.domain.error.InvalidPasswordError;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
@@ -36,13 +36,13 @@ public class Password {
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public int hashCode() {
     return Objects.hashCode(value);
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Password other)) return false;

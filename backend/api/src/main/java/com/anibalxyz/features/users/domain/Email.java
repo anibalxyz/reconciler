@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.users.domain.error.InvalidEmailError;
 import java.util.Locale;
 import java.util.Objects;
@@ -54,26 +54,26 @@ public final class Email {
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public int hashCode() {
     return Objects.hashCode(value);
   }
 
   @Override
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Email other)) return false;
     return Objects.equals(value, other.value());
   }
 
-  public String value() {
+  @Override
+  @ExcludeFromCoverageGenerated
+  public String toString() {
     return value;
   }
 
-  @Override
-  @ExcludeFromJacocoGenerated
-  public String toString() {
+  public String value() {
     return value;
   }
 }

@@ -1,6 +1,6 @@
 package com.anibalxyz.features.auth.application;
 
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.Result;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
 import java.time.Clock;
@@ -13,11 +13,11 @@ import org.slf4j.LoggerFactory;
 
 public class JwtService {
   private static final Logger log = LoggerFactory.getLogger(JwtService.class);
-  private final Env env;
+  private final Settings settings;
   private final Clock clock;
 
-  public JwtService(Env env, Clock clock) {
-    this.env = env;
+  public JwtService(Settings settings, Clock clock) {
+    this.settings = settings;
     this.clock = clock;
   }
 
@@ -31,9 +31,9 @@ public class JwtService {
         .subject(subject)
         .issuedAt(iat)
         .notBefore(iat)
-        .expiration(Date.from(now.plusSeconds(env.JWT_ACCESS_EXPIRATION_TIME_SECONDS())))
-        .issuer(env.JWT_ISSUER())
-        .signWith(env.JWT_KEY())
+        .expiration(Date.from(now.plusSeconds(settings.jwtAccessExpirationTimeSeconds())))
+        .issuer(settings.jwtIssuer())
+        .signWith(settings.jwtKey())
         .compact();
   }
 
@@ -44,7 +44,7 @@ public class JwtService {
     try {
       return Result.success(
           Jwts.parser()
-              .verifyWith(env.JWT_KEY())
+              .verifyWith(settings.jwtKey())
               .clock(() -> Date.from(clock.instant()))
               .build()
               .parseSignedClaims(token)
@@ -60,12 +60,12 @@ public class JwtService {
     }
   }
 
-  public interface Env {
-    SecretKey JWT_KEY();
+  public interface Settings {
+    SecretKey jwtKey();
 
-    String JWT_ISSUER();
+    String jwtIssuer();
 
-    long JWT_ACCESS_EXPIRATION_TIME_SECONDS();
+    long jwtAccessExpirationTimeSeconds();
   }
 
   public sealed interface JwtValidationError {

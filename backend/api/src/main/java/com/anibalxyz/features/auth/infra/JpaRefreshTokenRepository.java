@@ -4,7 +4,7 @@ import com.anibalxyz.features.auth.domain.RefreshToken;
 import com.anibalxyz.features.auth.domain.RefreshTokenRepository;
 import com.anibalxyz.features.auth.domain.TokenHash;
 import com.anibalxyz.features.users.infra.UserEntity;
-import com.anibalxyz.persistence.EntityManagerProvider;
+import com.anibalxyz.server.persistence.EntityManagerProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import java.util.Optional;

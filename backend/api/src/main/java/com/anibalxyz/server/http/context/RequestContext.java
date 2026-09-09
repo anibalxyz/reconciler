@@ -1,0 +1,61 @@
+package com.anibalxyz.server.http.context;
+
+import io.javalin.http.Context;
+import java.util.UUID;
+import org.slf4j.MDC;
+
+/**
+ * Manages per-request contextual data via SLF4J MDC.
+ *
+ * <p>MDC (Mapped Diagnostic Context) is a thread-local key-value store provided by SLF4J. Any value
+ * placed here is automatically included in every log statement made by any class on that thread,
+ * without needing to pass it as a parameter.
+ *
+ * <p>All values are cleared at the end of each request to prevent leaking into future requests
+ * (thread reuse via virtual threads or thread pools).
+ */
+public class RequestContext {
+
+  public static final String REQUEST_ID_KEY = "request_id";
+  public static final String USER_ID_KEY = "user_id";
+
+  private RequestContext() {}
+
+  /**
+   * Generates a request ID and seeds the MDC for this request.
+   *
+   * <p>The request ID follows the format {@code req-<UUID>}.
+   *
+   * @param ctx the Javalin request context
+   * @return the request ID that was assigned
+   */
+  public static String initialize(Context ctx) {
+    String requestId = "req-" + UUID.randomUUID();
+
+    MDC.put(REQUEST_ID_KEY, requestId);
+    MDC.put("client_ip", ctx.ip());
+    MDC.put("method", ctx.method().name());
+    MDC.put("path", ctx.path());
+    setUserId("anonymous");
+
+    return requestId;
+  }
+
+  /**
+   * Clears all MDC values for this thread.
+   *
+   * <p>MUST be called at the end of every request to prevent stale data leaking into the next
+   * request (thread reuse).
+   */
+  public static void clear() {
+    MDC.clear();
+  }
+
+  private static void setUserId(String userId) {
+    MDC.put(USER_ID_KEY, userId);
+  }
+
+  public static void setUserId(int userId) {
+    setUserId(String.valueOf(userId));
+  }
+}

@@ -18,17 +18,12 @@ import com.anibalxyz.features.users.api.handlers.*;
 import com.anibalxyz.features.users.application.*;
 import com.anibalxyz.features.users.domain.UserRepository;
 import com.anibalxyz.features.users.infra.JpaUserRepository;
-import com.anibalxyz.persistence.EntityManagerProvider;
-import com.anibalxyz.persistence.PersistenceManager;
-import com.anibalxyz.server.config.environment.AppEnvironmentSource;
-import com.anibalxyz.server.config.environment.ApplicationConfiguration;
-import com.anibalxyz.server.config.modules.AccessLogConfig;
-import com.anibalxyz.server.config.modules.ExceptionsConfig;
-import com.anibalxyz.server.config.modules.LifecycleConfig;
-import com.anibalxyz.server.config.modules.MetricsConfig;
-import com.anibalxyz.server.config.modules.ServerConfig;
-import com.anibalxyz.server.config.modules.SwaggerConfig;
-import com.anibalxyz.server.context.JavalinContextEntityManagerProvider;
+import com.anibalxyz.server.config.ApplicationConfiguration;
+import com.anibalxyz.server.config.modules.*;
+import com.anibalxyz.server.config.settings.SecuritySettings;
+import com.anibalxyz.server.http.context.JavalinContextEntityManagerProvider;
+import com.anibalxyz.server.persistence.EntityManagerProvider;
+import com.anibalxyz.server.persistence.PersistenceManager;
 import io.javalin.micrometer.MicrometerPlugin;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
@@ -46,13 +41,13 @@ public final class DependencyContainer {
 
   private final PersistenceManager persistenceManager;
 
-  private final ServerConfig serverConfig;
-  private final SwaggerConfig swaggerConfig;
+  private final ServerModule serverConfig;
+  private final SwaggerModule swaggerConfig;
 
-  private final LifecycleConfig lifecycleConfig;
-  private final ExceptionsConfig exceptionsConfig;
-  private final AccessLogConfig accessLogConfig;
-  private final MetricsConfig metricsConfig;
+  private final LifecycleModule lifecycleConfig;
+  private final ExceptionsModule exceptionsConfig;
+  private final AccessLogModule accessLogConfig;
+  private final MetricsModule metricsConfig;
 
   private final JwtMiddleware jwtMiddleware;
 
@@ -64,24 +59,24 @@ public final class DependencyContainer {
 
   public DependencyContainer(ApplicationConfiguration config, Clock clock) {
     // 1. Infrastructure
-    AppEnvironmentSource env = config.env();
+    SecuritySettings securitySettings = config.security();
     EntityManagerProvider emProvider = new JavalinContextEntityManagerProvider();
     var prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     persistenceManager = new PersistenceManager(config.database());
 
     // 2. Configurations
     // Startup Configurations
-    serverConfig = new ServerConfig(config.env());
-    swaggerConfig = new SwaggerConfig(config.env());
+    serverConfig = new ServerModule(config.httpServer());
+    swaggerConfig = new SwaggerModule(config.httpServer(), config.appEnv());
     MicrometerPlugin micrometerPlugin =
         new MicrometerPlugin(
             micrometerPluginConfig -> micrometerPluginConfig.registry = prometheusMeterRegistry);
 
     // Runtime Configurations
-    lifecycleConfig = new LifecycleConfig(persistenceManager);
-    exceptionsConfig = new ExceptionsConfig();
-    accessLogConfig = new AccessLogConfig();
-    metricsConfig = new MetricsConfig(micrometerPlugin, prometheusMeterRegistry);
+    lifecycleConfig = new LifecycleModule(persistenceManager);
+    exceptionsConfig = new ExceptionsModule();
+    accessLogConfig = new AccessLogModule();
+    metricsConfig = new MetricsModule(micrometerPlugin, prometheusMeterRegistry);
 
     // 3. Repositories
     UserRepository userRepository = new JpaUserRepository(emProvider);
@@ -95,19 +90,29 @@ public final class DependencyContainer {
     GetAllUsers getAllUsers = new GetAllUsers(userRepository);
     GetUserByEmail getUserByEmail = new GetUserByEmail(userRepository);
     GetUserById getUserById = new GetUserById(userRepository);
-    CreateUser createUser = new CreateUser(env, userRepository);
-    UpdateUserById updateUserById = new UpdateUserById(env, userRepository);
+    CreateUser createUser = new CreateUser(securitySettings, userRepository);
+    UpdateUserById updateUserById = new UpdateUserById(securitySettings, userRepository);
     DeleteUserById deleteUserById = new DeleteUserById(userRepository);
 
-    JwtService jwtService = new JwtService(env, clock);
+    JwtService jwtService = new JwtService(securitySettings, clock);
 
     CreateRefreshToken createRefreshToken = new CreateRefreshToken(refreshTokenRepository);
     AuthenticateUser authenticateUser =
         new AuthenticateUser(
-            env, clock, maintenancePolicy, getUserByEmail, jwtService, createRefreshToken);
+            securitySettings,
+            clock,
+            maintenancePolicy,
+            getUserByEmail,
+            jwtService,
+            createRefreshToken);
     RefreshTokens refreshTokens =
         new RefreshTokens(
-            env, clock, refreshTokenRepository, maintenancePolicy, jwtService, createRefreshToken);
+            securitySettings,
+            clock,
+            refreshTokenRepository,
+            maintenancePolicy,
+            jwtService,
+            createRefreshToken);
     Logout logout = new Logout(refreshTokenRepository);
 
     // 6. Handlers and Middlewares
@@ -118,7 +123,7 @@ public final class DependencyContainer {
     UpdateUserByIdHandler updateUserByIdHandler = new UpdateUserByIdHandler(updateUserById);
     DeleteUserByIdHandler deleteUserByIdHandler = new DeleteUserByIdHandler(deleteUserById);
 
-    AuthCookieService authCookieService = new AuthCookieService(clock, env);
+    AuthCookieService authCookieService = new AuthCookieService(clock, securitySettings);
     LoginHandler loginHandler = new LoginHandler(authCookieService, authenticateUser);
     LogoutHandler logoutHandler = new LogoutHandler(authCookieService, logout);
     RefreshTokensHandler refreshTokensHandler =
@@ -149,27 +154,27 @@ public final class DependencyContainer {
     return persistenceManager;
   }
 
-  public ServerConfig serverConfig() {
+  public ServerModule serverConfig() {
     return serverConfig;
   }
 
-  public SwaggerConfig swaggerConfig() {
+  public SwaggerModule swaggerConfig() {
     return swaggerConfig;
   }
 
-  public LifecycleConfig lifecycleConfig() {
+  public LifecycleModule lifecycleConfig() {
     return lifecycleConfig;
   }
 
-  public ExceptionsConfig exceptionsConfig() {
+  public ExceptionsModule exceptionsConfig() {
     return exceptionsConfig;
   }
 
-  public AccessLogConfig accessLogConfig() {
+  public AccessLogModule accessLogConfig() {
     return accessLogConfig;
   }
 
-  public MetricsConfig metricsConfig() {
+  public MetricsModule metricsConfig() {
     return metricsConfig;
   }
 

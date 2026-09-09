@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.domain;
 
-import com.anibalxyz.annotation.ExcludeFromJacocoGenerated;
-import com.anibalxyz.core.Result;
+import com.anibalxyz.core.primitives.ExcludeFromCoverageGenerated;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.users.domain.error.InvalidUserIdError;
 import java.util.Objects;
 
@@ -21,20 +21,20 @@ public class UserId {
     return this.value;
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public int hashCode() {
     return Objects.hashCode(value);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof UserId userId)) return false;
     return Objects.equals(value, userId.value);
   }
 
-  @ExcludeFromJacocoGenerated
+  @ExcludeFromCoverageGenerated
   @Override
   public String toString() {
     return "UserId{" + "value=" + value + '}';

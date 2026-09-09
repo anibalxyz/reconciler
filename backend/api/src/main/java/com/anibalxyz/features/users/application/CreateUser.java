@@ -1,7 +1,7 @@
 package com.anibalxyz.features.users.application;
 
-import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.users.application.in.CreateUserCommand;
 import com.anibalxyz.features.users.domain.*;
 import com.anibalxyz.features.users.domain.error.*;
@@ -11,11 +11,11 @@ import org.slf4j.LoggerFactory;
 public class CreateUser {
   private static final Logger log = LoggerFactory.getLogger(CreateUser.class);
 
-  private final Env env;
+  private final Settings settings;
   private final UserRepository userRepository;
 
-  public CreateUser(Env env, UserRepository userRepository) {
-    this.env = env;
+  public CreateUser(Settings settings, UserRepository userRepository) {
+    this.settings = settings;
     this.userRepository = userRepository;
   }
 
@@ -42,14 +42,14 @@ public class CreateUser {
       return Result.failure(notification);
     }
 
-    PasswordHash password = PasswordHash.of(passwordResult.unwrap(), env.BCRYPT_LOG_ROUNDS());
+    PasswordHash password = PasswordHash.of(passwordResult.unwrap(), settings.bcryptLogRounds());
 
     log.info("User created");
     return Result.success(
         userRepository.save(User.create(nameResult.unwrap(), emailResult.unwrap(), password)));
   }
 
-  public interface Env {
-    int BCRYPT_LOG_ROUNDS();
+  public interface Settings {
+    int bcryptLogRounds();
   }
 }

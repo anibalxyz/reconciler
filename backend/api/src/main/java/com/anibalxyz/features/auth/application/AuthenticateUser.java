@@ -1,7 +1,7 @@
 package com.anibalxyz.features.auth.application;
 
-import com.anibalxyz.core.Result;
 import com.anibalxyz.core.application.ValidationNotification;
+import com.anibalxyz.core.primitives.Result;
 import com.anibalxyz.features.auth.application.in.LoginCommand;
 import com.anibalxyz.features.auth.application.out.AuthResult;
 import com.anibalxyz.features.auth.domain.MaintenancePolicy;
@@ -13,7 +13,7 @@ import com.anibalxyz.features.users.domain.Password;
 import com.anibalxyz.features.users.domain.User;
 import com.anibalxyz.features.users.domain.UserId;
 import com.anibalxyz.features.users.domain.error.UserDomainError;
-import com.anibalxyz.server.context.RequestContext;
+import com.anibalxyz.server.http.context.RequestContext;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class AuthenticateUser {
   private static final Logger log = LoggerFactory.getLogger(AuthenticateUser.class);
-  private final Env env;
+  private final Settings settings;
   private final Clock clock;
   private final MaintenancePolicy maintenancePolicy;
   private final GetUserByEmail getUserByEmail;
@@ -32,13 +32,13 @@ public class AuthenticateUser {
   private final CreateRefreshToken createRefreshToken;
 
   public AuthenticateUser(
-      Env env,
+      Settings settings,
       Clock clock,
       MaintenancePolicy maintenancePolicy,
       GetUserByEmail getUserByEmail,
       JwtService jwtService,
       CreateRefreshToken createRefreshToken) {
-    this.env = env;
+    this.settings = settings;
     this.clock = clock;
     this.maintenancePolicy = maintenancePolicy;
     this.getUserByEmail = getUserByEmail;
@@ -85,7 +85,7 @@ public class AuthenticateUser {
 
     String accessToken = jwtService.generateToken(userId.value());
     Instant expiryDate =
-        maintenancePolicy.calculateExpiryDate(now, env.JWT_REFRESH_EXPIRATION_TIME_DAYS());
+        maintenancePolicy.calculateExpiryDate(now, settings.jwtRefreshExpirationTimeDays());
     RawToken refreshToken = createRefreshToken.execute(userId, expiryDate);
 
     log.info("User authenticated");
@@ -101,7 +101,7 @@ public class AuthenticateUser {
         implements Error {}
   }
 
-  public interface Env {
-    Duration JWT_REFRESH_EXPIRATION_TIME_DAYS();
+  public interface Settings {
+    Duration jwtRefreshExpirationTimeDays();
   }
 }

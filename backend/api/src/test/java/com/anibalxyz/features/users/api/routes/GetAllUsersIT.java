@@ -4,7 +4,7 @@ import static com.anibalxyz.shared.Helpers.createJwtHeader;
 import static com.anibalxyz.shared.Helpers.persistUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anibalxyz.features.common.api.out.response.success.CollectionResponse;
+import com.anibalxyz.core.api.response.success.CollectionResponse;
 import com.anibalxyz.features.users.api.UserMapper;
 import com.anibalxyz.features.users.api.out.DetailedUserResponse;
 import com.anibalxyz.features.users.infra.UserEntity;
