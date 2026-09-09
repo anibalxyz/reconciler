@@ -25,9 +25,9 @@ public class PersistenceManager {
 
   public PersistenceManager(DatabaseSettings dbConfig) {
     this.dbConfig = dbConfig;
-    log.info("Initializing database connection pool: {}", dbConfig);
+    log.info("Initializing database connection pool...");
     this.emf = getProperties().createEntityManagerFactory();
-    log.info("Database connection pool initialized successfully");
+    log.info("Database connection pool initialized successfully!");
   }
 
   public EntityManagerFactory emf() {

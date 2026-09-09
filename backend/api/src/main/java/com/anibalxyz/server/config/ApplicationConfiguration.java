@@ -53,7 +53,7 @@ public class ApplicationConfiguration {
             databaseSettings,
             featureFlags);
 
-    logLoadedConfiguration(result, appEnv);
+    logLoadedConfiguration(result, appEnv.equals(AppEnv.TEST));
     return result;
   }
 
@@ -77,12 +77,10 @@ public class ApplicationConfiguration {
     }
   }
 
-  /** TODO: refactor to a helper class, so can be used in other places */
-  private static void logLoadedConfiguration(ApplicationConfiguration result, AppEnv env) {
+  private static void logLoadedConfiguration(
+      ApplicationConfiguration result, boolean usePlaceholder) {
     String logMessage = "Configuration loaded";
-    if (env.equals(AppEnv.TEST)) {
-      logMessage = logMessage.concat(": {}");
-    }
+    if (usePlaceholder) logMessage = logMessage.concat(": {}");
     log.info(logMessage, v("config", result.toMap()));
   }
 
