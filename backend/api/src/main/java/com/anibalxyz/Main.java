@@ -9,7 +9,7 @@ public class Main {
     ApplicationConfiguration config = ConfigurationFactory.load(args);
     Application server = Application.create(config);
 
-    Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+    Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
 
     server.start(config.httpServer().apiPort());
   }

@@ -11,6 +11,8 @@ import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -29,12 +31,18 @@ import org.slf4j.LoggerFactory;
 public class Application {
   private static final Logger log = LoggerFactory.getLogger(Application.class);
   private final Javalin javalin;
+  private final List<Runnable> shutdownTasks;
   private final PersistenceManager persistenceManager;
   private final ApplicationConfiguration config;
 
   private Application(
-      Javalin javalin, PersistenceManager persistenceManager, ApplicationConfiguration config) {
+      Javalin javalin,
+      List<Runnable> shutdownTasks,
+      PersistenceManager persistenceManager,
+      ApplicationConfiguration config) {
+
     this.javalin = javalin;
+    this.shutdownTasks = shutdownTasks;
     this.persistenceManager = persistenceManager;
     this.config = config;
   }
@@ -66,9 +74,32 @@ public class Application {
     DependencyContainer container = new DependencyContainer(config, clock);
 
     Consumer<JavalinConfig> javalinConfig = setupJavalinConfig(config, container);
+    List<Runnable> shutdownTasks = setupShutdownTasks(container);
+
     Javalin server = Javalin.create(javalinConfig);
 
-    return new Application(server, container.persistenceManager(), config);
+    return new Application(server, shutdownTasks, container.persistenceManager(), config);
+  }
+
+  /**
+   * Resolves the {@link Clock} to use for a given environment: system clock in the configured
+   * timezone for {@link AppEnv#PROD}, a fixed clock at {@code SYSTEM_TIME_OVERRIDE} if set, or the
+   * system clock in America/Montevideo otherwise.
+   *
+   * @param appEnv the application environment
+   * @param config the datetime configuration
+   * @return the resolved clock
+   */
+  private static Clock buildClock(AppEnv appEnv, ClockSettings config) {
+    if (appEnv == AppEnv.PROD) {
+      return Clock.system(config.systemTimezone());
+    }
+
+    if (config.systemTimeOverride() != null) {
+      return Clock.fixed(config.systemTimeOverride(), config.systemTimezone());
+    }
+
+    return Clock.system(ZoneId.of("America/Montevideo"));
   }
 
   /**
@@ -114,36 +145,24 @@ public class Application {
   }
 
   /**
-   * Resolves the {@link Clock} to use for a given environment: system clock in the configured
-   * timezone for {@link AppEnv#PROD}, a fixed clock at {@code SYSTEM_TIME_OVERRIDE} if set, or the
-   * system clock in America/Montevideo otherwise.
+   * Registers the application resources that require explicit cleanup upon shutdown.
    *
-   * @param appEnv the application environment
-   * @param config the datetime configuration
-   * @return the resolved clock
+   * @param container the assembled dependency graph
+   * @return <b>ordered</b> list of cleanup tasks to be executed sequentially during shutdown
    */
-  public static Clock buildClock(AppEnv appEnv, ClockSettings config) {
-    if (appEnv == AppEnv.PROD) {
-      return Clock.system(config.systemTimezone());
+  private static List<Runnable> setupShutdownTasks(DependencyContainer container) {
+    List<Runnable> shutdownTasks = new ArrayList<>();
+    shutdownTasks.add(container.metricsConfig()::close);
+    shutdownTasks.add(container.persistenceManager()::close);
+    return shutdownTasks;
+  }
+
+  private static void tryShutdown(Runnable task) {
+    try {
+      task.run();
+    } catch (Exception e) {
+      log.error("Error shutting down task", e);
     }
-
-    if (config.systemTimeOverride() != null) {
-      return Clock.fixed(config.systemTimeOverride(), config.systemTimezone());
-    }
-
-    return Clock.system(ZoneId.of("America/Montevideo"));
-  }
-
-  public Javalin javalin() {
-    return javalin;
-  }
-
-  public PersistenceManager persistenceManager() {
-    return persistenceManager;
-  }
-
-  public ApplicationConfiguration config() {
-    return config;
   }
 
   /**
@@ -159,9 +178,26 @@ public class Application {
         kv("api_url", config.httpServer().apiUrl()));
   }
 
-  /** Stops the web server and shuts down the persistence layer gracefully. */
-  public void stop() {
+  /** Stops the web server and shuts down all registered resources gracefully. */
+  public void shutdown() {
+    log.info("Stopping Application...");
     javalin.stop();
-    persistenceManager.shutdown();
+
+    log.info("Shutting down Application resources...");
+    shutdownTasks.forEach(Application::tryShutdown);
+
+    log.info("Server shutdown completed successfully!");
+  }
+
+  public Javalin javalin() {
+    return javalin;
+  }
+
+  public PersistenceManager persistenceManager() {
+    return persistenceManager;
+  }
+
+  public ApplicationConfiguration config() {
+    return config;
   }
 }

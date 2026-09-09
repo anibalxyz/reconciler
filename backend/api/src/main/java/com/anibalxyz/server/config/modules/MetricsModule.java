@@ -113,8 +113,7 @@ public class MetricsModule implements JavalinModule {
     log.info("Metrics endpoint registered at {}", METRICS_PATH);
   }
 
-  // TODO: pending to be used
   public void close() {
-    registry.close();
+    if (!registry.isClosed()) registry.close();
   }
 }

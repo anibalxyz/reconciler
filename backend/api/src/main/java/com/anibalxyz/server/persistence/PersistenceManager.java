@@ -26,7 +26,7 @@ public class PersistenceManager {
   public PersistenceManager(DatabaseSettings dbConfig) {
     this.dbConfig = dbConfig;
     log.info("Initializing database connection pool: {}", dbConfig);
-    emf = getProperties().createEntityManagerFactory();
+    this.emf = getProperties().createEntityManagerFactory();
     log.info("Database connection pool initialized successfully");
   }
 
@@ -35,10 +35,8 @@ public class PersistenceManager {
   }
 
   /** Closes the {@link EntityManagerFactory} to release all database resources. */
-  public void shutdown() {
-    if (emf != null && emf.isOpen()) {
-      emf.close();
-    }
+  public void close() {
+    if (emf.isOpen()) emf.close();
   }
 
   /**

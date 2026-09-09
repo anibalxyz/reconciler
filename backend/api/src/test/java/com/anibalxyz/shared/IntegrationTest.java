@@ -56,7 +56,7 @@ public abstract class IntegrationTest {
 
     validJwt = createValidJwt(app.config().security(), testClock, VALID_USER.id().value());
 
-    Runtime.getRuntime().addShutdownHook(new Thread(app::stop));
+    Runtime.getRuntime().addShutdownHook(new Thread(app::shutdown));
   }
 
   @BeforeEach
