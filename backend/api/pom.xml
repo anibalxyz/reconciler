@@ -92,7 +92,9 @@
         <profile>
             <id>test-default-env-file</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>!useSystemEnv</name>
+                </property>
             </activation>
             <properties>
                 <envFile>../.env.test</envFile>
@@ -191,7 +193,7 @@
     </dependencyManagement>
 
     <dependencies>
-        
+
         <!-- Annotations -->
 
         <dependency>
