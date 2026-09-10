@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,54 +20,80 @@ import org.slf4j.LoggerFactory;
  */
 public class ConfigurationFactory {
   private static final Logger log = LoggerFactory.getLogger(ConfigurationFactory.class);
+  private final Function<String, String> source;
 
-  private ConfigurationFactory() {}
+  private ConfigurationFactory(Function<String, String> source) {
+    this.source = source;
+  }
 
   /**
-   * Loads configuration from the given command-line arguments.
+   * Creates a factory that assembles configuration from the given source.
+   *
+   * @param source resolves a variable name to its raw value (e.g. {@code System::getenv})
+   * @return a factory; call {@link #load()} to assemble the configuration
+   */
+  public static ConfigurationFactory source(Function<String, String> source) {
+    return new ConfigurationFactory(source);
+  }
+
+  /**
+   * Sources configuration from the given command-line arguments.
    *
    * <p>Uses the file passed via {@code --env-file} when present, otherwise the system environment.
    * The flag keeps the {@code env} wording by convention; any properties-format file is accepted,
    * not only dotenv ones.
    *
    * @param args the JVM command-line arguments
-   * @return a fully populated {@link ApplicationConfiguration} instance
+   * @return the selected sourcing method
    */
-  public static ApplicationConfiguration load(String[] args) {
+  public static Function<String, String> sourceFromArgs(String[] args) {
     return ArgParser.find("--env-file", args)
         .map(Paths::get)
-        .map(ConfigurationFactory::loadFromEnvFile)
-        .orElseGet(ConfigurationFactory::loadFromEnv);
+        .map(ConfigurationFactory::sourceFromFile)
+        .orElseGet(ConfigurationFactory::sourceFromSystem);
   }
 
   /**
-   * Loads configuration from system environment variables. This is the standard method for
-   * containerized environments like Docker, where variables are passed directly to the container.
-   *
-   * @return A new {@link ApplicationConfiguration} instance.
+   * Sources from system environment variables. This is the standard method for containerized
+   * environments like Docker, where variables are passed directly to the container.
    */
-  private static ApplicationConfiguration loadFromEnv() {
-    log.info("Loading configuration from the system environment.");
-    return ApplicationConfiguration.from(System::getenv);
+  private static Function<String, String> sourceFromSystem() {
+    log.info("Sourcing configuration from the system environment...");
+    return System::getenv;
   }
 
   /**
-   * Loads configuration from a properties/dotenv file from the given {@link Path}.
+   * Sources a properties/dotenv file from the given {@link Path}.
    *
    * <p>This method is intended for local development and testing, allowing developers to manage
    * configuration variables in a file.
    *
-   * @return A new {@link ApplicationConfiguration} instance.
+   * @param path the properties/dotenv file to read
    * @throws UnableToLoadConfigurationFile if the specified file cannot be found or read.
+   * @return a sourcing method backed by the file contents
    */
-  private static ApplicationConfiguration loadFromEnvFile(Path path) {
+  private static Function<String, String> sourceFromFile(Path path) {
+    Properties props = getPropertiesFromPath(path);
+    log.info("Sourcing configuration from a properties/dotenv file...");
+    return props::getProperty;
+  }
+
+  private static Properties getPropertiesFromPath(Path path) {
     Properties props = new Properties();
     try (InputStream in = Files.newInputStream(path)) {
       props.load(in);
     } catch (IOException e) {
       throw new UnableToLoadConfigurationFile(e);
     }
-    log.info("Loading configuration from properties/dotenv file.");
-    return ApplicationConfiguration.from(props::getProperty);
+    return props;
+  }
+
+  /**
+   * Assembles a {@link ApplicationConfiguration} instance from the provided source.
+   *
+   * @return a fully populated {@link ApplicationConfiguration} instance
+   */
+  public ApplicationConfiguration load() {
+    return ApplicationConfiguration.from(source);
   }
 }

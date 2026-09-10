@@ -6,7 +6,8 @@ import com.anibalxyz.server.config.ConfigurationFactory;
 
 public class Main {
   public static void main(String[] args) {
-    ApplicationConfiguration config = ConfigurationFactory.load(args);
+    ApplicationConfiguration config =
+        ConfigurationFactory.source(ConfigurationFactory.sourceFromArgs(args)).load();
     Application server = Application.create(config);
 
     Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
