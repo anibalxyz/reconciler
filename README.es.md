@@ -90,9 +90,8 @@ Resumen de los archivos y directorios más importantes:
 .
 ├── cli/                 # Herramienta CLI de Python
 ├── backend/
-│   ├── api/             # Código fuente Java (Javalin)
-│   └── db/
-│       └── migrations/  # Migraciones de base de datos (Flyway)
+│   └── api/             # Código fuente Java (Javalin)
+│       └── src/main/resources/db/migrations/  # Migraciones de base de datos (Flyway)
 ├── frontend/
 │   ├── common/          # Utilidades y servicios compartidos
 │   ├── dashboard/       # Aplicación React para el dashboard

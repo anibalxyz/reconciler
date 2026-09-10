@@ -87,9 +87,8 @@ A brief overview of the most important files and directories in the project:
 .
 ├── cli/                 # Python CLI tool
 ├── backend/
-│   ├── api/             # Java API (Javalin) source code
-│   └── db/
-│       └── migrations/  # Database migrations (Flyway)
+│   └── api/             # Java API (Javalin) source code
+│       └── src/main/resources/db/migrations/  # Database migrations (Flyway)
 ├── frontend/
 │   ├── common/          # Shared utilities and services
 │   ├── dashboard/       # React application for the dashboard

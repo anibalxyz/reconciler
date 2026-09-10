@@ -8,6 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public abstract class UnitTest {
   @BeforeAll
   public static void initializeTestEnvironment() {
-    Constants.init();
+    Constants.init(false);
   }
 }

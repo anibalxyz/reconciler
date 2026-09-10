@@ -10,7 +10,7 @@ import com.anibalxyz.server.config.ApplicationConfiguration;
 import com.anibalxyz.server.config.ConfigurationFactory;
 import com.anibalxyz.server.config.settings.SecuritySettings;
 import java.time.Instant;
-import org.jspecify.annotations.NonNull;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,29 +21,45 @@ public class Constants {
   public static SecuritySettings securitySettings;
   private static boolean initialized;
 
-  public static void init() {
+  public static void init(boolean isIntegrationTest) {
     if (initialized) return;
 
-    String[] args = getArgs();
-    config = ConfigurationFactory.load(args);
+    TestSettings settings = new TestSettings();
+    getArgs().ifPresent(args -> settings.override(ConfigurationFactory.sourceFromArgs(args)));
+    if (isIntegrationTest) {
+      initTestDB(settings);
+    }
+
+    config = ConfigurationFactory.source(settings::get).load();
     securitySettings = config.security();
 
     initialized = true;
     log.info("Test constants initialized.");
   }
 
-  private static String @NonNull [] getArgs() {
+  private static void initTestDB(TestSettings settings) {
+    TestDb.init();
+    settings.override(
+        key ->
+            switch (key) {
+              case "DB_HOST" -> TestDb.host();
+              case "DB_PORT" -> String.valueOf(TestDb.port());
+              case "DB_NAME" -> TestDb.dbName();
+              case "DB_USER" -> TestDb.user();
+              case "DB_PASSWORD" -> TestDb.password();
+              default -> null;
+            });
+  }
+
+  private static Optional<String[]> getArgs() {
     String[] args;
     if (Boolean.parseBoolean(System.getProperty("useSystemEnv", "false"))) {
       args = new String[] {};
     } else {
       String envFile = System.getProperty("envFile");
-      args =
-          (envFile != null && !envFile.isBlank())
-              ? new String[] {"--env-file", envFile}
-              : new String[] {};
+      args = (envFile != null && !envFile.isBlank()) ? new String[] {"--env-file", envFile} : null;
     }
-    return args;
+    return Optional.ofNullable(args);
   }
 
   public static final class Users {

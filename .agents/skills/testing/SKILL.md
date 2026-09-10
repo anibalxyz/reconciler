@@ -20,26 +20,25 @@ Two ways to run the backend suite; pick by what matters for the moment:
 The canonical command: always works regardless of environment state.
 
 1. Builds the API test Docker image
-2. Starts `db` + `flyway`
-3. Runs `mvn verify` in the API container (surefire + failsafe)
-4. Tears down non-DB services
-5. Restores your previous app env
+2. Runs `mvn verify` in the API container (surefire + failsafe)
+3. Tears down the API service
+4. Restores your previous app env
 
-**Pros**: one command, hermetic. The DB is always brought up with migrations, so you know the full suite ran against a known state.
+**Pros**: one command, hermetic. Integration tests run against a throwaway Testcontainers database migrated by in-app Flyway, so you know the full suite ran against a known state. Needs only Docker, no extra services.
 **Cons**: slowest feedback loop; no coverage, no test subsets.
 
 ### Local: plain `mvn` from `backend/api/`
 
-Needs the test DB running only when integration tests run.
+Needs only a running Docker daemon (Testcontainers boots the database for integration tests); no extra services.
 
-| Command                 | Runs                                 | Needs DB |
-| ----------------------- | ------------------------------------ | -------- |
-| `mvn test`              | unit tests only                      | no       |
-| `mvn verify`            | unit + integration                   | yes      |
-| `mvn verify -Pcoverage` | unit + integration + coverage report | yes      |
+| Command                 | Runs                                 | Needs Docker |
+| ----------------------- | ------------------------------------ | ------------ |
+| `mvn test`              | unit tests only                      | no           |
+| `mvn verify`            | unit + integration                   | yes          |
+| `mvn verify -Pcoverage` | unit + integration + coverage report | yes          |
 
-**Pros**: fastest iteration; granular control (unit-only without a DB, coverage or not, single-test reruns with `-Dtest=EmailTest`).
-**Cons**: remember to launch the test DB.
+**Pros**: fastest iteration; granular control (unit-only without Docker, coverage or not, single-test reruns with `-Dtest=EmailTest`).
+**Cons**: integration tests need a Docker daemon.
 
 **No frontend tests exist currently.** CI only lints, type-checks, and formats-check the frontend.
 
@@ -147,10 +146,10 @@ Opt-in via the `coverage` profile and **local-only**.
 
 From `backend/api/`:
 
-| Command                           | Runs               | Needs DB | Produces                                                 |
-| --------------------------------- | ------------------ | -------- | -------------------------------------------------------- |
-| `mvn verify -Pcoverage`           | unit + integration | yes      | HTML report in `target/site/jacoco/` (open `index.html`) |
-| `mvn test -Pcoverage`             | unit only          | no       | `target/jacoco.exec`, no HTML report                     |
-| `mvn verify` / `cli compose test` | unit + integration | yes      | no coverage                                              |
+| Command                           | Runs               | Needs Docker | Produces                                                 |
+| --------------------------------- | ------------------ | ------------ | -------------------------------------------------------- |
+| `mvn verify -Pcoverage`           | unit + integration | yes          | HTML report in `target/site/jacoco/` (open `index.html`) |
+| `mvn test -Pcoverage`             | unit only          | no           | `target/jacoco.exec`, no HTML report                     |
+| `mvn verify` / `cli compose test` | unit + integration | yes          | no coverage                                              |
 
 The report always covers unit and integration tests together.

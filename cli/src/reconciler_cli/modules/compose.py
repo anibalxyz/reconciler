@@ -34,7 +34,7 @@ LIFECYCLE_SERVICES: Dict[str, List[str]] = {
     "prod": core_lifecycle_services
     + [SERVICES["NGINX"], SERVICES["API"], SERVICES["CERTBOT"]]
     + MONITORING_SERVICES,
-    "test": core_lifecycle_services + [SERVICES["API"]],
+    "test": [SERVICES["API"]],
 }
 
 
@@ -46,7 +46,10 @@ def compose(cmd: List[str]):
         cmd: The docker-compose command to execute (e.g., ["up", "-d"]).
     """
     env = get_current_env()
-    compose_files = ["-f", "compose.yaml", "-f", f"compose.{env}.yaml"]
+    compose_files = ["-f", "compose.yaml"]
+    if env in ("dev", "prod"):
+        compose_files.extend(["-f", "compose.db.yaml"])
+    compose_files.extend(["-f", f"compose.{env}.yaml"])
     if env in ("dev", "prod"):
         compose_files.extend(["-f", "compose.monitoring.yaml"])
     if env == "dev":
@@ -275,11 +278,10 @@ def test(
 
     This command performs the following steps:\n
     1. Switches to the test environment\n
-    2. Builds all buildable services\n
-    3. Brings up the database and Flyway services\n
-    4. Brings up the API service and runs the tests\n
-    5. Tears down all services\n
-    6. Switches back to the original environment\n
+    2. Builds the API\n
+    3. Brings up the API service and runs the tests\n
+    4. Tears down all services\n
+    5. Switches back to the original environment\n
     """
     env_snap = get_current_env()
     try:
@@ -289,22 +291,14 @@ def test(
         #       Calling validate_env() here + ignoring the callback solves that issue
         validate_env()
 
-        buildable = get_buildable_services()
-        buildable.remove("all")
-        build(buildable, cache)
+        build(["api"], cache)
 
-        up(["db", "flyway"])
         result = compose(["up", "--exit-code-from", "api", "api"])
         if result.returncode != 0:
             raise typer.Exit(code=result.returncode)
     finally:
         try:
-            lifecycle = get_lifecycle_services()
-            lifecycle.remove("all")
-            lifecycle.remove(
-                "db"
-            )  # remains ready for other test runs and for local testing
-            down(lifecycle)
+            down(["api"])
         finally:
             set_env(env_snap)
 
