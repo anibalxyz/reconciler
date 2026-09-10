@@ -21,17 +21,34 @@ public class Constants {
   public static SecuritySettings securitySettings;
   private static boolean initialized;
 
-  public static void init() {
+  public static void init(boolean isIntegrationTest) {
     if (initialized) return;
 
     TestSettings settings = new TestSettings();
     getArgs().ifPresent(args -> settings.override(ConfigurationFactory.sourceFromArgs(args)));
+    if (isIntegrationTest) {
+      initTestDB(settings);
+    }
 
     config = ConfigurationFactory.source(settings::get).load();
     securitySettings = config.security();
 
     initialized = true;
     log.info("Test constants initialized.");
+  }
+
+  private static void initTestDB(TestSettings settings) {
+    TestDb.init();
+    settings.override(
+        key ->
+            switch (key) {
+              case "DB_HOST" -> TestDb.host();
+              case "DB_PORT" -> String.valueOf(TestDb.port());
+              case "DB_NAME" -> TestDb.dbName();
+              case "DB_USER" -> TestDb.user();
+              case "DB_PASSWORD" -> TestDb.password();
+              default -> null;
+            });
   }
 
   private static Optional<String[]> getArgs() {

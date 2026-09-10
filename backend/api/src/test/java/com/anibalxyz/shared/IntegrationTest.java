@@ -44,7 +44,7 @@ public abstract class IntegrationTest {
     if (app != null) {
       return;
     }
-    Constants.init();
+    Constants.init(true);
     app = Application.create(Constants.config, testClock);
     app.start(0);
 
