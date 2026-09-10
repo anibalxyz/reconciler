@@ -40,7 +40,7 @@ services:
     container_name: reconciler-${APP_ENV}-flyway
     pull_policy: missing
     volumes:
-      - ./backend/db/migrations:/flyway/sql
+      - ./backend/api/src/main/resources/db/migrations:/flyway/sql
     command:
       # Hardcoded for Docker network only. Change this URL if using an external database.
       - -url=jdbc:postgresql://db:5432/${DB_NAME}

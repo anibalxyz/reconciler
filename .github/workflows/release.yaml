@@ -198,7 +198,7 @@ jobs:
             compose.monitoring.dev.yaml \
             backend/.env.prod.example \
             frontend/.env.prod.example \
-            backend/db/migrations/ \
+            backend/api/src/main/resources/db/migrations \
             monitoring/promtail/promtail-config.yaml \
             monitoring/loki/loki-config.yaml \
             monitoring/prometheus/prometheus.yaml \
